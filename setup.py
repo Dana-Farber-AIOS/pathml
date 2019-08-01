@@ -14,7 +14,7 @@ setuptools.setup(
     url="https://github.com/Dana-Farber/pathml",
     packages=setuptools.find_packages(),
     install_requires=[
-        'numpy', 'skimage'
+        'numpy', 'skimage', 'PIL'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
