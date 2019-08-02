@@ -10,14 +10,14 @@ Image.MAX_IMAGE_PIXELS = None
 
 def prep_crop_image(imarray, patch_size):
     """
-    function to crop image so that image dimensions evenly divide patch dimensions.
+    Crop image array for tiling.
 
-    imarray: numpy array of image
-    patch_size: dimension of patches to extract
+    scikit-image view_as_blocks() function requires that block size
 
-    returns numpy array of cropped image
+    :param imarray: numpy array of image
+    :param patch_size: dimension of patches
+    :return: numpy array of cropped image
     """
-
     h = imarray.shape[0]
     w = imarray.shape[1]
     hcrop = (h % patch_size)
@@ -33,25 +33,20 @@ def prep_crop_image(imarray, patch_size):
         cropright = ((wcrop - 1) / 2)
     else:
         cropleft = cropright = wcrop / 2
-    # crop
     cropdims = ((croptop, cropbot), (cropleft, cropright), (0, 0))
     out = ski.util.crop(imarray, cropdims, copy=True)
     return out
 
 
-def tile_image(imagepath, patchsize):
+def tile_image(imarray, patchsize):
     """
     Divides image into non-overlapping patches
 
-    imagepath: path to .jpg image (m, n, 3)
-    patchsize: dimensions of output patches
-
-    returns tensor of patches (m/patchsize, n/patchsize, 1, patchsize, patchsize, 3)
+    :param imarray: numpy array of image (m, n, 3)
+    :param patchsize: dimensions of output patches
+    :return: tensor of patches (m/patchsize, n/patchsize, 1, patchsize, patchsize, 3)
     """
-
     # divide image into non-overlapping tiles (aka blocks)
-    im = Image.open(imagepath)
-    imarray = np.array(im)
     im_cropped = prep_crop_image(imarray, patchsize)
     # divide into patches
     patches = ski.util.shape.view_as_blocks(im_cropped, block_shape=(patchsize, patchsize, 3))
@@ -60,32 +55,29 @@ def tile_image(imagepath, patchsize):
 
 def flatten_patches(patches):
     """
-    reshape patches array so that all patches are stacked along a single axis (1st axis)
+    reshape patches tensor so that all patches are stacked along first axis.
 
-    patches: tensor of RGB images (m/patchsize, n/patchsize, 1, patchsize, patchsize, 3)
-
-    returns: tensor of RGB images (m*n/patchsize**2, patchsize, patchsize, 3)
+    :param patches: tensor of images (m/patchsize, n/patchsize, 1, patchsize, patchsize, 3)
+    :return: tensor of images (m*n/patchsize**2, patchsize, patchsize, 3)
     """
-
     s = patches.shape
     patches_flat = patches.reshape((-1, s[3], s[4], s[5]))
     return patches_flat, s
 
 
-# noinspection PyPep8Naming,PyPep8Naming,PyPep8Naming
-def rgb2hsi_v(patch):
+def rgb2hsi(imarray):
     """
-    Convert RGB image to HSI
+    Convert image from RGB to HSI
 
-    patch: (n, n, 3) numpy array of RGB image
+    See http://eng.usf.edu/~hady/courses/cap5400/rgb-to-hsi.pdf
 
-    returns (n, n, 3) numpy array of HSI image
+    :param imarray: numpy array of RGB image (m, n, 3)
+    :return: numpy array of HSI image (m, n, 3)
     """
-
-    R = patch[:, :, 0]
-    G = patch[:, :, 1]
-    B = patch[:, :, 2]
-    patch_sum = np.sum(patch, axis=2)
+    R = imarray[:, :, 0]
+    G = imarray[:, :, 1]
+    B = imarray[:, :, 2]
+    patch_sum = np.sum(imarray, axis=2)
     r = R / patch_sum
     g = G / patch_sum
     b = B / patch_sum
@@ -99,22 +91,21 @@ def rgb2hsi_v(patch):
     h = h / (2. * np.pi)
     patch_norm = np.stack([r, g, b], axis=2)
     s = 1 - 3 * np.amin(patch_norm, axis=2)
-    patchsum = np.sum(patch, axis=2)
+    patchsum = np.sum(imarray, axis=2)
     i = patchsum / (3 * 255)
     out = np.stack([h, s, i], axis=2)
     return out
 
 
-def label_artifact_tile_v(patch):
+def label_artifact_tile(patch):
     """
-    vectorized function to apply criteria from Kothari et al. (2012) for labeling artifacts
-    for quality control of tiles
+    Identify whether a patch contains artifacts or not.
 
-    input: rgb patch
+    Based on criteria from Kothari et al. 2012 ACM-BCB 218-225.
 
-    returns artifact status (1 - contains artifacts; 0 - no artifacts)
+    :param patch: numpy array of RGB image (m, n, 3)
+    :return: artifact status (1 - contains artifacts; 0 - no artifacts)
     """
-
     hsi_patch = rgb2hsi_v(patch)
     h = hsi_patch[:, :, 0]
     s = hsi_patch[:, :, 1]
