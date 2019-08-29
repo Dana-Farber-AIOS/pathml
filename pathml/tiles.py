@@ -2,17 +2,35 @@
 Code for creating and working with tiles
 """
 
-import skimage as ski
+from skimage.util.shape import view_as_blocks
+from skimage.util import crop
 import numpy as np
 from PIL import Image
-Image.MAX_IMAGE_PIXELS = None
+
+
+def set_max_pixels():
+    """
+    Remove max pixel limit for loading huge whole-slide images
+    """
+    Image.MAX_IMAGE_PIXELS = None
+
+def img_to_array(path_to_image):
+    """
+    Reads image, returns np array
+
+    :param path_to_image: path to image file
+    :return: np array of image
+    """
+    im = Image.open(path_to_image)
+    imarray = np.array(im)
+    return imarray
 
 
 def prep_crop_image(imarray, patch_size):
     """
     Crop image array for tiling.
 
-    scikit-image view_as_blocks() function requires that block size
+    scikit-image view_as_blocks() function requires that block size divides evenly into image size
 
     :param imarray: numpy array of image
     :param patch_size: dimension of patches
@@ -34,11 +52,11 @@ def prep_crop_image(imarray, patch_size):
     else:
         cropleft = cropright = wcrop / 2
     cropdims = ((croptop, cropbot), (cropleft, cropright), (0, 0))
-    out = ski.util.crop(imarray, cropdims, copy=True)
+    out = crop(imarray, cropdims, copy=True)
     return out
 
 
-def tile_image(imarray, patchsize):
+def tile_image(imarray, patchsize=299):
     """
     Divides image into non-overlapping patches
 
@@ -49,7 +67,7 @@ def tile_image(imarray, patchsize):
     # divide image into non-overlapping tiles (aka blocks)
     im_cropped = prep_crop_image(imarray, patchsize)
     # divide into patches
-    patches = ski.util.shape.view_as_blocks(im_cropped, block_shape=(patchsize, patchsize, 3))
+    patches = view_as_blocks(im_cropped, block_shape=(patchsize, patchsize, 3))
     return patches
 
 
@@ -62,13 +80,14 @@ def flatten_patches(patches):
     """
     s = patches.shape
     patches_flat = patches.reshape((-1, s[3], s[4], s[5]))
-    return patches_flat, s
+    return patches_flat
 
 
 def rgb2hsi(imarray):
     """
     Convert image from RGB to HSI
 
+    Necessary because Kothari et al. used HSI criteria for artifact identification.
     See http://eng.usf.edu/~hady/courses/cap5400/rgb-to-hsi.pdf
 
     :param imarray: numpy array of RGB image (m, n, 3)
@@ -101,6 +120,7 @@ def label_artifact_tile(patch):
     """
     Identify whether a patch contains artifacts or not.
 
+    Returns 1 if image contains artifacts, 0 otherwise.
     Based on criteria from Kothari et al. 2012 ACM-BCB 218-225.
 
     :param patch: numpy array of RGB image (m, n, 3)
