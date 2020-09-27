@@ -1,0 +1,12 @@
+# reference here: https://coverage.readthedocs.io/en/coverage-5.1/config.html
+
+[run]
+source = pathml
+omit =
+    pathml/ml/*
+    pathml/datasets/*
+    pathml/preprocessing/base_*
+command_line = -m pytest
+
+[html]
+directory = coverage_report_html

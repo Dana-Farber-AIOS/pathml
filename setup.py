@@ -3,18 +3,23 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+# do similar for requirements
+
 setuptools.setup(
     name="pathml",
     version="0.0.1",
     author="Jacob Rosenthal",
-    author_email="jacob_rosenthal@dfci.harvard.edu",
-    description="Utilities for digital pathology",
+    author_email="Jacob_Rosenthal@dfci.harvard.edu",
+    description="Toolbox for computational pathology",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/Dana-Farber/pathml",
     packages=setuptools.find_packages(),
     install_requires=[
-        'numpy', 'skimage', 'PIL'
+        'numpy',
+        'openslide-python',
+        'opencv-contrib-python==4.1.1.*',
+        'matplotlib',
+        'sklearn'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
