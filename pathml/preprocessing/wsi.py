@@ -5,6 +5,11 @@ import numpy as np
 
 from pathml.preprocessing.slide_data import SlideData
 
+# multiparametric imports
+import javabridge
+import bioformats.formatreader as biordr
+
+
 
 class BaseSlide:  # pragma: no cover
     """
@@ -66,11 +71,22 @@ class MultiparametricSlide(BaseSlide):
     Class for multiparametric images: CODEX, Hyperion, Vectra Polaris, Multiparametric IHC/IF
     Based on ImageJ/Fiji bioformatics importer, Open Microscopy Environment https://www.openmicroscopy.org/bio-formats/
     Depends on cellprofiler/python-bioformats https://github.com/CellProfiler/python-bioformats
+    sudo apt-get install default-jdk
+    pip install python-bioformats
+
+    bioformats wraps a java library that reads and writes life sciences image formats
+    parses pixels and metadata for a large number of proprietary formats
+    converts all formats to OME-TIFF
+    please cite: https://pubmed.ncbi.nlm.nih.gov/20513764/
+    java code is compiled one time into platform independent bite code, making this more distributable
+
+    https://ilovesymposia.com/2014/08/10/read-microscopy-images-to-numpy-arrays-with-python-bioformats/
     """
 
     def __init__(self, path, name=None):
         super().__init__(path, name)
         self.slide = # TODO
+        javabridge.start_vm(class_path=bioformats.JARS)
 
     def __repr__(self):
         return f""
@@ -79,3 +95,5 @@ class MultiparametricSlide(BaseSlide):
         """
 
         """
+
+
