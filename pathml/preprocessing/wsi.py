@@ -61,4 +61,21 @@ class HESlide(BaseSlide):
         out = SlideData(wsi = self, image = image_array)
         return out
 
-# TODO add support for CODEX data (see email from Ryan)
+class MultiparametricSlide(BaseSlide):
+    """
+    Class for multiparametric images: CODEX, Hyperion, Vectra Polaris, Multiparametric IHC/IF
+    Based on ImageJ/Fiji bioformatics importer, Open Microscopy Environment https://www.openmicroscopy.org/bio-formats/
+    Depends on cellprofiler/python-bioformats https://github.com/CellProfiler/python-bioformats
+    """
+
+    def __init__(self, path, name=None):
+        super().__init__(path, name)
+        self.slide = # TODO
+
+    def __repr__(self):
+        return f""
+
+    def load_data(self):
+        """
+
+        """
