@@ -89,7 +89,6 @@ class MultiparametricSlide(BaseSlide):
 
     def __init__(self, path, name=None):
         super().__init__(path, name)
-<<<<<<< HEAD
 
         # this field is too specific to openslide
         self.slide = None 
@@ -98,9 +97,7 @@ class MultiparametricSlide(BaseSlide):
     def __sizeof__(self, name=None):
         # init java virtual machine
         javabridge.start_vm(class_path=bioformats.JARS)
-=======
         self.slide = self._read_bioformats(path) 
->>>>>>> aa65864ab84a290463e1200e6836e2b074be5c8a
 
         # java maximum array size of 2GB constrains image size
         # we need to check if we need to allocate multiple arrays of 2GB
@@ -132,7 +129,6 @@ class MultiparametricSlide(BaseSlide):
         data = reader.openByes(0)
         data = bioformats.formatreader.load_using_bioformats(path, rescale=False)
 
-<<<<<<< HEAD
         # init java virtual machine
         javabridge.start_vm(class_path=bioformats.JARS)
 
@@ -145,11 +141,8 @@ class MultiparametricSlide(BaseSlide):
         image_array = np.asarray(data, dtype = np.uint8) 
         out = SlideData(wsi = self, image = image_array)
         return out 
-=======
         # ome-tiff to ndarray
 
         image_array = 
         out = SlideData(wsi = self, image = image_array)
         return 
->>>>>>> aa65864ab84a290463e1200e6836e2b074be5c8a
-
