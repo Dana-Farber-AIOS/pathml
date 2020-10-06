@@ -80,10 +80,16 @@ class MultiparametricSlide(BaseSlide):
     parses pixel and metadata of proprietary formats
     converts all formats to OME-TIFF
     please cite: https://pubmed.ncbi.nlm.nih.gov/20513764/
+<<<<<<< HEAD
+=======
+    java code is compiled one time into platform independent bite code, making this more distributable
+    https://ilovesymposia.com/2014/08/10/read-microscopy-images-to-numpy-arrays-with-python-bioformats/
+>>>>>>> aa65864ab84a290463e1200e6836e2b074be5c8a
     """
 
     def __init__(self, path, name=None):
         super().__init__(path, name)
+<<<<<<< HEAD
 
         # this field is too specific to openslide
         self.slide = None 
@@ -92,6 +98,9 @@ class MultiparametricSlide(BaseSlide):
     def __sizeof__(self, name=None):
         # init java virtual machine
         javabridge.start_vm(class_path=bioformats.JARS)
+=======
+        self.slide = self._read_bioformats(path) 
+>>>>>>> aa65864ab84a290463e1200e6836e2b074be5c8a
 
         # java maximum array size of 2GB constrains image size
         # we need to check if we need to allocate multiple arrays of 2GB
@@ -113,7 +122,17 @@ class MultiparametricSlide(BaseSlide):
         Load slide using ``python-bioformats``, and initialize a :class:`~pathml.preprocessing.slide_data.SlideData` object
         
         """
+        javabridge.start_vm(class_path=bioformats.JARS)
 
+        # cast to ome-tiff
+        ImageReader = bioformats.formatreader.make_image_reader_class()
+        FormatTools = bioformats.formatreader.make_format_tools_class()
+        reader = ImageReader()
+        reader.setId(path)
+        data = reader.openByes(0)
+        data = bioformats.formatreader.load_using_bioformats(path, rescale=False)
+
+<<<<<<< HEAD
         # init java virtual machine
         javabridge.start_vm(class_path=bioformats.JARS)
 
@@ -126,4 +145,11 @@ class MultiparametricSlide(BaseSlide):
         image_array = np.asarray(data, dtype = np.uint8) 
         out = SlideData(wsi = self, image = image_array)
         return out 
+=======
+        # ome-tiff to ndarray
+
+        image_array = 
+        out = SlideData(wsi = self, image = image_array)
+        return 
+>>>>>>> aa65864ab84a290463e1200e6836e2b074be5c8a
 
