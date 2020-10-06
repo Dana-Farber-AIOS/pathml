@@ -19,6 +19,7 @@ def openslide_example():
     return im_np_rgb
 
 # TODO: make test less depeendent on javabridge? want to test bioformats also
+# filesize too large for git repo
 def confocal_zseries_multichannel_example():
     path = "tests/testdata/zeissconfocal3channelzseries.czi"
     javabridge.start_vm(class_path=bioformats.JARS)
