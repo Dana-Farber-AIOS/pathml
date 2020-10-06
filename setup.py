@@ -19,7 +19,9 @@ setuptools.setup(
         'openslide-python',
         'opencv-contrib-python>=4.1.1.*',
         'matplotlib',
-        'sklearn'
+        'sklearn',
+        'python-javabridge',
+        'python-bioformats'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

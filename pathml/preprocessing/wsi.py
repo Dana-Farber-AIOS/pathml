@@ -8,7 +8,8 @@ from pathml.preprocessing.slide_data import SlideData
 # multiparametric imports
 import javabridge
 import bioformats.formatreader as biordr
-
+from bioformats.formatreader import ImageReader
+from bioformats.metadatatools import createOMEXMLMetadata
 
 
 class BaseSlide:  # pragma: no cover
@@ -68,32 +69,61 @@ class HESlide(BaseSlide):
 
 class MultiparametricSlide(BaseSlide):
     """
-    Class for multiparametric images: CODEX, Hyperion, Vectra Polaris, Multiparametric IHC/IF
-    Based on ImageJ/Fiji bioformatics importer, Open Microscopy Environment https://www.openmicroscopy.org/bio-formats/
+    Class for multiparametric if/ihc including: CODEX, Hyperion, Vectra Polaris    
     Depends on cellprofiler/python-bioformats https://github.com/CellProfiler/python-bioformats
+
+    Dependencies:
     sudo apt-get install default-jdk
     pip install python-bioformats
 
-    bioformats wraps a java library that reads and writes life sciences image formats
-    parses pixels and metadata for a large number of proprietary formats
+    python-bioformats wraps ome bioformats java library
+    parses pixel and metadata of proprietary formats
     converts all formats to OME-TIFF
     please cite: https://pubmed.ncbi.nlm.nih.gov/20513764/
-    java code is compiled one time into platform independent bite code, making this more distributable
-
-    https://ilovesymposia.com/2014/08/10/read-microscopy-images-to-numpy-arrays-with-python-bioformats/
     """
 
     def __init__(self, path, name=None):
         super().__init__(path, name)
-        self.slide = # TODO
+
+        # this field is too specific to openslide
+        self.slide = None 
+        self.path = path
+    
+    def __sizeof__(self, name=None):
+        # init java virtual machine
         javabridge.start_vm(class_path=bioformats.JARS)
 
+        # java maximum array size of 2GB constrains image size
+        # we need to check if we need to allocate multiple arrays of 2GB
+        # read image dimensions from metadata
+        ImageReader = bioformats.formatreader.make_image_reader_class()
+        FormatTools = bioformats.formatreader.make_format_tools_class()
+        reader = ImageReader()
+        omeMeta = createOMEXMLMetadata()
+        reader.setMetadataStore(omeMeta)
+        reader.setId(self.path)
+        sizex, sizey, sizez, sizec = reader.getSizeX(), reader.getSizeY(), reader.getSizeZ(), reader.getSizeC()
+        return((sizex,sizey,sizez,sizec))
+
     def __repr__(self):
-        return f""
+        return f"MultiparametricSlide(path={self.path}, name={self.name})"
 
     def load_data(self):
         """
-
+        Load slide using ``python-bioformats``, and initialize a :class:`~pathml.preprocessing.slide_data.SlideData` object
+        
         """
 
+        # init java virtual machine
+        javabridge.start_vm(class_path=bioformats.JARS)
+
+        # TODO: Handling for images > 2GB
+
+        # load ome-tiff array
+        data = bioformats.formatreader.load_using_bioformats(self.path, rescale=False)
+
+        # ome-tiff array to ndarray
+        image_array = np.asarray(data, dtype = np.uint8) 
+        out = SlideData(wsi = self, image = image_array)
+        return out 
 
