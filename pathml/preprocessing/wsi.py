@@ -2,15 +2,27 @@ import openslide
 import cv2
 import os
 import numpy as np
-
 from pathml.preprocessing.slide_data import SlideData
 
-# multiparametric imports
-import javabridge
-import bioformats.formatreader as biordr
-from bioformats.formatreader import ImageReader
-from bioformats.metadatatools import createOMEXMLMetadata
-
+# MultiparametricSlide imports
+try:
+    import bioformats
+    import javabridge
+    import bioformats.formatreader as biordr
+    from bioformats.formatreader import ImageReader
+    from bioformats.metadatatools import createOMEXMLMetadata
+except ImportError:
+    warn(
+        """MultiparametricSlide requires a jvm to interface with java bioformats library that is not installed by default.
+        
+    To use MultiparametricSlide, install the following in your conda environment:
+        
+    https://pythonhosted.org/javabridge/installation.html
+    sudo apt-get install default-jdk
+    pip install javabridge
+    pip install python-bioformats
+    """
+    )
 
 class BaseSlide:  # pragma: no cover
     """
@@ -84,15 +96,11 @@ class MultiparametricSlide(BaseSlide):
 
     def __init__(self, path, name=None):
         super().__init__(path, name)
-
-        # this field is too specific to openslide
-        self.slide = None 
         self.path = path
     
     def __sizeof__(self, name=None):
         # init java virtual machine
         javabridge.start_vm(class_path=bioformats.JARS)
-        self.slide = self._read_bioformats(path) 
 
         # java maximum array size of 2GB constrains image size
         # we need to check if we need to allocate multiple arrays of 2GB

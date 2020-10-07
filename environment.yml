@@ -11,5 +11,3 @@ dependencies:
   - pip:
       - opencv-contrib-python>=4.1.1
       - openslide-python>=1.1.1
-      - python-bioformats>=4.0.0
-      - python-javabridge>=4.0.0
