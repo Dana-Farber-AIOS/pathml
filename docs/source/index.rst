@@ -25,7 +25,7 @@ Institute.
    ml
    datasets
    examples
-   contributing
+   link_contributing
 
 Indices and tables
 ==================
