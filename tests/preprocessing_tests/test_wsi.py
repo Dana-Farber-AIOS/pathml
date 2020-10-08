@@ -3,7 +3,8 @@ import pytest
 import numpy as np
 import cv2
 
-from pathml.preprocessing.wsi import HESlide, MultiparametricSlide
+from pathml.preprocessing.wsi import HESlide
+from pathml.preprocessing.multiparametricslide import MultiparametricSlide
 
 try:
     import javabridge
@@ -20,7 +21,6 @@ except ImportError:
                 pip install python-bioformats
             """
     )
-
 
 @pytest.fixture
 def openslide_example():
