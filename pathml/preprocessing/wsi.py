@@ -5,7 +5,6 @@ import numpy as np
 
 from pathml.preprocessing.slide_data import SlideData
 
-
 class BaseSlide:  # pragma: no cover
     """
     Base class for slides.
@@ -22,7 +21,6 @@ class BaseSlide:  # pragma: no cover
     def load_data(self, **kwargs):
         """Initialize a :class:`~pathml.preprocessing.slide_data.SlideData` object"""
         raise NotImplementedError
-
 
 class HESlide(BaseSlide):
     """
@@ -61,4 +59,3 @@ class HESlide(BaseSlide):
         out = SlideData(wsi = self, image = image_array)
         return out
 
-# TODO add support for CODEX data (see email from Ryan)

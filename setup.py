@@ -17,7 +17,7 @@ setuptools.setup(
     install_requires=[
         'numpy',
         'openslide-python',
-        'opencv-contrib-python==4.1.1.*',
+        'opencv-contrib-python',
         'matplotlib',
         'sklearn'
     ],
