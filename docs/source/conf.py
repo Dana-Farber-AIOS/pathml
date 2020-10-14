@@ -36,7 +36,8 @@ extensions = [
     'nbsphinx',
     'nbsphinx_link',
     'sphinx.ext.napoleon',
-    'sphinx.ext.imgmath'
+    'sphinx.ext.imgmath',
+    'IPython.sphinxext.ipython_console_highlighting'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

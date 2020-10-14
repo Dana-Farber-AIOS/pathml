@@ -231,7 +231,7 @@ def RGB_to_HSI(imarr):
 def RGB_to_OD(imarr):
     """
     Convert input image from RGB space to optical density (OD) space.
-    :math:`OD = -\log(I)`, where I is the input image in RGB space.
+    `OD = -\log(I)`, where I is the input image in RGB space.
 
     :param imarr: Image array, RGB format
     :type imarr: numpy.ndarray

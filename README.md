@@ -28,9 +28,10 @@ This repo is not yet open to the public. Once we open source it, we will host do
 Until then, you must build a local copy of the documentation yourself.
 
 ````
-conda install sphinx    # install sphinx package for generating docs
-cd docs                 # enter docs directory
-make html               # build docs in html format
+# first install packages for generating docs
+pip install ipython sphinx nbsphinx nbsphinx-link sphinx-rtd-theme  
+cd docs         # enter docs directory
+make html       # build docs in html format
 ````
 
 Then use your favorite web browser to open ``pathml/docs/build/html/index.html``
@@ -53,6 +54,9 @@ To run tests:
 conda install pytest    # first install pytest package
 python -m pytest        # run test suite
 ````
+Note that because the testing suite tests all parts of the code base, 
+this may require installing additional packages as well. 
+(e.g. installation of java is required for some functionality).
 
 You may also optionally measure code coverage, i.e. what percentage of code is covered in the testing suite.
 

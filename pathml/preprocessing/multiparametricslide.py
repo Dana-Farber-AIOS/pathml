@@ -1,5 +1,5 @@
-import os
 import numpy as np
+from warnings import warn
 
 from pathml.preprocessing.slide_data import SlideData
 from pathml.preprocessing.wsi import BaseSlide 
@@ -12,30 +12,28 @@ try:
     from bioformats.metadatatools import createOMEXMLMetadata
 except ImportError:
     warn(
-        """MultiparametricSlide requires a jvm to interface with java bioformats library that is not installed by default.
-        
-    To use MultiparametricSlide, install the following in your conda environment:
-        
-    https://pythonhosted.org/javabridge/installation.html
-    sudo apt-get install default-jdk
-    pip install javabridge
-    pip install python-bioformats
-    """
+        """MultiparametricSlide requires a jvm to interface with java bioformats library.
+            See: https://pythonhosted.org/javabridge/installation.html. You can install using:
+                
+                sudo apt-get install openjdk-8-jdk
+                pip install javabridge
+                pip install python-bioformats
+        """
     )
 
 class MultiparametricSlide(BaseSlide):
     """
-    Represents multiparametric if/ihc images
-    Depends on cellprofiler/python-bioformats https://github.com/CellProfiler/python-bioformats
+    Represents multiparametric IF/IHC images. Backend based on ``bioformats``.
 
-    Dependencies:
-    sudo apt-get install default-jdk
-    pip install python-bioformats
+    To install dependencies::
 
-    python-bioformats wraps ome bioformats java library
-    parses pixel and metadata of proprietary formats
-    converts all formats to OME-TIFF
-    please cite: https://pubmed.ncbi.nlm.nih.gov/20513764/
+        sudo apt-get install openjdk-8-jdk
+        pip install javabridge
+        pip install python-bioformats
+
+    `python-bioformats <https://github.com/CellProfiler/python-bioformats>`_ wraps ome bioformats java library,
+    parses pixel and metadata of proprietary formats, and
+    converts all formats to OME-TIFF. Please cite: https://pubmed.ncbi.nlm.nih.gov/20513764/
     """
 
     def __init__(self, path):
