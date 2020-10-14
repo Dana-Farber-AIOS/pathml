@@ -60,6 +60,14 @@ class Pipeline:
         :return: :class:`~pathml.preprocessing.slide_data.SlideData` object resulting from running full pipeline on
             input image
         """
+        '''
+        if path is to dataset:
+        apply pipeline to all slides in dataset and save to disk
+        '''
+        '''
+        if path is to slide:
+        apply pipeline to slide and save to disk
+        '''
         data = self.load_slide(path)
         data = self.run_slide_level(data)
         data = self.extract_tiles(data)
