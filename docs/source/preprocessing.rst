@@ -21,6 +21,8 @@ Loading Images
 --------------
 .. autoclass:: pathml.preprocessing.wsi.HESlide
     :members:
+.. autoclass:: pathml.preprocessing.multiparametricslide.MultiparametricSlide
+    :members:
 
 Tiling Images
 -------------
