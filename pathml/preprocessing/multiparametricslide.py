@@ -1,5 +1,5 @@
-import os
 import numpy as np
+from warnings import warn
 
 from pathml.preprocessing.slide_data import SlideData
 from pathml.preprocessing.wsi import BaseSlide 
@@ -12,15 +12,13 @@ try:
     from bioformats.metadatatools import createOMEXMLMetadata
 except ImportError:
     warn(
-        """MultiparametricSlide requires a jvm to interface with java bioformats library that is not installed by default.
-        
-    To use MultiparametricSlide, install the following in your conda environment:
-        
-    https://pythonhosted.org/javabridge/installation.html
-    sudo apt-get install default-jdk
-    pip install javabridge
-    pip install python-bioformats
-    """
+        """MultiparametricSlide requires a jvm to interface with java bioformats library.
+            See: https://pythonhosted.org/javabridge/installation.html. You can install using:
+                
+                sudo apt-get install openjdk-8-jdk
+                pip install javabridge
+                pip install python-bioformats
+        """
     )
 
 class MultiparametricSlide(BaseSlide):
