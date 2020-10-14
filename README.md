@@ -62,7 +62,7 @@ You may also optionally measure code coverage, i.e. what percentage of code is c
 
 To run tests and check code coverage:
 ```
-c  # install coverage package for code coverage
+conda install coverage  # install coverage package for code coverage
 coverage run            # run tests and calculate code coverage
 coverage report         # view coverage report
 coverage html           # optionally generate HTML coverage report
