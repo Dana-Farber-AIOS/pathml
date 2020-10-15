@@ -1,58 +1,75 @@
 import openslide
-import pandas
+import os
 
 class Dataset:
     """
     Class representing datasets composed of slides.
+    Filesystem:
+        dataset
+            -> paths to slides (.svs)
+            -> /tiles/
+                -> paths to tiles
+            -> /labels/ #this is masks
+                -> paths to labels (.csv)
     """
     '''
-    give path
-        if the path contains slides
-            create dict {slidepath, processedpath, labelpath} 
-                in this case {slidepath, None, labelpath}
-        if the path contains filesystem
-            infer dict {slidepath, processedpath, labelpath}
-                in this case {slidepath, processedpath, labelpath}
+    TODO: 
+        requires all tiles in each slide to be written together as one file in processedpath
+            choose: 
+                keep a set of paths
+                write all tiles to h5
+            concerns:
+                dataloader design (grabbing only a few tiles might be more efficient each tile its own file)
+        when generate masks (which could be used as labels), generate labels folder following filesystem
     '''
     def __init__(
             self, 
-            path=None, 
+            path, 
             slidelabels=None
     ):
         self.path = path
         self.slides = {}
-        if slidelabels=None:
+        self.processedpath = None
+        self.tilelabelpath = None
+        if slidelabels == None:
             self.slidelabels = None
         else:
             self.slidelabels = pd.read_csv(slidelabels)
-        # add raw slide paths to slides dict 
-        for f  in os.listdir(path):
-            if isopenslideformat(f):
-                slidepath = f
+
+        # add slide paths to self.slides
+        for f in os.listdir(path):
+            slidepath = os.path.join(self.path, f)
+            if isopenslideformat(slidepath):
                 name = os.path.splitext(f)[0]
                 self.slides[name] = [slidepath, None, None] 
-        # add processed slide paths to slides dict 
-        processedpath = os.path.join(path, 'processed')
-        if os.path.isdir(processedpath):
-            self.processedpath = processedpath
-            for slide in os.listdir(processedpath):
-                name = os.path.splitext(slide)[0]
-                tilepath = slide
-                self.slides[name][1] = tilepath
-        # add patch level labels to slides dict
-        tilelabels = os.path.join(path, 'labels')
-        if os.path.isdir(tilelabels):
-            self.tilelabels = tilelabels
-            for label in os.listdir(tilelabels):
-                name = os.path.splitext(label)[0]
-                labelpath = label
-                slide.slides[name][2] = labelpath
+
+        # add tile paths to self.slides 
+        tilepath = os.path.join(self.path, 'tiles')
+        self._loadtiles(tilepath)
+
+        # add tile labels to self.slides
+        tilelabelpath = os.path.join(path, 'labels')
+        self._loadtileslabels(tilelabelpath)
+
+        def _loadtiles(self, tilepath):
+            if os.path.isdir(tilepath):
+                self.tilepath = tilepath
+                for slidetiles in os.listdir(tilepath):
+                    name = os.path.splitext(slidetiles)[0]
+                    slidetilespath = os.path.join(tilespath, slidetiles)
+                    self.slides[name][1] = tilepath
+
+        def _loadtileslabels(self, tilelabelpath):
+            if os.path.isdir(tilelabelpath):
+                self.tilelabelpath = tilelabelpath
+                for label in os.listdir(tilelabelpath):
+                    name = os.path.splitext(label)[0]
+                    labelpath = os.path.join(tilelabelpath, label)
+                    slide.slides[name][2] = labelpath
        
 def isopenslideformat(path):
     try:
         openslide.open_slide(path) 
-        return True
-    except UnidentifiedImageError:
+    except:
         return False
-    except IsADirectoryError:
-        return False
+    return True

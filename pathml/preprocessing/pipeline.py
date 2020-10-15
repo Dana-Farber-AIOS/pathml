@@ -1,6 +1,6 @@
 from pathml.preprocessing.base_preprocessor import (BaseSlideLoader, BaseSlidePreprocessor,
                                                     BaseTileExtractor, BaseTilePreprocessor)
-
+import os
 
 class Pipeline:
     """
@@ -46,30 +46,69 @@ class Pipeline:
         data = self.tile_extractor.apply(data)
         return data
 
-    def run_tile_level(self, data):
+    def run_tile_level(self, data, dataset=None):
         """Run only the tile_preprocessor component of the pipeline"""
-        data = self.tile_preprocessor.apply(data)
+        data = self.tile_preprocessor.apply(data, dataset)
         return data
 
-    def run(self, path):
+    def run(self, path=None, dataset=None):
         """
         Run full preprocessing pipeline
 
         :param path: path to input WSI
         :type path: str
+        :param dataset: input Dataset object
+        :type dataset: :class:`~pathml.datasets.dataset.Dataset`
         :return: :class:`~pathml.preprocessing.slide_data.SlideData` object resulting from running full pipeline on
             input image
+        :return: :class:`~pathml.datasets.dataset.Dataset' object containing references to processed data generated 
+            by pipeline
         """
-        '''
-        if path is to dataset:
-        apply pipeline to all slides in dataset and save to disk
-        '''
-        '''
-        if path is to slide:
-        apply pipeline to slide and save to disk
-        '''
-        data = self.load_slide(path)
-        data = self.run_slide_level(data)
-        data = self.extract_tiles(data)
-        data = self.run_tile_level(data)
-        return data
+        if path:
+            data = self.load_slide(path)
+            data = self.run_slide_level(data)
+            data = self.extract_tiles(data)
+            data = self.run_tile_level(data)
+            return data
+        
+        elif dataset:
+            slides = dataset.slides
+            if not dataset.tilepath:
+                tilepath = os.path.join(dataset.path,'tiles')
+                dataset.tilepath = tilepath
+                os.makedirs(tilepath)
+            for slide in slides:
+                name = slide
+                slidepath = slides[slide][0]
+                data = self.load_slide(slidepath)
+                data = self.run_slide_level(data)
+                data = self.extract_tiles(data)
+                data = self.run_tile_level(data,dataset)
+            return dataset
+
+        elif None:
+            print('provide path or dataset')
+                   
+'''
+# TODO:  write tiles to h5 instead of individually to disk
+def write_tiles(tiles, name, path):
+    """ 
+    write an array of tiles to h5
+
+    :param tiles: tiles object
+    :type tiles: :class:`~pathml.preprocessing.Tile`
+    :param name: slide name
+    :type name: str
+    :param path: save path
+    :type path: str
+    """
+
+    # init new hdf5 file
+    file = h5py.File(os.path.join(path,f"{name}.h5"), "w")
+
+    # write tiles to hdf5
+    dataset = file.create_dataset(
+        "tiles", np.shape(tiles), h5py.h5t.STD_U8BE, data=tiles
+    )
+    file.close()
+'''
