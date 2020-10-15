@@ -29,12 +29,13 @@ class Dataset:
     ):
         self.path = path
         self.slides = {}
-        self.processedpath = None
+        self.tilepath = None
         self.tilelabelpath = None
         if slidelabels == None:
             self.slidelabels = None
         else:
             self.slidelabels = pd.read_csv(slidelabels)
+            # TODO: process slide labels 
 
         # add slide paths to self.slides
         for f in os.listdir(path):
@@ -51,22 +52,22 @@ class Dataset:
         tilelabelpath = os.path.join(path, 'labels')
         self._loadtileslabels(tilelabelpath)
 
-        def _loadtiles(self, tilepath):
-            if os.path.isdir(tilepath):
-                self.tilepath = tilepath
-                for slidetiles in os.listdir(tilepath):
-                    name = os.path.splitext(slidetiles)[0]
-                    slidetilespath = os.path.join(tilespath, slidetiles)
-                    self.slides[name][1] = tilepath
+    def _loadtiles(self, tilepath):
+        if os.path.isdir(tilepath):
+            self.tilepath = tilepath
+            for slidetiles in os.listdir(tilepath):
+                name = os.path.splitext(slidetiles)[0]
+                slidetilespath = os.path.join(tilespath, slidetiles)
+                self.slides[name][1] = tilepath
 
-        def _loadtileslabels(self, tilelabelpath):
-            if os.path.isdir(tilelabelpath):
-                self.tilelabelpath = tilelabelpath
-                for label in os.listdir(tilelabelpath):
-                    name = os.path.splitext(label)[0]
-                    labelpath = os.path.join(tilelabelpath, label)
-                    slide.slides[name][2] = labelpath
-       
+    def _loadtileslabels(self, tilelabelpath):
+        if os.path.isdir(tilelabelpath):
+            self.tilelabelpath = tilelabelpath
+            for label in os.listdir(tilelabelpath):
+                name = os.path.splitext(label)[0]
+                labelpath = os.path.join(tilelabelpath, label)
+                slide.slides[name][2] = labelpath
+   
 def isopenslideformat(path):
     try:
         openslide.open_slide(path) 
