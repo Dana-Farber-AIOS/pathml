@@ -1,8 +1,10 @@
 import numpy as np
 from warnings import warn
+import sys
+import os
 
 from pathml.preprocessing.slide_data import SlideData
-from pathml.preprocessing.wsi import BaseSlide 
+from pathml.preprocessing.wsi import BaseSlide
 
 try:
     import bioformats
@@ -12,7 +14,8 @@ try:
     from bioformats.metadatatools import createOMEXMLMetadata
 except ImportError:
     warn(
-        """MultiparametricSlide requires a jvm to interface with java bioformats library.
+        """
+        MultiparametricSlide requires a jvm to interface with java bioformats library.
             See: https://pythonhosted.org/javabridge/installation.html. You can install using:
                 
                 sudo apt-get install openjdk-8-jdk
@@ -20,6 +23,29 @@ except ImportError:
                 pip install python-bioformats
         """
     )
+    raise ImportError("MultiparametricSlide requires javabridge and bioformats")
+
+
+def check_mac_java_home():
+    is_mac = sys.platform == 'darwin'
+    if is_mac and "JAVA_HOME" not in os.environ:
+        warn(
+            """
+        It looks like you are using a mac, and the $JAVA_HOME variable was not found in your environment.
+        This means that the javabridge may not work correctly!
+        
+        Try these steps to resolve:
+            1. Find the path to JAVA SDK 8: 
+                os.system('/usr/libexec/java_home -V')
+            2. export that path to JAVA_HOME:
+                os.environ["JAVA_HOME"] = '/Library/Java/JavaVirtualMachines/jdk1.8.0_261.jdk/Contents/Home'
+                (the path on your machine may be different)
+        """
+        )
+
+
+check_mac_java_home()
+
 
 class MultiparametricSlide(BaseSlide):
     """
@@ -41,7 +67,7 @@ class MultiparametricSlide(BaseSlide):
         self.path = path
 
         # init java virtual machine
-        javabridge.start_vm(class_path=bioformats.JARS)
+        javabridge.start_vm(class_path = bioformats.JARS)
         # java maximum array size of 2GB constrains image size
         ImageReader = bioformats.formatreader.make_image_reader_class()
         FormatTools = bioformats.formatreader.make_format_tools_class()
@@ -50,8 +76,8 @@ class MultiparametricSlide(BaseSlide):
         reader.setMetadataStore(omeMeta)
         reader.setId(self.path)
         sizex, sizey, sizez, sizec = reader.getSizeX(), reader.getSizeY(), reader.getSizeZ(), reader.getSizeC()
-        self.imsize = sizex*sizey*sizez*sizec
-    
+        self.imsize = sizex * sizey * sizez * sizec
+
     def __repr__(self):
         return f"MultiparametricSlide(path={self.path}, name={self.name})"
 
@@ -60,17 +86,17 @@ class MultiparametricSlide(BaseSlide):
         Load slide using ``python-bioformats``, and initialize a :class:`~pathml.preprocessing.slide_data.SlideData` object
         """
         if self.imsize > 2147483647:
-            raise Exception(f"Java arrays allocate maximum 32 bits (~2GB). Image size is {self.imsize}")  
+            raise Exception(f"Java arrays allocate maximum 32 bits (~2GB). Image size is {self.imsize}")
 
-        # init java virtual machine
-        javabridge.start_vm(class_path=bioformats.JARS)
+            # init java virtual machine
+        javabridge.start_vm(class_path = bioformats.JARS)
 
         # TODO: Handling for images > 2GB
 
         # load ome-tiff array
-        data = bioformats.formatreader.load_using_bioformats(self.path, rescale=False)
+        data = bioformats.formatreader.load_using_bioformats(self.path, rescale = False)
 
         # ome-tiff array to ndarray
-        image_array = np.asarray(data, dtype = np.uint8) 
+        image_array = np.asarray(data, dtype = np.uint8)
         out = SlideData(wsi = self, image = image_array)
-        return out 
+        return out
