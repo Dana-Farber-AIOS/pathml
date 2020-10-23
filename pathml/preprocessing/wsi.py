@@ -106,4 +106,4 @@ class HESlide(BaseSlide):
                 # pad if necessary (this won't affect the chunks that are already the correct size)
                 # out = pad_or_crop(region_rgb, (size, size, 3))
 
-                yield out
+                yield region_rgb
