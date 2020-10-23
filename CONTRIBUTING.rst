@@ -31,18 +31,24 @@ Report bugs or errors by filing an issue on GitHub. Make sure to include the fol
 
 Request a new feature
 ---------------------
-Request a new feature by filing an issue on GitHub.
+Request a new feature by filing an issue on GitHub. Make sure to include the following information:
+
+* Description of the feature
+* Pseudocode of how the feature might work (if applicable)
+* Any other useful information
 
 Contribute Code/Documentation
 -----------------------------
 Here's how to contribute code, documentation, etc.
 
-1. Create a new fork of the ``PathML`` repository
-2. Clone your fork to your local machine
-3. Ensure that your environment is properly configured and that all tests pass
-4. Implement your changes. Write new tests as needed to maintain code coverage.
-5. Ensure that all tests still pass
-6. Commit your changes and submit a pull request reference the corresponding issue
+1. Create an issue for what you will be working on, if one does not already exist 
+2. Create a new fork of the ``PathML`` repository
+3. Clone your fork to your local machine
+4. Ensure that your environment is properly configured and that all tests pass
+5. Implement your changes
+6. Write new tests as needed to maintain code coverage
+7. Ensure that all tests still pass
+8. Commit your changes and submit a pull request reference the corresponding issue
 
 Documentation Standards
 =======================
