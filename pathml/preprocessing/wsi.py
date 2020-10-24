@@ -4,7 +4,7 @@ import os
 import numpy as np
 
 from pathml.preprocessing.slide_data import SlideData
-from pathml.preprocessing.utils import pil_to_rgb, pad_or_crop
+from pathml.preprocessing.utils import pil_to_rgb
 
 
 class BaseSlide:  # pragma: no cover
@@ -102,8 +102,5 @@ class HESlide(BaseSlide):
                     level = level, size = (size, size)
                 )
                 region_rgb = pil_to_rgb(region)
-
-                # pad if necessary (this won't affect the chunks that are already the correct size)
-                # out = pad_or_crop(region_rgb, (size, size, 3))
 
                 yield region_rgb
