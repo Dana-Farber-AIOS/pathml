@@ -8,7 +8,7 @@ jobs:
     strategy:
       max-parallel: 5
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [3.7]
 
     steps:
     - uses: actions/checkout@v2
@@ -21,12 +21,13 @@ jobs:
         # install openslide
         sudo apt-get install openslide-tools
         # $CONDA is an environment variable pointing to the root of the miniconda directory
-        $CONDA/bin/conda env update --file environment.yml
+        $CONDA/bin/conda env create --file environment.yml
+        $CONDA/bin/conda activate pathml
         # install dependencies for bioformats
         sudo apt-get install openjdk-8-jdk
         pip install javabridge
         pip install python-bioformats
     - name: Test with pytest
       run: |
-        conda install pytest
+        $CONDA/bin/conda install pytest
         python -m pytest
