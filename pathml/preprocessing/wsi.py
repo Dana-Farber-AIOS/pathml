@@ -4,7 +4,7 @@ import os
 import numpy as np
 
 from pathml.preprocessing.slide_data import SlideData
-from pathml.preprocessing.utils import pil_to_rgb, pad_or_crop
+from pathml.preprocessing.utils import pil_to_rgb
 
 
 class BaseSlide:  # pragma: no cover
@@ -87,39 +87,20 @@ class HESlide(BaseSlide):
         if stride is None:
             stride = size
 
-        n_chunk_i = i // stride
-        n_chunk_j = j // stride
+        n_chunk_i = (i-size)// stride +1
+        n_chunk_j = (j-size)// stride +1
 
         if pad:
-            n_chunk_i += 1
-            n_chunk_j += 1
+            n_chunk_i = i // stride +1
+            n_chunk_j = j // stride +1
 
         for ix_i in range(n_chunk_i):
             for ix_j in range(n_chunk_j):
-
-                # check if on last i chunk
-                if ix_i == n_chunk_i - 1:
-                    # if last chunk, size should be remainder
-                    size_i = i - ix_i * stride
-                else:
-                    size_i = size
-
-                # check if on last j chunk
-                if ix_j == n_chunk_j - 1:
-                    # if last chunk, size should be remainder
-                    size_j = j - ix_j * stride
-                else:
-                    size_j = size
-
-                mysize = (size_j, size_i)
-
+                
                 region = self.slide.read_region(
-                    location = (ix_j * stride, ix_i * stride),
-                    level = level, size = mysize
+                    location = (int(ix_j * stride), int(ix_i * stride)),
+                    level = level, size = (size, size)
                 )
                 region_rgb = pil_to_rgb(region)
 
-                # pad if necessary (this won't affect the chunks that are already the correct size)
-                out = pad_or_crop(region_rgb, (size, size, 3))
-
-                yield out
+                yield region_rgb
