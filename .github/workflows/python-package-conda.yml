@@ -16,18 +16,30 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+    - name: setup-conda
+      # You may pin to the exact commit or the version.
+      # uses: s-weigand/setup-conda@bf65a211e008297225b737b153801ac1231e9758
+      uses: s-weigand/setup-conda@v1.0.5
+      with:
+        # Whether to activate the conda base env (Default: 'true')
+        activate-conda: true
+        # If conda should be updated before running other commands (Default: 'false')
+        update-conda: true
+        # Python version which should be installed with conda (default: 'Default')
+        python-version: ${{ matrix.python-version }}
+        # Additional channels like 'conda-forge' which can be used to install packages
+        conda-channels: anaconda
     - name: Install dependencies
       run: |
         # install openslide
         sudo apt-get install openslide-tools
-        # $CONDA is an environment variable pointing to the root of the miniconda directory
-        $CONDA/bin/conda env create --file environment.yml
-        $CONDA/bin/conda activate pathml
+        conda env create --file environment.yml
+        conda activate pathml
         # install dependencies for bioformats
         sudo apt-get install openjdk-8-jdk
         pip install javabridge
         pip install python-bioformats
     - name: Test with pytest
       run: |
-        $CONDA/bin/conda install pytest
+        conda install pytest
         python -m pytest
