@@ -1,0 +1,32 @@
+name: Python Package using Conda
+
+on: [push]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 5
+      matrix:
+        python-version: [3.5, 3.6, 3.7, 3.8]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        # install openslide
+        sudo apt-get install openslide-tools
+        # $CONDA is an environment variable pointing to the root of the miniconda directory
+        $CONDA/bin/conda env update --file environment.yml
+        # install dependencies for bioformats
+        sudo apt-get install openjdk-8-jdk
+        pip install javabridge
+        pip install python-bioformats
+    - name: Test with pytest
+      run: |
+        conda install pytest
+        python -m pytest
