@@ -25,12 +25,12 @@ def test_HE_slide(openslide_example):
     assert np.array_equal(slide_data2.image, openslide_example[200:400, 200:400, :])
 
 
-@pytest.mark.parametrize("stride,size,n_expected", [(500, 500, 4*5), (100, 500, 22*29), (None, 500, 4*5), (500, 2000, 2)])
+@pytest.mark.parametrize("stride,size,n_expected", [(500, 500, 4*5), (100, 500, 18*25), (None, 500, 4*5), (500, 2000, 2)])
 def test_HE_chunks(stride, size, n_expected):
     wsi = HESlide(path = "tests/testdata/CMU-1-Small-Region.svs")
     chunk_counter = 0
     for chunk in wsi.chunks(level = 0, size = size, stride = stride, pad = False):
-        assert chunk.shape == (500, 500, 3)
+        assert chunk.shape == (size, size, 3)
         chunk_counter += 1
     assert chunk_counter == n_expected
 
