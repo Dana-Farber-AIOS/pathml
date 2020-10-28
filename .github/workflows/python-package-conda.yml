@@ -34,6 +34,7 @@ jobs:
         # install openslide
         sudo apt-get install openslide-tools
         conda env create --file environment.yml
+        conda init bash
         conda activate pathml
         # install dependencies for bioformats
         sudo apt-get install openjdk-8-jdk
