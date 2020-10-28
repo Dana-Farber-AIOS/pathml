@@ -22,13 +22,11 @@ jobs:
       uses: s-weigand/setup-conda@v1.0.5
       with:
         # Whether to activate the conda base env (Default: 'true')
-        activate-conda: true
+        activate-conda: false
         # If conda should be updated before running other commands (Default: 'false')
         update-conda: true
         # Python version which should be installed with conda (default: 'Default')
         python-version: ${{ matrix.python-version }}
-        # Additional channels like 'conda-forge' which can be used to install packages
-        conda-channels: anaconda
     - name: Install dependencies
       run: |
         # install openslide
