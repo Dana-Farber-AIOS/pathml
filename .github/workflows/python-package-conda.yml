@@ -41,6 +41,8 @@ jobs:
         pip install python-bioformats
     - name: Test with pytest
       run: |
+        # see: https://github.com/conda/conda/issues/7980#issuecomment-441358406
+        source $CONDA/etc/profile.d/conda.sh
         conda activate pathml
         conda install pytest
         python -m pytest
