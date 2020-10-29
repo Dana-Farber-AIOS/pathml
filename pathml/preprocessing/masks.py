@@ -2,7 +2,7 @@ import numpy as np
 from collections import OrderedDict
 
 
-class Masks()
+class Masks():
     '''
     Class wrapping OrderedDict of masks.
     Masks are type np.ndarray with elements type int8.
@@ -20,7 +20,7 @@ class Masks()
     def __getitem__(self, idx):
         if idx > len(self._masks)-1:
             raise KeyError(f"index out of range [0,{len(self._masks)-1}]") 
-        return self._masks.values()[idx]
+        return list(self._masks.values())[idx]
 
     # @masks.setter instead?
     def add(self, key, mask):
