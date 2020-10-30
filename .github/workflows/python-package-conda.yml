@@ -29,6 +29,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
+        sudo apt-get update
         # install openslide
         sudo apt-get install openslide-tools
         conda env create --file environment.yml
