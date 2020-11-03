@@ -24,11 +24,8 @@ jobs:
       # uses: conda-incubator/setup-miniconda@f4c00b0ec69bdc87b1ab4972613558dd9f4f36f3
       uses: conda-incubator/setup-miniconda@v1.7.0
       with:
-        # Environment.yml to create an environment. See https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-from-an-environment-yml-file for more information.
         environment-file: environment.yml
-        # Environment to activate by default on all shells. Default is "test". If an empty string is used, no environment is activated by default (For "base" activation see the "auto-activate-base" option). If the environment does not exist, it will be created and activated. If "environment-file" is used and you want that to be the environment used, you need to explicitely provide the name of that environmet on "activate-environment". If using sh/bash/cmd.exe shells please read the IMPORTANT! section on the README.md! to properly activate conda environments on these shells.
         activate-environment: pathml
-        # Exact version of a Python version to use on "activate-environment". If provided, this will be installed before the "environment-file". See https://anaconda.org/anaconda/python for available "python" versions.
         python-version: ${{ matrix.python-version }}
     - name: Conda info
       shell: bash -l {0}
