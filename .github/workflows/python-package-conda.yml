@@ -48,7 +48,7 @@ jobs:
         sudo apt-get update
         # install openslide
         sudo apt-get install openslide-tools
-        conda env create --file environment.yml
+        # conda env create --file environment.yml
         # see: https://github.com/conda/conda/issues/7980#issuecomment-441358406
         # source $CONDA/etc/profile.d/conda.sh
         # conda activate pathml
