@@ -112,7 +112,7 @@ class PanNukeDataModule:
         else:
             # check that files exist
             for f in [1, 2, 3]:
-                p = os.path.join(data_dir, f"Fold\ {f}")
+                p = os.path.join(data_dir, f"Fold {f}")
                 assert os.path.isdir(p), \
                     f"Error: `download is False` but PanNuke data for Fold {f} not found at {p}"
         self.shuffle = shuffle
