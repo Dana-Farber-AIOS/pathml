@@ -16,26 +16,42 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: setup-conda
-      # You may pin to the exact commit or the version.
-      # uses: s-weigand/setup-conda@bf65a211e008297225b737b153801ac1231e9758
-      uses: s-weigand/setup-conda@v1.0.5
-      with:
-        # Whether to activate the conda base env (Default: 'true')
-        activate-conda: false
-        # If conda should be updated before running other commands (Default: 'false')
-        update-conda: true
+    # Test matrix by printing the current Python version
+    - name: Display Python version
+      run: python -c "import sys; print(sys.version)"
+    #- name: setup-conda
+      ## You may pin to the exact commit or the version.
+      ## uses: s-weigand/setup-conda@bf65a211e008297225b737b153801ac1231e9758
+      #uses: s-weigand/setup-conda@v1.0.5
+      #with:
+        ## Whether to activate the conda base env (Default: 'true')
+        #activate-conda: false
         # Python version which should be installed with conda (default: 'Default')
+        #python-version: ${{ matrix.python-version }}
+    - name: Setup Miniconda
+      # You may pin to the exact commit or the version.
+      # uses: conda-incubator/setup-miniconda@f4c00b0ec69bdc87b1ab4972613558dd9f4f36f3
+      uses: conda-incubator/setup-miniconda@v1.7.0
+      with:
+        # Environment.yml to create an environment. See https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-from-an-environment-yml-file for more information.
+        environment-file: environment.yml
+        # Environment to activate by default on all shells. Default is "test". If an empty string is used, no environment is activated by default (For "base" activation see the "auto-activate-base" option). If the environment does not exist, it will be created and activated. If "environment-file" is used and you want that to be the environment used, you need to explicitely provide the name of that environmet on "activate-environment". If using sh/bash/cmd.exe shells please read the IMPORTANT! section on the README.md! to properly activate conda environments on these shells.
+        activate-environment: pathml
+        # Exact version of a Python version to use on "activate-environment". If provided, this will be installed before the "environment-file". See https://anaconda.org/anaconda/python for available "python" versions.
         python-version: ${{ matrix.python-version }}
+    - name: Conda info
+      shell: bash -l {0}
+      run: conda info
     - name: Install dependencies
+      shell: bash -l {0}
       run: |
         sudo apt-get update
         # install openslide
         sudo apt-get install openslide-tools
         conda env create --file environment.yml
         # see: https://github.com/conda/conda/issues/7980#issuecomment-441358406
-        source $CONDA/etc/profile.d/conda.sh
-        conda activate pathml
+        # source $CONDA/etc/profile.d/conda.sh
+        # conda activate pathml
         # install dependencies for bioformats
         sudo apt-get install openjdk-8-jdk
         pip install javabridge
@@ -43,7 +59,7 @@ jobs:
     - name: Test with pytest
       run: |
         # see: https://github.com/conda/conda/issues/7980#issuecomment-441358406
-        source $CONDA/etc/profile.d/conda.sh
-        conda activate pathml
-        conda install pytest
+        # source $CONDA/etc/profile.d/conda.sh
+        # conda activate pathml
+        conda install pytest requests
         python -m pytest
