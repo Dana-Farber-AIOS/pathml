@@ -19,15 +19,6 @@ jobs:
     # Test matrix by printing the current Python version
     - name: Display Python version
       run: python -c "import sys; print(sys.version)"
-    #- name: setup-conda
-      ## You may pin to the exact commit or the version.
-      ## uses: s-weigand/setup-conda@bf65a211e008297225b737b153801ac1231e9758
-      #uses: s-weigand/setup-conda@v1.0.5
-      #with:
-        ## Whether to activate the conda base env (Default: 'true')
-        #activate-conda: false
-        # Python version which should be installed with conda (default: 'Default')
-        #python-version: ${{ matrix.python-version }}
     - name: Setup Miniconda
       # You may pin to the exact commit or the version.
       # uses: conda-incubator/setup-miniconda@f4c00b0ec69bdc87b1ab4972613558dd9f4f36f3
@@ -48,18 +39,12 @@ jobs:
         sudo apt-get update
         # install openslide
         sudo apt-get install openslide-tools
-        # conda env create --file environment.yml
-        # see: https://github.com/conda/conda/issues/7980#issuecomment-441358406
-        # source $CONDA/etc/profile.d/conda.sh
-        # conda activate pathml
         # install dependencies for bioformats
         sudo apt-get install openjdk-8-jdk
         pip install javabridge
         pip install python-bioformats
     - name: Test with pytest
+      shell: bash -l {0}
       run: |
-        # see: https://github.com/conda/conda/issues/7980#issuecomment-441358406
-        # source $CONDA/etc/profile.d/conda.sh
-        # conda activate pathml
         conda install pytest requests
         python -m pytest
