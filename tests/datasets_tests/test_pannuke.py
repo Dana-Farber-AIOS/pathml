@@ -1,5 +1,5 @@
 import pytest
-import requests
+import urllib
 
 from pathml.datasets.pannuke import PanNukeDataModule
 
@@ -37,9 +37,9 @@ def check_pannuke_data_urls():
     # make sure that the urls for the pannuke data are still valid!
     for fold_ix in [1, 2, 3]:
         url = f"https://warwick.ac.uk/fac/sci/dcs/research/tia/data/pannuke/fold_{fold_ix}.zip"
-        r = requests.head(url)
+        r = urllib.request.urlopen(url)
         # HTTP status code 200 means "OK"
-        assert r.status_code == 200
+        assert r.getcode() == 200
 
 
 def test_zero_division():
