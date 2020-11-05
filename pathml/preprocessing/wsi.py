@@ -4,6 +4,8 @@ import os
 import numpy as np
 
 from pathml.preprocessing.slide_data import SlideData
+from pathml.preprocessing.utils import pil_to_rgb
+
 
 class BaseSlide:  # pragma: no cover
     """
@@ -21,6 +23,11 @@ class BaseSlide:  # pragma: no cover
     def load_data(self, **kwargs):
         """Initialize a :class:`~pathml.preprocessing.slide_data.SlideData` object"""
         raise NotImplementedError
+
+    def chunks(self, **kwargs):
+        """Iterator over chunks. Implement for each different backend"""
+        raise NotImplementedError
+
 
 class HESlide(BaseSlide):
     """
@@ -59,3 +66,41 @@ class HESlide(BaseSlide):
         out = SlideData(wsi = self, image = image_array)
         return out
 
+    def chunks(self, level, size, stride=None, pad=False):
+        """Generator over chunks. Useful for processing the image in pieces, avoiding having to load the entire image
+        at full-resolution.
+
+        Args:
+            level (int): Level from which to extract chunks.
+            size (int): Chunk size.
+            stride (int): Stride between chunks. If ``None``, uses ``stride = size`` for non-overlapping chunks.
+                Defaults to ``None``.
+            pad (bool): How to handle chunks on the edges. If ``True``, these edge chunks will be zero-padded
+                symmetrically and yielded with the other chunks. If ``False``, incomplete edge chunks will be ignored.
+                Defaults to ``False``.
+
+        Yields:
+            np.ndarray: Extracted RGB chunk of dimension (size, size, 3)
+        """
+        j, i = self.slide.level_dimensions[level]
+
+        if stride is None:
+            stride = size
+
+        n_chunk_i = (i-size)// stride +1
+        n_chunk_j = (j-size)// stride +1
+
+        if pad:
+            n_chunk_i = i // stride +1
+            n_chunk_j = j // stride +1
+
+        for ix_i in range(n_chunk_i):
+            for ix_j in range(n_chunk_j):
+                
+                region = self.slide.read_region(
+                    location = (int(ix_j * stride), int(ix_i * stride)),
+                    level = level, size = (size, size)
+                )
+                region_rgb = pil_to_rgb(region)
+
+                yield region_rgb

@@ -1,6 +1,17 @@
-# PathML 
+<img src=docs/source/_static/logo.png width="500"> 
 
-Utilities for working with pathology images, facilitating machine learning for digital pathology.
+A toolkit for computational pathology and machine learning.
+
+* [Installing](#installing)
+   * [Requirements](#requirements)
+   * [Installation](#installation)
+   * [Generate Documentation](#generate-documentation)
+   * [Tests and Code Coverage](#tests-and-code-coverage)
+* [Getting Started](#getting-started)
+* [Contributing](#contributing)
+* [Contact](#contact)
+
+# Installing
 
 ## Requirements
 
@@ -10,7 +21,6 @@ Utilities for working with pathology images, facilitating machine learning for d
 
 * For managing environments, we recommend using Conda. 
     Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
-
 
 ## Installation
 
@@ -36,15 +46,6 @@ make html       # build docs in html format
 
 Then use your favorite web browser to open ``pathml/docs/build/html/index.html``
 
-## Getting Started
-
-The [example notebooks](examples) are a good place start with `PathML`.
-
-1. [Building a basic preprocessing pipeline for H&E images](examples/basic_HE.ipynb)
-1. [Building a more efficient custom preprocessing pipeline](examples/advanced_HE_chunks.ipynb)
-1. [Stain normalization for H&E images](examples/stain_normalization.ipynb)
-1. [Nucleus detection for H&E images](examples/nucleus_detection.ipynb)
-
 ## Tests and Code Coverage 
 
 You may optionally run the test suite to verify installation. 
@@ -68,7 +69,16 @@ coverage report         # view coverage report
 coverage html           # optionally generate HTML coverage report
 ```
 
-## Contributing
+# Getting Started
+
+The [example notebooks](examples) are a good place start with `PathML`.
+
+1. [Building a basic preprocessing pipeline for H&E images](examples/basic_HE.ipynb)
+1. [Building a more efficient custom preprocessing pipeline](examples/advanced_HE_chunks.ipynb)
+1. [Stain normalization for H&E images](examples/stain_normalization.ipynb)
+1. [Nucleus detection for H&E images](examples/nucleus_detection.ipynb)
+
+# Contributing
 
 ``PathML`` is an open source project. Consider contributing to benefit the entire community!
 
@@ -83,7 +93,9 @@ There are many ways to contribute to PathML, including:
 * Sharing trained model parameters
 * Sharing ``PathML`` with colleagues, students, etc.
 
-## Contact
+See [contributing](CONTRIBUTING.rst) for more details.
+
+# Contact
 
 Questions? Comments? Suggestions? Get in touch!
 

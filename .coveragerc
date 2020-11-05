@@ -4,7 +4,6 @@
 source = pathml
 omit =
     pathml/ml/*
-    pathml/datasets/*
     pathml/preprocessing/base_*
 command_line = -m pytest
 

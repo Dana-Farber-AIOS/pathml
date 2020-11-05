@@ -1,6 +1,6 @@
 import pytest
 
-from pathml.datasets.datasets_utils import parse_file_size, download_from_url
+from pathml.datasets.utils import parse_file_size, download_from_url
 
 
 @pytest.mark.parametrize("test_input,expected", [
@@ -13,6 +13,6 @@ def test_parse_file_sizes(test_input, expected):
 def test_download_from_url(tmp_path):
     url = 'http://openslide.cs.cmu.edu/download/openslide-testdata/Aperio/index.yaml'
     d = tmp_path / "test"
-    download_from_url(url = url, dest = d)
-    file1 = open(d, 'r')
+    download_from_url(url = url, download_dir = d, name = "testfile")
+    file1 = open(d / "testfile", 'r')
     assert file1.readline() == "format: Aperio SVS\n"

@@ -2,6 +2,7 @@ name: pathml
 
 channels:
   - conda-forge
+  - pytorch
 
 dependencies:
   - python>=3.7
@@ -9,6 +10,7 @@ dependencies:
   - matplotlib>=3.1.3
   - python-spams>=2.6.1
   - pip>=20.0.2
+  - pytorch>=1.7.0
   - pip:
       - opencv-contrib-python>=4.1.1
       - openslide-python>=1.1.1
