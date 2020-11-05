@@ -2,6 +2,7 @@ import zipfile
 import os
 import numpy as np
 import torch.utils.data as data
+from warnings import warn
 
 from pathml.datasets.utils import download_from_url
 
@@ -15,7 +16,7 @@ class PanNukeDataset(data.Dataset):
 
     masks are arrays of 6 channel instance-wise masks (0:
     Neoplastic cells, 1: Inflammatory, 2: Connective/Soft tissue cells, 3: Dead Cells, 4: Epithelial, 5: Background)
-    If ``classification is False`` then only a single channel mask will be returned, which is the inverse of the
+    If ``nucleus_type_labels is False`` then only a single channel mask will be returned, which is the inverse of the
     'Background' mask (i.e. nucleus pixels are 1.). Otherwise, the full 6-channel masks will be returned.
 
     If using transforms for data augmentation, the transform must accept two arguments (image and mask) and return a
@@ -32,9 +33,9 @@ class PanNukeDataset(data.Dataset):
         typepath = os.path.join(data_dir, f"Fold {self.fold_ix}/images/fold{fold_ix}/types.npy")
         maskpath = os.path.join(data_dir, f"Fold {self.fold_ix}/masks/fold{fold_ix}/masks.npy")
 
-        self.images = np.load(impath, mmap_mode = 'r+')
+        self.images = np.load(impath, mmap_mode = 'r+').astype(np.uint8)
         self.types = np.load(typepath, mmap_mode = 'r+')
-        self.masks = np.load(maskpath, mmap_mode = 'r+')
+        self.masks = np.load(maskpath, mmap_mode = 'r+').astype(np.uint8)
 
     def __len__(self):
         return self.images.shape[0]
@@ -46,7 +47,7 @@ class PanNukeDataset(data.Dataset):
             # only look at "background" mask
             mask = self.masks[ix, ..., 5]
             # invert so that ones are nuclei pixels
-            mask = 1. - mask
+            mask = 1 - mask
         else:
             mask = self.masks[ix, ...]
 
@@ -72,7 +73,7 @@ class PanNukeDataModule:
         transforms (optional): Data augmentation transforms to apply to images. Transform must accept two arguments:
             (mask and image) and return a dict with "image" and "mask" keys. See an example here:
             https://albumentations.ai/docs/getting_started/mask_augmentation/
-        classification (bool, optional): Whether target task is nucleus detection, or detection + classification.
+        nucleus_type_labels (bool, optional): Whether to provide nucleus type labels, or binary nucleus labels.
             If ``True``, then masks will be returned with six channels, corresponding to
 
                 0. Neoplastic cells
@@ -84,8 +85,8 @@ class PanNukeDataModule:
 
             If ``False``, then the returned mask will have a single channel, with zeros for background pixels and ones
             for nucleus pixels (i.e. the inverse of the Background mask). Defaults to ``False``.
-        split (int, optional): How to divide the three folds into train, test, and validation splits. Must be [1, 2, 3]
-            corresponding to the following splits:
+        split (int, optional): How to divide the three folds into train, test, and validation splits. Must be one of
+            {1, 2, 3} corresponding to the following splits:
 
                 1. Training: Fold 1; Validation: Fold 2; Testing: Fold 3
                 2. Training: Fold 2; Validation: Fold 1; Testing: Fold 3
@@ -104,7 +105,7 @@ class PanNukeDataModule:
     """
 
     def __init__(self, data_dir, download=False, shuffle=True, transforms=None,
-                 classification=False, split=1, batch_size=16):
+                 nucleus_type_labels=False, split=1, batch_size=16):
         self.data_dir = data_dir
         self.download = download
         if download:
@@ -117,7 +118,7 @@ class PanNukeDataModule:
                     f"Error: `download is False` but PanNuke data for Fold {f} not found at {p}"
         self.shuffle = shuffle
         self.transforms = transforms
-        self.classification = classification
+        self.classification = nucleus_type_labels
         assert split in [1, 2, 3], f"Error: input split {split} not valid. Must be one of [1, 2, 3]."
         self.split = split
         self.batch_size = batch_size
@@ -146,6 +147,8 @@ class PanNukeDataModule:
                     zip_ref.extractall(download_dir)
                 # delete zip files
                 os.remove(path = path)
+            else:
+                warn(f"Skipping download of fold {fold_ix}, using local data found at {p}")
 
     @property
     def train_dataloader(self):

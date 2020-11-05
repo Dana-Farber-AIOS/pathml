@@ -9,13 +9,13 @@ Commenting this out because I don't think it makes sense to download the entire 
 But do need to test the PanNukeDataModule class.... need to think of a smarter way to test it though
 
 @pytest.mark.parametrize("batch_size", [8, 16])
-@pytest.mark.parametrize("classification", [True, False])
-def test_batches(batch_size, classification):
+@pytest.mark.parametrize("nucleus_type_labels", [True, False])
+def test_batches(batch_size, nucleus_type_labels):
     pannuke = PanNukeDataModule(
         data_dir = "data/pannuke",
         download = True,
         batch_size = batch_size,
-        classification = classification
+        nucleus_type_labels = nucleus_type_labels
     )
 
     train_dataloader = pannuke.train_dataloader
@@ -25,7 +25,7 @@ def test_batches(batch_size, classification):
     for dl in [train_dataloader, valid_dataloader, test_dataloader]:
         ims, masks, tissues = next(iter(dl))
         assert ims.shape == (batch_size, 256, 256, 3)
-        if classification:
+        if nucleus_type_labels:
             assert masks.shape == (batch_size, 256, 256, 6)
         else:
             assert masks.shape == (batch_size, 256, 256)
@@ -42,6 +42,6 @@ def check_pannuke_data_urls():
         assert r.getcode() == 200
 
 
-def test_zero_division():
+def check_wrong_path_download_false():
     with pytest.raises(AssertionError):
         pannuke = PanNukeDataModule(data_dir = "wrong/path/to/pannuke", download = False)
