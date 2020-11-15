@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from pathml.preprocessing.base_transforms import ImageTransform, SegmentationTransform, MaskTransform
+from pathml.preprocessing.base import ImageTransform, SegmentationTransform, MaskTransform
 from pathml.preprocessing.utils import RGB_to_GREY
 
 
@@ -260,14 +260,14 @@ class SuperpixelInterpolationSLIC(ImageTransform):
     SLIC superpixel algorithm described in Achanta et al. 2012.
 
     :param blur: Blur transform to apply. If ``None``, uses ``GaussianBlur()``. Defaults to ``None``.
-    :type blur: :class:`~pathml.preprocessing.base_transforms.ImageTransform`
+    :type blur: :class:`~pathml.preprocessing.base.ImageTransform`
     :param superpixel_size: region_size parameter used for superpixel creation
     :type superpixel_size: int
     :param num_iter: Number of iterations to run SLIC algorithm
     :type num_iter: int
     :param threshold: Binary threshold transform. If ``None``, uses ``BinaryThreshold(use_otsu = True)``.
         Defaults to ``None``.
-    :type threshold: :class:`~pathml.preprocessing.base_transforms.SegmentationTransform`
+    :type threshold: :class:`~pathml.preprocessing.base.SegmentationTransform`
 
     References:
         Achanta, R., Shaji, A., Smith, K., Lucchi, A., Fua, P. and Süsstrunk, S., 2012. SLIC superpixels compared to

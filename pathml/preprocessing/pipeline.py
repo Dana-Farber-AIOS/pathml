@@ -1,5 +1,4 @@
-from pathml.preprocessing.base_preprocessor import (BaseSlideLoader, BaseSlidePreprocessor,
-                                                    BaseTileExtractor, BaseTilePreprocessor)
+from pathml.preprocessing.base import BaseSlideLoader, BaseSlidePreprocessor, BaseTileExtractor, BaseTilePreprocessor
 
 
 class Pipeline:
@@ -7,13 +6,13 @@ class Pipeline:
     Object for running preprocessing pipelines.
 
     :param slide_loader: preprocessor which loads slide from disk
-    :type slide_loader: :class:`~pathml.preprocessing.base_preprocessor.BaseSlideLoader`
+    :type slide_loader: :class:`~pathml.preprocessing.base.BaseSlideLoader`
     :param slide_preprocessor: preprocessor to apply on slide level
-    :type slide_preprocessor: :class:`~pathml.preprocessing.base_preprocessor.BaseSlidePreprocessor`
+    :type slide_preprocessor: :class:`~pathml.preprocessing.base.BaseSlidePreprocessor`
     :param tile_extractor: preprocessor to extract tiles
-    :type tile_extractor: :class:`~pathml.preprocessing.base_preprocessor.BaseTileExtractor`
+    :type tile_extractor: :class:`~pathml.preprocessing.base.BaseTileExtractor`
     :param tile_preprocessor: preprocessor to run on each tile
-    :type tile_preprocessor: :class:`~pathml.preprocessing.base_preprocessor.BaseTilePreprocessor`
+    :type tile_preprocessor: :class:`~pathml.preprocessing.base.BaseTilePreprocessor`
     """
 
     def __init__(self, slide_loader, slide_preprocessor, tile_extractor, tile_preprocessor):

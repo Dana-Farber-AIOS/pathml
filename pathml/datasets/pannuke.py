@@ -4,10 +4,11 @@ import numpy as np
 import torch.utils.data as data
 from warnings import warn
 
+from pathml.datasets.base import BaseSlideDataset, BaseDataModule
 from pathml.datasets.utils import download_from_url
 
 
-class PanNukeDataset(data.Dataset):
+class PanNukeDataset(BaseSlideDataset):
     """
     Dataset object for PanNuke dataset
 
@@ -59,7 +60,7 @@ class PanNukeDataset(data.Dataset):
         return im, mask, tissue_type
 
 
-class PanNukeDataModule:
+class PanNukeDataModule(BaseDataModule):
     """
     DataModule for the PanNuke Dataset. Contains 256px image patches from 19 tissue types with annotations for 5
     nucleus types. For more information, see: https://warwick.ac.uk/fac/sci/dcs/research/tia/data/pannuke

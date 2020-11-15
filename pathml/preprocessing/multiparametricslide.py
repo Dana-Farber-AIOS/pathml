@@ -4,8 +4,7 @@ import sys
 import os
 
 from pathml.preprocessing.slide_data import SlideData
-from pathml.preprocessing.wsi import BaseSlide 
-
+from pathml.preprocessing.base import BaseSlide
 
 try:
     import bioformats
