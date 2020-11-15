@@ -2,12 +2,12 @@ import openslide
 import cv2
 import numpy as np
 
-from pathml.preprocessing.base import BaseSlide
+from pathml.preprocessing.base import RGBSlide
 from pathml.preprocessing.slide_data import SlideData
 from pathml.preprocessing.utils import pil_to_rgb
 
 
-class HESlide(BaseSlide):
+class HESlide(RGBSlide):
     """
     Class for H&E stained slides, based on ``OpenSlide``
     """

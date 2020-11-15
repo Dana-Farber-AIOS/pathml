@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 import cv2
 
+from pathml.preprocessing.base import BaseSlide, Slide2d, RGBSlide
 from pathml.preprocessing.wsi import HESlide
 
 
@@ -23,6 +24,11 @@ def test_HE_slide(openslide_example):
     assert np.array_equal(slide_data.image, openslide_example)
     slide_data2 = wsi.load_data(level = 0, location = (200, 200), size = (200, 200))
     assert np.array_equal(slide_data2.image, openslide_example[200:400, 200:400, :])
+
+    # check that the hierarchy of the slide class structure is working properly
+    assert isinstance(wsi, BaseSlide)
+    assert isinstance(wsi, Slide2d)
+    assert isinstance(wsi, RGBSlide)
 
 
 @pytest.mark.parametrize("stride,size,n_expected", [(500, 500, 4*5), (100, 500, 18*25), (None, 500, 4*5), (500, 2000, 2)])

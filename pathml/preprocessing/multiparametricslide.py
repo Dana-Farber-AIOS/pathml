@@ -4,7 +4,7 @@ import sys
 import os
 
 from pathml.preprocessing.slide_data import SlideData
-from pathml.preprocessing.base import BaseSlide
+from pathml.preprocessing.base import Slide2d
 
 try:
     import bioformats
@@ -44,7 +44,7 @@ def check_mac_java_home():
 check_mac_java_home()
 
 
-class MultiparametricSlide(BaseSlide):
+class MultiparametricSlide(Slide2d):
     """
     Represents multiparametric IF/IHC images. Backend based on ``bioformats``.
 

@@ -2,6 +2,7 @@ from warnings import warn
 import numpy as np
 import pytest
 
+from pathml.preprocessing.base import Slide2d, BaseSlide
 from pathml.preprocessing.multiparametricslide import MultiparametricSlide
 
 try:
@@ -43,3 +44,7 @@ def test_multiparametric_slide():
     im_np = np.asarray(data, dtype = np.uint8)
 
     assert np.allclose(slide_data.image, im_np)
+
+    # make sure slide class hierarchy is working
+    assert isinstance(wsi, BaseSlide)
+    assert isinstance(wsi, Slide2d)
