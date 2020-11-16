@@ -1,6 +1,5 @@
 from warnings import warn
 import numpy as np
-import pytest
 
 from pathml.preprocessing.base import Slide2d, BaseSlide
 from pathml.preprocessing.multiparametricslide import MultiparametricSlide
