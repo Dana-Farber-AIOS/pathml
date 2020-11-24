@@ -5,6 +5,7 @@ import numpy as np
 
 from pathml.preprocessing.slide_data import SlideData
 from pathml.preprocessing.utils import pil_to_rgb
+from pathml.preprocessing.masks import Masks
 
 
 class BaseSlide:  # pragma: no cover
@@ -19,6 +20,7 @@ class BaseSlide:  # pragma: no cover
             basename = os.path.basename(path)
             name = os.path.splitext(basename)[0]
             self.name = name
+        self.masks = Masks()
 
     def load_data(self, **kwargs):
         """Initialize a :class:`~pathml.preprocessing.slide_data.SlideData` object"""
