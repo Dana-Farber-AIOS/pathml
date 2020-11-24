@@ -14,7 +14,7 @@ try:
     from bioformats.metadatatools import createOMEXMLMetadata
 except ImportError:
     warn(
-        """MultiparametricSlide requires a jvm to interface with java bioformats library.
+        """MultiparametricSlide2d requires a jvm to interface with java bioformats library.
             See: https://pythonhosted.org/javabridge/installation.html. You can install using:
                 
                 sudo apt-get install openjdk-8-jdk
@@ -22,7 +22,7 @@ except ImportError:
                 pip install python-bioformats
         """
     )
-    raise ImportError("MultiparametricSlide requires javabridge and bioformats")
+    raise ImportError("MultiparametricSlide2d requires javabridge and bioformats")
 
 
 def check_mac_java_home():
@@ -44,7 +44,7 @@ def check_mac_java_home():
 check_mac_java_home()
 
 
-class MultiparametricSlide(Slide2d):
+class MultiparametricSlide2d(Slide2d):
     """
     Represents multiparametric IF/IHC images. Backend based on ``bioformats``.
 
@@ -76,7 +76,7 @@ class MultiparametricSlide(Slide2d):
         self.imsize = sizex*sizey*sizez*sizec
     
     def __repr__(self):
-        return f"MultiparametricSlide(path={self.path}, name={self.name})"
+        return f"MultiparametricSlide2d(path={self.path}, name={self.name})"
 
     def load_data(self):
         """
