@@ -1,35 +1,13 @@
 import openslide
 import cv2
-import os
 import numpy as np
 
+from pathml.preprocessing.base import RGBSlide
 from pathml.preprocessing.slide_data import SlideData
 from pathml.preprocessing.utils import pil_to_rgb
 
 
-class BaseSlide:  # pragma: no cover
-    """
-    Base class for slides.
-    """
-    def __init__(self, path, name=None):
-        self.path = path
-        if name:
-            self.name = name
-        else:
-            basename = os.path.basename(path)
-            name = os.path.splitext(basename)[0]
-            self.name = name
-
-    def load_data(self, **kwargs):
-        """Initialize a :class:`~pathml.preprocessing.slide_data.SlideData` object"""
-        raise NotImplementedError
-
-    def chunks(self, **kwargs):
-        """Iterator over chunks. Implement for each different backend"""
-        raise NotImplementedError
-
-
-class HESlide(BaseSlide):
+class HESlide(RGBSlide):
     """
     Class for H&E stained slides, based on ``OpenSlide``
     """

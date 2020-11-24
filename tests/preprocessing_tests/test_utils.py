@@ -11,9 +11,6 @@ from pathml.preprocessing.utils import (
     RGB_to_HSV, RGB_to_OD, RGB_to_HSI, RGB_to_GREY, RGB_to_LAB,
     normalize_matrix_cols, normalize_matrix_rows, label_artifact_tile_HE, label_whitespace_HE
 )
-
-
-# Fixtures
 from pathml.preprocessing.wsi import HESlide
 
 
@@ -72,7 +69,6 @@ def test_segmentation_lines(simple_mask):
             (4, 1), (4, 5),
             (5, 1), (5, 2), (5, 3), (5, 4), (5, 5)
         ]
-
 
 
 @check_figures_equal(extensions = [".png"])

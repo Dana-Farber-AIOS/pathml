@@ -1,15 +1,15 @@
 from warnings import warn
 import numpy as np
-import pytest
 
-from pathml.preprocessing.multiparametricslide import MultiparametricSlide
+from pathml.preprocessing.base import Slide2d, BaseSlide
+from pathml.preprocessing.multiparametricslide import MultiparametricSlide2d
 
 try:
     import javabridge
     import bioformats
 except ImportError:
     warn(
-            """MultiparametricSlide requires a jvm to interface with java bioformats library.
+            """MultiparametricSlide2d requires a jvm to interface with java bioformats library.
             See: https://pythonhosted.org/javabridge/installation.html. You can install using:
                 
                 sudo apt-get install openjdk-8-jdk
@@ -30,7 +30,7 @@ def smalltif_example():
 
 
 def test_multiparametric_slide():
-    wsi = MultiparametricSlide(path = "tests/testdata/smalltif.tif")
+    wsi = MultiparametricSlide2d(path = "tests/testdata/smalltif.tif")
     assert wsi.name == "smalltif"
     assert wsi.path == "tests/testdata/smalltif.tif"
     slide_data = wsi.load_data()
@@ -43,3 +43,7 @@ def test_multiparametric_slide():
     im_np = np.asarray(data, dtype = np.uint8)
 
     assert np.allclose(slide_data.image, im_np)
+
+    # make sure slide class hierarchy is working
+    assert isinstance(wsi, BaseSlide)
+    assert isinstance(wsi, Slide2d)

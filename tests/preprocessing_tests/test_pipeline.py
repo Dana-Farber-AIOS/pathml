@@ -1,6 +1,5 @@
 from pathml.preprocessing.pipeline import Pipeline
-from pathml.preprocessing.base_preprocessor import (BaseSlideLoader, BaseSlidePreprocessor,
-                                                    BaseTileExtractor, BaseTilePreprocessor)
+from pathml.preprocessing.base import BaseSlideLoader, BaseSlidePreprocessor, BaseTileExtractor, BaseTilePreprocessor
 
 
 def test_pipeline():
