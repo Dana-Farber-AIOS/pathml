@@ -22,7 +22,7 @@ jobs:
     - name: Setup Miniconda
       # You may pin to the exact commit or the version.
       # uses: conda-incubator/setup-miniconda@f4c00b0ec69bdc87b1ab4972613558dd9f4f36f3
-      uses: conda-incubator/setup-miniconda@v1.7.0
+      uses: conda-incubator/setup-miniconda@v2.0.0
       with:
         environment-file: environment.yml
         activate-environment: pathml
