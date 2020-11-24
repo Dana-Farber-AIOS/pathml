@@ -21,12 +21,11 @@ class Masks():
             raise KeyError(f"index out of range [0,{len(self._masks)-1}]") 
         return list(self._masks.values())[idx]
 
-    # @masks.setter instead?
     def add(self, key, mask):
         if not isinstance(mask, np.ndarray):
-            raise Exception("mask must be of type np.ndarray")
+            raise ValueError("can not add {type(mask)}, mask must be of type np.ndarray")
         if not isinstance(key, str):
-            raise Exception("key must be of type str")
+            raise ValueError("invalid type {type(key)}, key must be of type str")
         if key in self._masks:
             print(f"overwriting mask {key}")
         self._masks[key] = mask
