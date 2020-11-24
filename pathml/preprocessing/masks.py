@@ -1,7 +1,6 @@
 import numpy as np
 from collections import OrderedDict
 
-
 class Masks():
     '''
     Class wrapping OrderedDict of masks.
@@ -11,8 +10,8 @@ class Masks():
         self._masks = OrderedDict()
 
     def __repr__(self):
-        out = f"Masks(keys={self._masks.keys()})"
-        return out
+        rep = f"Masks(keys={self._masks.keys()})"
+        return rep
 
     def __len__(self):
         return len(self._masks)
@@ -31,6 +30,11 @@ class Masks():
         if key in self._masks:
             print(f"overwriting mask {key}")
         self._masks[key] = mask
+
+    def remove(self, key):
+        if key not in self._masks:
+            raise KeyError('key is not in dict Masks')
+        del self._masks[key]
     
     @property
     def masks(self):
