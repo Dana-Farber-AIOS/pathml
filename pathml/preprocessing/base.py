@@ -1,5 +1,7 @@
 import os
 
+from pathml.preprocessing.masks import Masks
+
 
 class BasePreprocessor:
     """
@@ -82,6 +84,7 @@ class BaseSlide:
     """
     def __init__(self, path, name=None):
         self.path = path
+        self.masks = Masks()
         if name:
             self.name = name
         else:
