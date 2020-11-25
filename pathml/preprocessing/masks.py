@@ -24,6 +24,8 @@ class Masks():
     def __getitem__(self, item):
         if isinstance(item, str):
             return self._masks[item]
+        if not isinstance(item, int):
+            raise KeyError(f"must getitem by name(str) or index(int)")
         if item > len(self._masks)-1:
             raise KeyError(f"index out of range [0,{len(self._masks)-1}]") 
         return list(self._masks.values())[item]
