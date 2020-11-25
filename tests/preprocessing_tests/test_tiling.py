@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 
 import pathml.preprocessing.tiling as tiling
-from pathml.preprocessing.wsi import HESlide
 
 
 @pytest.fixture
@@ -58,40 +57,27 @@ def test_extract_tiles_empty_mask(array_5_5_3, mask_5_5_all_zeros):
     assert len(tiles) == 0
 
 
-@pytest.fixture(scope = "module")
-def example_slide_data():
-    wsi = HESlide(path = "tests/testdata/CMU-1-Small-Region.svs")
-    slide_data = wsi.load_data(level = 0, location = (900, 800), size = (100, 100))
-    m = np.zeros((100, 100), dtype = np.uint8)
-    m[0:55, 0:55] = 1
-    slide_data.mask = m
-    m2 = np.zeros((100, 100), dtype = np.uint8)
-    m2[0:95, 0:95] = 1
-    slide_data.mask = m2
-    return slide_data
-
-
-def test_tile_extractor(example_slide_data):
+def test_tile_extractor(example_slide_data_with_mask):
     extractor1 = tiling.SimpleTileExtractor(tile_size = 25)
-    extractor1.apply(example_slide_data)
-    assert len(example_slide_data.tiles) == 4
+    extractor1.apply(example_slide_data_with_mask)
+    assert len(example_slide_data_with_mask.tiles) == 4
     # test specifying a mask ix
     extractor2 = tiling.SimpleTileExtractor(tile_size = 25, mask_ix = 0)
-    extractor2.apply(example_slide_data)
-    assert len(example_slide_data.tiles) == 4
+    extractor2.apply(example_slide_data_with_mask)
+    assert len(example_slide_data_with_mask.tiles) == 4
     extractor3 = tiling.SimpleTileExtractor(tile_size = 25, mask_ix = 1)
-    extractor3.apply(example_slide_data)
-    assert len(example_slide_data.tiles) == 16
+    extractor3.apply(example_slide_data_with_mask)
+    assert len(example_slide_data_with_mask.tiles) == 16
     # test specifying single mask threshold
     extractor4 = tiling.SimpleTileExtractor(tile_size = 25, mask_thresholds = 0.01)
-    extractor4.apply(example_slide_data)
-    assert len(example_slide_data.tiles) == 9
+    extractor4.apply(example_slide_data_with_mask)
+    assert len(example_slide_data_with_mask.tiles) == 9
     # test specifying multiple mask thresholds
     extractor5 = tiling.SimpleTileExtractor(tile_size = 25, mask_thresholds = [0.01, 0.99])
-    extractor5.apply(example_slide_data)
-    assert len(example_slide_data.tiles) == 9
+    extractor5.apply(example_slide_data_with_mask)
+    assert len(example_slide_data_with_mask.tiles) == 9
     # specify mask ix and multiple thresholds
     extractor6 = tiling.SimpleTileExtractor(tile_size = 25, mask_thresholds = [0.01, 0.04], mask_ix = 1)
-    extractor6.apply(example_slide_data)
-    assert len(example_slide_data.tiles) == 16
+    extractor6.apply(example_slide_data_with_mask)
+    assert len(example_slide_data_with_mask.tiles) == 16
 

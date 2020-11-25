@@ -8,7 +8,7 @@ class SlideData:
     Attributes may be added or modified depending on needs of specific pipelines.
 
     :param wsi: WSI object from which this data object was generated
-    :type wsi: :class:`~pathml.preprocessing.wsi.BaseSlide`
+    :type wsi: :class:`~pathml.preprocessing.base.BaseSlide`
     :param image: image of slide
     :type image: np.ndarray
     :param mask: Array of masks generated for input image

@@ -2,7 +2,7 @@ import numpy as np
 import os
 import cv2
 
-from pathml.preprocessing.base_preprocessor import BasePreprocessor, BaseTileExtractor
+from pathml.preprocessing.base import BasePreprocessor, BaseTileExtractor
 
 
 class Tile:

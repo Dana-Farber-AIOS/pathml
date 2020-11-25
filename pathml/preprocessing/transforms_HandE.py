@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from pathml.preprocessing.base_transforms import SegmentationTransform
+from pathml.preprocessing.base import SegmentationTransform
 from pathml.preprocessing.stains import StainNormalizationHE
 from pathml.preprocessing.transforms import MorphOpen, MorphClose, BinaryThreshold, ForegroundDetection, MedianBlur, \
     SuperpixelInterpolationSLIC
@@ -17,19 +17,19 @@ class TissueDetectionHE(SegmentationTransform):
     :type use_saturation: bool
     :param blur: Blur operation applied before binary thresholding. Helps reduce noise in input image_ref.
         If ``None``, uses ``MedianBlur(kernel_size = 17)``. Defaults to ``None``.
-    :type blur: :class:`~pathml.preprocessing.base_transforms.ImageTransform`
+    :type blur: :class:`~pathml.preprocessing.base.ImageTransform`
     :param threshold: Binary thresholding operation. If ``None``, uses
         ``BinaryThreshold(use_otsu = False, threshold = 30)``. Defaults to ``None``.
-    :type threshold: :class:`~pathml.preprocessing.base_transforms.SegmentationTransform`
+    :type threshold: :class:`~pathml.preprocessing.base.SegmentationTransform`
     :param opening: Morphological opening transformation. Helps reduce noise from binary thresholding.
         If ``None``, uses ``MorphOpen(kernel_size = 7, n_iterations = 3)``. Defaults to ``None``.
-    :type opening: :class:`~pathml.preprocessing.base_transforms.MaskTransform`
+    :type opening: :class:`~pathml.preprocessing.base.MaskTransform`
     :param closing: Morphological closing transformation. Helps reduce noise from binary thresholding.
         If ``None``, uses ``MorphClose(kernel_size = 7, n_iterations = 3)``. Defaults to ``None``.
-    :type closing: :class:`~pathml.preprocessing.base_transforms.MaskTransform`
+    :type closing: :class:`~pathml.preprocessing.base.MaskTransform`
     :param foreground_detection: Foreground detection transform.
         If ``None``, uses ``ForegroundDetection()``. Defaults to ``None``.
-    :type foreground_detection: :class:`~pathml.preprocessing.base_transforms.MaskTransform`
+    :type foreground_detection: :class:`~pathml.preprocessing.base.MaskTransform`
     """
 
     def __init__(
@@ -76,7 +76,7 @@ class BlackPenDetectionHE(SegmentationTransform):
     :param opening: morphological opening transform to perform after thresholding.
         This helps remove noise from thresholding. If None, uses ``MorphOpen(kernel_size = 11, n_iterations = 3)``.
         Defaults to ``None``.
-    :type opening: :class:`~pathml.preprocessing.base_transforms.MaskTransform`
+    :type opening: :class:`~pathml.preprocessing.base.MaskTransform`
     :param smoothing: Transform to smooth the output of segmentation.
         If ``None``, uses
         ``MorphOpen(n_iterations = 3, custom_kernel = cv2.getStructuringElement(shape = cv2.MORPH_ELLIPSE, ksize = (31, 31)))``.
@@ -148,13 +148,13 @@ class BasicNucleusDetectionHE(SegmentationTransform):
     :param hematoxylin_separator: stain separator to extract hematoxylin channel
         If ``None``, uses ``StainNormalizationHE(target = "hematoxylin", stain_estimation_method = "vahadane")``.
         Defaults to ``None``.
-    :type hematoxylin_separator: :class:`~pathml.preprocessing.base_transforms.ImageTransform`
+    :type hematoxylin_separator: :class:`~pathml.preprocessing.base.ImageTransform`
     :param superpixel_interpolator: transform to perform superpixel interpolation after separating hematoxylin channel.
         If ``None``, uses ``SuperpixelInterpolationSLIC()``. Defaults to ``None``.
-    :type superpixel_interpolator: :class:`~pathml.preprocessing.base_transforms.ImageTransform`
+    :type superpixel_interpolator: :class:`~pathml.preprocessing.base.ImageTransform`
     :param threshold: Binary threshold transform. If ``None``, uses ``BinaryThreshold(use_otsu=True)``.
         Defaults to ``None``.
-    :type threshold: :class:`~pathml.preprocessing.base_transforms.SegmentationTransform`
+    :type threshold: :class:`~pathml.preprocessing.base.SegmentationTransform`
 
 
     References:
