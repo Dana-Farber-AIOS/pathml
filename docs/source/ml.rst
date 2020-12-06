@@ -1,5 +1,5 @@
-ML
-==
+ML Quickstart
+=============
 
 The ``pathml.ml`` module provides functionality for machine learning. Will include:
 
