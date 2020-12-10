@@ -59,6 +59,7 @@ class PanNukeDataset(BaseSlideDataset):
 
         # change from HWC to CHW for pytorch dataloader
         im = np.moveaxis(im, -1, 0)
+        mask = np.moveaxis(mask, -1, 0)
 
         return im, mask, tissue_type
 
