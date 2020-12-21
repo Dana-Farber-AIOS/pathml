@@ -14,6 +14,11 @@ def example_he_tile():
 
 
 @pytest.fixture
+def example_he_slide():
+    return HESlide(path = "tests/testdata/CMU-1-Small-Region.svs")
+
+
+@pytest.fixture
 def example_slide_data():
     path = "tests/testdata/CMU-1-Small-Region.svs"
     slide = HESlide(path)
@@ -53,7 +58,6 @@ def example_slide_dataset():
         def __init__(self, n=4):
             path = "tests/testdata/CMU-1-Small-Region.svs"
             self._slides = [HESlide(path, name = f"slide_{ix}") for ix in range(n)]
-            self._slides = [s.load_data(level = 0, location = (900, 800), size = (100, 100)) for s in self._slides]
 
         def __getitem__(self, ix):
             return self._slides[ix]
