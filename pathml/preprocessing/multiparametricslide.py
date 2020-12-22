@@ -5,6 +5,7 @@ import os
 
 from pathml.preprocessing.slide_data import SlideData
 from pathml.preprocessing.base import Slide2d
+from pathml.preprocessing.masks import Masks
 
 
 try:
@@ -25,7 +26,6 @@ except ImportError:
     )
     raise ImportError("MultiparametricSlide2d requires javabridge and bioformats")
 
-
 def check_mac_java_home():
     is_mac = sys.platform == 'darwin'
     if is_mac and "JAVA_HOME" not in os.environ:
@@ -40,26 +40,6 @@ def check_mac_java_home():
                     os.environ["JAVA_HOME"] = '/Library/Java/JavaVirtualMachines/jdk1.8.0_261.jdk/Contents/Home'
                     (the path on your machine may be different)
             """)
-
-
-check_mac_java_home()
-
-
-def check_mac_java_home():
-    is_mac = sys.platform == 'darwin'
-    if is_mac and "JAVA_HOME" not in os.environ:
-        warn("""
-            It looks like you are using a mac, and the $JAVA_HOME variable was not found in your environment.
-            This means that the javabridge may not work correctly!
-
-            Try these steps to resolve:
-                1. Find the path to JAVA SDK 8: 
-                    os.system('/usr/libexec/java_home -V')
-                2. export that path to JAVA_HOME:
-                    os.environ["JAVA_HOME"] = '/Library/Java/JavaVirtualMachines/jdk1.8.0_261.jdk/Contents/Home'
-                    (the path on your machine may be different)
-            """)
-
 
 check_mac_java_home()
 
@@ -79,7 +59,7 @@ class MultiparametricSlide2d(Slide2d):
     converts all formats to OME-TIFF. Please cite: https://pubmed.ncbi.nlm.nih.gov/20513764/
     """
 
-    def __init__(self, path):
+    def __init__(self, path, masks=None):
         super().__init__(path)
         self.path = path
 
@@ -93,7 +73,26 @@ class MultiparametricSlide2d(Slide2d):
         reader.setMetadataStore(omeMeta)
         reader.setId(self.path)
         sizex, sizey, sizez, sizec = reader.getSizeX(), reader.getSizeY(), reader.getSizeZ(), reader.getSizeC()
+        self.2dshape = (sizex, sizey)
+        self.3dshape = (sizex, sizey, sizez)
+        self.4dshape = (sizex, sizey, sizez, sizec)
         self.imsize = sizex*sizey*sizez*sizec
+
+        if masks:
+            # supports 2d (birdseye), 3d (volumetric), and 4d (volumetric by channel) masking 
+            for val in masks.values():
+                if len(val) == 2:
+                    if val.shape != self.2dshape:
+                        raise ValueError(f"mask is of shape {val.shape} but must match slide shape {self.2dshape}")
+                if len(val) == 3:
+                    if val.shape != self.3dshape:
+                        raise ValueError(f"mask is of shape {val.shape} but must match slide shape {self.3dshape}")
+                elif len(val) == 4:
+                    if val.shape != self.4dshape:
+                        raise ValueError(f"mask is of shape {val.shape} but must match slide shape {self.4dshape}"
+                else: 
+                    raise ValueError(f"mask must be 2d (birdseye), 3d (volumetric), or 4d (volumetric with channel masking) but received mask of dimension {len(val)}")
+            self.masks = Masks(masks)
     
     def __repr__(self):
         return f"MultiparametricSlide2d(path={self.path}, name={self.name})"

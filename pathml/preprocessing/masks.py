@@ -7,9 +7,16 @@ class Masks():
     Masks are type np.ndarray with elements type int8.
     '''
     def __init__(self, masks=None):
+        # init with dict {key1:mask1,key2:mask2,...}
         if masks:
-            if not isinstance(mask, np.ndarray):
-                raise ValueError(f"can not add {type(mask)}, mask must be of type np.ndarray")
+            if not isinstance(masks, dict):
+                raise ValueError(f"masks must be passed as dicts of the form key1:mask1,key2:mask2,...")
+            for val in masks.values():
+                if not isinstance(val, np.ndarray):
+                    raise ValueError(f"can not add {type(val)}, mask must be of type np.ndarray")
+            for key in masks.keys():
+                if not isinstance(key, str):
+                    raise ValueError(f"can not add {type(key)}, key must be of type str") 
             self._masks = OrderedDict(masks)
         else:
             self._masks = OrderedDict()
@@ -25,9 +32,9 @@ class Masks():
         if isinstance(item, str):
             return self._masks[item]
         if not isinstance(item, int):
-            raise KeyError(f"must getitem by name(str) or index(int)")
+            raise KeyError(f"must getitem by name(type str) or index(type int)")
         if item > len(self._masks)-1:
-            raise KeyError(f"index out of range [0,{len(self._masks)-1}]") 
+            raise KeyError(f"index out of range, valid indices are ints in [0,{len(self._masks)-1}]") 
         return list(self._masks.values())[item]
 
     def add(self, key, mask):
