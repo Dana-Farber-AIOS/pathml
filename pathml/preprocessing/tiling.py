@@ -209,7 +209,7 @@ class SimpleTileExtractor(BaseTileExtractor):
             else:
                 Exception(f"Mask_thresholds of type {type(self.mask_thresholds)} must be a float or list of floats")
         else:
-            mask = data.mask
+            mask = data.masks
         data.tiles = extract_tiles_with_mask(
             im = im,
             tile_size = self.tile_size,

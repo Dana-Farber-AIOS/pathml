@@ -22,9 +22,9 @@ class SlideData:
     def __init__(self, wsi=None, image=None, mask=None, tiles=None):
         self.wsi = wsi
         self.image = None if image is None else image.astype(np.uint8)
-        self._mask = wsi.masks 
+        self.masks = wsi.masks 
         if mask:
-            mask(mask)
+            masks(mask)
         self.tiles = tiles
 
     def __repr__(self):  # pragma: no cover
@@ -35,14 +35,14 @@ class SlideData:
         return out
 
     @property
-    def mask(self):
-        return self._mask
+    def masks(self):
+        return self.masks
 
     # TODO make this more intuitive, like use a method like .add_mask(). The setter isn't very clear as is
     @mask.setter
-    def mask(self, key, new_mask):
+    def masks(self, key, new_mask):
         # use setter to handle initial None for mask to make mask updating easy
-        if self._mask is None:
-            self._mask = Masks({key, new_mask}) 
+        if self.masks is None:
+            self.masks = Masks({key, new_mask}) 
         else:
-            self._mask.add(key, new_mask) 
+            self.masks.add(key, new_mask) 
