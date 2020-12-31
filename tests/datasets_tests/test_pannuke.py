@@ -1,3 +1,5 @@
+import zipfile
+
 import pytest
 import urllib
 import numpy as np
@@ -8,7 +10,7 @@ from pathml.datasets.pannuke import PanNukeDataModule, PanNukeDataset
 
 def create_fake_pannuke_data(target_dir, n_fold=16):
     """
-    create some fake images and masks in target_dir
+    create some fake images and masks in target_dir/images and target_dir/masks
 
     Args:
         target_dir (pathlib.Path): directory where to save the images and masks. 'images' and 'masks' subdirectories
@@ -64,11 +66,103 @@ def test_pannuke_dataset_sizes(tmp_path, fold, nucleus_type_labels):
 
 
 
+def create_fake_pannuke_data_raw(target_dir, fold_size=16):
+    """
+    Create some fake raw data that mimics file structure of what is downloaded from PanNuke website:
+    https://warwick.ac.uk/fac/sci/dcs/research/tia/data/pannuke/
+
+    Args:
+        target_dir (pathlib.Path): directory where to save the data.
+        fold_size (int): number of images and masks per fold
+    """
+    folds = [1, 2, 3]
+    tissue_types = ["breast", "colon", "head-neck"]
+
+    for fold_ix in folds:
+        # create the directories
+        images_dir = target_dir / f"Fold {fold_ix}" / "images" / f"fold{fold_ix}"
+        masks_dir = target_dir / f"Fold {fold_ix}" / "masks" / f"fold{fold_ix}"
+        images_dir.mkdir(parents = True)
+        masks_dir.mkdir(parents = True)
+
+        # create the fake data
+        types_fold = np.random.choice(tissue_types, size = fold_size)
+        masks = np.random.randint(low = 0, high = 10, size = (fold_size, 256, 256, 6))
+        ims = np.random.randint(low = 0, high = 254, size = (fold_size, 256, 256, 3))
+
+        # write the data
+        np.save(file = str(images_dir / "images.npy"), arr = ims)
+        np.save(file = str(images_dir / "types.npy"), arr = types_fold)
+        np.save(file = str(masks_dir / "masks.npy"), arr = masks)
+
+
+def test_process_downloaded_pannuke(tmp_path):
+    """ Test the post-processing of the pannuke raw data """
+    # make fake data
+    fold_size = 16
+    create_fake_pannuke_data_raw(tmp_path, fold_size = fold_size)
+
+    # process the fake data
+    PanNukeDataModule._process_downloaded_pannuke(tmp_path)
+
+    # check everything
+    imdir = tmp_path / "images"
+    maskdir = tmp_path / "masks"
+
+    assert imdir.is_dir()
+    assert maskdir.is_dir()
+
+    assert len(list(imdir.glob("*"))) == 3*fold_size
+    assert len(list(maskdir.glob("*"))) == 3 * fold_size
+
+    for fold_ix in [1, 2, 3]:
+        assert len(list(imdir.glob(f"fold{fold_ix}*"))) == fold_size
+        assert len(list(maskdir.glob(f"fold{fold_ix}*"))) == fold_size
 
 
 
-# TODO add tests for dataloaders
-# TODO add tests for _process_downloaded_pannuke(), _download_pannuke(), and _clean_up_download_pannuke()
+@pytest.mark.parametrize("split", [1, 2, 3, None])
+@pytest.mark.parametrize("nucleus_type_labels", [True, False])
+def test_pannuke_datamodule(tmp_path, split, nucleus_type_labels):
+    # make fake data
+    fold_size = 16
+    create_fake_pannuke_data(tmp_path, n_fold = fold_size)
+
+    batch_size = 8
+    pannuke = PanNukeDataModule(data_dir = tmp_path, nucleus_type_labels = nucleus_type_labels,
+                                split = split, download = False, transforms = None, batch_size = batch_size)
+
+    train = pannuke.train_dataloader
+    valid = pannuke.valid_dataloader
+    test = pannuke.test_dataloader
+
+    for loader in [train, test, valid]:
+        im, mask, tissue_types = next(iter(loader))
+        assert im.shape == (batch_size, 3, 256, 256)
+        if nucleus_type_labels:
+            assert mask.shape == (batch_size, 6, 256, 256)
+        else:
+            assert mask.shape == (batch_size, 256, 256)
+        assert len(tissue_types) == batch_size and all([isinstance(t, str) for t in tissue_types])
+
+
+def test_clean_up_download_pannuke(tmp_path):
+    # first create the files and dirs to delete
+    for fold_ix in [1, 2, 3]:
+        with zipfile.ZipFile(tmp_path / f"fold_{fold_ix}.zip", 'w') as myzip:
+            myzip.writestr('fake_pannuke_data.txt', "NYE 2020 - happy new year!")
+        downloaded_dir = tmp_path / f"Fold {fold_ix}"
+        downloaded_dir.mkdir()
+
+    # now call cleanup
+    PanNukeDataModule._clean_up_download_pannuke(tmp_path)
+
+    # now make sure that the files/dirs were deleted
+    for fold_ix in [1, 2, 3]:
+        zfile = tmp_path / f"fold_{fold_ix}.zip"
+        downloaded_dir = tmp_path / f"Fold {fold_ix}"
+        assert not zfile.exists()
+        assert not downloaded_dir.exists()
 
 
 def check_pannuke_data_urls():
@@ -83,3 +177,6 @@ def check_pannuke_data_urls():
 def check_wrong_path_download_false():
     with pytest.raises(AssertionError):
         pannuke = PanNukeDataModule(data_dir = "wrong/path/to/pannuke", download = False)
+
+
+# TODO add tests for _download_pannuke()

@@ -129,7 +129,7 @@ class PanNukeDataModule(BaseDataModule):
             If ``False``, then the returned mask will have a single channel, with zeros for background pixels and ones
             for nucleus pixels (i.e. the inverse of the Background mask). Defaults to ``False``.
         split (int, optional): How to divide the three folds into train, test, and validation splits. Must be one of
-            {1, 2, 3} corresponding to the following splits:
+            {1, 2, 3, None} corresponding to the following splits:
 
                 1. Training: Fold 1; Validation: Fold 2; Testing: Fold 3
                 2. Training: Fold 2; Validation: Fold 1; Testing: Fold 3
