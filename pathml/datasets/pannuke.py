@@ -1,18 +1,22 @@
 import zipfile
 import os
 import numpy as np
+import torch
 import torch.utils.data as data
 from warnings import warn
+from pathlib import Path
+import re
+import cv2
 
-from pathml.datasets.base import BaseSlideDataset, BaseDataModule
+from pathml.datasets.base import BaseTileDataset, BaseDataModule
 from pathml.datasets.utils import download_from_url
 
 
-class PanNukeDataset(BaseSlideDataset):
+class PanNukeDataset(BaseTileDataset):
     """
     Dataset object for PanNuke dataset
 
-    Tissue types: Breast, Colon, Bile-duct, Esophagus, Uterus, Lung, Cervix, Head&Neck, Skin, Adrenal Gland, Kidney,
+    Tissue types: Breast, Colon, Bile-duct, Esophagus, Uterus, Lung, Cervix, Head&Neck, Skin, Adrenal-Gland, Kidney,
     Stomach, Prostate, Testis, Liver, Thyroid, Pancreas, Ovary, Bladder
 
     masks are arrays of 6 channel instance-wise masks (0:
@@ -23,41 +27,79 @@ class PanNukeDataset(BaseSlideDataset):
     If using transforms for data augmentation, the transform must accept two arguments (image and mask) and return a
     dict with "image" and "mask" keys.
     See example here https://albumentations.ai/docs/getting_started/mask_augmentation
+
+    Args:
+        data_dir: Path to PanNuke data. Should contain an 'images' directory and a 'masks' directory.
+        fold_ix: Index of which fold of PanNuke data to use. One of 1, 2, or 3. If ``None``, ignores the folds and uses
+            the entire PanNuke dataset. Defaults to ``None``.
+        transforms: Transforms to use for data augmentation. Must accept two arguments (image and mask) and return a
+            dict with "image" and "mask" keys. If ``None``, no transforms are applied. Defaults to ``None``.
+        nucleus_type_labels (bool, optional): Whether to provide nucleus type labels, or binary nucleus labels.
+            If ``True``, then masks will be returned with six channels, corresponding to
+
+                0. Neoplastic cells
+                1. Inflammatory
+                2. Connective/Soft tissue cells
+                3. Dead Cells
+                4. Epithelial
+                5. Background
+
+            If ``False``, then the returned mask will have a single channel, with zeros for background pixels and ones
+            for nucleus pixels (i.e. the inverse of the Background mask). Defaults to ``False``.
     """
-    def __init__(self, data_dir, fold_ix, transforms=None, classification=False):
+    def __init__(self, data_dir, fold_ix=None, transforms=None, nucleus_type_labels=False):
         self.data_dir = data_dir
         self.fold_ix = fold_ix
         self.transforms = transforms
-        self.classification = classification
+        self.nucleus_type_labels = nucleus_type_labels
 
-        impath = os.path.join(data_dir, f"Fold {self.fold_ix}/images/fold{fold_ix}/images.npy")
-        typepath = os.path.join(data_dir, f"Fold {self.fold_ix}/images/fold{fold_ix}/types.npy")
-        maskpath = os.path.join(data_dir, f"Fold {self.fold_ix}/masks/fold{fold_ix}/masks.npy")
+        data_dir = Path(data_dir)
 
-        self.images = np.load(impath, mmap_mode = 'r+').astype(np.uint8)
-        self.types = np.load(typepath, mmap_mode = 'r+')
-        self.masks = np.load(maskpath, mmap_mode = 'r+').astype(np.uint8)
+        # dirs for images, masks
+        imdir = data_dir / "images"
+        maskdir = data_dir / "masks"
+
+        # stop if the output files already exist
+        assert imdir.is_dir(), f"Error: 'images' directory not found: {imdir}"
+        assert maskdir.is_dir(), f"Error: 'masks' directory not found: {maskdir}"
+
+        if self.fold_ix is None:
+            self.impaths = list(imdir.glob("*"))
+            self.maskpaths = list(maskdir.glob("*"))
+        else:
+            self.impaths = list(imdir.glob(f"fold{fold_ix}*"))
+            self.maskpaths = list(maskdir.glob(f"fold{fold_ix}*"))
 
     def __len__(self):
-        return self.images.shape[0]
+        return len(self.impaths)
 
     def __getitem__(self, ix):
-        im = self.images[ix, ...]
-        tissue_type = self.types[ix]
-        if self.classification is False:
-            # only look at "background" mask
-            mask = self.masks[ix, ..., 5]
+        impath = self.impaths[ix]
+        maskpath = self.maskpaths[ix]
+        tissue_type = str(impath.stem).split(sep = "_")[2]
+
+        im = cv2.imread(str(impath))
+        mask = np.load(str(maskpath))
+
+        if self.nucleus_type_labels is False:
+            # only look at "background" mask in last channel
+            mask = mask[:, :, 5]
             # invert so that ones are nuclei pixels
             mask = 1 - mask
-        else:
-            mask = self.masks[ix, ...]
 
         if self.transforms is not None:
             transformed = self.transforms(image = im, mask = mask)
             im = transformed["image"]
             mask = transformed["mask"]
 
-        return im, mask, tissue_type
+        # swap channel dim to pytorch standard (C, H, W)
+        im = im.transpose((2, 0, 1))
+
+        # only need to swap axes if multiclass labels. Otherwise the mask is just (H, W)
+        if self.nucleus_type_labels:
+            mask = mask.transpose((2, 0, 1))
+
+        return torch.from_numpy(im), torch.from_numpy(mask), tissue_type
 
 
 class PanNukeDataModule(BaseDataModule):
@@ -93,8 +135,8 @@ class PanNukeDataModule(BaseDataModule):
                 2. Training: Fold 2; Validation: Fold 1; Testing: Fold 3
                 3. Training: Fold 3; Validation: Fold 2; Testing: Fold 1
 
-            Defaults to 1.
-        batch_size (int, optional): batch size for dataloaders. Defaults to 16.
+            If ``None``, then the entire PanNuke dataset will be used. Defaults to ``None``.
+        batch_size (int, optional): batch size for dataloaders. Defaults to 8.
 
     References
         Gamper, J., Koohbanani, N.A., Benet, K., Khuram, A. and Rajpoot, N., 2019, April. PanNuke: an open pan-cancer
@@ -106,21 +148,22 @@ class PanNukeDataModule(BaseDataModule):
     """
 
     def __init__(self, data_dir, download=False, shuffle=True, transforms=None,
-                 nucleus_type_labels=False, split=1, batch_size=16):
-        self.data_dir = data_dir
+                 nucleus_type_labels=False, split=1, batch_size=8):
+        self.data_dir = Path(data_dir)
         self.download = download
         if download:
             self._download_pannuke(self.data_dir)
         else:
-            # check that files exist
-            for f in [1, 2, 3]:
-                p = os.path.join(data_dir, f"Fold {f}")
-                assert os.path.isdir(p), \
-                    f"Error: `download is False` but PanNuke data for Fold {f} not found at {p}"
+            # make sure that subdirectories exist
+            imdir = self.data_dir / "images"
+            maskdir = self.data_dir / "masks"
+            assert imdir.is_dir(), f"`download is False` but 'images' subdirectory not found at {imdir}"
+            assert maskdir.is_dir(), f"`download is False` but 'masks' subdirectory not found at {maskdir}"
+
         self.shuffle = shuffle
         self.transforms = transforms
-        self.classification = nucleus_type_labels
-        assert split in [1, 2, 3], f"Error: input split {split} not valid. Must be one of [1, 2, 3]."
+        self.nucleus_type_labels = nucleus_type_labels
+        assert split in [1, 2, 3, None], f"Error: input split {split} not valid. Must be one of [1, 2, 3] or None."
         self.split = split
         self.batch_size = batch_size
 
@@ -129,11 +172,11 @@ class PanNukeDataModule(BaseDataModule):
             data_dir = self.data_dir,
             fold_ix = fold_ix,
             transforms = self.transforms,
-            classification = self.classification
+            nucleus_type_labels = self.nucleus_type_labels
         )
 
-    @staticmethod
-    def _download_pannuke(download_dir):
+    def _download_pannuke(self, download_dir):
+        """download PanNuke dataset"""
         for fold_ix in [1, 2, 3]:
             p = os.path.join(download_dir, "Fold " + str(fold_ix))
             # don't download if the directory already exists
@@ -146,10 +189,77 @@ class PanNukeDataModule(BaseDataModule):
                 # unzip
                 with zipfile.ZipFile(path, 'r') as zip_ref:
                     zip_ref.extractall(download_dir)
-                # delete zip files
-                os.remove(path = path)
             else:
                 warn(f"Skipping download of fold {fold_ix}, using local data found at {p}")
+
+        self._process_downloaded_pannuke(download_dir)
+        self._clean_up_download_pannuke(download_dir)
+
+    @staticmethod
+    def _process_downloaded_pannuke(pannuke_dir):
+        """
+        Process downloaded .npy files, save individual images & masks.
+        That way we can load a single image efficiently without holding entire dataset in memory.
+        This must be run after _download_pannuke!
+        """
+        pannuke_dir = Path(pannuke_dir)
+
+        # dirs for images, masks
+        imdir = pannuke_dir / "images"
+        maskdir = pannuke_dir / "masks"
+
+        # stop if the output files already exist
+        assert not imdir.is_dir(), f"Error: 'images' directory already exists: {imdir}"
+        assert not maskdir.is_dir(), f"Error: 'masks' directory already exists: {maskdir}"
+
+        imdir.mkdir()
+        maskdir.mkdir()
+
+        for fold_ix in [1, 2, 3]:
+            ims_fold_path = pannuke_dir / f"Fold {fold_ix}" / "images" / f"fold{fold_ix}" / "images.npy"
+            masks_fold_path = pannuke_dir / f"Fold {fold_ix}" / "masks" / f"fold{fold_ix}" / "masks.npy"
+            types_fold_path = pannuke_dir / f"Fold {fold_ix}" / "images" / f"fold{fold_ix}" / "types.npy"
+
+            # make sure the input files exist
+            assert ims_fold_path.is_file(), f"Error: image file not found at {ims_fold_path}"
+            assert masks_fold_path.is_file(), f"Error: masks file not found at {masks_fold_path}"
+            assert types_fold_path.is_file(), f"Error: types file not found at {types_fold_path}"
+
+            ims_fold = np.load(ims_fold_path, mmap_mode = 'r')
+            masks_fold = np.load(masks_fold_path, mmap_mode = 'r')
+            types_fold = np.load(types_fold_path, mmap_mode = 'r')
+
+            # change masks dims from (B, H, W, C) to (B, C, H, W)
+            masks_fold = np.moveaxis(masks_fold, 3, 1)
+
+            fold_size = len(types_fold)
+
+            for j in range(fold_size):
+                im = ims_fold[j, ...]
+                mask = masks_fold[j, ...]
+                tissue_type = types_fold[j]
+                # change underscores in tissue type label to dashes
+                tissue_type = re.sub(pattern = "_", repl = "-", string = tissue_type)
+
+                im_fname = imdir / f"fold{fold_ix}_{j}_{tissue_type}.png"
+                im_fname = str(im_fname.resolve())
+                mask_fname = maskdir / f"fold{fold_ix}_{j}_{tissue_type}.npy"
+                mask_fname = str(mask_fname.resolve())
+
+                cv2.imwrite(im_fname, im)
+                np.save(mask_fname, mask)
+
+    @staticmethod
+    def _clean_up_download_pannuke(pannuke_dir):
+        """remove files after downloading, unzipping, and processing"""
+        p = Path(pannuke_dir)
+
+        for fold_ix in [1, 2, 3]:
+            zip_file = p / f"fold_{fold_ix}.zip"
+            downloaded_dir = p / f"Fold {fold_ix}"
+            zip_file.unlink()
+            downloaded_dir.rmdir()
+
 
     @property
     def train_dataloader(self):

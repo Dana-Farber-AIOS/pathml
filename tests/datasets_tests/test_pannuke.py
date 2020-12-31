@@ -1,36 +1,74 @@
 import pytest
 import urllib
+import numpy as np
+import cv2
 
-from pathml.datasets.pannuke import PanNukeDataModule
+from pathml.datasets.pannuke import PanNukeDataModule, PanNukeDataset
 
 
-"""
-Commenting this out because I don't think it makes sense to download the entire dataset just to test it.
-But do need to test the PanNukeDataModule class.... need to think of a smarter way to test it though
+def create_fake_pannuke_data(target_dir, n_fold=16):
+    """
+    create some fake images and masks in target_dir
 
-@pytest.mark.parametrize("batch_size", [8, 16])
+    Args:
+        target_dir (pathlib.Path): directory where to save the images and masks. 'images' and 'masks' subdirectories
+            will be created here.
+        n_fold (int): number of images and masks per fold
+    """
+    folds = [1, 2, 3]
+    tissue_types = ["breast", "colon", "head-neck"]
+
+    imdir = target_dir / "images"
+    maskdir = target_dir / "masks"
+
+    imdir.mkdir()
+    maskdir.mkdir()
+
+    for fold_ix in folds:
+        for i in range(n_fold):
+            im = np.random.randint(low = 2, high = 254, size = (256, 256, 3), dtype = np.uint8)
+            mask = np.random.randint(low = 0, high = 10, size = (256, 256, 6), dtype = np.uint8)
+            tissue_type = np.random.choice(tissue_types)
+
+            im_fname = imdir / f"fold{fold_ix}_{i}_{tissue_type}.png"
+            im_fname = str(im_fname.resolve())
+            mask_fname = maskdir / f"fold{fold_ix}_{i}_{tissue_type}.npy"
+            mask_fname = str(mask_fname.resolve())
+
+            cv2.imwrite(im_fname, im)
+            np.save(mask_fname, mask)
+
+
+@pytest.mark.parametrize("fold", [1, 2, 3, None])
 @pytest.mark.parametrize("nucleus_type_labels", [True, False])
-def test_batches(batch_size, nucleus_type_labels):
-    pannuke = PanNukeDataModule(
-        data_dir = "data/pannuke",
-        download = True,
-        batch_size = batch_size,
-        nucleus_type_labels = nucleus_type_labels
-    )
+def test_pannuke_dataset_sizes(tmp_path, fold, nucleus_type_labels):
+    n_fold = 16
+    create_fake_pannuke_data(tmp_path, n_fold = n_fold)
 
-    train_dataloader = pannuke.train_dataloader
-    valid_dataloader = pannuke.valid_dataloader
-    test_dataloader = pannuke.test_dataloader
+    pannuke_dataset = PanNukeDataset(data_dir = tmp_path, fold_ix = fold, nucleus_type_labels = nucleus_type_labels)
 
-    for dl in [train_dataloader, valid_dataloader, test_dataloader]:
-        ims, masks, tissues = next(iter(dl))
-        assert ims.shape == (batch_size, 256, 256, 3)
-        if nucleus_type_labels:
-            assert masks.shape == (batch_size, 256, 256, 6)
-        else:
-            assert masks.shape == (batch_size, 256, 256)
-        assert len(tissues) == batch_size
-"""
+    # check size of dataset
+    if fold in [1, 2, 3]:
+        assert len(pannuke_dataset) == n_fold
+    else:
+        assert len(pannuke_dataset) == 3*n_fold
+
+    # check shapes of individual elements
+    im, mask, lab = pannuke_dataset[0]
+    assert im.shape == (3, 256, 256)
+
+    if nucleus_type_labels:
+        assert mask.shape == (6, 256, 256)
+    else:
+        assert mask.shape == (256, 256)
+
+
+
+
+
+
+# TODO add tests for dataloaders
+# TODO add tests for _process_downloaded_pannuke(), _download_pannuke(), and _clean_up_download_pannuke()
 
 
 def check_pannuke_data_urls():
