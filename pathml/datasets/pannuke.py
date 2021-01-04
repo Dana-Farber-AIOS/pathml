@@ -59,7 +59,7 @@ class PanNukeDataset(BaseTileDataset):
         imdir = data_dir / "images"
         maskdir = data_dir / "masks"
 
-        # stop if the output files already exist
+        # stop if the images and masks directories don't already exist
         assert imdir.is_dir(), f"Error: 'images' directory not found: {imdir}"
         assert maskdir.is_dir(), f"Error: 'masks' directory not found: {maskdir}"
 
