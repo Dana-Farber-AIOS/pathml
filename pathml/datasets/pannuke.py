@@ -195,7 +195,7 @@ class PanNukeDataModule(BaseDataModule):
             data_dir = self.data_dir,
             fold_ix = fold_ix,
             transforms = self.transforms,
-            nucleus_type_labels = self.nucleus_type_labels
+            nucleus_type_labels = self.nucleus_type_labels,
             hovernet_preprocess = self.hovernet_preprocess
         )
 
