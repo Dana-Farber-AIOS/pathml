@@ -106,11 +106,10 @@ class PanNukeDataset(BaseTileDataset):
             mask = mask.transpose((2, 0, 1))
         
         if self.hovernet_preprocess:
-            if self.classification:
+            if self.nucleus_type_labels:
                 # sum across mask channels to squash mask channel dim to size 1
                 # don't sum the last channel, which is background!
-                mask_1c = mask[:-1, :, :]
-                mask_1c = np.sum(mask_1c, axis = 0, keepdims = True)
+                mask_1c = pannuke_multiclass_mask_to_nucleus_mask(mask)
             else:
                 mask_1c = mask
             hv_map = compute_hv_map(mask_1c)
@@ -118,6 +117,30 @@ class PanNukeDataset(BaseTileDataset):
 
         else:
             return torch.from_numpy(im), torch.from_numpy(mask), tissue_type
+
+
+def pannuke_multiclass_mask_to_nucleus_mask(multiclass_mask):
+    """
+    Convert multiclass mask from PanNuke to a single channel nucleus mask.
+    Assumes each pixel is assigned to one and only one class. Sums across channels, except the last mask channel
+    which indicates background pixels in PanNuke.
+    Operates on a single masks.
+
+    Args:
+        multiclass_mask (torch.Tensor): Mask from PanNuke, in classification setting. (i.e. ``nucleus_type_labels=True``).
+            Tensor of shape (6, 256, 256).
+
+    Returns:
+        Tensor of shape (256, 256).
+    """
+    # verify shape of input
+    assert multiclass_mask.ndim == 3 and multiclass_mask.shape[0] == 6, \
+        f"Expecting a batch of masks with dims (6, 256, 256). Got input of shape {multiclass_mask.shape}"
+    assert multiclass_mask.shape[1] == 256 and multiclass_mask.shape[2] == 256, \
+        f"Expecting a batch of masks with dims (6, 256, 256). Got input of shape {multiclass_mask.shape}"
+    # ignore last channel
+    out = np.sum(multiclass_mask[:-1, :, :], axis = 0)
+    return out
 
 
 class PanNukeDataModule(BaseDataModule):

@@ -78,3 +78,9 @@ def test_remove_small_objs():
     a_small_obj[91:93, 0:2] = 9
     a_removed = hovernet.remove_small_objs(a_small_obj, min_size = 10)
     assert np.array_equal(a, a_removed)
+
+
+def test_compute_hv_map():
+    mask = np.random.randint(low=0, high=2, size = (256, 256))
+    mask_hv = hovernet.compute_hv_map(mask)
+    assert mask_hv.shape == (2, 256, 256)
