@@ -16,11 +16,9 @@ There are many ways to contribute to PathML, including:
 * Sharing trained model parameters [coming soon]
 * Sharing ``PathML`` with colleagues, students, etc.
 
-How To:
-=======
 
-Submit a bug report
--------------------
+Submitting a bug report
+=======================
 Report bugs or errors by filing an issue on GitHub. Make sure to include the following information:
 
 * Short description of the bug
@@ -29,16 +27,16 @@ Report bugs or errors by filing an issue on GitHub. Make sure to include the fol
 * Actual result
 * Any other useful information
 
-Request a new feature
----------------------
+Requesting a new feature
+=========================
 Request a new feature by filing an issue on GitHub. Make sure to include the following information:
 
 * Description of the feature
 * Pseudocode of how the feature might work (if applicable)
 * Any other useful information
 
-Contribute Code/Documentation
------------------------------
+Writing code and/or documentation
+==============================================
 Here's how to contribute code, documentation, etc.
 
 1. Create an issue for what you will be working on, if one does not already exist 

@@ -1,11 +1,23 @@
-from pathml.preprocessing.base import BaseSlideLoader, BaseSlidePreprocessor, BaseTileExtractor, BaseTilePreprocessor
+from pathml.preprocessing.base import BaseSlideLoader, BaseSlidePreprocessor, BaseTileExtractor, BaseTilePreprocessor, \
+    BasePipeline, BaseSlide
 
 
-class Pipeline:
+class Pipeline(BasePipeline):
     """
-    Object for running preprocessing pipelines.
+    Convenience object for running preprocessing pipelines that are based on four main steps:
+        1. Ingesting a Slide object and loading into SlideData object
+        2. Performing slide-level preprocessing
+        3. Extracting tiles
+        4. performing tile-level preprocessing
 
-    :param slide_loader: preprocessor which loads slide from disk
+    Each step is performed by a Preprocessor object.
+    Pipelines can be composed modularly from default and custom Preprocessors.
+
+    This structure of pipeline is useful in many cases, but it is not strictly necessary to follow this four-step
+    process for all preprocessing pipelines. For complete control over custom pipelines,
+    inherit directly from :class:`~pathml.preprocessing.base.BasePipeline` and define the ``run_single()`` method.
+
+    :param slide_loader: preprocessor which ingests a BaseSlide object
     :type slide_loader: :class:`~pathml.preprocessing.base.BaseSlideLoader`
     :param slide_preprocessor: preprocessor to apply on slide level
     :type slide_preprocessor: :class:`~pathml.preprocessing.base.BaseSlidePreprocessor`
@@ -30,9 +42,10 @@ class Pipeline:
         self.tile_extractor = tile_extractor
         self.tile_preprocessor = tile_preprocessor
 
-    def load_slide(self, path):
+    def load_slide(self, slide):
         """Run only the slide_loader component of the pipeline"""
-        data = self.slide_loader.apply(path)
+        assert isinstance(slide, BaseSlide), f"Input slide type {type(slide)} invalid. Must inherit from BaseSlide"
+        data = self.slide_loader.apply(slide)
         return data
 
     def run_slide_level(self, data):
@@ -50,16 +63,16 @@ class Pipeline:
         data = self.tile_preprocessor.apply(data)
         return data
 
-    def run(self, path):
+    def run_single(self, slide):
         """
         Run full preprocessing pipeline
 
-        :param path: path to input WSI
-        :type path: str
+        :param slide: input Slide object
+        :type slide: :class:`~pathml.preprocessing.base.BaseSlide`
         :return: :class:`~pathml.preprocessing.slide_data.SlideData` object resulting from running full pipeline on
             input image
         """
-        data = self.load_slide(path)
+        data = self.load_slide(slide)
         data = self.run_slide_level(data)
         data = self.extract_tiles(data)
         data = self.run_tile_level(data)

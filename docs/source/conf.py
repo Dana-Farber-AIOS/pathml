@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath('../../'))
 # -- Project information -----------------------------------------------------
 
 project = 'PathML'
-copyright = '2020, Jacob Rosenthal'
+copyright = '2020, DFCI'
 author = 'Jacob Rosenthal'
 
 version = '0.0.1'
@@ -67,10 +67,14 @@ html_theme_options = {
 }
 
 # link to logo
-html_logo = '_static/logo.png'
+html_logo = '_static/images/logo.png'
 
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+
+def setup(app):
+    app.add_css_file('css/pathml.css')

@@ -1,7 +1,14 @@
 from torch.utils import data as data
 
 
-class BaseSlideDataset(data.Dataset):
+class BaseDataset(data.Dataset):
+    """
+    Base class for all pathML datasets.
+    """
+    pass
+
+
+class BaseSlideDataset(BaseDataset):
     """
     A base class for a collection of whole-slide-images.
     Specific datasets should inherit from this class.
@@ -15,7 +22,7 @@ class BaseSlideDataset(data.Dataset):
         raise NotImplementedError
 
 
-class BaseTileDataset(data.Dataset):
+class BaseTileDataset(BaseDataset):
     """
     A base class for a collection of tiles.
     Specific datasets should inherit from this class.

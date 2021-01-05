@@ -18,14 +18,52 @@ Institute.
 
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Contents:
+   :maxdepth: 2
+   :caption: Getting Started
+
+   overview
+   installation
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Preprocessing
 
    preprocessing
-   ml
+   custom_pipelines
+   pipeline_repo
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Datasets
+
    datasets
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Machine Learning
+
+   ml
+   models
+   model_repo
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Examples
+
    examples
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Reference
+
+   api_reference_full
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contributing
+
    link_contributing
+
 
 Indices and tables
 ==================
