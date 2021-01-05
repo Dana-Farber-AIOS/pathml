@@ -212,7 +212,6 @@ class HoverNet(nn.Module):
         self.np_branch = _HoverNetDecoder()
         # classification head
         self.np_head = nn.Sequential(
-            _BatchNormRelu(n_channels = 64),
             # two channels in output - background prob and pixel prob
             nn.Conv2d(in_channels = 64, out_channels = 2, kernel_size = 1)
         )
@@ -221,7 +220,6 @@ class HoverNet(nn.Module):
         self.hv_branch = _HoverNetDecoder()  # hv = horizontal vertical
         # classification head
         self.hv_head = nn.Sequential(
-            _BatchNormRelu(n_channels = 64),
             # two channels in output - horizontal and vertical
             nn.Conv2d(in_channels = 64, out_channels = 2, kernel_size = 1)
         )
@@ -232,7 +230,6 @@ class HoverNet(nn.Module):
             self.nc_branch = _HoverNetDecoder()
             # classification head
             self.nc_head = nn.Sequential(
-                _BatchNormRelu(n_channels = 64),
                 # one channel in output for each class
                 nn.Conv2d(in_channels = 64, out_channels = self.n_classes, kernel_size = 1)
             )
@@ -324,7 +321,7 @@ def _ce_loss_nc_head(nc_out, true_mask):
 
 def _ce_loss_np_head(np_out, true_mask):
     """
-    Cross-entropy loss term for nc branch.
+    Cross-entropy loss term for np branch.
     Args:
         np_out: logit outputs of np branch. Tensor of shape (B, 2, H, W)
         true_mask: True mask. Tensor of shape (B, n_classes, H, W)
