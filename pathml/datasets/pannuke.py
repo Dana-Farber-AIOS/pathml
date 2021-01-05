@@ -10,6 +10,7 @@ import cv2
 
 from pathml.datasets.base import BaseTileDataset, BaseDataModule
 from pathml.datasets.utils import download_from_url
+from pathml.ml.hovernet import compute_hv_map
 
 
 class PanNukeDataset(BaseTileDataset):
@@ -19,9 +20,9 @@ class PanNukeDataset(BaseTileDataset):
     Tissue types: Breast, Colon, Bile-duct, Esophagus, Uterus, Lung, Cervix, Head&Neck, Skin, Adrenal-Gland, Kidney,
     Stomach, Prostate, Testis, Liver, Thyroid, Pancreas, Ovary, Bladder
 
-    masks are arrays of 6 channel instance-wise masks (0:
-    Neoplastic cells, 1: Inflammatory, 2: Connective/Soft tissue cells, 3: Dead Cells, 4: Epithelial, 5: Background)
-    If ``nucleus_type_labels is False`` then only a single channel mask will be returned, which is the inverse of the
+    masks are arrays of 6 channel instance-wise masks
+    (0: Neoplastic cells, 1: Inflammatory, 2: Connective/Soft tissue cells, 3: Dead Cells, 4: Epithelial, 5: Background)
+    If ``classification is False`` then only a single channel mask will be returned, which is the inverse of the
     'Background' mask (i.e. nucleus pixels are 1.). Otherwise, the full 6-channel masks will be returned.
 
     If using transforms for data augmentation, the transform must accept two arguments (image and mask) and return a
@@ -46,12 +47,17 @@ class PanNukeDataset(BaseTileDataset):
 
             If ``False``, then the returned mask will have a single channel, with zeros for background pixels and ones
             for nucleus pixels (i.e. the inverse of the Background mask). Defaults to ``False``.
+        hovernet_preprocess (bool): Whether to perform preprocessing specific to HoVer-Net architecture. If ``True``,
+            the center of mass of each nucleus will be computed, and an additional mask will be returned with the
+            distance of each nuclear pixel to its center of mass in the horizontal and vertical dimensions.
+            This corresponds to Gamma(I) from the HoVer-Net paper. Defaults to ``False``.
     """
-    def __init__(self, data_dir, fold_ix=None, transforms=None, nucleus_type_labels=False):
+    def __init__(self, data_dir, fold_ix=None, transforms=None, nucleus_type_labels=False, hovernet_preprocess=False):
         self.data_dir = data_dir
         self.fold_ix = fold_ix
         self.transforms = transforms
         self.nucleus_type_labels = nucleus_type_labels
+        self.hovernet_preprocess = hovernet_preprocess
 
         data_dir = Path(data_dir)
 
@@ -98,8 +104,43 @@ class PanNukeDataset(BaseTileDataset):
         # only need to swap axes if multiclass labels. Otherwise the mask is just (H, W)
         if self.nucleus_type_labels:
             mask = mask.transpose((2, 0, 1))
+        
+        if self.hovernet_preprocess:
+            if self.nucleus_type_labels:
+                # sum across mask channels to squash mask channel dim to size 1
+                # don't sum the last channel, which is background!
+                mask_1c = pannuke_multiclass_mask_to_nucleus_mask(mask)
+            else:
+                mask_1c = mask
+            hv_map = compute_hv_map(mask_1c)
+            return torch.from_numpy(im), torch.from_numpy(mask), torch.from_numpy(hv_map), tissue_type
 
-        return torch.from_numpy(im), torch.from_numpy(mask), tissue_type
+        else:
+            return torch.from_numpy(im), torch.from_numpy(mask), tissue_type
+
+
+def pannuke_multiclass_mask_to_nucleus_mask(multiclass_mask):
+    """
+    Convert multiclass mask from PanNuke to a single channel nucleus mask.
+    Assumes each pixel is assigned to one and only one class. Sums across channels, except the last mask channel
+    which indicates background pixels in PanNuke.
+    Operates on a single masks.
+
+    Args:
+        multiclass_mask (torch.Tensor): Mask from PanNuke, in classification setting. (i.e. ``nucleus_type_labels=True``).
+            Tensor of shape (6, 256, 256).
+
+    Returns:
+        Tensor of shape (256, 256).
+    """
+    # verify shape of input
+    assert multiclass_mask.ndim == 3 and multiclass_mask.shape[0] == 6, \
+        f"Expecting a batch of masks with dims (6, 256, 256). Got input of shape {multiclass_mask.shape}"
+    assert multiclass_mask.shape[1] == 256 and multiclass_mask.shape[2] == 256, \
+        f"Expecting a batch of masks with dims (6, 256, 256). Got input of shape {multiclass_mask.shape}"
+    # ignore last channel
+    out = np.sum(multiclass_mask[:-1, :, :], axis = 0)
+    return out
 
 
 class PanNukeDataModule(BaseDataModule):
@@ -137,6 +178,10 @@ class PanNukeDataModule(BaseDataModule):
 
             If ``None``, then the entire PanNuke dataset will be used. Defaults to ``None``.
         batch_size (int, optional): batch size for dataloaders. Defaults to 8.
+        hovernet_preprocess (bool): Whether to perform preprocessing specific to HoVer-Net architecture. If ``True``,
+            the center of mass of each nucleus will be computed, and an additional mask will be returned with the
+            distance of each nuclear pixel to its center of mass in the horizontal and vertical dimensions.
+            This corresponds to Gamma(I) from the HoVer-Net paper. Defaults to ``False``.
 
     References
         Gamper, J., Koohbanani, N.A., Benet, K., Khuram, A. and Rajpoot, N., 2019, April. PanNuke: an open pan-cancer
@@ -148,7 +193,7 @@ class PanNukeDataModule(BaseDataModule):
     """
 
     def __init__(self, data_dir, download=False, shuffle=True, transforms=None,
-                 nucleus_type_labels=False, split=1, batch_size=8):
+                 nucleus_type_labels=False, split=None, batch_size=8, hovernet_preprocess=False):
         self.data_dir = Path(data_dir)
         self.download = download
         if download:
@@ -166,13 +211,15 @@ class PanNukeDataModule(BaseDataModule):
         assert split in [1, 2, 3, None], f"Error: input split {split} not valid. Must be one of [1, 2, 3] or None."
         self.split = split
         self.batch_size = batch_size
+        self.hovernet_preprocess = hovernet_preprocess
 
     def _get_dataset(self, fold_ix):
         return PanNukeDataset(
             data_dir = self.data_dir,
             fold_ix = fold_ix,
             transforms = self.transforms,
-            nucleus_type_labels = self.nucleus_type_labels
+            nucleus_type_labels = self.nucleus_type_labels,
+            hovernet_preprocess = self.hovernet_preprocess
         )
 
     def _download_pannuke(self, download_dir):
@@ -265,7 +312,7 @@ class PanNukeDataModule(BaseDataModule):
     def train_dataloader(self):
         """
         Dataloader for training set.
-        Yields (image, mask, tissue_type)
+        Yields (image, mask, tissue_type), or (image, mask, hv, tissue_type) for HoVer-Net
         """
         return data.DataLoader(
             dataset = self._get_dataset(fold_ix = self.split),
@@ -277,7 +324,7 @@ class PanNukeDataModule(BaseDataModule):
     def valid_dataloader(self):
         """
         Dataloader for validation set.
-        Yields (image, mask, tissue_type)
+        Yields (image, mask, tissue_type), or (image, mask, hv, tissue_type) for HoVer-Net
         """
         if self.split in [1, 3]:
             fold_ix = 2
@@ -293,7 +340,7 @@ class PanNukeDataModule(BaseDataModule):
     def test_dataloader(self):
         """
         Dataloader for test set.
-        Yields (image, mask, tissue_type)
+        Yields (image, mask, tissue_type), or (image, mask, hv, tissue_type) for HoVer-Net
         """
         if self.split in [1, 2]:
             fold_ix = 3

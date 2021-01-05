@@ -5,7 +5,7 @@ import urllib
 import numpy as np
 import cv2
 
-from pathml.datasets.pannuke import PanNukeDataModule, PanNukeDataset
+from pathml.datasets.pannuke import PanNukeDataModule, PanNukeDataset, pannuke_multiclass_mask_to_nucleus_mask
 
 
 def create_fake_pannuke_data(target_dir, n_fold=16):
@@ -120,29 +120,37 @@ def test_process_downloaded_pannuke(tmp_path):
         assert len(list(maskdir.glob(f"fold{fold_ix}*"))) == fold_size
 
 
-
+@pytest.mark.parametrize("hovernet_preprocess", [True, False])
 @pytest.mark.parametrize("split", [1, 2, 3, None])
 @pytest.mark.parametrize("nucleus_type_labels", [True, False])
-def test_pannuke_datamodule(tmp_path, split, nucleus_type_labels):
+def test_pannuke_datamodule(tmp_path, split, nucleus_type_labels, hovernet_preprocess):
     # make fake data
     fold_size = 16
     create_fake_pannuke_data(tmp_path, n_fold = fold_size)
 
     batch_size = 8
     pannuke = PanNukeDataModule(data_dir = tmp_path, nucleus_type_labels = nucleus_type_labels,
-                                split = split, download = False, transforms = None, batch_size = batch_size)
+                                split = split, download = False, transforms = None,
+                                batch_size = batch_size, hovernet_preprocess = hovernet_preprocess)
 
     train = pannuke.train_dataloader
     valid = pannuke.valid_dataloader
     test = pannuke.test_dataloader
 
     for loader in [train, test, valid]:
-        im, mask, tissue_types = next(iter(loader))
+        # make sure everything is correct dimensions
+        if hovernet_preprocess:
+            im, mask, hv, tissue_types = next(iter(loader))
+            assert hv.shape == (batch_size, 2, 256, 256)
+        else:
+            im, mask, tissue_types = next(iter(loader))
+
         assert im.shape == (batch_size, 3, 256, 256)
         if nucleus_type_labels:
             assert mask.shape == (batch_size, 6, 256, 256)
         else:
             assert mask.shape == (batch_size, 256, 256)
+
         assert len(tissue_types) == batch_size and all([isinstance(t, str) for t in tissue_types])
 
 
@@ -174,9 +182,14 @@ def check_pannuke_data_urls():
         assert r.getcode() == 200
 
 
-def check_wrong_path_download_false():
+def check_wrong_path_download_false_fails():
     with pytest.raises(AssertionError):
         pannuke = PanNukeDataModule(data_dir = "wrong/path/to/pannuke", download = False)
 
+
+def test_pannuke_multiclass_mask_to_nucleus_mask():
+    mask = np.random.randint(low = 0, high = 10, size = (6, 256, 256), dtype = np.uint8)
+    mask_1c = pannuke_multiclass_mask_to_nucleus_mask(mask)
+    assert mask_1c.shape == (256, 256)
 
 # TODO add tests for _download_pannuke()
