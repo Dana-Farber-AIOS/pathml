@@ -48,6 +48,7 @@ jobs:
     - name: Compile docs
       shell: bash -l {0}
       run: |
+        sudo apt-get install pandoc
         pip install ipython sphinx nbsphinx nbsphinx-link sphinx-rtd-theme
         cd docs
         make html
