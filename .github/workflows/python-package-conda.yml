@@ -45,3 +45,9 @@ jobs:
       run: |
         conda install pytest
         python -m pytest
+    - name: Compile docs
+      shell: bash -l {0}
+      run: |
+        pip install ipython sphinx nbsphinx nbsphinx-link sphinx-rtd-theme
+        cd docs
+        make html
