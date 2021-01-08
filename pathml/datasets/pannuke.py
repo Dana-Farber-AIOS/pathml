@@ -31,6 +31,8 @@ class PanNukeDataset(BaseTileDataset):
 
     Args:
         data_dir: Path to PanNuke data. Should contain an 'images' directory and a 'masks' directory.
+            Images should be 256x256 RGB in a format that can be read by `cv2.imread()` (e.g. png).
+            Masks should be .npy files of shape (6, 256, 256).
         fold_ix: Index of which fold of PanNuke data to use. One of 1, 2, or 3. If ``None``, ignores the folds and uses
             the entire PanNuke dataset. Defaults to ``None``.
         transforms: Transforms to use for data augmentation. Must accept two arguments (image and mask) and return a
@@ -89,7 +91,7 @@ class PanNukeDataset(BaseTileDataset):
 
         if self.nucleus_type_labels is False:
             # only look at "background" mask in last channel
-            mask = mask[:, :, 5]
+            mask = mask[5, :, :]
             # invert so that ones are nuclei pixels
             mask = 1 - mask
 
@@ -101,10 +103,7 @@ class PanNukeDataset(BaseTileDataset):
         # swap channel dim to pytorch standard (C, H, W)
         im = im.transpose((2, 0, 1))
 
-        # only need to swap axes if multiclass labels. Otherwise the mask is just (H, W)
-        if self.nucleus_type_labels:
-            mask = mask.transpose((2, 0, 1))
-        
+        # compute hv map
         if self.hovernet_preprocess:
             if self.nucleus_type_labels:
                 # sum across mask channels to squash mask channel dim to size 1
@@ -113,10 +112,13 @@ class PanNukeDataset(BaseTileDataset):
             else:
                 mask_1c = mask
             hv_map = compute_hv_map(mask_1c)
-            return torch.from_numpy(im), torch.from_numpy(mask), torch.from_numpy(hv_map), tissue_type
 
+        if self.hovernet_preprocess:
+            out = torch.from_numpy(im), torch.from_numpy(mask), torch.from_numpy(hv_map), tissue_type
         else:
-            return torch.from_numpy(im), torch.from_numpy(mask), tissue_type
+            out = torch.from_numpy(im), torch.from_numpy(mask), tissue_type
+
+        return out
 
 
 def pannuke_multiclass_mask_to_nucleus_mask(multiclass_mask):
@@ -124,7 +126,7 @@ def pannuke_multiclass_mask_to_nucleus_mask(multiclass_mask):
     Convert multiclass mask from PanNuke to a single channel nucleus mask.
     Assumes each pixel is assigned to one and only one class. Sums across channels, except the last mask channel
     which indicates background pixels in PanNuke.
-    Operates on a single masks.
+    Operates on a single mask.
 
     Args:
         multiclass_mask (torch.Tensor): Mask from PanNuke, in classification setting. (i.e. ``nucleus_type_labels=True``).
@@ -135,9 +137,9 @@ def pannuke_multiclass_mask_to_nucleus_mask(multiclass_mask):
     """
     # verify shape of input
     assert multiclass_mask.ndim == 3 and multiclass_mask.shape[0] == 6, \
-        f"Expecting a batch of masks with dims (6, 256, 256). Got input of shape {multiclass_mask.shape}"
+        f"Expecting a mask with dims (6, 256, 256). Got input of shape {multiclass_mask.shape}"
     assert multiclass_mask.shape[1] == 256 and multiclass_mask.shape[2] == 256, \
-        f"Expecting a batch of masks with dims (6, 256, 256). Got input of shape {multiclass_mask.shape}"
+        f"Expecting a mask with dims (6, 256, 256). Got input of shape {multiclass_mask.shape}"
     # ignore last channel
     out = np.sum(multiclass_mask[:-1, :, :], axis = 0)
     return out

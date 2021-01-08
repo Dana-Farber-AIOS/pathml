@@ -29,7 +29,7 @@ def create_fake_pannuke_data(target_dir, n_fold=16):
     for fold_ix in folds:
         for i in range(n_fold):
             im = np.random.randint(low = 2, high = 254, size = (256, 256, 3), dtype = np.uint8)
-            mask = np.random.randint(low = 0, high = 10, size = (256, 256, 6), dtype = np.uint8)
+            mask = np.random.randint(low = 0, high = 10, size = (6, 256, 256), dtype = np.uint8)
             tissue_type = np.random.choice(tissue_types)
 
             im_fname = imdir / f"fold{fold_ix}_{i}_{tissue_type}.png"
@@ -63,7 +63,6 @@ def test_pannuke_dataset_sizes(tmp_path, fold, nucleus_type_labels):
         assert mask.shape == (6, 256, 256)
     else:
         assert mask.shape == (256, 256)
-
 
 
 def create_fake_pannuke_data_raw(target_dir, fold_size=16):
@@ -120,15 +119,23 @@ def test_process_downloaded_pannuke(tmp_path):
         assert len(list(maskdir.glob(f"fold{fold_ix}*"))) == fold_size
 
 
+@pytest.mark.parametrize("raw_data", [True, False])
 @pytest.mark.parametrize("hovernet_preprocess", [True, False])
 @pytest.mark.parametrize("split", [1, 2, 3, None])
 @pytest.mark.parametrize("nucleus_type_labels", [True, False])
-def test_pannuke_datamodule(tmp_path, split, nucleus_type_labels, hovernet_preprocess):
+def test_pannuke_datamodule(tmp_path, split, nucleus_type_labels, hovernet_preprocess, raw_data):
     # make fake data
-    fold_size = 16
-    create_fake_pannuke_data(tmp_path, n_fold = fold_size)
+    # if raw_data, then also test processing step
+    fold_size = 8
 
-    batch_size = 8
+    if raw_data:
+        create_fake_pannuke_data_raw(tmp_path, fold_size = fold_size)
+        # process the fake data
+        PanNukeDataModule._process_downloaded_pannuke(tmp_path)
+    else:
+        create_fake_pannuke_data(tmp_path, n_fold = fold_size)
+
+    batch_size = 4
     pannuke = PanNukeDataModule(data_dir = tmp_path, nucleus_type_labels = nucleus_type_labels,
                                 split = split, download = False, transforms = None,
                                 batch_size = batch_size, hovernet_preprocess = hovernet_preprocess)
