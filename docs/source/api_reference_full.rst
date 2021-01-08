@@ -39,5 +39,7 @@ Datasets
 ML
 --
 
-.. automodule:: pathml.ml
+.. automodule:: pathml.ml.hovernet
+    :members:
+.. automodule:: pathml.ml.utils
     :members:
