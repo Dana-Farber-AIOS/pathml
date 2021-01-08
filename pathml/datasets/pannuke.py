@@ -7,6 +7,7 @@ from warnings import warn
 from pathlib import Path
 import re
 import cv2
+import shutil
 
 from pathml.datasets.base import BaseTileDataset, BaseDataModule
 from pathml.datasets.utils import download_from_url
@@ -307,7 +308,7 @@ class PanNukeDataModule(BaseDataModule):
             zip_file = p / f"fold_{fold_ix}.zip"
             downloaded_dir = p / f"Fold {fold_ix}"
             zip_file.unlink()
-            downloaded_dir.rmdir()
+            shutil.rmtree(downloaded_dir)
 
 
     @property

@@ -168,6 +168,9 @@ def test_clean_up_download_pannuke(tmp_path):
             myzip.writestr('fake_pannuke_data.txt', "NYE 2020 - happy new year!")
         downloaded_dir = tmp_path / f"Fold {fold_ix}"
         downloaded_dir.mkdir()
+        # add some data inside the dirs (test for issue #53)
+        data = np.random.randint(low = 0, high = 10, size = (8, 256, 256, 6))
+        np.save(file = str(downloaded_dir / "data.npy"), arr = data)
 
     # now call cleanup
     PanNukeDataModule._clean_up_download_pannuke(tmp_path)
