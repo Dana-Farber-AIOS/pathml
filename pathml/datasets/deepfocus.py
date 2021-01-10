@@ -67,7 +67,7 @@ class DeepFocusDataModule(BaseDataModule):
             return
         # TODO: add md5 checksum
         download_url('https://zenodo.org/record/1134848/files/outoffocus2017_patches5Classification.h5', root)
-        # TODO: clean dataset?
+        # TODO: clean dataset
 
     def _checkintegrity(self) -> bool:
         # TODO: check hash of file
@@ -79,7 +79,7 @@ class DeepFocusDataset(BaseDataset):
             fold_ix=None,
             transforms=None):
         self.datah5 = h5py.File(str(data_dir + 'outoffocus2017_patches5Classification.h5'), 'r')
-        # TODO: decide size of folds
+        # TODO: determine folds 
         if fold_ix == 1:
             self.datah5 = self.datah5[]
         if fold_ix == 2:
