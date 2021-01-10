@@ -34,6 +34,7 @@ class PanNukeDataset(BaseTileDataset):
         data_dir: Path to PanNuke data. Should contain an 'images' directory and a 'masks' directory.
             Images should be 256x256 RGB in a format that can be read by `cv2.imread()` (e.g. png).
             Masks should be .npy files of shape (6, 256, 256).
+            Image and mask files should be named in 'fold<fold_ix>_<i>_<tissue>' format.
         fold_ix: Index of which fold of PanNuke data to use. One of 1, 2, or 3. If ``None``, ignores the folds and uses
             the entire PanNuke dataset. Defaults to ``None``.
         transforms: Transforms to use for data augmentation. Must accept two arguments (image and mask) and return a
@@ -73,18 +74,21 @@ class PanNukeDataset(BaseTileDataset):
         assert maskdir.is_dir(), f"Error: 'masks' directory not found: {maskdir}"
 
         if self.fold_ix is None:
-            self.impaths = list(imdir.glob("*"))
-            self.maskpaths = list(maskdir.glob("*"))
+            paths = list(imdir.glob("*"))
         else:
-            self.impaths = list(imdir.glob(f"fold{fold_ix}*"))
-            self.maskpaths = list(maskdir.glob(f"fold{fold_ix}*"))
+            paths = list(imdir.glob(f"fold{fold_ix}*"))
+
+        self.imdir = imdir
+        self.maskdir = maskdir
+        self.paths = [p.stem for p in paths]
 
     def __len__(self):
-        return len(self.impaths)
+        return len(self.paths)
 
     def __getitem__(self, ix):
-        impath = self.impaths[ix]
-        maskpath = self.maskpaths[ix]
+        stem = self.paths[ix]
+        impath = self.imdir / f"{stem}.png"
+        maskpath = self.maskdir / f"{stem}.npy"
         tissue_type = str(impath.stem).split(sep = "_")[2]
 
         im = cv2.imread(str(impath))
@@ -290,10 +294,10 @@ class PanNukeDataModule(BaseDataModule):
                 tissue_type = types_fold[j]
                 # change underscores in tissue type label to dashes
                 tissue_type = re.sub(pattern = "_", repl = "-", string = tissue_type)
-
-                im_fname = imdir / f"fold{fold_ix}_{j}_{tissue_type}.png"
+                file_basename = f"fold{fold_ix}_{j}_{tissue_type}"
+                im_fname = imdir / f"{file_basename}.png"
                 im_fname = str(im_fname.resolve())
-                mask_fname = maskdir / f"fold{fold_ix}_{j}_{tissue_type}.npy"
+                mask_fname = maskdir / f"{file_basename}.npy"
                 mask_fname = str(mask_fname.resolve())
 
                 cv2.imwrite(im_fname, im)
