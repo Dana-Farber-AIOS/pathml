@@ -30,9 +30,6 @@ class DeepFocusDataModule(BaseDataModule):
         self.transforms = transforms
         self.batch_size = batch_size
 
-    def __len__(self):
-        return len(self.datah5['X'])
-
     @property
     def train_dataloader(self):
         return data.DataLoader(
@@ -82,6 +79,7 @@ class DeepFocusDataset(BaseDataset):
             fold_ix=None,
             transforms=None):
         self.datah5 = h5py.File(str(data_dir + 'outoffocus2017_patches5Classification.h5'), 'r')
+        # TODO: this is extremely jank and must be improved
         if fold_ix == None:
             self.X = self.datah5['X']
             self.Y = self.datah5['Y']

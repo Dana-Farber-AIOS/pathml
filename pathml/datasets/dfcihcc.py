@@ -1,7 +1,7 @@
 import os
 import ntpath
 import h5py
-from pathlib import path
+from pathlib import Path
 
 import torch.utils.data
 from torch.utils.data import Dataset, DataLoader
@@ -20,57 +20,74 @@ class DFCIHCCImagingDatamodule(BaseDataModule):
             split = None, 
             batch_size = 32
     ):
+        self.data_dir = Path(data_dir)
+        self.shuffle = shuffle
+        self.transforms = transforms
+        self.split = split
+        self.batch_size = batch_size
+
+    def _get_dataset(self, fold_ix = None):
+        return DFCIHCCImagingDataset(
+            data_dir = self.data_dir,
+            fold_ix = fold_ix,
+            transforms = self.transforms
+        )
+
+    @property
     def train_dataloader(self):
         return data.DataLoader(
-                dataset = DFCIHCCImagingDataset(root=data_dir, split=0),
+                dataset = self._get_dataset(fold_ix = 1),
                 batch_size = self.batch_size,
                 shuffle = self.shuffle
             )
 
+    @property
     def valid_dataloader(self):
         return data.DataLoader(
-                dataset = DFCIHCCImagingDataset(data_dir, split=1),
+                dataset = self._get_dataset(fold_ix = 2),
                 batch_size = self.batch_size,
                 shuffle = self.shuffle
             )
-
+    
+    @property
     def test_dataloader(self):
         return data.DataLoader(
-                dataset = DFCIHCCImagingDataset(data_dir, split=2),
+                dataset = self._get_dataset(fold_ix = 3),
                 batch_size = self.batch_size,
                 shuffle = self.shuffle
             )
 
-class DFCIHCCImagingDataset(BaseSlideDataset):
+class DFCIHCCImagingDataset(BaseTileDataset):
     """
-    BaseSlideDataset class for PathML preprocessing to tiles
+    Dataset object for DFCI/HCC data.
+    Preprocesses slides into tile dataset and saves to .h5.
     Imaging data from Dana Farber Cancer Institute/Harvard Cancer Center prostate cancer database.
     Dataset consists of histology, affymetrix rna arrays, metabolon metabolomics, radiology, cnv arrays, mutation annotations from gelb.
     """
     def __init__(self,
-            root: str,
-            split: None
+            data_dir,
+            fold_ix = None,
+            transforms = None
     ):
-        self.path = root
+        self.data_dir = Path(data_dir)
+        assert fold_ix in [1,2,3,None], f"Error: split {split} must be in [1,2,3,None]."
+        self.fold_ix = fold_ix
         # if no .h5 file, generate from raw
-        if not any(fname.endswith('.h5') for fname in os.listdir(root)):
+        if not any(fname.endswith('.h5') for fname in os.listdir(self.data_dir)):
             slides = []
-            for root, dirs, files in os.walk(root):
+            for root, dirs, files in os.walk(self.data_dir):
                 for file in files:
                     if file.endswith(".svs"):
                         slides.append(file)
             self.slides = slides
             self._h5fromraw()
-        # from here on use .h5 file
-        self.data = h5py.File(Path(root+"dfcihccdataset.h5"), "r") 
-        assert split in [0,1,2,None], f"Error: split {split} must be in [1,2,3,None]."
-        self.split = split
-        # TODO: split h5 file based on self.split
+        self.data = h5py.File(self.data_dir / "dfcihccdataset.h5", "r") 
+        # TODO: grab data based on fold_ix 
 
     def __len__(self):
-        return len(slides)
+        return len(self.data['tiles'])
 
-    def __geitem__(self, idx):
+    def __getitem__(self, idx):
         slide = HESlide(path=self.slides[idx]) 
         head, tail = ntpath.split(self.slides[idx])
         name = os.path.splittext(tail)[0]
@@ -99,7 +116,6 @@ class DFCIHCCImagingDataset(BaseSlideDataset):
             i = 1
             for root, dirs, files in os.walk(root):
                 for file in files:
-                    # TODO: ?
                     if file.endswith(".png"):
                         tile = cv2.imread(file)
                         head, tail = ntpath.split(file)
@@ -208,16 +224,3 @@ class DFCIHCCImagingDataset(BaseSlideDataset):
                 tile.array = normalizer.apply(tile.array)
                 tile.save(out_dir = out_dir, filename = f"{data.wsi.name}_{tile.i}_{tile.j}.png")
             return data
-
-class DFCIHCCImagingDataset(Dataset):
-    """
-    Pytorch dataloader for imaging data from Dana Farber Cancer Institute/Harvard Cancer Center prostate cancer database.
-    Dataset consists of histology, affymetrix rna arrays, metabolon metabolomics, radiology, cnv arrays, mutation annotations from gelb.
-    """
-    def __init__(self,
-            root: str
-    ):
-        self.path = root
-
-    def __getitem__(self, idx):
-        pass
