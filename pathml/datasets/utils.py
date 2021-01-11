@@ -1,6 +1,7 @@
 import os
 import shutil
 import urllib
+import io
 
 
 def parse_file_size(fs):
@@ -40,4 +41,23 @@ def download_from_url(url, download_dir, name=None):
 
         # Download the file from `url` and save it locally under `file_name`:
         with urllib.request.urlopen(url) as response, open(path, 'wb') as out_file:
+            # if response provides content-length print status bar
+            length = response.getheader('content-length')
+            if length:
+                length = int(length)
+                blocksize = max(4096, length//100)
+            else:
+                blocksize = 1000000
+            print(f"length is {length}, blocksize is {blocksize}")
+            buf = io.BytesIO()
+            size = 0
+            while True:
+                buf1 = response.read(blocksize)
+                if not buf1:
+                    break
+                buf.write(buf1)
+                size += len(buf1)
+                if length:
+                    print(f"{round(size/length,3)}", end='\r')
+            print()
             shutil.copyfileobj(response, out_file)

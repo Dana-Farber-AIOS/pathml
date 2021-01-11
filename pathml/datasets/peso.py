@@ -24,7 +24,7 @@ class PesoDataModule(BaseDataModule):
         if download:
             self._download_peso(self.data_dir)
 
-    def _get_dataset(self, fold_ix):
+    def _get_dataset(self, fold_ix=None):
         return PesoDataset(
                 data_dir = self.data_dir,
                 fold_ix = fold_ix,
@@ -40,11 +40,12 @@ class PesoDataModule(BaseDataModule):
             files = ['peso_testset_mapping.csv','peso_testset_png.zip','peso_testset_png_padded.zip','peso_testset_regions.zip','peso_testset_wsi_1.zip','peso_testset_wsi_2.zip','peso_testset_wsi_3.zip','peso_testset_wsi_4.zip','peso_training_colordeconvolution.zip','peso_training_masks.zip','peso_training_masks_corrected.zip','peso_training_wsi_1.zip','peso_training_wsi_2.zip','peso_training_wsi_3.zip','peso_training_wsi_4.zip','peso_training_wsi_5.zip','peso_training_wsi_6.zip']
             url = f'https://zenodo.org/record/1485967/files/'
             for file in files:
+                file = Path(file)
                 print(f"downloading {file}")
                 download_from_url(f"{url}/{file}", download_dir) 
-                if file.endswith('.zip'):
-                    with zipfile.ZipFile(f"{download_dir}/{file}",'r') as zip_ref:
-                        zip_ref.extractall(download_dir)
+                if zipfile.is_zipfile(file.name):
+                    with zipfile.ZipFile(download_dir / file,'r') as zip_ref:
+                        zip_ref.extractall(download_dir / file)
         else:
             warn(f'download_dir exists, download canceled')
 
@@ -130,6 +131,7 @@ class PesoDataset(BaseSlideDataset):
         pass
 
     def _makeh5(self):
+        pass
         
 
 
