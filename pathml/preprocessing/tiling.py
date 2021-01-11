@@ -14,6 +14,8 @@ class Tile:
 
     :param array: image for tile
     :type array: np.ndarray
+    :param masks: masks for tile
+    :type masks: dict
     :param i: vertical coordinate of top-left corner of tile, in original image
     :type i: int
     :param j: horizontal coordinate of top-left corner of tile, in original image
@@ -26,11 +28,11 @@ class Tile:
         self.j = j  # j coordinate of top left corner pixel
         if masks: 
             for val in masks.values():
-                if val.shape != self.array.shape:
+                if val.shape != self.array.shape[:2]:
                     raise ValueError(f"mask is of shape {val.shape} but must match tile shape {self.array.shape}")
             self.masks = Masks(masks)
-        elif masks==None:
-            self.masks = masks
+        elif masks == None:
+            self.masks = masks 
 
     def __repr__(self):  # pragma: no cover
         return f"Tile(array shape {self.array.shape}, " \

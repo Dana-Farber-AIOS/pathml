@@ -3,10 +3,13 @@ from collections import OrderedDict
 
 class Masks():
     '''
-    Class wrapping OrderedDict of masks.
-    Masks are type np.ndarray with elements type int8.
+    Object holding dict of masks.
+    Masks are np.ndarrays with elements type int8.
+    Wraps OrderedDict.
     '''
-    def __init__(self, masks=None):
+    def __init__(self, 
+            masks=None
+        ):
         # init with dict {key1:mask1,key2:mask2,...}
         if masks:
             if not isinstance(masks, dict):
@@ -49,6 +52,15 @@ class Masks():
             if mask.shape != requiredshape:
                 raise ValueError(f"masks must be of shape {requiredshape} but provided mask is of shape {mask.shape}") 
         self._masks[key] = mask
+
+    # TODO: classmethod decorator?
+    def slice(self, coordinates):
+        maskslice = Masks() 
+        for key in self._masks.keys():
+            val = self._masks[key]
+            val = val[coordinates]
+            maskslice.add(key, val)
+        return maskslice
 
     def remove(self, key):
         if key not in self._masks:

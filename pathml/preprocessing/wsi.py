@@ -15,7 +15,7 @@ class HESlide(RGBSlide):
     def __init__(self, path, name=None, masks=None):
         super().__init__(path, name)
         self.slide = openslide.open_slide(path)
-        self.masks = masks
+        self.masks = masks 
 
     def __repr__(self):  # pragma: no cover
         return f"HESlide(path={self.path}, name={self.name})"
@@ -44,9 +44,9 @@ class HESlide(RGBSlide):
         image_array = cv2.cvtColor(image_array_rgba, cv2.COLOR_RGBA2RGB)
         out = SlideData(wsi = self, image = image_array)
 
-        if masks:
+        if self.masks:
             # supports 2d (birdseye), and 3d (birdseye by channel) masking 
-            for val in masks.values():
+            for val in self.masks.values():
                 if len(val) == 2:
                     if val.shape != imagearray.shape[:2]:
                         raise ValueError(f"mask is of shape {val.shape} but must match slide shape {imagearray.shape[:2]}")
@@ -94,5 +94,7 @@ class HESlide(RGBSlide):
                     level = level, size = (size, size)
                 )
                 region_rgb = pil_to_rgb(region)
-
-                yield region_rgb
+                # TODO: test. switch i and j?
+                if self.masks is not None:
+                    masks_chunk = self.masks.slice([int(ix_j*stride):int(ix_j*stride)+size,int(ix_i*stride):int(ix_i*stride)+size, ...])
+                yield region_rgb, masks_chunk

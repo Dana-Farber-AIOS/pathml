@@ -59,7 +59,10 @@ class MultiparametricSlide2d(Slide2d):
     converts all formats to OME-TIFF. Please cite: https://pubmed.ncbi.nlm.nih.gov/20513764/
     """
 
-    def __init__(self, path, masks=None):
+    def __init__(self, 
+            path, 
+            masks=None
+        ):
         super().__init__(path)
         self.path = path
 
