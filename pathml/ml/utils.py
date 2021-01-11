@@ -96,3 +96,35 @@ def get_sobel_kernels(size, dt=torch.float32):
 
     return kernel_h, kernel_v
 
+
+def wrap_transform_multichannel(transform):
+    """
+    Wrapper to make albumentations transform compatible with a multichannel mask.
+    
+    Args:
+        transform: Albumentations transform. Must have 'additional_targets' parameter specified with 
+            a total of `n_channels` key,value pairs. All values must be 'mask' but the keys don't matter.
+            e.g. for a mask with 3 channels, you could use: 
+                `additional targets = {'mask1' : 'mask', 'mask2' : 'mask', 'pathml' : 'mask'}`
+    
+    Returns:
+        function that can be called with a multichannel mask argument
+    """
+    # make sure that everything is correct so that transform is correctly applied
+    assert all([v == "mask" for v in transform.additional_targets.values()]), \
+        f"error all values in transform.additional_targets must be 'mask'." 
+    
+    def transform_out(*args, **kwargs):
+        mask = kwargs.pop("mask")
+        
+        assert len(transform.additional_targets) == mask.shape[0], \
+            f"input mask shape {mask.shape} doesn't match additional_targets {transform.additional_targets}"
+        
+        mask_to_dict = {value : mask[i, :, :] for i, value in enumerate(transform.additional_targets)}
+        kwargs.update(mask_to_dict)
+        out = transform(*args, **kwargs)
+        mask_out = np.stack([out.pop(key) for key in transform.additional_targets])
+        out["mask"] = mask_out
+        return out
+    
+    return transform_out
