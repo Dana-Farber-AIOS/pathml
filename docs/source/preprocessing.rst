@@ -24,6 +24,11 @@ Loading Images
 .. autoclass:: pathml.preprocessing.multiparametricslide.MultiparametricSlide
     :members:
 
+Annotating Images
+-----------------
+.. autoclass:: pathml.preprocessing.masks.Masks
+    :members:
+
 Tiling Images
 -------------
 .. automodule:: pathml.preprocessing.tiling

@@ -3,14 +3,14 @@ from collections import OrderedDict
 
 class Masks():
     '''
-    Object holding dict of masks.
-    Masks are np.ndarrays with elements type int8.
-    Wraps OrderedDict.
+    Object holding masks.  
+
+    :param masks: Mask objects representing ex. labels, segmentations. 
+    :type masks: :class:`collections.OrderedDict` with keys of type str and values of type np.ndarray with elements of type int8
     '''
     def __init__(self, 
             masks=None
         ):
-        # init with dict {key1:mask1,key2:mask2,...}
         if masks:
             if not isinstance(masks, dict):
                 raise ValueError(f"masks must be passed as dicts of the form key1:mask1,key2:mask2,...")
@@ -41,6 +41,12 @@ class Masks():
         return list(self._masks.values())[item]
 
     def add(self, key, mask):
+        """
+        Add mask indexed by key to self._masks.
+
+        :type key: str
+        :type mask: np.ndarray with elements of type int8
+        """
         if not isinstance(mask, np.ndarray):
             raise ValueError(f"can not add {type(mask)}, mask must be of type np.ndarray")
         if not isinstance(key, str):
@@ -53,8 +59,12 @@ class Masks():
                 raise ValueError(f"masks must be of shape {requiredshape} but provided mask is of shape {mask.shape}") 
         self._masks[key] = mask
 
-    # TODO: classmethod decorator?
     def slice(self, coordinates):
+        """
+        Slice all masks in self._masks extending of numpy array slicing.
+
+        :param coordinates: coordinates denoting slice i.e. 'selection' https://numpy.org/doc/stable/reference/arrays.indexing.html 
+        """
         maskslice = Masks() 
         for key in self._masks.keys():
             val = self._masks[key]
@@ -63,6 +73,9 @@ class Masks():
         return maskslice
 
     def remove(self, key):
+        """
+        Remove mask from self._masks by key.
+        """
         if key not in self._masks:
             raise KeyError('key is not in dict Masks')
         del self._masks[key]
