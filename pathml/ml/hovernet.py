@@ -189,7 +189,7 @@ class _HoverNetDecoder(nn.Module):
         return out
 
 
-class HoverNet(nn.Module):
+class HoVerNet(nn.Module):
     """
     Model for simultaneous segmentation and classification based on HoVer-Net.
     Can also be used for segmentation only, if class labels are not supplied.
@@ -486,7 +486,7 @@ def _loss_hv_mse(hv_out, true_hv):
     return loss
 
 
-def loss_HoVerNet(outputs, ground_truth, n_classes=None):
+def loss_hovernet(outputs, ground_truth, n_classes=None):
     """
     Compute loss for HoVer-Net.
     Equation (1) in Graham et al.
