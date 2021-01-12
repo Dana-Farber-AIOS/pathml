@@ -1,6 +1,7 @@
 # Utilities for ML module
 import torch
 from torch.nn import functional as F
+import numpy as np
 
 
 def center_crop_im_batch(batch, dims, batch_order = "BCHW"):
@@ -74,6 +75,29 @@ def dice_loss(true, logits, eps=1e-3):
     loss = (2. * intersection / (cardinality + eps)).mean()
     loss = 1 - loss
     return loss
+
+
+def dice_score(pred, truth, eps=1e-3):
+    """
+    Calculate dice score for two tensors of the same shape.
+    If tensors are not already binary, they are converted to bool by zero/non-zero.
+    
+    Args:
+        pred (np.ndarray): Predictions
+        truth (np.ndarray): ground truth
+        
+    Returns:
+        float: Dice score
+    """    
+    assert isinstance(truth, np.ndarray) and isinstance(pred, np.ndarray), "inputs must be torch.Tensor or np.ndarray"
+    assert pred.shape == truth.shape
+    # turn into binary if not already
+    pred = pred != 0
+    truth = truth != 0
+    
+    num = 2 * np.sum(pred.flatten() * truth.flatten())
+    denom = np.sum(pred) + np.sum(truth) + eps
+    return float(num / denom)
 
 
 def get_sobel_kernels(size, dt=torch.float32):
