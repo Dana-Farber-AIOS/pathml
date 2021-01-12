@@ -41,6 +41,7 @@ def download_from_url(url, download_dir, name=None):
 
         # Download the file from `url` and save it locally under `file_name`:
         with urllib.request.urlopen(url) as response, open(path, 'wb') as out_file:
+            shutil.copyfileobj(response, out_file)
             # if response provides content-length print status bar
             length = response.getheader('content-length')
             if length:
@@ -60,4 +61,3 @@ def download_from_url(url, download_dir, name=None):
                 if length:
                     print(f"{round(size/length,3)}", end='\r')
             print()
-            shutil.copyfileobj(response, out_file)
