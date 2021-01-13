@@ -1,4 +1,5 @@
 import pytest
+import pickle
 
 from pathml.preprocessing.pipeline import Pipeline
 from pathml.preprocessing.base import (
@@ -31,41 +32,47 @@ def test_base_pipeline_dataset(example_slide_dataset, dummy_pipeline, n_jobs):
     for slide in example_slide_dataset:
         assert dummy_pipeline.record[slide.name]
 
+# define dummy preprocessors amd dummy data class for testing
+# we are testing the pipeline, not the preprocessors themselves
+class MySlideLoader(BaseSlideLoader):
+    def apply(self, slide):
+        data = {"slide_loaded": True}
+        return data
 
+class MySlidePreprocessor(BaseSlidePreprocessor):
+    def apply(self, data):
+        data["slide_preprocessed"] = True
+        return data
+
+class MyTileExtractor(BaseTileExtractor):
+    def apply(self, data):
+        data["tiles_extracted"] = True
+        return data
+
+class MyTilePreprocessor(BaseTilePreprocessor):
+    def apply(self, data):
+        data["tiles_preprocessed"] = True
+        return data
+
+# now create pipeline to string these together and check that it worked properly
+my_pipeline = Pipeline(
+    slide_loader = MySlideLoader(),
+    slide_preprocessor = MySlidePreprocessor(),
+    tile_extractor = MyTileExtractor(),
+    tile_preprocessor = MyTilePreprocessor()
+)
 def test_pipeline(example_he_slide):
-    # define dummy preprocessors amd dummy data class for testing
-    # we are testing the pipeline, not the preprocessors themselves
-    class MySlideLoader(BaseSlideLoader):
-        def apply(self, slide):
-            data = {"slide_loaded": True}
-            return data
-
-    class MySlidePreprocessor(BaseSlidePreprocessor):
-        def apply(self, data):
-            data["slide_preprocessed"] = True
-            return data
-
-    class MyTileExtractor(BaseTileExtractor):
-        def apply(self, data):
-            data["tiles_extracted"] = True
-            return data
-
-    class MyTilePreprocessor(BaseTilePreprocessor):
-        def apply(self, data):
-            data["tiles_preprocessed"] = True
-            return data
-
-    # now create pipeline to string these together and check that it worked properly
-    my_pipeline = Pipeline(
-        slide_loader = MySlideLoader(),
-        slide_preprocessor = MySlidePreprocessor(),
-        tile_extractor = MyTileExtractor(),
-        tile_preprocessor = MyTilePreprocessor()
-    )
-
     test_data = my_pipeline.run_single(example_he_slide)
 
     assert test_data["slide_loaded"]
     assert test_data["slide_preprocessed"]
     assert test_data["tiles_extracted"]
     assert test_data["tiles_preprocessed"]
+
+
+def test_pipeline_save(tmp_path):
+    # tmp_path is a temporary path used for testing
+    d = tmp_path / "test"
+    saved = my_pipeline.save(d)
+
+    assert type(pickle.load(open(saved, "rb"))) == type(my_pipeline)

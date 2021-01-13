@@ -1,6 +1,6 @@
 from pathml.preprocessing.base import BaseSlideLoader, BaseSlidePreprocessor, BaseTileExtractor, BaseTilePreprocessor, \
     BasePipeline, BaseSlide
-
+import pickle
 
 class Pipeline(BasePipeline):
     """
@@ -77,3 +77,13 @@ class Pipeline(BasePipeline):
         data = self.extract_tiles(data)
         data = self.run_tile_level(data)
         return data
+
+    def save(self, filename):
+        """
+        save pipeline by writing them to disk
+        :param filename: save path on disk
+        :type path: str
+        :return: string indicated file saved to above path
+        """
+        pickle.dump(self, open(filename, "wb"))
+        return filename
