@@ -710,7 +710,8 @@ def post_process_batch_hovernet(outputs, n_classes, small_obj_size_thresh=10, ke
         for batch_ix, nuc_preds in enumerate(out_detection_list):
             # get labels of nuclei from nucleus detection
             nucleus_labels = list(np.unique(nuc_preds))
-            nucleus_labels.remove(0)  # 0 is background
+            if 0 in nucleus_labels:
+                nucleus_labels.remove(0)  # 0 is background
             nucleus_class_preds = nc_out_preds[batch_ix, ...]
 
             out_class_preds_single = out_classification[batch_ix, ...]
