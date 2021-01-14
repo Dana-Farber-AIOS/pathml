@@ -17,3 +17,6 @@ dependencies:
   - openjdk==8.0.152
   - pip:
       - opencv-contrib-python>=4.1.1
+      - openslide-python>=1.1.1
+      - javabridge==1.0.19
+      - python-bioformats==4.0.0

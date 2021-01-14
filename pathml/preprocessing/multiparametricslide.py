@@ -2,11 +2,27 @@ from warnings import warn
 import sys
 import os
 import numpy as n
-import imagej
 
 from pathml.preprocessing.slide_data import SlideData
 from pathml.preprocessing.base import Slide2d
 
+try:
+    import bioformats
+    import javabridge
+    import bioformats.formatreader as biordr
+    from bioformats.formatreader import ImageReader
+    from bioformats.metadatatools import createOMEXMLMetadata
+except ImportError:
+    warn(
+        """MultiparametricSlide2d requires a jvm to interface with java bioformats library.
+            See: https://pythonhosted.org/javabridge/installation.html. You can install using:
+
+                sudo apt-get install openjdk-8-jdk
+                pip install javabridge
+                pip install python-bioformats
+        """
+    )
+    raise ImportError("MultiparametricSlide2d requires javabridge and bioformats")
 
 def check_mac_java_home():
     is_mac = sys.platform == 'darwin'
@@ -47,9 +63,6 @@ class MultiparametricSlide2d(Slide2d):
         self.path = path
 
         # init java virtual machine
-        # TODO: try pyimagej
-        # TODO: try jpype
-        # TODO: try py4j
         javabridge.start_vm(class_path=bioformats.JARS)
         # java maximum array size of 2GB constrains image size
         ImageReader = bioformats.formatreader.make_image_reader_class()
