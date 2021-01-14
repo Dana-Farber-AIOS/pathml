@@ -1,7 +1,7 @@
 from warnings import warn
 import sys
 import os
-import numpy as n
+import numpy as np
 
 from pathml.preprocessing.slide_data import SlideData
 from pathml.preprocessing.base import Slide2d
