@@ -35,13 +35,19 @@ class PesoDataModule(BaseDataModule):
         return f"repr=(DataModule for PESO segmentation dataset)"
 
     def _download_peso(self, download_dir):
+        # remove trailing path
+        if download_dir.endswith(os.sep):
+            download_dir = download_dir[:-1]
+        # throw exception if download directory exists
+        # TODO: check hash
         if not os.path.isdir(download_dir):
             print("Downloading Peso Dataset")
             files = ['peso_testset_mapping.csv','peso_testset_png.zip','peso_testset_png_padded.zip','peso_testset_regions.zip','peso_testset_wsi_1.zip','peso_testset_wsi_2.zip','peso_testset_wsi_3.zip','peso_testset_wsi_4.zip','peso_training_colordeconvolution.zip','peso_training_masks.zip','peso_training_masks_corrected.zip','peso_training_wsi_1.zip','peso_training_wsi_2.zip','peso_training_wsi_3.zip','peso_training_wsi_4.zip','peso_training_wsi_5.zip','peso_training_wsi_6.zip']
+            files = ['peso_training_wsi_3.zip','peso_training_wsi_4.zip','peso_training_wsi_5.zip','peso_training_wsi_6.zip']
             url = f'https://zenodo.org/record/1485967/files/'
             for file in files:
                 print(f"downloading {file}")
-                download_from_url(f"{url}{file}", download_dir) 
+                download_from_url(f"{url}{file}", f"{download_dir}/{os.path.splitext(file)[0]}") 
                 if zipfile.is_zipfile(file):
                     with zipfile.ZipFile(f"{download_dir}/{file}",'r') as zip_ref:
                         zip_ref.extractall(f"{download_dir}/{file}")
