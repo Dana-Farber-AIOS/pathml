@@ -13,6 +13,9 @@ dependencies:
   - python-spams>=2.6.1
   - pip>=20.0.2
   - pytorch>=1.7.0
+  - openjdk==8.0.152
   - pip:
       - opencv-contrib-python>=4.1.1
       - openslide-python>=1.1.1
+      - javabridge
+      - python-bioformats
