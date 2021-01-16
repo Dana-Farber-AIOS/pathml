@@ -1,7 +1,9 @@
 import numpy as np
 
+from pathml.core.slide import Slide
 from pathml.core.masks import Masks
 from pathml.core.tiles import Tiles
+from pathml.core.chunk import Chunk
 from pathml.preprocessing.transforms import Transform
 from pathml.preprocessing.pipeline import Pipeline
 
@@ -28,15 +30,17 @@ class SlideData:
     :type history: list of __repr__'s from each method called on SlideData 
     """
     def __init__(self, slide=None, masks=None, tiles=None, labels=None):
+        assert isinstance(slide, Slide), f"slide is of type {type(slide)} but must be a subclass of pathml.core.slide.Slide"
         self.slide = slide
+        self._slidetype = type(slide)
         self.name = None if slide is None else slide.name
         # TODO: should size be a dict containing the sizes of slide?
         self.size = None if slide is None else slide.size
-        assert isinstance(masks, Masks), f"mask are of type {type(masks)} but must be of type pathml.core.masks.Masks"
+        assert isinstance(masks, (None, Masks)), f"mask are of type {type(masks)} but must be of type pathml.core.masks.Masks"
         self.masks = masks 
-        assert isinstance(tiles, Tiles), f"tiles are of type {type(tiles)} but must be of type pathml.core.tiles.Tiles" 
+        assert isinstance(tiles, (None, Tiles)), f"tiles are of type {type(tiles)} but must be of type pathml.core.tiles.Tiles" 
         self.tiles = tiles
-        assert isinstance(labels, ('int','str',Masks)), f"labels are of type {type(labels)} but must be of type int, str, or pathml.core.masks.Masks"
+        assert isinstance(labels, (None, 'int', 'str', Masks)), f"labels are of type {type(labels)} but must be of type int, str, or pathml.core.masks.Masks"
         self.labels = labels
         self.history = []
 
@@ -44,14 +48,18 @@ class SlideData:
         out = f"SlideData(slide={repr(self.slide)}, "
         out += f"slide: {self.slide.shape}, "
         out += f"masks: {'None' if self.masks is None else repr(self.masks)}, "
-        out += f"tiles: {'None' if self.tiles is None else repr(self.tiles)})"
+        out += f"tiles: {'None' if self.tiles is None else repr(self.tiles)}) "
+        out += f"labels: {self.labels} "
+        out += f"history: {self.history}"
         return out 
 
     def run(pipeline, **kwargs):
         assert isinstance(pipeline, Pipeline), f"pipeline is of type {type(pipeline)} but must be of type pathml.preprocessing.pipeline.Pipeline"
-        # pop args required for chunks and check that they exist
-        chunksize = kwargs.pop("chunksize", 3000)
-        for chunk in self.chunks():
+        chunkshape = kwargs.pop("chunkshape", 3000)
+        chunklevel = kwargs.pop("chunklevel", None)
+        chunkstride = kwargs.pop("chunkstride", chunkshape)
+        chunkpad = kwargs.pop("chunkpad", False)
+        for chunk in self.chunks(level = chunklevel, shape = chunkshape, stride = chunkstride, pad = chunkpad):
             pipeline(chunk, **kwargs)
 
     def chunks(self, level=None, shape, stride=shape, pad=False):
@@ -70,9 +78,6 @@ class SlideData:
         Yields:
             np.ndarray: Extracted chunk of dimension (size, size, 3)
         """
-        # if shape is int
-        # square chunks
-        # else chunks of shape
         if isinstance(shape, int):
             shape = (shape, shape)
         if self.slide.backend == 'openslide': 
@@ -100,16 +105,21 @@ class SlideData:
                         level = level, size = (shape[0], shape[1])
                     )
                     region_rgb = pil_to_rgb(region)
-                    # TODO: test. switch i and j?
+                    coords = (ix_i, ix_j)
                     if self.masks is not None:
-                        masks_chunk = self.masks.slice([int(ix_j*stride):int(ix_j*stride)+size,int(ix_i*stride):int(ix_i*stride)+size, ...])
-                    yield region_rgb, masks_chunk
+                        # TODO: test this line
+                        masks_chunk = self.masks.slice([int(ix_j*stride_j):int(ix_j*stride_j)+size,int(ix_i*stride_i):int(ix_i*stride_i)+size, ...])
+                    yield Chunk(region_rgb, masks_chunk, coords)
+
         elif self.slide.backend == 'bioformats':
-            # TODO: implement
+            # TODO: this is complicated because need to handle both chunking, allocating different 2GB java arrays, and managing java heap  
             pass
 
     def plot():
         pass 
 
     def save():
+        # see https://github.com/theislab/anndata/blob/master/anndata/_core/anndata.py#L1834-L1889
+        # TODO: combine slide, masks, tiles .h5 objects into a single .h5 object 
+        # TODO: write read method
         pass
