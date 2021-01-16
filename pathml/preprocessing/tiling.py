@@ -3,6 +3,7 @@ import os
 import cv2
 
 from pathml.preprocessing.base import BasePreprocessor, BaseTileExtractor
+from pathml.preprocessing.masks import Masks
 
 
 class Tile:
@@ -13,16 +14,25 @@ class Tile:
 
     :param array: image for tile
     :type array: np.ndarray
+    :param masks: masks for tile
+    :type masks: dict
     :param i: vertical coordinate of top-left corner of tile, in original image
     :type i: int
     :param j: horizontal coordinate of top-left corner of tile, in original image
     :type j: int
     """
-    def __init__(self, array, i=None, j=None):
+    def __init__(self, array, masks=None, i=None, j=None):
         assert isinstance(array, np.ndarray), "Array must be a np.ndarray"
         self.array = array
         self.i = i  # i coordinate of top left corner pixel
         self.j = j  # j coordinate of top left corner pixel
+        if masks: 
+            for val in masks.values():
+                if val.shape != self.array.shape[:2]:
+                    raise ValueError(f"mask is of shape {val.shape} but must match tile shape {self.array.shape}")
+            self.masks = Masks(masks)
+        elif masks == None:
+            self.masks = masks 
 
     def __repr__(self):  # pragma: no cover
         return f"Tile(array shape {self.array.shape}, " \
@@ -201,7 +211,7 @@ class SimpleTileExtractor(BaseTileExtractor):
             else:
                 Exception(f"Mask_thresholds of type {type(self.mask_thresholds)} must be a float or list of floats")
         else:
-            mask = data.mask
+            mask = data.masks
         data.tiles = extract_tiles_with_mask(
             im = im,
             tile_size = self.tile_size,

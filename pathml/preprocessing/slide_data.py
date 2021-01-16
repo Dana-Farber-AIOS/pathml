@@ -1,5 +1,7 @@
 import numpy as np
 
+from pathml.preprocessing.masks import Masks
+
 
 class SlideData:
     """
@@ -20,26 +22,27 @@ class SlideData:
     def __init__(self, wsi=None, image=None, mask=None, tiles=None):
         self.wsi = wsi
         self.image = None if image is None else image.astype(np.uint8)
-        self._mask = None if mask is None else mask.astype(np.uint8)
+        self.masks = wsi.masks 
+        if mask:
+            masks(mask)
         self.tiles = tiles
 
     def __repr__(self):  # pragma: no cover
         out = f"SlideData(wsi={repr(self.wsi)}, "
         out += f"image shape: {self.image.shape}, "
-        out += f"mask shape: {'None' if self._mask is None else self._mask.shape}, "
+        out += f"mask shape: {'None' if self._mask is None else repr(self.masks)}, "
         out += f"number of tiles: {'None' if self.tiles is None else len(self.tiles)})"
         return out
 
     @property
-    def mask(self):
-        return self._mask
+    def masks(self):
+        return self.masks
 
     # TODO make this more intuitive, like use a method like .add_mask(). The setter isn't very clear as is
     @mask.setter
-    def mask(self, new_mask):
+    def masks(self, key, new_mask):
         # use setter to handle initial None for mask to make mask updating easy
-        if self._mask is None:
-            self._mask = new_mask.astype(np.uint8)
+        if self.masks is None:
+            self.masks = Masks({key, new_mask}) 
         else:
-            assert self._mask.shape[0:2] == new_mask.shape[0:2]
-            self._mask = np.dstack([self._mask, new_mask]).astype(np.uint8)
+            self.masks.add(key, new_mask) 

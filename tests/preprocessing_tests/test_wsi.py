@@ -30,7 +30,7 @@ def test_HE_slide(openslide_example):
     assert isinstance(wsi, Slide2d)
     assert isinstance(wsi, RGBSlide)
 
-
+    
 @pytest.mark.parametrize("stride,size,n_expected", [(500, 500, 4*5), (100, 500, 18*25), (None, 500, 4*5), (500, 2000, 2)])
 def test_HE_chunks(stride, size, n_expected):
     wsi = HESlide(path = "tests/testdata/CMU-1-Small-Region.svs")
