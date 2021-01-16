@@ -1,6 +1,7 @@
 import numpy as np
 
-from pathml.preprocessing.masks import Masks
+from pathml.core.masks import Masks
+from pathml.core.tiles import Tiles
 
 
 class SlideData:
@@ -24,20 +25,25 @@ class SlideData:
     :param history: the history of operations applied to the SlideData object
     :type history: list of __repr__'s from each method called on SlideData 
     """
-    def __init__(self, slide=None, image=None, mask=None, tiles=None):
+    def __init__(self, slide=None, masks=None, tiles=None, labels=None):
         self.slide = slide
-        self.image = None if image is None else image.astype(np.uint8)
-        self.masks = wsi.masks 
-        if mask:
-            masks(mask)
+        self.name = None if slide is None else slide.name
+        # TODO: should size be a dict containing the sizes of slide?
+        self.size = None if slide is None else slide.size
+        assert isinstance(masks, Masks), f"mask are of type {type(masks)} but must be of type pathml.core.masks.Masks"
+        self.masks = masks 
+        assert isinstance(tiles, Tiles), f"tiles are of type {type(tiles)} but must be of type pathml.core.tiles.Tiles" 
         self.tiles = tiles
+        assert isinstance(labels, ('int','str',Masks)), f"labels are of type {type(labels)} but must be of type int, str, or pathml.core.masks.Masks"
+        self.labels = labels
+        self.history = []
 
     def __repr__(self):  # pragma: no cover
-        out = f"SlideData(wsi={repr(self.wsi)}, "
-        out += f"image shape: {self.image.shape}, "
-        out += f"mask shape: {'None' if self._mask is None else repr(self.masks)}, "
-        out += f"number of tiles: {'None' if self.tiles is None else len(self.tiles)})"
-        return out
+        out = f"SlideData(slide={repr(self.slide)}, "
+        out += f"slide: {self.slide.shape}, "
+        out += f"masks: {'None' if self.masks is None else repr(self.masks)}, "
+        out += f"tiles: {'None' if self.tiles is None else repr(self.tiles)})"
+        return out 
 
     @property
     def masks(self):
