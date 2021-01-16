@@ -2,6 +2,8 @@ import numpy as np
 
 from pathml.core.masks import Masks
 from pathml.core.tiles import Tiles
+from pathml.preprocessing.transforms import Transform
+from pathml.preprocessing.pipeline import Pipeline
 
 
 class SlideData:
@@ -38,22 +40,76 @@ class SlideData:
         self.labels = labels
         self.history = []
 
-    def __repr__(self):  # pragma: no cover
+    def __repr__(self): 
         out = f"SlideData(slide={repr(self.slide)}, "
         out += f"slide: {self.slide.shape}, "
         out += f"masks: {'None' if self.masks is None else repr(self.masks)}, "
         out += f"tiles: {'None' if self.tiles is None else repr(self.tiles)})"
         return out 
 
-    @property
-    def masks(self):
-        return self.masks
+    def run(pipeline, **kwargs):
+        assert isinstance(pipeline, Pipeline), f"pipeline is of type {type(pipeline)} but must be of type pathml.preprocessing.pipeline.Pipeline"
+        # pop args required for chunks and check that they exist
+        chunksize = kwargs.pop("chunksize", 3000)
+        for chunk in self.chunks():
+            pipeline(chunk, **kwargs)
 
-    # TODO make this more intuitive, like use a method like .add_mask(). The setter isn't very clear as is
-    @mask.setter
-    def masks(self, key, new_mask):
-        # use setter to handle initial None for mask to make mask updating easy
-        if self.masks is None:
-            self.masks = Masks({key, new_mask}) 
-        else:
-            self.masks.add(key, new_mask) 
+    def chunks(self, level=None, shape, stride=shape, pad=False):
+        """
+        Generator over chunks.
+        All pipelines must be composed of transforms acting on chunks.
+
+        Args:
+            level (int): level from which to extract chunks.
+            shape (tuple(int)): chunk shape.
+            stride (int): stride between chunks. If ``None``, uses ``stride = size`` for non-overlapping chunks.
+                Defaults to ``None``.
+            pad (bool): How to handle chunks on the edges. If ``True``, these edge chunks will be zero-padded
+                symmetrically and yielded with the other chunks. If ``False``, incomplete edge chunks will be ignored.
+                Defaults to ``False``.
+        Yields:
+            np.ndarray: Extracted chunk of dimension (size, size, 3)
+        """
+        # if shape is int
+        # square chunks
+        # else chunks of shape
+        if isinstance(shape, int):
+            shape = (shape, shape)
+        if self.slide.backend == 'openslide': 
+            if level == None:
+                # TODO: is this the right default for openslide?
+                level = 1
+            j, i = self.slide.level_dimensions[level]
+
+            if stride is None:
+                stride_i = shape[0]
+                stride_j = shape[1]
+
+            n_chunk_i = (i-shape[0])// stride_i +1
+            n_chunk_j = (j-shape[1])// stride_i +1
+
+            if pad:
+                n_chunk_i = i // stride_i +1
+                n_chunk_j = j // stride_j +1
+
+            for ix_i in range(n_chunk_i):
+                for ix_j in range(n_chunk_j):
+                    
+                    region = self.slide.read_region(
+                        location = (int(ix_j * stride_j), int(ix_i * stride_i)),
+                        level = level, size = (shape[0], shape[1])
+                    )
+                    region_rgb = pil_to_rgb(region)
+                    # TODO: test. switch i and j?
+                    if self.masks is not None:
+                        masks_chunk = self.masks.slice([int(ix_j*stride):int(ix_j*stride)+size,int(ix_i*stride):int(ix_i*stride)+size, ...])
+                    yield region_rgb, masks_chunk
+        elif self.slide.backend == 'bioformats':
+            # TODO: implement
+            pass
+
+    def plot():
+        pass 
+
+    def save():
+        pass
