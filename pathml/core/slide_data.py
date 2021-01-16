@@ -5,22 +5,27 @@ from pathml.preprocessing.masks import Masks
 
 class SlideData:
     """
-    Main class for holding data during preprocessing pipeline.
+    Main class representing a slide and its annotations. 
     Preprocessing pipelines change the state of this object.
-    Attributes may be added or modified depending on needs of specific pipelines.
+    Declared by subclassing Slide
 
-    :param wsi: WSI object from which this data object was generated
-    :type wsi: :class:`~pathml.preprocessing.base.BaseSlide`
-    :param image: image of slide
-    :type image: np.ndarray
-    :param mask: Array of masks generated for input image
-    :type mask: np.ndarray
-    :param tiles: list of :class:`~pathml.preprocessing.tiling.Tile` objects
-    :type tiles: list
+    :param name: name of slide
+    :type name: str 
+    :param size: total size of slide in pixels 
+    :type size: int 
+    :param slide: slide object
+    :type slide: subclass of `~pathml.core.slide` 
+    :param masks: object containing {key,mask} pairs
+    :type masks: :class:`~pathml.core.masks.Masks` 
+    :param tiles: object containing {coordinates,tile} pairs 
+    :type tiles: :class:`~pathml.core.tiles.Tiles`
+    :param labels: dictionary containing {key,label} pairs
+    :type labels: collections.OrderedDict 
+    :param history: the history of operations applied to the SlideData object
+    :type history: list of __repr__'s from each method called on SlideData 
     """
-    # TODO look at changing this to a dataclass
-    def __init__(self, wsi=None, image=None, mask=None, tiles=None):
-        self.wsi = wsi
+    def __init__(self, slide=None, image=None, mask=None, tiles=None):
+        self.slide = slide
         self.image = None if image is None else image.astype(np.uint8)
         self.masks = wsi.masks 
         if mask:
