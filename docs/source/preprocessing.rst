@@ -1,28 +1,13 @@
-Preprocessing
-=============
+Preprocessing Quickstart
+========================
 
+Preprocessing pipelines define how raw images are transformed and prepared to be fed as inputs into models.
 The ``pathml.preprocessing`` module provides tools for defining preprocessing pipelines for whole-slide images.
-The general workflow is:
 
-1. Load whole-slide image from disk
-2. Perform slide-level preprocessing
-3. Extract tiles
-4. Perform tile-level preprocessing
-5. Save tiles to disk
+Getting started with premade pipelines
+--------------------------------------
 
-Preprocessing pipelines are defined using the :class:`~pathml.preprocessing.pipeline.Pipeline` class, and
-are composed of :ref:`transforms-label`. We provide a set of pre-built Transforms as well as tools
-to build custom-made Transforms to suit the needs of specific projects.
-
-Pipelines operate by modifying the state of :class:`~pathml.preprocessing.slide_data.SlideData` objects.
-
-
-Loading Images
---------------
-.. autoclass:: pathml.preprocessing.wsi.HESlide
-    :members:
-.. autoclass:: pathml.preprocessing.multiparametricslide.MultiparametricSlide
-    :members:
+The general preprocessing workflow is:
 
 Annotating Images
 -----------------
@@ -34,86 +19,66 @@ Tiling Images
 .. automodule:: pathml.preprocessing.tiling
     :members:
 
-Preprocessing Pipeline
+.. image:: _static/images/preprocess_schematic_single.png
+
+PathML comes with preprocessing pipelines ready to use out of the box.
+Get started by loading a WSI from disk and running a default preprocessing pipeline in 5 lines of code:
+
+.. code-block::
+
+    from pathml.preprocessing.wsi import HESlide
+    from pathml.preprocessing.pipelines import DefaultHEPipeline
+
+    wsi = HESlide("/path/to/slide.svs")
+    pipeline = DefaultTilingPipeline()
+    pipeline.run(wsi, output_dir = "/path/to/output/dir")
+
+
+Pipelines can also be run on entire datasets, with no change to the code:
+
+.. image:: _static/images/preprocess_schematic_dataset.png
+
+.. code-block::
+
+    from pathml.datasets import PESO
+    from pathml.preprocessing.pipelines import DefaultTilingPipeline
+
+    peso = PESO(data_dir = "/path/to/data/", download = True)
+    pipeline = DefaultTilingPipeline()
+    pipeline.run(peso, output_dir = "/path/to/output/dir")
+
+When running a pipeline on a dataset, ``PathML`` will use multiprocessing by default to distribute the workload to
+all available cores. This allows users to efficiently process large datasets by scaling up computational resources
+(local cluster, cloud machines, etc.) without needing to make any changes to the code.
+
+Currently available premade pipelines
+-------------------------------------
+
++--------------------------------------------+------------------------------------------------------------------------+
+| Pipeline name                              | Description                                                            |
++============================================+========================================================================+
+| DefaultHEPipeline                          | Divides input wsi into tiles. Does not apply any tile-level processing.|
++--------------------------------------------+------------------------------------------------------------------------+
+
+[implement a few more default pipelines, and add here with links in the left column]
+
+Supported file formats
 ----------------------
-.. autoclass:: pathml.preprocessing.pipeline.Pipeline
-    :members:
 
-.. autoclass:: pathml.preprocessing.slide_data.SlideData
-    :members:
+Whole-slide images can come in a variety of file formats, depending on the type of image and the scanner used.
+``PathML`` has several backends for loading images, enabling support for a wide variety of data formats.
 
-.. _transforms-label:
+============ ==========================================================================================================
+Backend      Supported file types
+============ ==========================================================================================================
+OpenSlide    ``.svs``, ``.tif``, ``.tiff``, ``.bif``, ``.ndpi``, ``.vms``, ``.vmu``, ``.scn``, ``.mrxs``, ``.svslide``
 
-Transforms
-----------
-General-Purpose Transforms
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. automodule:: pathml.preprocessing.transforms
-    :members:
+             `Complete list of file types supported by OpenSlide <https://openslide.org/formats/>`_
 
-H&E-Specific Transforms
-^^^^^^^^^^^^^^^^^^^^^^^
-.. automodule:: pathml.preprocessing.transforms_HandE
-    :members:
+DICOM        ``.dcm``
 
+Bio-Formats  Multiparametric and volumetric TIFF files
 
-Miscellaneous
-^^^^^^^^^^^^^
-
-H&E Colors and Stains
----------------------
-.. automodule:: pathml.preprocessing.stains
-    :members:
-
-
-
-Utilities
----------
-
-Image Utilities
-^^^^^^^^^^^^^^^
-.. autofunction:: pathml.preprocessing.utils.pil_to_rgb
-.. autofunction:: pathml.preprocessing.utils.segmentation_lines
-.. autofunction:: pathml.preprocessing.utils.plot_mask
-.. autofunction:: pathml.preprocessing.utils.contour_centroid
-.. autofunction:: pathml.preprocessing.utils.sort_points_clockwise
-
-Color Utilities
-^^^^^^^^^^^^^^^
-.. autofunction:: pathml.preprocessing.utils.RGB_to_HSI
-.. autofunction:: pathml.preprocessing.utils.RGB_to_OD
-.. autofunction:: pathml.preprocessing.utils.RGB_to_HSV
-.. autofunction:: pathml.preprocessing.utils.RGB_to_LAB
-.. autofunction:: pathml.preprocessing.utils.RGB_to_GREY
-
-
-General Utilities
-^^^^^^^^^^^^^^^^^
-.. autofunction:: pathml.preprocessing.utils.upsample_array
-.. autofunction:: pathml.preprocessing.utils.pad_or_crop
-.. autofunction:: pathml.preprocessing.utils.normalize_matrix_rows
-.. autofunction:: pathml.preprocessing.utils.normalize_matrix_cols
-
-
-Abstract Classes
-----------------
-
-These classes are not designed to be instantiated.
-They are inherited by other classes, and are used when implementing new classes.
-The features in this section are meant for developers and advanced users!
-
-Base Classes for Loading Slides
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autoclass:: pathml.preprocessing.wsi.BaseSlide
-    :members:
-
-Base Classes for Preprocessing Pipelines
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. automodule:: pathml.preprocessing.base_preprocessor
-    :members:
-
-Base Classes for Transforms
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. automodule:: pathml.preprocessing.base_transforms
-    :members:
-
+             `Complete list of file types supported by Bio-Formats
+             <https://docs.openmicroscopy.org/bio-formats/latest/supported-formats.html>`_
+============ ==========================================================================================================

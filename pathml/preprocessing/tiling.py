@@ -36,8 +36,8 @@ class Tile:
 
     def __repr__(self):  # pragma: no cover
         return f"Tile(array shape {self.array.shape}, " \
-               f"i={self.i if self.i else 'None'}, " \
-               f"j={self.j if self.j else 'None'})"
+               f"i={self.i if self.i is not None else 'None'}, " \
+               f"j={self.j if self.j is not None else 'None'})"
 
     def save(self, out_dir, filename):
         """
