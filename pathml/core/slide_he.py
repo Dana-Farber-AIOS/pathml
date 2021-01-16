@@ -7,6 +7,7 @@ from pathml.preprocessing.slide_data import SlideData
 from pathml.preprocessing.utils import pil_to_rgb
 from pathml.preprocessing.masks import Masks
 
+
 class HESlide(RGBSlide):
     """
     Class for H&E stained slides, based on ``OpenSlide``
@@ -17,7 +18,7 @@ class HESlide(RGBSlide):
         self.slide = openslide.open_slide(path)
         self.masks = masks 
 
-    def __repr__(self):  # pragma: no cover
+    def __repr__(self):
         return f"HESlide(path={self.path}, name={self.name})"
 
     def load_data(self, level=0, location=(0, 0), size=None):
