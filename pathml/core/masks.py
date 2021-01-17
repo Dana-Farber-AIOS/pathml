@@ -6,7 +6,7 @@ class Masks():
     Object holding masks.  
 
     :param masks: Mask objects representing ex. labels, segmentations. 
-    :type masks: :class:`collections.OrderedDict` with keys of type str and values of type np.ndarray with elements of type int8
+    :type masks: :class:`dict` with keys of type str and values of type np.ndarray with elements of type int8
     '''
     def __init__(self, 
             masks=None
