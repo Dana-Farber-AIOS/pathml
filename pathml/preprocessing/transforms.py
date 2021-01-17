@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import spams
 
-from pathml.preprocessing.utils import RGB_to_GREY, RGB_to_HSV, normalize_matrix_cols, RGB_to_OD
+from pathml.utils import RGB_to_GREY, RGB_to_HSV, normalize_matrix_cols, RGB_to_OD
 
 from pathml.core import Chunk
 

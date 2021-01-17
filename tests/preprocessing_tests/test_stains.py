@@ -1,6 +1,6 @@
 import pytest
 
-from pathml.preprocessing.stains import StainNormalizationHE
+from pathml.preprocessing.transforms import StainNormalizationHE
 
 
 @pytest.mark.parametrize("target", ["normalize", "eosin", "hematoxylin"])

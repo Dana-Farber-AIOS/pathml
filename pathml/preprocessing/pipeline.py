@@ -1,15 +1,29 @@
 import concurrent.futures
 import os
 
-from pathml.preprocessing.base import BaseSlideLoader, BaseSlidePreprocessor, BaseTileExtractor, BaseTilePreprocessor, \
-    BasePipeline, BaseSlide
 import pickle
 
 from pathml.core.slide import BaseSlide
 from pathml.datasets.base import BaseDataset
 
 
-def save(self, filename):
+class Pipeline:
+    """
+    Base class for Pipeline objects
+    """
+    def __init__(self):
+        raise NotImplementedError
+
+    def __repr__(self):
+        raise NotImplementedError
+
+    def run_single(self, slide, **kwargs):
+        """
+        Define pipeline here for a single BaseSlide object
+        """
+        raise NotImplementedError
+
+    def save(self, filename):
         """
         save pipeline by writing them to disk
         :param filename: save path on disk
@@ -19,18 +33,7 @@ def save(self, filename):
         pickle.dump(self, open(filename, "wb"))
         return filename
 
-
-class BasePipeline:
-    """
-    Base class for Pipeline objects
-    """
-
-    def run_single(self, slide, **kwargs):
-        """
-        Define pipeline here for a single BaseSlide object
-        """
-        raise NotImplementedError
-
+    # TODO move this to be a method of SlideData
     def run(self, target, n_jobs=-1, **kwargs):
         """
         Execute pipeline on a single input or an entire dataset.
