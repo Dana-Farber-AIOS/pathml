@@ -6,7 +6,7 @@ import spams
 
 from pathml.utils import RGB_to_GREY, RGB_to_HSV, normalize_matrix_cols, RGB_to_OD
 
-from pathml.core import Chunk
+from pathml.core import Tile
 
 
 # Base class
@@ -23,7 +23,7 @@ class Transform:
         """functional implementation"""
         raise NotImplementedError
 
-    def apply(self, chunk):
+    def apply(self, tile):
         """modify chunk"""
         raise NotImplementedError
 
@@ -48,9 +48,9 @@ class MedianBlur(Transform):
         assert image.dtype == np.uint8, f"image dtype {image.dtype} must be np.uint8"
         return cv2.medianBlur(image, ksize = self.kernel_size)
 
-    def apply(self, chunk):
-        assert isinstance(chunk, Chunk), f"argument of type {type(chunk)} must be a pathml.core.Chunk object."
-        chunk.image = self.F(chunk.image)
+    def apply(self, tile):
+        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        tile.image = self.F(tile.image)
 
 
 class GaussianBlur(Transform):
@@ -73,9 +73,9 @@ class GaussianBlur(Transform):
         out = cv2.GaussianBlur(image, ksize = (self.k_size, self.k_size), sigmaX = self.sigma, sigmaY = self.sigma)
         return out
 
-    def apply(self, chunk):
-        assert isinstance(chunk, Chunk), f"argument of type {type(chunk)} must be a pathml.core.Chunk object."
-        chunk.image = self.F(chunk.image)
+    def apply(self, tile):
+        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        tile.image = self.F(tile.image)
 
 
 class BoxBlur(Transform):
@@ -95,9 +95,9 @@ class BoxBlur(Transform):
         assert image.dtype == np.uint8, f"image dtype {image.dtype} must be np.uint8"
         return cv2.boxFilter(image, ksize = (self.kernel_size, self.kernel_size), ddepth = -1)
 
-    def apply(self, chunk):
-        assert isinstance(chunk, Chunk), f"argument of type {type(chunk)} must be a pathml.core.Chunk object."
-        chunk.image = self.F(chunk.image)
+    def apply(self, tile):
+        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        tile.image = self.F(tile.image)
 
 
 class BinaryThreshold(Transform):
@@ -134,17 +134,17 @@ class BinaryThreshold(Transform):
         _, out = cv2.threshold(src = image, thresh = self.threshold, maxval = self.max_value, type = self.type)
         return out.astype(np.uint8)
 
-    def apply(self, chunk):
-        assert isinstance(chunk, Chunk), f"argument of type {type(chunk)} must be a pathml.core.Chunk object."
+    def apply(self, tile):
+        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
         assert self.mask_name is not None, f"Must enter a mask name"
         # TODO fix this type checking
-        if chunk.slidetype == "RGB":
-            im = RGB_to_GREY(chunk.image)
+        if tile.slidetype == "RGB":
+            im = RGB_to_GREY(tile.image)
         else:
-            im = np.squeeze(chunk.image)
+            im = np.squeeze(tile.image)
             assert im.ndim == 2, "chunk.image is not RGB and has more than 1 channel"
         thresholded_mask = self.F(im)
-        chunk.masks.add(key = self.mask_name, mask = thresholded_mask)
+        tile.masks.add(key = self.mask_name, mask = thresholded_mask)
 
 
 class MorphOpen(Transform):
@@ -177,11 +177,12 @@ class MorphOpen(Transform):
         out = cv2.morphologyEx(src = mask, kernel = k, op = cv2.MORPH_OPEN, iterations = self.n_iterations)
         return out
 
-    def apply(self, chunk):
+    def apply(self, tile):
+        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
         assert self.mask_name is not None, f"Must enter a mask name"
-        m = chunk.masks[self.mask_name]
+        m = tile.masks[self.mask_name]
         out = self.F(m)
-        chunk.masks[self.mask_name] = out
+        tile.masks[self.mask_name] = out
 
 
 class MorphClose(Transform):
@@ -215,11 +216,12 @@ class MorphClose(Transform):
         out = cv2.morphologyEx(src = mask, kernel = k, op = cv2.MORPH_CLOSE, iterations = self.n_iterations)
         return out
 
-    def apply(self, chunk):
+    def apply(self, tile):
+        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
         assert self.mask_name is not None, f"Must enter a mask name"
-        m = chunk.masks[self.mask_name]
+        m = tile.masks[self.mask_name]
         out = self.F(m)
-        chunk.masks[self.mask_name] = out
+        tile.masks[self.mask_name] = out
 
 
 class ForegroundDetection(Transform):
@@ -301,11 +303,12 @@ class ForegroundDetection(Transform):
 
         return mask_out.astype(np.uint8)
 
-    def apply(self, chunk):
+    def apply(self, tile):
+        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
         assert self.mask_name is not None, f"Must enter a mask name"
-        m = chunk.masks[self.mask_name]
+        m = tile.masks[self.mask_name]
         mask_out = self.F(m)
-        chunk.masks[self.mask_name] = mask_out
+        tile.masks[self.mask_name] = mask_out
 
 
 class SuperpixelInterpolation(Transform):
@@ -345,8 +348,9 @@ class SuperpixelInterpolation(Transform):
                 out[:, :, c][mask] = av
         return out
 
-    def apply(self, chunk):
-        chunk.image = self.F(chunk.image)
+    def apply(self, tile):
+        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        tile.image = self.F(tile.image)
 
 
 class StainNormalizationHE(Transform):
@@ -654,11 +658,10 @@ class StainNormalizationHE(Transform):
         im_reconstructed = im_reconstructed.reshape(image.shape)
         return im_reconstructed
 
-    def apply(self, chunk):
-        assert chunk.slidetype == "HE", f"Input chunk has slidetype {chunk.slidetype}. Must be HE"
-        chunk.image = self.F(chunk.image)
-
-
+    def apply(self, tile):
+        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        assert tile.slidetype == "HE", f"Input chunk has slidetype {tile.slidetype}. Must be HE"
+        tile.image = self.F(tile.image)
 
 
 class NucleusDetectionHE(Transform):
@@ -706,12 +709,12 @@ class NucleusDetectionHE(Transform):
         thresholded = ~thresholded
         return thresholded
 
-    def apply(self, chunk):
-        assert isinstance(chunk, Chunk), f"argument of type {type(chunk)} must be a pathml.core.Chunk object."
-        assert chunk.slidetype == "HE", f"Input chunk has slidetype {chunk.slidetype}. Must be HE"
+    def apply(self, tile):
+        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        assert tile.slidetype == "HE", f"Input chunk has slidetype {tile.slidetype}. Must be HE"
         assert self.mask_name is not None, f"Must enter a mask name"
-        nucleus_mask = self.F(chunk.image)
-        chunk.masks.add(key = self.mask_name, mask = nucleus_mask)
+        nucleus_mask = self.F(tile.image)
+        tile.masks.add(key = self.mask_name, mask = nucleus_mask)
 
 
 class TissueDetectionHE(Transform):
@@ -773,7 +776,8 @@ class TissueDetectionHE(Transform):
                                      outer_contours_only = self.outer_contours_only).F(closed)
         return tissue
 
-    def apply(self, chunk):
-        assert chunk.slidetype == "HE"
-        mask = self.F(chunk.image)
-        chunk.masks.add(key = self.mask_name, mask = mask)
+    def apply(self, tile):
+        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        assert tile.slidetype == "HE"
+        mask = self.F(tile.image)
+        tile.masks.add(key = self.mask_name, mask = mask)

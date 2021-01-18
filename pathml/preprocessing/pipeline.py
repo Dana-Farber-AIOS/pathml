@@ -4,7 +4,7 @@ import pickle
 
 from pathml.core.slide import BaseSlide
 from pathml.datasets.base import BaseDataset
-from pathml.core import Transform, Chunk
+from pathml.core import Transform, Tile
 
 
 class Pipeline(Transform):
@@ -30,10 +30,10 @@ class Pipeline(Transform):
         out += "])"
         return out
 
-    def apply(self, chunk):
-        assert isinstance(chunk, Chunk), f"argument of type {type(chunk)} must be a pathml.core.Chunk object."
+    def apply(self, tile):
+        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
         for t in self.transforms:
-            t.apply(chunk)
+            t.apply(tile)
 
     def save(self, filename):
         """
