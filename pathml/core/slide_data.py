@@ -14,23 +14,17 @@ class SlideData:
     Preprocessing pipelines change the state of this object.
     Declared by subclassing Slide
 
-    :param name: name of slide
-    :type name: str 
-    :param size: total size of slide in pixels 
-    :type size: int 
-    :param slide: slide object
-    :type slide: subclass of `~pathml.core.slide` 
-    :param masks: object containing {key,mask} pairs
-    :type masks: :class:`~pathml.core.masks.Masks` 
-    :param tiles: object containing {coordinates,tile} pairs 
-    :type tiles: :class:`~pathml.core.tiles.Tiles`
-    :param labels: dictionary containing {key,label} pairs
-    :type labels: collections.OrderedDict 
-    :param history: the history of operations applied to the SlideData object
-    :type history: list of __repr__'s from each method called on SlideData 
+    Attributes:
+        name (str): name of slide
+        size (int): total size of slide in pixels 
+        slide (`~pathml.core.slide.Slide`): slide object
+        masks (`~pathml.core.masks.Masks`, optional): object containing {key,mask} pairs
+        tiles (`~pathml.core.tiles.Tiles`, optional): object containing {coordinates,tile} pairs 
+        labels (collections.OrderedDict, optional): dictionary containing {key,label} pairs
+        history (list): the history of operations applied to the SlideData object
     """
     def __init__(self, slide=None, masks=None, tiles=None, labels=None):
-        assert isinstance(slide, Slide), f"slide is of type {type(slide)} but must be a subclass of pathml.core.slide.Slide"
+        assert issubclass(slide, Slide), f"slide is of type {type(slide)} but must be a subclass of pathml.core.slide.Slide"
         self.slide = slide
         self._slidetype = type(slide)
         self.name = None if slide is None else slide.name
@@ -40,17 +34,17 @@ class SlideData:
         self.masks = masks 
         assert isinstance(tiles, (None, Tiles)), f"tiles are of type {type(tiles)} but must be of type pathml.core.tiles.Tiles" 
         self.tiles = tiles
-        assert isinstance(labels, (None, 'int', 'str', Masks)), f"labels are of type {type(labels)} but must be of type int, str, or pathml.core.masks.Masks"
+        assert isinstance(labels, (None, 'int', 'str')), f"labels are of type {type(labels)} but must be of type int or string. array-like labels should be stored in masks."
         self.labels = labels
         self.history = []
 
     def __repr__(self): 
         out = f"SlideData(slide={repr(self.slide)}, "
-        out += f"slide: {self.slide.shape}, "
-        out += f"masks: {'None' if self.masks is None else repr(self.masks)}, "
-        out += f"tiles: {'None' if self.tiles is None else repr(self.tiles)}) "
-        out += f"labels: {self.labels} "
-        out += f"history: {self.history}"
+        out += f"slide={self.slide.shape}, "
+        out += f"masks={'None' if self.masks is None else repr(self.masks)}, "
+        out += f"tiles={'None' if self.tiles is None else repr(self.tiles)}, "
+        out += f"labels={self.labels}, "
+        out += f"history={self.history})"
         return out 
 
     def run(pipeline, **kwargs):
@@ -62,7 +56,7 @@ class SlideData:
         for chunk in self.chunks(level = chunklevel, shape = chunkshape, stride = chunkstride, pad = chunkpad):
             pipeline(chunk, **kwargs)
 
-    def chunks(self, level=None, shape, stride=shape, pad=False):
+    def chunks(self, level=None, shape=3000, stride=shape, pad=False):
         """
         Generator over chunks.
         All pipelines must be composed of transforms acting on chunks.
@@ -121,5 +115,5 @@ class SlideData:
     def save():
         # see https://github.com/theislab/anndata/blob/master/anndata/_core/anndata.py#L1834-L1889
         # TODO: combine slide, masks, tiles .h5 objects into a single .h5 object 
-        # TODO: write read method
+        # TODO: read method
         pass
