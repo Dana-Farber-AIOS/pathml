@@ -2,8 +2,7 @@ import numpy as np
 
 from pathml.core.slide import Slide
 from pathml.core.masks import Masks
-from pathml.core.tiles import Tiles
-from pathml.core.chunk import Chunk
+from pathml.core.tiles import Tile,Tiles
 from pathml.preprocessing.transforms import Transform
 from pathml.preprocessing.pipeline import Pipeline
 
@@ -23,20 +22,20 @@ class SlideData:
         labels (collections.OrderedDict, optional): dictionary containing {key,label} pairs
         history (list): the history of operations applied to the SlideData object
     """
-    def __init__(self, slide=None, masks=None, tiles=None, labels=None):
+    def __init__(self, slide=None, masks=None, tiles=None, labels=None, h5=None):
         assert issubclass(slide, Slide), f"slide is of type {type(slide)} but must be a subclass of pathml.core.slide.Slide"
         self.slide = slide
         self._slidetype = type(slide)
         self.name = slide.name
-        # TODO: should size be a dict containing the sizes of slide?
-        self.size = None if slide is None else slide.size
+        self.shape = None if slide is None else slide.shape
         assert isinstance(masks, (None, Masks)), f"mask are of type {type(masks)} but must be of type pathml.core.masks.Masks"
         self.masks = masks 
         assert isinstance(tiles, (None, Tiles)), f"tiles are of type {type(tiles)} but must be of type pathml.core.tiles.Tiles" 
         self.tiles = tiles
-        assert isinstance(labels, (None, 'int', 'str')), f"labels are of type {type(labels)} but must be of type int or string. array-like labels should be stored in masks."
+        assert isinstance(labels, dict), f"labels are of type {type(labels)} but must be of type dict. array-like labels should be stored in masks."
         self.labels = labels
         self.history = []
+        self.h5 = h5
 
     def __repr__(self): 
         out = f"SlideData(slide={repr(self.slide)}, "
@@ -49,17 +48,17 @@ class SlideData:
 
     def run(pipeline, **kwargs):
         assert isinstance(pipeline, Pipeline), f"pipeline is of type {type(pipeline)} but must be of type pathml.preprocessing.pipeline.Pipeline"
-        chunkshape = kwargs.pop("chunkshape", 3000)
-        chunklevel = kwargs.pop("chunklevel", None)
-        chunkstride = kwargs.pop("chunkstride", chunkshape)
-        chunkpad = kwargs.pop("chunkpad", False)
-        for chunk in self.chunks(level = chunklevel, shape = chunkshape, stride = chunkstride, pad = chunkpad):
-            pipeline(chunk, **kwargs)
+        tileshape = kwargs.pop("tileshape", 3000)
+        tilelevel = kwargs.pop("tilelevel", None)
+        tilestride = kwargs.pop("tilestride", tileshape)
+        tilepad = kwargs.pop("tilepad", False)
+        for tile in self.tiles(level = tilelevel, shape = tileshape, stride = tilestride, pad = tilepad):
+            pipeline(tile, **kwargs)
 
-    def chunks(self, level=None, shape=3000, stride=shape, pad=False):
+    def generate_tiles(self, level=None, shape=3000, stride=shape, pad=False):
         """
-        Generator over chunks.
-        All pipelines must be composed of transforms acting on chunks.
+        Generator over tiles.
+        All pipelines must be composed of transforms acting on tiles.
 
         Args:
             level (int): level from which to extract chunks.
@@ -103,13 +102,23 @@ class SlideData:
                     if self.masks is not None:
                         # TODO: test this line
                         masks_chunk = self.masks.slice([int(ix_j*stride_j):int(ix_j*stride_j)+size,int(ix_i*stride_i):int(ix_i*stride_i)+size, ...])
-                    yield Chunk(region_rgb, masks_chunk, coords)
+                    yield Tile(region_rgb, masks_chunk, coords)
 
         elif self.slide.backend == 'bioformats':
             # TODO: this is complicated because need to handle both chunking, allocating different 2GB java arrays, and managing java heap  
             pass
 
     def plot():
+        """
+
+        Args:
+            location
+            tile = True
+            size
+            downsample
+            mask(str)
+            save
+        """
         pass 
 
     def write_h5(
