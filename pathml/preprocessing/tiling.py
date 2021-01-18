@@ -5,6 +5,7 @@ def extract_tiles(arr, tile_size, stride=None):
     """
     Extract tiles from an array. Allows user to specify stride between tiles.
     Based on original implementation in ``sklearn.feature_extraction.image_ref._extract_patches``
+    Incomplete tiles on the edge are dropped (TO DO: fix this (zero padding?))
 
     Args:
         arr (np.ndarray): input array. Must be 3 dimensional (H, W, n_channels)
@@ -18,7 +19,10 @@ def extract_tiles(arr, tile_size, stride=None):
     assert arr.ndim == 3, f"Number of input dimensions {arr.ndim} must be 3"
     if stride is None:
         stride = tile_size
-    n_channels = arr.shape[2]
+    i, j, n_channels = arr.shape
+    if (i - tile_size) % stride != 0 or (j - tile_size) % stride != 0:
+        raise NotImplementedError(f"Array of shape {arr.shape} is not perfectly tiled by tiles of size "
+                                  f"{tile_size} and stride {stride}.")
     patch_strides = arr.strides
     patch_shape = (tile_size, tile_size, n_channels)
     extraction_step = (stride, stride, 1)
