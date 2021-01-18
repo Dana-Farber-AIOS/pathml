@@ -34,6 +34,19 @@ class Tiles:
                     tiledictionary[(tile.i, tile.j)] = tile
                 self._tiles = OrderedDict(tiledictionary)
 
+        # initialize temp file
+        # TODO: mkstemp or TemporaryFile
+        # fd = tempfile.TemporaryFile()
+        fd, path = tempfile.mkstemp()
+        # chunked storage
+        # which .h5 file driver? 
+        # libver (backwards compatibility) convention? 
+        f = h5py.File(fd, 'w')
+        # tile shape?
+        dset = f.create_dataset("tiles", tileshape) 
+        labels = f.create_attributes()
+        self.h5 = path
+
     def __repr__(self):
         rep = f"Tiles(keys={self._tiles.keys()})"
 
@@ -91,6 +104,17 @@ class Tiles:
             raise KeyError('key is not in dict Tiles')
         del self._tiles[key]
 
+    def save(self, out_dir, filename):
+        """
+        Save tiles as .h5 
+
+        Args:
+            out_dir(str): directory to write
+            filename(str) file name of tiles 
+        """
+        savepath = Path(out_dir)+Path(filename)
+        shutil.copy(self.h5, savepath)
+
 class Tile:
     """
     Object representing a tile extracted from an image. Holds the image for the tile, as well as the (i,j)
@@ -121,32 +145,9 @@ class Tile:
             self.masks = masks 
         assert isinstance(labels, (None, dict))
         self.labels = labels
-        # initialize temp file
-        # TODO: mkstemp or TemporaryFile
-        fd = tempfile.TemporaryFile()
-        # fd, path = tempfile.mkstemp()
-        # write tile, masks, labels to h5 (which h5), then clear
-        # which .h5 file driver? 
-        # libver (backwards compatibility) convention? 
-        f = h5py.File(fd, 'w')
-        dset = f.create_dataset("tile", 
-        f['array'] = array
-        f['masks'] = masks
-        self.h5 = path
 
     def __repr__(self):  # pragma: no cover
         return f"Tile(array shape {self.array.shape}, " \
                f"i={self.i if self.i is not None else 'None'}, " \
                f"j={self.j if self.j is not None else 'None'})"
 
-    def save(self, out_dir, filename):
-        """
-        Save tile to disk as jpeg file.
-
-        :param out_dir: directory to write to.
-        :type out_dir: str
-        :param filename: File name of saved tile.
-        :type filename: str
-        """
-        savepath = Path(out_dir)+Path(filename)
-        shutil.copy(self.h5, savepath)
