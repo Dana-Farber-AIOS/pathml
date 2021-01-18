@@ -2,7 +2,7 @@ import numpy as np
 
 from pathml.core.slide import Slide
 from pathml.core.masks import Masks
-from pathml.core.tiles import Tile,Tiles
+from pathml.core.tiles import Tile, Tiles
 from pathml.preprocessing.transforms import Transform
 from pathml.preprocessing.pipeline import Pipeline
 
@@ -119,7 +119,7 @@ class SlideData:
             mask(str)
             save
         """
-        pass 
+        raise NotImplementedError() 
 
     def write_h5(
         self,
@@ -127,11 +127,5 @@ class SlideData:
         compression: Optional[Literal["gzip", "lzf"]] = None,
         compression_opts: Union[int, Any] = None,
     ):
-        # see https://github.com/theislab/anndata/blob/master/anndata/_core/anndata.py#L1834-L1889
-        # see https://github.com/theislab/anndata/blob/f1d1e17ec61bea97d7db9ea1bb9ee88f883fc484/anndata/_io/h5ad.py#L54
-        # TODO: aggregate slide, masks, tiles .h5s into a single .h5 
-        # TODO: method to populate from h5
-        slideh5 = self.slide.h5
-        masksh5 = self.masks.h5
-        tilesh5 = self.tiles.h5
+        raise NotImplementedError()
 
