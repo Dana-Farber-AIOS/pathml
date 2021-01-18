@@ -27,7 +27,7 @@ class SlideData:
         assert issubclass(slide, Slide), f"slide is of type {type(slide)} but must be a subclass of pathml.core.slide.Slide"
         self.slide = slide
         self._slidetype = type(slide)
-        self.name = None if slide is None else slide.name
+        self.name = slide.name
         # TODO: should size be a dict containing the sizes of slide?
         self.size = None if slide is None else slide.size
         assert isinstance(masks, (None, Masks)), f"mask are of type {type(masks)} but must be of type pathml.core.masks.Masks"
@@ -112,8 +112,17 @@ class SlideData:
     def plot():
         pass 
 
-    def save():
+    def write_h5(
+        self,
+        filename: Optional[PathLike] = None,
+        compression: Optional[Literal["gzip", "lzf"]] = None,
+        compression_opts: Union[int, Any] = None,
+    ):
         # see https://github.com/theislab/anndata/blob/master/anndata/_core/anndata.py#L1834-L1889
-        # TODO: combine slide, masks, tiles .h5 objects into a single .h5 object 
-        # TODO: read method
-        pass
+        # see https://github.com/theislab/anndata/blob/f1d1e17ec61bea97d7db9ea1bb9ee88f883fc484/anndata/_io/h5ad.py#L54
+        # TODO: aggregate slide, masks, tiles .h5s into a single .h5 
+        # TODO: method to populate from h5
+        slideh5 = self.slide.h5
+        masksh5 = self.masks.h5
+        tilesh5 = self.tiles.h5
+
