@@ -6,6 +6,7 @@ from typing import Union
 from pathlib import Path
 
 from pathml.core.masks import Masks
+from pathml.core.h5managers import _tiles_h5_manager
 
 class Tiles:
     """
@@ -33,19 +34,10 @@ class Tiles:
                 for tile in tiles:
                     tiledictionary[(tile.i, tile.j)] = tile
                 self._tiles = OrderedDict(tiledictionary)
-
-        # initialize temp file
-        # TODO: mkstemp or TemporaryFile
-        # fd = tempfile.TemporaryFile()
-        fd, path = tempfile.mkstemp()
-        # chunked storage
-        # which .h5 file driver? 
-        # libver (backwards compatibility) convention? 
-        f = h5py.File(fd, 'w')
-        # tile shape?
-        dset = f.create_dataset("tiles", tileshape) 
-        labels = f.create_attributes()
-        self.h5 = path
+        self.h5manager = _tile_h5_manager() 
+        for key in self._tiles:
+            self.h5manager.add(key, self._tiles[key])
+            del self._tiles[key]
 
     def __repr__(self):
         rep = f"Tiles(keys={self._tiles.keys()})"
@@ -55,16 +47,16 @@ class Tiles:
 
     def __getitem__(self, item):
         if isinstance(item, tuple[int]):
-            return self._tiles[item]
+            return self.h5manager.h5[item]
         if not isinstance(ite, int):
-            raise KeyERror(f"must getitem by coordinate(type tuple[int]) or index(type int)")
+            raise KeyError(f"must getitem by coordinate(type tuple[int]) or index(type int)")
         if item > len(self._tiles)-1:
             raise KeyError(f"index out of range, valid indeces are ints in [0,{len(self._tiles)-1}]")
-        return list(self._tiles.values())[item]
+        return list(self.h5manager.h5.values())[item]
 
     def add(self, coordinate, tile):
         """
-        Add tile indexed by coordinate to self._tiles.
+        Add tile indexed by coordinate to self.h5manager.
 
         Args:
             coordinate(tuple[int]): location of tile on slide
@@ -74,35 +66,25 @@ class Tiles:
             raise ValueError(f"can not add {type(tile)}, tile must be of type pathml.core.tile.Tile")
         if not isinstance(coordinate, tuple[int]):
             raise ValueError(f"can not add type {type(key)}, key must be of type tuple[int]")
-        if coordinate in self._tiles:
-            print(f"overwriting tile at {coordinate}")
-        if self._tiles.keys():
-            requiredshape = self._tiles[list(self._tiles.keys())[0]].shape
-            if tile.array.shape != requiredshape:
-                raise ValueError(f"Tiles contains tiles of shape {requiredshape}, provided tile is of shape {tile.array.shape}. We enforce that all Tile in Tiles must have matching shapes.")
-        self._tiles[coordinate] = tile
-
+        self.h5manager.add(coordinate, tile)
+    
     def slice(self, coordinates):
         """
-        Slice all tiles in self._tiles extending numpy array slicing
+        Slice all tiles in self.h5manager extending numpy array slicing
 
         Args:
             coordinates(tuple[int]): coordinates denoting slice i.e. 'selection' https://numpy.org/doc/stable/reference/arrays.indexing.html
         """
-        tileslice = Tiles()
-        for key in self._tiles.keys():
-            val = self._tiles[key]
-            val = val[coordinates]
-            tileslice.add(key, val)
-        return tileslice
+        self.h5manager.slice(coordinates)
 
     def remove(self, key):
         """
-        Remove tile from self._tiles by key.
+        Remove tile from self.h5manager by key.
         """
-        if key not in self._tiles:
-            raise KeyError('key is not in dict Tiles')
-        del self._tiles[key]
+        self.h5manager.remove(key)
+
+    def resize(self, shape):
+        raise NotImplementedError
 
     def save(self, out_dir, filename):
         """
@@ -110,10 +92,10 @@ class Tiles:
 
         Args:
             out_dir(str): directory to write
-            filename(str) file name of tiles 
+            filename(str) file name 
         """
         savepath = Path(out_dir)+Path(filename)
-        shutil.copy(self.h5, savepath)
+        shutil.copy(self.h5manager.h5, savepath)
 
 class Tile:
     """
@@ -130,6 +112,7 @@ class Tile:
     def __init__(self, array, labels=None, masks=None, i=None, j=None):
         assert isinstance(array, np.ndarray), "Array must be a np.ndarray"
         self.array = array
+        self.shape = array.shape
         self.i = i  # i coordinate of top left corner pixel
         self.j = j  # j coordinate of top left corner pixel
         assert isinstance(masks, (None, Masks, dict)), f"masks is of type {type(masks)} but must be of type pathml.core.Masks or dict"
