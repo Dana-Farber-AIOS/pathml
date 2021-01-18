@@ -1,7 +1,7 @@
 import numpy as np
 from collections import OrderedDict
 
-class Masks():
+class Masks:
     '''
     Object holding masks.  
 
