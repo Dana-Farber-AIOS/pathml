@@ -20,14 +20,13 @@ class _tiles_h5_manager:
             coordinates(tuple[int]): location of tile on slide
             tile(`~pathml.core.tile.Tile`): Tile object 
         """
-        if coordinates in self.h5.keys():
-            print(f"overwriting tile at {coordinate}")
-        if self.h5.keys() is False:
+        if str(coordinates) in self.h5.keys():
+            print(f"overwriting tile at {coordinates}")
+        if self.shape == None:
             self.shape = tile.array.shape
         newcoord = self.h5.create_dataset(
             str(coordinates),
-            data = tile.array,
-            maxshape=(None, ) + tile.shape,
+            data = tile.array
         )
         if tile.array.shape != self.shape:
             raise ValueError(f"Tiles contains tiles of shape {self.shape}, provided tile is of shape {tile.array.shape}. We enforce that all Tile in Tiles must have matching shapes.")
@@ -46,6 +45,17 @@ class _tiles_h5_manager:
         for key, val in self.h5.items():
             val = val[coordinates]
             yield key, val
+
+    def get(self, item):
+        if isinstance(item, tuple):
+            if str(item) not in self.h5.keys():
+                raise KeyError('key {index} does not exist')
+            return self.h5[str(item)][:]
+        if not isinstance(item, int):
+            raise KeyError(f"must getitem by coordinate(type tuple[int]) or index(type int)")
+        if item > len(self.h5.keys())-1:
+            raise KeyError(f"index out of range, valid indeces are ints in [0,{len(self.h5.keys())-1}]")
+        return self.h5[list(self.h5.keys())[item]][:]
 
     def remove(self, key):
         """

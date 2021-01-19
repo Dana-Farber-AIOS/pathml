@@ -4,6 +4,7 @@ import cv2
 import shutil
 from typing import Union
 from pathlib import Path
+from collections import OrderedDict
 
 from pathml.core.masks import Masks
 from pathml.core.h5managers import _tiles_h5_manager
@@ -34,40 +35,37 @@ class Tiles:
                 for tile in tiles:
                     tiledictionary[(tile.i, tile.j)] = tile
                 self._tiles = OrderedDict(tiledictionary)
+        else:
+            self._tiles = OrderedDict()
         self.h5manager = _tiles_h5_manager() 
         for key in self._tiles:
             self.h5manager.add(key, self._tiles[key])
             del self._tiles[key]
 
     def __repr__(self):
-        rep = f"Tiles(keys={self._tiles.keys()})"
+        rep = f"Tiles(keys={self.h5manager.h5.keys()})"
+        return rep
 
     def __len__(self):
         return len(self._tiles)
 
     def __getitem__(self, item):
-        if isinstance(item, tuple[int]):
-            return self.h5manager.h5[item]
-        if not isinstance(ite, int):
-            raise KeyError(f"must getitem by coordinate(type tuple[int]) or index(type int)")
-        if item > len(self._tiles)-1:
-            raise KeyError(f"index out of range, valid indeces are ints in [0,{len(self._tiles)-1}]")
-        return list(self.h5manager.h5.values())[item]
+        return self.h5manager.get(item) 
 
-    def add(self, coordinate, tile):
+    def add(self, coordinates, tile):
         """
-        Add tile indexed by coordinate to self.h5manager.
+        Add tile indexed by coordinates to self.h5manager.
 
         Args:
-            coordinate(tuple[int]): location of tile on slide
+            coordinates(tuple[int]): location of tile on slide
             tile(Tile): tile object
         """
         if not isinstance(tile, Tile):
-            raise ValueError(f"can not add {type(tile)}, tile must be of type pathml.core.tile.Tile")
-        if not isinstance(coordinate, tuple[int]):
+            raise ValueError(f"can not add {type(tile)}, tile must be of type pathml.core.tiles.Tile")
+        if not isinstance(coordinates, tuple):
             raise ValueError(f"can not add type {type(key)}, key must be of type tuple[int]")
-        self.h5manager.add(coordinate, tile)
-    
+        self.h5manager.add(coordinates, tile)
+
     def slice(self, coordinates):
         """
         Slice all tiles in self.h5manager extending numpy array slicing
@@ -118,7 +116,7 @@ class Tile:
         self.shape = array.shape
         self.i = i  # i coordinate of top left corner pixel
         self.j = j  # j coordinate of top left corner pixel
-        assert isinstance(masks, (None, Masks, dict)), f"masks is of type {type(masks)} but must be of type pathml.core.Masks or dict"
+        assert isinstance(masks, (type(None), Masks, dict)), f"masks is of type {type(masks)} but must be of type pathml.core.Masks or dict"
         if isinstance(masks, Masks):
             self.masks = Masks
         # populate Masks object by dict
@@ -129,7 +127,7 @@ class Tile:
             self.masks = Masks(masks)
         elif masks == None:
             self.masks = masks 
-        assert isinstance(labels, (None, dict))
+        assert isinstance(labels, (type(None), dict))
         self.labels = labels
 
     def __repr__(self):  # pragma: no cover
