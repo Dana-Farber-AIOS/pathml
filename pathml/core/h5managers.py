@@ -42,6 +42,8 @@ class _tiles_h5_manager:
             key(str): tile coordinates
             val(`~pathml.core.tile.Tile`): tile
         """
+        raise NotImplementedError
+        # how to pass coordinates?
         for key, val in self.h5.items():
             val = val[coordinates]
             yield key, val
@@ -64,7 +66,6 @@ class _tiles_h5_manager:
         if key not in self.h5.keys():
             raise KeyError('key is not in Tiles')
         del self.h5[key]
-
 
 class _masks_h5_manager:
     """

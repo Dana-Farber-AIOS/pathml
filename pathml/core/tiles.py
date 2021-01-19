@@ -135,3 +135,14 @@ class Tile:
                f"i={self.i if self.i is not None else 'None'}, " \
                f"j={self.j if self.j is not None else 'None'})"
 
+
+if __name__ == "__main__":
+    # create and load tiles
+    tiles = Tiles()
+    testtile = Tile(np.ones((224,224,3)), i=1, j=3)
+    tiles.add((1,3), testtile)
+    print(tiles)
+    tiles.slice((:5))
+    print(tiles)
+    tiles.remove('(1, 3)')
+    print(tiles)
