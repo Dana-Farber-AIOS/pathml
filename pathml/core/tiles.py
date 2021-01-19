@@ -34,7 +34,7 @@ class Tiles:
                 for tile in tiles:
                     tiledictionary[(tile.i, tile.j)] = tile
                 self._tiles = OrderedDict(tiledictionary)
-        self.h5manager = _tile_h5_manager() 
+        self.h5manager = _tiles_h5_manager() 
         for key in self._tiles:
             self.h5manager.add(key, self._tiles[key])
             del self._tiles[key]

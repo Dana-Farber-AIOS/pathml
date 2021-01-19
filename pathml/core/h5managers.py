@@ -1,3 +1,4 @@
+import h5py
 import tempfile
 import numpy as np
 
@@ -6,8 +7,8 @@ class _tiles_h5_manager:
     Interface between tiles object and data management on disk by h5py. 
     """
     def __init__(self):
-        fd, path = tempfile.TemporaryFile()
-        f = h5py.File(fd, 'w')
+        path = tempfile.TemporaryFile()
+        f = h5py.File(path, 'w')
         self.h5 = f
         self.shape = None
 
@@ -60,8 +61,8 @@ class _masks_h5_manager:
     Interface between masks object and data management on disk by h5py. 
     """
     def __init__(self):
-        fd, path = tempfile.TemporaryFile()
-        f = h5py.File(fd, 'w')
+        path = tempfile.TemporaryFile()
+        f = h5py.File(path, 'w')
         self.h5 = f
         self.shape = None
 
