@@ -124,6 +124,7 @@ def get_sobel_kernels(size, dt=torch.float32):
 def wrap_transform_multichannel(transform):
     """
     Wrapper to make albumentations transform compatible with a multichannel mask.
+    Channel should be in first dimension, i.e. (n_mask_channels, H, W)
     
     Args:
         transform: Albumentations transform. Must have 'additional_targets' parameter specified with 
@@ -134,20 +135,24 @@ def wrap_transform_multichannel(transform):
     Returns:
         function that can be called with a multichannel mask argument
     """
+    targets = transform.additional_targets    
+    n_targets = len(targets)
+    
     # make sure that everything is correct so that transform is correctly applied
-    assert all([v == "mask" for v in transform.additional_targets.values()]), \
+    assert all([v == "mask" for v in targets.values()]), \
         f"error all values in transform.additional_targets must be 'mask'." 
     
     def transform_out(*args, **kwargs):
         mask = kwargs.pop("mask")
-        
-        assert len(transform.additional_targets) == mask.shape[0], \
+        assert mask.ndim == 3, f"input mask shape {mask.shape} must be 3-dimensions ()"
+        assert mask.shape[0] == n_targets, \
             f"input mask shape {mask.shape} doesn't match additional_targets {transform.additional_targets}"
         
-        mask_to_dict = {value : mask[i, :, :] for i, value in enumerate(transform.additional_targets)}
+        mask_to_dict = {key : mask[i, :, :] for i, key in enumerate(targets.keys())}
         kwargs.update(mask_to_dict)
         out = transform(*args, **kwargs)
-        mask_out = np.stack([out.pop(key) for key in transform.additional_targets])
+        mask_out = np.stack([out.pop(key) for key in targets.keys()], axis=0)
+        assert mask_out.shape == mask.shape
         out["mask"] = mask_out
         return out
     
