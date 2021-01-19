@@ -87,21 +87,18 @@ class _masks_h5_manager:
 
     def slice(self, coordinates):
         """
-        Slice all masks in self.h5 extending numpy array slicing
+        Generator to slice all masks in self.h5 extending numpy array slicing
 
         Args:
             coordinates(tuple[int]): coordinates denoting slice i.e. 'selection' https://numpy.org/doc/stable/reference/arrays.indexing.html
 
-        Returns:
-            maskslice(dict): all masks sliced by coordinates in dict
+        Yields:
+            key(str): mask key
+            val(np.ndarray): mask
         """
-        maskslice = Masks()
-        # dict.items()
-        for key in self.h5.keys():
-            val = self.h5[key]
+        for key, val in self.h5.items():
             val = val[coordinates]
-            maskslice.add(key, val)
-        return maskslice
+            yield key, val
 
     def remove(self, key):
         """

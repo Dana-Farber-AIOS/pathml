@@ -64,7 +64,10 @@ class Masks:
         Args:
             coordinates(tuple[int]): coordinates denoting slice i.e. 'selection' https://numpy.org/doc/stable/reference/arrays.indexing.html 
         """
-        self.h5manager.slice(coordinates)
+        sliced = Masks()
+        for key, val in self.h5manager.slice(coordinates)
+            sliced.add(key, val)
+        return sliced
 
     def remove(self, key):
         """
