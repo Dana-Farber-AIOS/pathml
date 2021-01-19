@@ -1,8 +1,6 @@
 import tempfile
 import numpy as np
 
-from pathml.core.tiles import Tile, Tiles
-
 class _tiles_h5_manager:
     """
     Interface between tiles object and data management on disk by h5py. 
@@ -19,7 +17,7 @@ class _tiles_h5_manager:
 
         Args:
             coordinates(tuple[int]): location of tile on slide
-            tile(Tile): Tile object 
+            tile(`~pathml.core.tile.Tile`): Tile object 
         """
         if coordinates in self.h5.keys():
             print(f"overwriting tile at {coordinate}")
@@ -33,23 +31,20 @@ class _tiles_h5_manager:
         if tile.array.shape != self.shape:
             raise ValueError(f"Tiles contains tiles of shape {self.shape}, provided tile is of shape {tile.array.shape}. We enforce that all Tile in Tiles must have matching shapes.")
 
-    def slice(self, coordinates):
+    def slice(self, coordinates, slicedict):
         """
-        Slice all tiles in self.h5 extending numpy array slicing
+        Generator to slice all tiles in self.h5 extending numpy array slicing
 
         Args:
             coordinates(tuple[int]): coordinates denoting slice i.e. 'selection' https://numpy.org/doc/stable/reference/arrays.indexing.html
 
-        Returns:
-            tileslice(dict): all tiles sliced by coordinates in dict
+        Yields:
+            key(str): tile coordinates
+            val(`~pathml.core.tile.Tile`): tile
         """
-        tileslice = Tiles()
-        # dict.items()
-        for key in self.h5.keys():
-            val = self.h5[key]
+        for key, val in self.h5.items():
             val = val[coordinates]
-            tileslice.add(key, val)
-        return tileslice
+            yield key, val
 
     def remove(self, key):
         """
