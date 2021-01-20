@@ -9,6 +9,7 @@ class _tiles_h5_manager:
     def __init__(self):
         path = tempfile.TemporaryFile()
         f = h5py.File(path, 'w')
+        f.create_group("tiles")
         self.h5 = f
         self.h5path = path
         self.shape = None
@@ -21,11 +22,11 @@ class _tiles_h5_manager:
             coordinates(tuple[int]): location of tile on slide
             tile(`~pathml.core.tile.Tile`): Tile object 
         """
-        if str(coordinates) in self.h5.keys():
+        if str(coordinates) in self.h5['tiles'].keys():
             print(f"overwriting tile at {coordinates}")
         if self.shape == None:
             self.shape = tile.array.shape
-        newcoord = self.h5.create_dataset(
+        newcoord = self.h5['tiles'].create_dataset(
             str(coordinates),
             data = tile.array
         )
@@ -44,29 +45,29 @@ class _tiles_h5_manager:
             val(`~pathml.core.tile.Tile`): tile
         """
         raise NotImplementedError
-        # how to pass coordinates?
+        # how to pass numpy indexing style from tiles
         for key, val in self.h5.items():
             val = val[coordinates]
             yield key, val
 
     def get(self, item):
         if isinstance(item, tuple):
-            if str(item) not in self.h5.keys():
-                raise KeyError('key {index} does not exist')
-            return self.h5[str(item)][:]
+            if str(item) not in self.h5['tiles'].keys():
+                raise KeyError('key {item} does not exist')
+            return self.h5['tiles'][str(item)][:]
         if not isinstance(item, int):
             raise KeyError(f"must getitem by coordinate(type tuple[int]) or index(type int)")
-        if item > len(self.h5.keys())-1:
-            raise KeyError(f"index out of range, valid indeces are ints in [0,{len(self.h5.keys())-1}]")
-        return self.h5[list(self.h5.keys())[item]][:]
+        if item > len(self.h5['tiles'].keys())-1:
+            raise KeyError(f"index out of range, valid indeces are ints in [0,{len(self.h5['tiles'].keys())-1}]")
+        return self.h5['tiles'][list(self.h5['tiles'].keys())[item]][:]
 
     def remove(self, key):
         """
         Remove tile from self.h5 by key.
         """
-        if key not in self.h5.keys():
+        if key not in self.h5['tiles'].keys():
             raise KeyError('key is not in Tiles')
-        del self.h5[key]
+        del self.h5['tiles'][key]
 
 class _masks_h5_manager:
     """
@@ -75,6 +76,7 @@ class _masks_h5_manager:
     def __init__(self):
         path = tempfile.TemporaryFile()
         f = h5py.File(path, 'w')
+        f.create_group("masks")
         self.h5 = f
         self.h5path = path
         self.shape = None
@@ -87,14 +89,13 @@ class _masks_h5_manager:
             key(str): key labeling mask
             mask(np.ndarray): mask  
         """
-        if key in self.h5.keys():
+        if key in self.h5['masks'].keys():
             print(f"overwriting key at {key}")
-        if self.h5.keys() is False:
+        if self.shape == None:
             self.shape = mask.shape
-        newkey = self.h5.create_dataset(
+        newkey = self.h5['masks'].create_dataset(
             str(key),
-            data = mask,
-            maxshape=(None, ) + mask.shape,
+            data = mask
         )
         if mask.shape != self.shape:
             raise ValueError(f"Masks contains masks of shape {self.shape}, provided mask is of shape {mask.shape}. We enforce that all Mask in Masks must have matching shapes.")
@@ -114,10 +115,21 @@ class _masks_h5_manager:
             val = val[coordinates]
             yield key, val
 
+    def get(self, item):
+        if isinstance(item, str):
+            if item not in self.h5['masks'].keys():
+                raise KeyError('key {item} does not exist')
+            return self.h5['masks'][item][:]
+        if not isinstance(item, int):
+            raise KeyError(f"must getitem by name (type str) or index(type int)")
+        if item > len(self.h5['masks'].keys())-1:
+            raise KeyError(f"index out of range, valid indeces are ints in [0,{len(self.h5['masks'].keys())-1}]")
+        return self.h5['masks'][list(self.h5['masks'].keys())[item]][:]
+
     def remove(self, key):
         """
         Remove mask from self.h5 by key.
         """
-        if key not in self.h5.keys():
+        if key not in self.h5['masks'].keys():
             raise KeyError('key is not in Masks')
-        del self.h5[key]
+        del self.h5['masks'][key]

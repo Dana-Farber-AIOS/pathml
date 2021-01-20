@@ -1,5 +1,11 @@
 import numpy as np
+import os
+import cv2
+import shutil
+from typing import Union
+from pathlib import Path
 from collections import OrderedDict
+import h5py
 
 from pathml.core.h5managers import _masks_h5_manager
 
@@ -30,20 +36,14 @@ class Masks:
             del self._masks[mask]
 
     def __repr__(self):
-        rep = f"Masks(keys={self._masks.keys()})"
+        rep = f"Masks(keys={self.h5manager.h5['masks'].keys()})"
         return rep
 
     def __len__(self):
-        return len(self._masks)
+        return len(self.h5manager.h5['masks'].keys())
 
     def __getitem__(self, item):
-        if isinstance(item, str):
-            return self.h5manager.h5[item]
-        if not isinstance(item, int):
-            raise KeyError(f"must getitem by name(type str) or index(type int)")
-        if item > len(self._masks)-1:
-            raise KeyError(f"index out of range, valid indices are ints in [0,{len(self._masks)-1}]") 
-        return list(self.h5manager.h5.values())[item]
+        return self.h5manager.get(item)
 
     def add(self, key, mask):
         """
@@ -78,7 +78,7 @@ class Masks:
     def resize(self, shape):
         raise NotImplementedError
 
-    def save(self, out_dir, filename):
+    def write(self, out_dir, filename):
         """
         Save masks as .h5 
 
@@ -96,3 +96,9 @@ class Masks:
 
         for dataset in self.h5manager.h5.keys():
             self.h5manager.h5.copy(self.h5manager.h5[dataset], newh5)
+
+    def read(self, path):
+        """
+        Read masks from .h5
+        """
+        raise NotImplementedError

@@ -44,11 +44,11 @@ class Tiles:
             del self._tiles[key]
 
     def __repr__(self):
-        rep = f"Tiles(keys={self.h5manager.h5.keys()})"
+        rep = f"Tiles(keys={self.h5manager.h5['tiles'].keys()})"
         return rep
 
     def __len__(self):
-        return len(self._tiles)
+        return len(self.h5manager.h5['tiles'].keys())
 
     def __getitem__(self, item):
         return self.h5manager.get(item) 
@@ -88,7 +88,7 @@ class Tiles:
     def resize(self, shape):
         raise NotImplementedError
 
-    def save(self, out_dir, filename):
+    def write(self, out_dir, filename):
         """
         Save tiles as .h5 
 
@@ -106,6 +106,14 @@ class Tiles:
 
         for dataset in self.h5manager.h5.keys():
             self.h5manager.h5.copy(self.h5manager.h5[dataset], newh5)
+
+    def read(self, path):
+        """
+        Read tiles from .h5
+        """
+        raise NotImplementedError
+
+
 
 class Tile:
     """
@@ -146,14 +154,16 @@ class Tile:
 
 
 if __name__ == "__main__":
-    # create and load tiles
+    # create tile
     tiles = Tiles()
     testtile = Tile(np.ones((224,224,3)), i=1, j=3)
+    # add to tiles .h5
     tiles.add((1,3), testtile)
     print(tiles)
-    #tiles.slice((:5))
-    tiles.save('out','test.h5')
+    # write temp .h5 to persistent .h5
+    tiles.write('out','test.h5')
+    # remove tiles
     tiles.remove('(1, 3)')
     print(tiles)
     test = h5py.File('out/test.h5')
-    print(test['(1, 3)'][:])
+    print(test['tiles']['(1, 3)'][:])
