@@ -5,6 +5,7 @@ import shutil
 from typing import Union
 from pathlib import Path
 from collections import OrderedDict
+import h5py
 
 from pathml.core.masks import Masks
 from pathml.core.h5managers import _tiles_h5_manager
@@ -95,8 +96,16 @@ class Tiles:
             out_dir(str): directory to write
             filename(str) file name 
         """
-        savepath = Path(out_dir)+Path(filename)
-        shutil.copy(self.h5manager.h5, savepath)
+        savepath = Path(out_dir) / Path(filename)
+        try:
+            os.mkdir(str(Path(out_dir)))
+        except:
+            pass
+        newfile = f"{str(savepath.with_suffix('.h5'))}"
+        newh5 = h5py.File(newfile, 'w')
+
+        for dataset in self.h5manager.h5.keys():
+            self.h5manager.h5.copy(self.h5manager.h5[dataset], newh5)
 
 class Tile:
     """
@@ -142,7 +151,9 @@ if __name__ == "__main__":
     testtile = Tile(np.ones((224,224,3)), i=1, j=3)
     tiles.add((1,3), testtile)
     print(tiles)
-    tiles.slice((:5))
-    print(tiles)
+    #tiles.slice((:5))
+    tiles.save('out','test.h5')
     tiles.remove('(1, 3)')
     print(tiles)
+    test = h5py.File('out/test.h5')
+    print(test['(1, 3)'][:])

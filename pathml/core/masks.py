@@ -86,5 +86,13 @@ class Masks:
             out_dir(str): directory to write
             filename(str) file name
         """
-        savepath = Path(out_dir)+Path(filename)
-        shutil.copy(self.h5manager.h5, savepath)
+        savepath = Path(out_dir) / Path(filename)
+        try:
+            os.mkdir(str(Path(out_dir)))
+        except:
+            pass
+        newfile = f"{str(savepath.with_suffix('.h5'))}"
+        newh5 = h5py.File(newfile, 'w')
+
+        for dataset in self.h5manager.h5.keys():
+            self.h5manager.h5.copy(self.h5manager.h5[dataset], newh5)

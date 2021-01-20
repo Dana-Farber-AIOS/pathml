@@ -10,6 +10,7 @@ class _tiles_h5_manager:
         path = tempfile.TemporaryFile()
         f = h5py.File(path, 'w')
         self.h5 = f
+        self.h5path = path
         self.shape = None
 
     def add(self, coordinates, tile):
@@ -75,6 +76,7 @@ class _masks_h5_manager:
         path = tempfile.TemporaryFile()
         f = h5py.File(path, 'w')
         self.h5 = f
+        self.h5path = path
         self.shape = None
 
     def add(self, key, mask):
