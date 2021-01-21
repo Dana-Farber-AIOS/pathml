@@ -5,7 +5,7 @@ from matplotlib.testing.decorators import check_figures_equal
 from matplotlib.patches import Rectangle
 
 from pathml.preprocessing.tiling import Tile
-from pathml.preprocessing.utils import (
+from pathml.utils import (
     segmentation_lines, contour_centroid, sort_points_clockwise,
     pad_or_crop, _pad_or_crop_1d, upsample_array, plot_mask, plot_extracted_tiles,
     RGB_to_HSV, RGB_to_OD, RGB_to_HSI, RGB_to_GREY, RGB_to_LAB,
