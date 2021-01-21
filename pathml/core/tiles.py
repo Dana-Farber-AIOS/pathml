@@ -107,14 +107,6 @@ class Tiles:
         for dataset in self.h5manager.h5.keys():
             self.h5manager.h5.copy(self.h5manager.h5[dataset], newh5)
 
-    def read(self, path):
-        """
-        Read tiles from .h5
-        """
-        raise NotImplementedError
-
-
-
 class Tile:
     """
     Object representing a tile extracted from an image. Holds the image for the tile, as well as the (i,j)
