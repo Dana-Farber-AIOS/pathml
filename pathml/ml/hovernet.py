@@ -665,7 +665,7 @@ def post_process_batch_hovernet(outputs, n_classes, small_obj_size_thresh=10, ke
             segmentation. Defaults to 0.5.
 
     Returns:
-        If n_classes is None, returns det_out. In classification setting, returns (det_out, class_out).
+        np.ndarray: If n_classes is None, returns det_out. In classification setting, returns (det_out, class_out).
 
             - det_out is np.ndarray of shape (B, H, W)
             - class_out is np.ndarray of shape (B, n_classes, H, W)
@@ -784,40 +784,3 @@ def _vis_outputs_single(images, preds, n_classes, index=0, ax=None, markersize=5
                 x, y = segmentation_lines(nuclei_mask.astype(np.uint8))
                 ax.scatter(x, y, color = palette[i], marker = ".", s = markersize)
     ax.axis("off")
-
-
-def vis_outputs(images, preds, n_classes, n_images, markersize=5, palette=None):
-    """
-    Plot the results of HoVer-Net predictions for multiple images in a batch, overlayed over
-    original images.
-
-    Args:
-        images: Input RGB image batch. Tensor of shape (B, 3, H, W).
-        preds: Postprocessed outputs of HoVer-Net. From post_process_batch_hovernet(). Each pixel should be either 0
-            for background or an integer n indicating that the pixel is part of the nth nucleus. Can be either:
-            - Tensor of shape (B, H, W), in the context of nucleus detection.
-            - Tensor of shape (B, n_classes, H, W), in the context of nucleus classification.
-        n_classes (int): Number of classes for classification setting, or None to indicate detection setting.
-        n_images (int): number of images to plot. Must be a multiple of 4.
-        markersize: Size of markers used to outline nuclei
-        palette (list): list of colors to use for plotting. If None, uses matplotlib.colors.TABLEAU_COLORS.
-            Defaults to None
-    """
-    if palette is None:
-        palette = list(TABLEAU_COLORS.values())
-
-    if n_classes is not None:
-        assert n_classes == preds.shape[1], f"preds dimension {preds.shape[1]} doesn't match n_classes {n_classes}"
-        assert len(palette) >= n_classes, f"len(palette)={len(palette)} < n_classes={n_classes}."
-
-    assert len(preds.shape) in [3, 4], f"Preds shape is {preds.shape}. Must be (B, H, W) or (B, n_classes, H, W)"
-    assert n_images <= images.shape[0], f"input n_images {n_images} is larger than batch size {images.shape[0]}"
-    assert n_images % 4 == 0, f"input n_images {n_images} must be a multiple of 4"
-
-    nr = int(np.ceil(n_images / 4))
-    fig, ax = plt.subplots(nrows = nr, ncols = 4, figsize = (10, 4 * nr))
-
-    for i, ax in enumerate(ax.ravel()):
-        _vis_outputs_single(images, preds, n_classes, ax = ax, index = i, markersize = markersize, palette = palette)
-
-    plt.tight_layout()
