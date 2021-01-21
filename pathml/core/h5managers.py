@@ -23,8 +23,6 @@ class _tiles_h5_manager:
             coordinates(tuple[int]): location of tile on slide
             tile(`~pathml.core.tile.Tile`): Tile object 
         """
-        if not isinstance(tile, Tile):
-            raise ValueError(f"can not add {type(tile)}, tile must be of type pathml.core.tiles.Tile")
         if not isinstance(coordinates, tuple):
             raise ValueError(f"can not add type {type(key)}, key must be of type tuple[int]")
         if str(coordinates) in self.h5['tiles'].keys():

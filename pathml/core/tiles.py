@@ -18,7 +18,7 @@ class Tiles:
         tiles (Union[dict[tuple[int], `~pathml.core.tiles.Tile`], list]): tile objects  
     """
     def __init__(self,
-            tiles = None
+            tiles =  None
         ):
         if tiles:
             if not isinstance(tiles, (dict, list[Tile])):
@@ -61,6 +61,8 @@ class Tiles:
             coordinates(tuple[int]): location of tile on slide
             tile(Tile): tile object
         """
+        if not isinstance(tile, Tile):
+            raise ValueError(f"can not add {type(tile)}, tile must be of type pathml.core.tiles.Tile")
         self.h5manager.add(coordinates, tile)
 
     def slice(self, coordinates):
@@ -93,13 +95,12 @@ class Tiles:
             filename(str) file name 
         """
         savepath = Path(out_dir) / Path(filename)
-        try:
-            savepath.mkdir() 
-        except:
-            pass
-        newfile = str(savepath.with_suffix('.h5'))
-        newh5 = h5py.File(newfile, 'w')
+        Path(out_dir).mkdir(parents=True, exist_ok=True) 
+        # abspath resolves documented h5py bug
+        newfile = os.path.abspath(str(savepath.with_suffix('.h5')))
+        newh5 = h5py.File(newfile, 'a')
 
+        #shutil.move(self.h5manager.h5path, newh5)
         for dataset in self.h5manager.h5.keys():
             self.h5manager.h5.copy(self.h5manager.h5[dataset], newh5)
 
