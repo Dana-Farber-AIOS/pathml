@@ -23,7 +23,7 @@ class SlideData:
         history (list): the history of operations applied to the SlideData object
     """
     def __init__(self, slide=None, masks=None, tiles=None, labels=None, h5=None):
-        assert issubclass(slide, Slide), f"slide is of type {type(slide)} but must be a subclass of pathml.core.slide.Slide"
+        assert isinstance(slide, Slide), f"slide is of type {type(slide)} but must be a subclass of pathml.core.slide.Slide"
         self.slide = slide
         self._slidetype = type(slide)
         self.name = slide.name
@@ -52,7 +52,7 @@ class SlideData:
         tilelevel = kwargs.pop("tilelevel", None)
         tilestride = kwargs.pop("tilestride", tileshape)
         tilepad = kwargs.pop("tilepad", False)
-        for tile in self.tiles(level = tilelevel, shape = tileshape, stride = tilestride, pad = tilepad):
+        for tile in self.generate_tiles(level = tilelevel, shape = tileshape, stride = tilestride, pad = tilepad):
             pipeline(tile, **kwargs)
 
     def generate_tiles(self, level=None, shape=3000, stride=shape, pad=False):
