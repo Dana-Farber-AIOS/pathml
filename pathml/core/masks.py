@@ -31,6 +31,7 @@ class Masks:
             self._masks = OrderedDict(masks)
         else:
             self._masks = OrderedDict()
+        self.h5manager = _masks_h5_manager()
         for mask in self._masks:
             self.h5manager.add(mask, self._masks[mask])
             del self._masks[mask]
@@ -52,10 +53,6 @@ class Masks:
         :type key: str
         :type mask: np.ndarray with elements of type int8
         """
-        if not isinstance(mask, np.ndarray):
-            raise ValueError(f"can not add {type(mask)}, mask must be of type np.ndarray")
-        if not isinstance(key, str):
-            raise ValueError(f"invalid type {type(key)}, key must be of type str")
         self.h5manager.add(key, mask)
 
     def slice(self, coordinates):
@@ -88,10 +85,10 @@ class Masks:
         """
         savepath = Path(out_dir) / Path(filename)
         try:
-            os.mkdir(str(Path(out_dir)))
+            savepath.mkdir()
         except:
             pass
-        newfile = f"{str(savepath.with_suffix('.h5'))}"
+        newfile = str(savepath.with_suffix('.h5'))
         newh5 = h5py.File(newfile, 'w')
 
         for dataset in self.h5manager.h5.keys():

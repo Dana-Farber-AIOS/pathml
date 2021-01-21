@@ -23,6 +23,10 @@ class _tiles_h5_manager:
             coordinates(tuple[int]): location of tile on slide
             tile(`~pathml.core.tile.Tile`): Tile object 
         """
+        if not isinstance(tile, Tile):
+            raise ValueError(f"can not add {type(tile)}, tile must be of type pathml.core.tiles.Tile")
+        if not isinstance(coordinates, tuple):
+            raise ValueError(f"can not add type {type(key)}, key must be of type tuple[int]")
         if str(coordinates) in self.h5['tiles'].keys():
             print(f"overwriting tile at {coordinates}")
         if self.shape == None:
@@ -70,16 +74,18 @@ class _tiles_h5_manager:
             return self.h5['tiles'][str(item)][:]
         if not isinstance(item, int):
             raise KeyError(f"must getitem by coordinate(type tuple[int]) or index(type int)")
-        if item > len(self.h5['tiles'].keys())-1:
-            raise KeyError(f"index out of range, valid indeces are ints in [0,{len(self.h5['tiles'].keys())-1}]")
+        if item > len(self.h5['tiles'])-1:
+            raise KeyError(f"index out of range, valid indices are ints in [0,{len(self.h5['tiles'].keys())-1}]")
         return self.h5['tiles'][list(self.h5['tiles'].keys())[item]][:]
 
     def remove(self, key):
         """
         Remove tile from self.h5 by key.
         """
+        if not isinstance(key, str):
+            raise KeyError(f'key must be of type str, check valid keys in repr')
         if key not in self.h5['tiles'].keys():
-            raise KeyError('key is not in Tiles')
+            raise KeyError(f'key {key} is not in Tiles')
         del self.h5['tiles'][key]
 
 class _masks_h5_manager:
@@ -102,6 +108,10 @@ class _masks_h5_manager:
             key(str): key labeling mask
             mask(np.ndarray): mask  
         """
+        if not isinstance(mask, np.ndarray):
+            raise ValueError(f"can not add {type(mask)}, mask must be of type np.ndarray")
+        if not isinstance(key, str):
+            raise ValueError(f"invalid type {type(key)}, key must be of type str")
         if key in self.h5['masks'].keys():
             print(f"overwriting key at {key}")
         if self.shape == None:
@@ -131,12 +141,12 @@ class _masks_h5_manager:
     def get(self, item):
         if isinstance(item, str):
             if item not in self.h5['masks'].keys():
-                raise KeyError('key {item} does not exist')
+                raise KeyError(f'key {item} does not exist')
             return self.h5['masks'][item][:]
         if not isinstance(item, int):
             raise KeyError(f"must getitem by name (type str) or index(type int)")
-        if item > len(self.h5['masks'].keys())-1:
-            raise KeyError(f"index out of range, valid indeces are ints in [0,{len(self.h5['masks'].keys())-1}]")
+        if item > len(self.h5['masks'])-1:
+            raise KeyError(f"index out of range, valid indices are ints in [0,{len(self.h5['masks'].keys())-1}]")
         return self.h5['masks'][list(self.h5['masks'].keys())[item]][:]
 
     def remove(self, key):
@@ -146,3 +156,10 @@ class _masks_h5_manager:
         if key not in self.h5['masks'].keys():
             raise KeyError('key is not in Masks')
         del self.h5['masks'][key]
+
+def read_h5(path):
+    f = h5py.File(path, 'r+')
+    if f['tiles']:
+        pass
+    if f['masks']:
+        pass

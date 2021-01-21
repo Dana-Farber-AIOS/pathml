@@ -61,10 +61,6 @@ class Tiles:
             coordinates(tuple[int]): location of tile on slide
             tile(Tile): tile object
         """
-        if not isinstance(tile, Tile):
-            raise ValueError(f"can not add {type(tile)}, tile must be of type pathml.core.tiles.Tile")
-        if not isinstance(coordinates, tuple):
-            raise ValueError(f"can not add type {type(key)}, key must be of type tuple[int]")
         self.h5manager.add(coordinates, tile)
 
     def slice(self, coordinates):
@@ -98,10 +94,10 @@ class Tiles:
         """
         savepath = Path(out_dir) / Path(filename)
         try:
-            os.mkdir(str(Path(out_dir)))
+            savepath.mkdir() 
         except:
             pass
-        newfile = f"{str(savepath.with_suffix('.h5'))}"
+        newfile = str(savepath.with_suffix('.h5'))
         newh5 = h5py.File(newfile, 'w')
 
         for dataset in self.h5manager.h5.keys():
