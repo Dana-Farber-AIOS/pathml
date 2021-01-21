@@ -10,11 +10,10 @@ from pathml.core import Tile
 
 
 # Base class
-# TODO move this to pathml.core
 class Transform:
     """
     Base class for all Transforms.
-    Each transform must operate on a chunk.
+    Each transform must operate on a Tile.
     """
     def __repr__(self):
         return "Base class for all transforms"
