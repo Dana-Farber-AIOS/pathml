@@ -34,7 +34,7 @@ class Tiles:
             else:
                 tiledictionary = {}
                 for tile in tiles:
-                    tiledictionary[(tile.i, tile.j)] = tile
+                    tiledictionary[(tile.i, tile.j)] = tiles[tile]
                 self._tiles = OrderedDict(tiledictionary)
         else:
             self._tiles = OrderedDict()

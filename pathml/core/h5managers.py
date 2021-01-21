@@ -1,5 +1,6 @@
 import h5py
 import tempfile
+
 import numpy as np
 
 class _tiles_h5_manager:
@@ -26,12 +27,24 @@ class _tiles_h5_manager:
             print(f"overwriting tile at {coordinates}")
         if self.shape == None:
             self.shape = tile.array.shape
-        newcoord = self.h5['tiles'].create_dataset(
+        if tile.array.shape != self.shape:
+            raise ValueError(f"Tiles contains tiles of shape {self.shape}, provided tile is of shape {tile.array.shape}. We enforce that all Tile in Tiles must have matching shapes.")
+        addtile = self.h5['tiles'].create_dataset(
             str(coordinates),
             data = tile.array
         )
-        if tile.array.shape != self.shape:
-            raise ValueError(f"Tiles contains tiles of shape {self.shape}, provided tile is of shape {tile.array.shape}. We enforce that all Tile in Tiles must have matching shapes.")
+        if tile.masks:
+            for mask in tile.masks: 
+                addmask = self.h5['tiles'][str(coordinates)].create_dataset(
+                        str(mask),
+                        data = tile.masks[mask]
+                )
+        if tile.labels:
+            # TODO: may cause errors if labels are non-ascii
+            addlabels = self.h5['tiles'][str(coordinates)].create_dataset(
+                    'labels',
+                    data = np.array(tile.labels, dtype='S')
+            )
 
     def slice(self, coordinates, slicedict):
         """
@@ -93,12 +106,12 @@ class _masks_h5_manager:
             print(f"overwriting key at {key}")
         if self.shape == None:
             self.shape = mask.shape
+        if mask.shape != self.shape:
+            raise ValueError(f"Masks contains masks of shape {self.shape}, provided mask is of shape {mask.shape}. We enforce that all Mask in Masks must have matching shapes.")
         newkey = self.h5['masks'].create_dataset(
             str(key),
             data = mask
         )
-        if mask.shape != self.shape:
-            raise ValueError(f"Masks contains masks of shape {self.shape}, provided mask is of shape {mask.shape}. We enforce that all Mask in Masks must have matching shapes.")
 
     def slice(self, coordinates):
         """
