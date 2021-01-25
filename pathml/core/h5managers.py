@@ -35,6 +35,7 @@ class _tiles_h5_manager:
             str(coordinates),
             data = tile.array
         )
+        # TODO: There is redundant storage of masks (also stored in .h5 when masks object is instantiated). Move extra masks
         if tile.masks:
             for mask in tile.masks: 
                 addmask = self.h5['tiles'][str(coordinates)].create_dataset(
@@ -69,11 +70,13 @@ class _tiles_h5_manager:
         if isinstance(item, tuple):
             if str(item) not in self.h5['tiles'].keys():
                 raise KeyError('key {item} does not exist')
+            # TODO: return a Tile object with masks
             return self.h5['tiles'][str(item)][:]
         if not isinstance(item, int):
             raise KeyError(f"must getitem by coordinate(type tuple[int]) or index(type int)")
         if item > len(self.h5['tiles'])-1:
             raise KeyError(f"index out of range, valid indices are ints in [0,{len(self.h5['tiles'].keys())-1}]")
+        # TODO: return a Tile object with masks
         return self.h5['tiles'][list(self.h5['tiles'].keys())[item]][:]
 
     def remove(self, key):
