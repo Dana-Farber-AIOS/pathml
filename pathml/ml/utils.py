@@ -129,8 +129,8 @@ def wrap_transform_multichannel(transform):
     Args:
         transform: Albumentations transform. Must have 'additional_targets' parameter specified with 
             a total of `n_channels` key,value pairs. All values must be 'mask' but the keys don't matter.
-            e.g. for a mask with 3 channels, you could use: 
-                `additional targets = {'mask1' : 'mask', 'mask2' : 'mask', 'pathml' : 'mask'}`
+            e.g. for a mask with 3 channels, you could use:
+            `additional targets = {'mask1' : 'mask', 'mask2' : 'mask', 'pathml' : 'mask'}`
     
     Returns:
         function that can be called with a multichannel mask argument
