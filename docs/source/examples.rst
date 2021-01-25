@@ -8,3 +8,4 @@ These notebooks give examples of how to use various ``PathML`` features and deve
 
     examples/link_stain_normalization
     examples/link_nucleus_detection
+    examples/link_train_hovernet

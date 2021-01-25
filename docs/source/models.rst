@@ -6,12 +6,12 @@ Models
 .. table::
     :widths: 20, 20, 60
 
-    ========= ============ =============
-    Model     Reference    Description
-    ========= ============ =============
-    U-net     [Unet]_      A model for segmentation in biomedical images
-    HoVer-Net [HoVerNet]_  A model for nucleus segmentation and classification in H&E images
-    ========= ============ =============
+    ===================================== ============ =============
+    Model                                 Reference    Description
+    ===================================== ============ =============
+    U-net    (in progress)                [Unet]_      A model for segmentation in biomedical images
+    :class:`~pathml.ml.hovernet.HoVerNet` [HoVerNet]_  A model for nucleus segmentation and classification in H&E images
+    ===================================== ============ =============
 
 You can also use models from `torchvision.models <https://pytorch.org/docs/stable/torchvision/models.html>`_, or create your own!
 
