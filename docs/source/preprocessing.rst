@@ -9,15 +9,9 @@ Getting started with premade pipelines
 
 The general preprocessing workflow is:
 
-Annotating Images
------------------
-.. autoclass:: pathml.preprocessing.masks.Masks
-    :members:
-
-Tiling Images
--------------
-.. automodule:: pathml.preprocessing.tiling
-    :members:
+1. Load whole-slide image from disk
+2. Perform preprocessing
+3. Write output to disk
 
 .. image:: _static/images/preprocess_schematic_single.png
 
