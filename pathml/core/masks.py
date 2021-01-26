@@ -34,7 +34,7 @@ class Masks:
         self.h5manager = _masks_h5_manager()
         for mask in self._masks:
             self.h5manager.add(mask, self._masks[mask])
-            del self._masks[mask]
+        del self._masks
 
     def __repr__(self):
         rep = f"Masks(keys={self.h5manager.h5['masks'].keys()})"
@@ -45,6 +45,11 @@ class Masks:
 
     def __getitem__(self, item):
         return self.h5manager.get(item)
+
+    def __setitem__(self, key, mask):
+        if key in self.h5manager.h5.keys():
+            self.h5manager.remove(key)
+        self.h5manager.add(key, mask)
 
     def add(self, key, mask):
         """

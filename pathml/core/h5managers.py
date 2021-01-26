@@ -10,7 +10,6 @@ class _tiles_h5_manager:
     def __init__(self):
         path = tempfile.TemporaryFile()
         f = h5py.File(path, 'w')
-        f.create_group("tiles")
         self.h5 = f
         self.h5path = path
         self.shape = None
@@ -25,26 +24,27 @@ class _tiles_h5_manager:
         """
         if not isinstance(coordinates, tuple):
             raise ValueError(f"can not add type {type(key)}, key must be of type tuple[int]")
-        if str(coordinates) in self.h5['tiles'].keys():
+        if str(coordinates) in self.h5.keys():
             print(f"overwriting tile at {coordinates}")
         if self.shape == None:
             self.shape = tile.array.shape
         if tile.array.shape != self.shape:
             raise ValueError(f"Tiles contains tiles of shape {self.shape}, provided tile is of shape {tile.array.shape}. We enforce that all Tile in Tiles must have matching shapes.")
-        addtile = self.h5['tiles'].create_dataset(
-            str(coordinates),
+        tilegroup = self.h5.create_group(str(coordinates))
+        masksgroup = tilegroup.create_group('masks')
+        labelsgroup = tilegroup.create_group('labels')
+        addtile = tilegroup.create_dataset(
+            'tile',
             data = tile.array
         )
-        # TODO: There is redundant storage of masks (also stored in .h5 when masks object is instantiated). Move extra masks
         if tile.masks:
-            for mask in tile.masks: 
-                addmask = self.h5['tiles'][str(coordinates)].create_dataset(
+            for mask in tile.masks.h5manager.h5['masks']: 
+                addmask = masksgroup.create_dataset(
                         str(mask),
                         data = tile.masks[mask]
                 )
         if tile.labels:
-            # TODO: may cause errors if labels are non-ascii
-            addlabels = self.h5['tiles'][str(coordinates)].create_dataset(
+            addlabels = labelsgroup.create_dataset(
                     'labels',
                     data = np.array(tile.labels, dtype='S')
             )
@@ -68,26 +68,32 @@ class _tiles_h5_manager:
 
     def get(self, item):
         if isinstance(item, tuple):
-            if str(item) not in self.h5['tiles'].keys():
+            if str(item) not in self.h5.keys():
                 raise KeyError('key {item} does not exist')
-            # TODO: return a Tile object with masks
-            return self.h5['tiles'][str(item)][:]
+            tile = self.h5[str(item)]['tile'][:]
+            maskdict = {key:self.h5[str(item)]['masks'][key][:] for key in self.h5[str(item)]['masks'].keys()}
+            # TODO: decide on type for labels so they can be read back to tile
+            labels = None
+            return item, tile, maskdict, labels
         if not isinstance(item, int):
             raise KeyError(f"must getitem by coordinate(type tuple[int]) or index(type int)")
-        if item > len(self.h5['tiles'])-1:
+        if item > len(self.h5)-1:
             raise KeyError(f"index out of range, valid indices are ints in [0,{len(self.h5['tiles'].keys())-1}]")
-        # TODO: return a Tile object with masks
-        return self.h5['tiles'][list(self.h5['tiles'].keys())[item]][:]
+        tile = self.h5[list(self.h5.keys())[item]]['tile'][:]
+        maskdict = {key:self.h5[list(self.h5.keys())[item]]['masks'][key][:] for key in self.h5[list(self.h5.keys())[item]]['masks'].keys()} 
+        # TODO: decide on type for labels so they can be read back to tile
+        labels = None
+        return list(self.h5.keys())[item], tile, maskdict, labels
 
     def remove(self, key):
         """
         Remove tile from self.h5 by key.
         """
-        if not isinstance(key, str):
-            raise KeyError(f'key must be of type str, check valid keys in repr')
-        if key not in self.h5['tiles'].keys():
+        if not isinstance(key, (str,tuple)):
+            raise KeyError(f'key must represent tuple, check valid keys in repr')
+        if str(key) not in self.h5.keys():
             raise KeyError(f'key {key} is not in Tiles')
-        del self.h5['tiles'][key]
+        del self.h5[str(key)]
 
 class _masks_h5_manager:
     """
@@ -120,7 +126,7 @@ class _masks_h5_manager:
         if mask.shape != self.shape:
             raise ValueError(f"Masks contains masks of shape {self.shape}, provided mask is of shape {mask.shape}. We enforce that all Mask in Masks must have matching shapes.")
         newkey = self.h5['masks'].create_dataset(
-            str(key),
+            bytes(str(key), encoding='utf-8'),
             data = mask
         )
 
@@ -154,11 +160,14 @@ class _masks_h5_manager:
         """
         Remove mask from self.h5 by key.
         """
+        if not isinstance(key, str):
+            raise KeyError(f"masks keys must be of type(str) but key was passed of type {type(key)}")
         if key not in self.h5['masks'].keys():
             raise KeyError('key is not in Masks')
         del self.h5['masks'][key]
 
 def read_h5(path):
+    raise NotImplementedError
     f = h5py.File(path, 'r+')
     if f['tiles']:
         pass

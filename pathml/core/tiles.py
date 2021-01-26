@@ -11,6 +11,13 @@ from pathml.core.masks import Masks
 from pathml.core.h5managers import _tiles_h5_manager
 
 class Tiles:
+    # TODO: 
+    # 1. do we want to be able to tiles[tile].masks, tiles[tile].masks.add(), tiles[tile].masks.remove()
+    #    at the moment we getitem the whole tile object, modify it, add it back
+    # 2. connected to ^ we keep a copy of masks in the reference to the tile (redundant)
+    # both of these problems are connected to the question whether h5 should be one file (we could hold 
+    # reference to tile.masks giving us (1) but this gives us 2+ objects)
+    # 3. label type
     """
     Object holding tiles.
 
@@ -34,6 +41,8 @@ class Tiles:
             else:
                 tiledictionary = {}
                 for tile in tiles:
+                    if not isinstance(tile, Tile):
+                        raise ValueError(f"Tiles expects a list of type Tile but was given {type(tile)}")
                     tiledictionary[(tile.i, tile.j)] = tiles[tile]
                 self._tiles = OrderedDict(tiledictionary)
         else:
@@ -41,17 +50,20 @@ class Tiles:
         self.h5manager = _tiles_h5_manager() 
         for key in self._tiles:
             self.h5manager.add(key, self._tiles[key])
-            del self._tiles[key]
+        del self._tiles
 
     def __repr__(self):
-        rep = f"Tiles(keys={self.h5manager.h5['tiles'].keys()})"
+        rep = f"Tiles(keys={self.h5manager.h5.keys()})"
         return rep
 
     def __len__(self):
         return len(self.h5manager.h5['tiles'].keys())
 
     def __getitem__(self, item):
-        return self.h5manager.get(item) 
+        name, tile, maskdict, labels = self.h5manager.get(item) 
+        if isinstance(item, tuple):
+            return Tile(tile, masks=Masks(maskdict), labels=labels, i=item[0], j=item[1]) 
+        return Tile(tile, masks=Masks(maskdict), labels=labels)
 
     def add(self, coordinates, tile):
         """
@@ -96,7 +108,6 @@ class Tiles:
         """
         savepath = Path(out_dir) / Path(filename)
         Path(out_dir).mkdir(parents=True, exist_ok=True) 
-        # abspath resolves documented h5py bug
         newfile = os.path.abspath(str(savepath.with_suffix('.h5')))
         newh5 = h5py.File(newfile, 'a')
 
@@ -122,9 +133,9 @@ class Tile:
         self.shape = array.shape
         self.i = i  # i coordinate of top left corner pixel
         self.j = j  # j coordinate of top left corner pixel
-        assert isinstance(masks, (type(None), Masks, dict)), f"masks is of type {type(masks)} but must be of type pathml.core.Masks or dict"
+        assert isinstance(masks, (type(None), Masks, dict)), f"masks is of type {type(masks)} but must be of type pathml.core.masks.Masks or dict"
         if isinstance(masks, Masks):
-            self.masks = Masks
+            self.masks = masks
         # populate Masks object by dict
         if isinstance(masks, dict): 
             for val in masks.values():
@@ -141,18 +152,22 @@ class Tile:
                f"i={self.i if self.i is not None else 'None'}, " \
                f"j={self.j if self.j is not None else 'None'})"
 
-
-if __name__ == "__main__":
-    # create tile
+if __name__ == '__main__':
+    import random
+    import string
+    maskdict = {}
+    letters = string.ascii_letters + string.digits
+    for i in range(50):
+        randomkey = 'test' + ''.join(random.choice(letters) for j in range(i))
+        maskdict[randomkey] = np.random.randint(2, size=(224,224,3))
+    masks = Masks(maskdict)
+    testtile = Tile(np.random.random_sample((224,224,3)), i=3, j=4, masks=masks)
     tiles = Tiles()
-    testtile = Tile(np.ones((224,224,3)), i=1, j=3)
-    # add to tiles .h5
-    tiles.add((1,3), testtile)
+    tiles.add((2, 4), testtile)
+    print(tiles.h5manager.h5.keys())
+    print(tiles.h5manager.h5['(2, 4)'].keys())
+    print(tiles.h5manager.h5['(2, 4)']['masks'].keys())
+    print(tiles[(2, 4)].labels)
+    print(tiles[0])
+    tiles.remove((2,4))
     print(tiles)
-    # write temp .h5 to persistent .h5
-    tiles.write('out','test.h5')
-    # remove tiles
-    tiles.remove('(1, 3)')
-    print(tiles)
-    test = h5py.File('out/test.h5')
-    print(test['tiles']['(1, 3)'][:])
