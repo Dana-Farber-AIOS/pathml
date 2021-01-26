@@ -4,7 +4,8 @@ import pickle
 
 from pathml.core.slide import BaseSlide
 from pathml.datasets.base import BaseDataset
-from pathml.core import Transform, Tile
+from pathml.core.tile import Tile
+from pathml.preprocessing.transforms import Transform
 
 
 class Pipeline(Transform):

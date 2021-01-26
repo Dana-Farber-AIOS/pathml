@@ -1,11 +1,5 @@
-"""testing for all transforms"""
-import cv2
 import numpy as np
 import pytest
-import openslide
-
-from pathml.core.tile import Tile
-from pathml.core.masks import Masks
 
 from pathml.preprocessing.transforms import (
     MedianBlur, GaussianBlur, BoxBlur, BinaryThreshold,
@@ -13,25 +7,6 @@ from pathml.preprocessing.transforms import (
     StainNormalizationHE, NucleusDetectionHE, TissueDetectionHE
 )
 from pathml.utils import RGB_to_GREY
-
-
-@pytest.fixture
-def tileHE():
-    """ Example of pathml.Tile object """
-    s = openslide.open_slide("tests/testdata/small_HE.svs")
-    im_image = s.read_region(level = 0, location = (900, 800), size = (500, 500))
-    im_np = np.asarray(im_image)
-    im_np_rgb = cv2.cvtColor(im_np, cv2.COLOR_RGBA2RGB)
-
-    mask = np.zeros((im_np_rgb.shape[0], im_np_rgb.shape[1]), dtype = np.uint8)
-    center = np.ones((50, 50))
-    center_circle = cv2.getStructuringElement(shape = cv2.MORPH_ELLIPSE, ksize = (25, 25))
-    center[12:37, 12:37] -= center_circle
-    mask[25:75, 25:75] = center
-
-    m = Masks(masks = {"testmask" : mask})
-    tile = Tile(image = im_np_rgb, coords = (0, 0), masks = m, slidetype = "HE")
-    return tile
 
 
 @pytest.mark.parametrize('ksize', [3, 7, 21])
@@ -109,8 +84,8 @@ def test_nuc_detectionHE(tileHE):
 
 @pytest.mark.parametrize('use_saturation', [True, False])
 @pytest.mark.parametrize('threshold', [None, 100])
-def test_tissue_detectionHE(tileHE):
-    t = TissueDetectionHE(mask_name = "testing")
+def test_tissue_detectionHE(tileHE, threshold, use_saturation):
+    t = TissueDetectionHE(mask_name = "testing", threshold = threshold, use_saturation = use_saturation)
     orig_im = tileHE.image
     t.apply(tileHE)
     assert np.array_equal(tileHE.masks["testing"], t.F(orig_im))
