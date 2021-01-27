@@ -85,6 +85,9 @@ class _tiles_h5_manager:
         labels = None
         return list(self.h5.keys())[item], tile, maskdict, labels
 
+    def update(self, key, tile):
+        raise NotImplementedError
+
     def remove(self, key):
         """
         Remove tile from self.h5 by key.
@@ -94,6 +97,7 @@ class _tiles_h5_manager:
         if str(key) not in self.h5.keys():
             raise KeyError(f'key {key} is not in Tiles')
         del self.h5[str(key)]
+
 
 class _masks_h5_manager:
     """
@@ -120,7 +124,7 @@ class _masks_h5_manager:
         if not isinstance(key, str):
             raise ValueError(f"invalid type {type(key)}, key must be of type str")
         if key in self.h5['masks'].keys():
-            print(f"overwriting key at {key}")
+            raise ValueError(f"key {key} already exists. Cannot add. Must update to modify existing mask.")
         if self.shape == None:
             self.shape = mask.shape
         if mask.shape != self.shape:
@@ -129,6 +133,25 @@ class _masks_h5_manager:
             bytes(str(key), encoding='utf-8'),
             data = mask
         )
+
+    def update(self, key, mask):
+        """
+        Update an existing mask
+
+        Args:
+            key(str): key labeling mask
+            mask(np.ndarray): mask
+        """
+        if key not in self.h5['masks'].keys():
+            raise ValueError(f"key {key} does not exist. Must use add.")
+
+        original_mask = self.get(key)
+
+        assert original_mask.shape == mask.shape, f"Cannot update a mask of shape {original_mask.shape} with a mask" \
+                                                  f"of shape {mask.shape}. Shapes must match."
+
+        self.h5['masks'][key][...] = mask
+
 
     def slice(self, coordinates):
         """

@@ -47,9 +47,7 @@ class Masks:
         return self.h5manager.get(item)
 
     def __setitem__(self, key, mask):
-        if key in self.h5manager.h5.keys():
-            self.h5manager.remove(key)
-        self.h5manager.add(key, mask)
+        self.h5manager.update(key, mask)
 
     def add(self, key, mask):
         """
