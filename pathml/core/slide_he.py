@@ -2,10 +2,14 @@ import openslide
 import cv2
 import numpy as np
 
-from pathml.preprocessing.base import RGBSlide
-from pathml.preprocessing.slide_data import SlideData
-from pathml.preprocessing.utils import pil_to_rgb
-from pathml.preprocessing.masks import Masks
+from pathml.core.slide import Slide
+from pathml.core.slide_data import SlideData
+from pathml.utils import pil_to_rgb
+from pathml.core.masks import Masks
+
+
+class RGBSlide(Slide):
+    pass
 
 
 class HESlide(RGBSlide):

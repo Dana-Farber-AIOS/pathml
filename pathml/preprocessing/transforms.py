@@ -6,7 +6,7 @@ import spams
 
 from pathml.utils import RGB_to_GREY, RGB_to_HSV, normalize_matrix_cols, RGB_to_OD
 
-from pathml.core import Tile
+from pathml.core.tile import Tile
 
 
 # Base class
@@ -18,7 +18,7 @@ class Transform:
     def __repr__(self):
         return "Base class for all transforms"
 
-    def F(self, input):
+    def F(self, target):
         """functional implementation"""
         raise NotImplementedError
 
@@ -31,7 +31,7 @@ class Transform:
 
 class MedianBlur(Transform):
     """
-    Median blur transform
+    Median blur kernel.
 
     Args:
         kernel_size (int): Width of kernel. Must be an odd number. Defaults to 5.
@@ -54,7 +54,7 @@ class MedianBlur(Transform):
 
 class GaussianBlur(Transform):
     """
-    Gaussian blur transform
+    Gaussian blur kernel.
 
     Args:
         kernel_size (int): Width of kernel. Must be an odd number. Defaults to 5.
@@ -79,7 +79,7 @@ class GaussianBlur(Transform):
 
 class BoxBlur(Transform):
     """
-    Box blur transform. Averages each pixel with nearby pixels.
+    Box (average) blur kernel.
 
     Args:
         kernel_size (int): Width of kernel. Defaults to 5.
@@ -101,9 +101,8 @@ class BoxBlur(Transform):
 
 class BinaryThreshold(Transform):
     """
-    Binary thresholding transform.
+    Binary thresholding transform to create a binary mask.
     If input image is RGB it is first converted to greyscale, otherwise the input must have 1 channel.
-    Creates a new mask.
 
     Args:
         use_otsu (bool): Whether to use Otsu's method to automatically determine optimal threshold. Defaults to True.
@@ -137,7 +136,7 @@ class BinaryThreshold(Transform):
         assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
         assert self.mask_name is not None, f"Must enter a mask name"
         # TODO fix this type checking
-        if tile.slidetype == "RGB":
+        if tile.slidetype in ["RGB", "HE", "IHC"]:
             im = RGB_to_GREY(tile.image)
         else:
             im = np.squeeze(tile.image)
@@ -148,7 +147,9 @@ class BinaryThreshold(Transform):
 
 class MorphOpen(Transform):
     """
-    Applies morphological opening to a mask.
+    Morphological opening. First applies erosion operation, then dilation.
+    Reduces noise by removing small objects from the background.
+    Operates on a binary mask.
 
     Args:
         kernel_size (int): Size of kernel for default square kernel. Ignored if a custom kernel is specified.
@@ -186,7 +187,9 @@ class MorphOpen(Transform):
 
 class MorphClose(Transform):
     """
-    Applies morphological closing to a mask.
+    Morphological closing. First applies dilation operation, then erosion.
+    Reduces noise by closing small holes in the foreground.
+    Operates on a binary mask.
 
     Args:
         kernel_size (int): Size of kernel for default square kernel. Ignored if a custom kernel is specified.
@@ -362,16 +365,16 @@ class StainNormalizationHE(Transform):
     corresponds to eosin stain vector. The stain matrix can be estimated from a reference image in a number of ways;
     here we provide implementations of two such algorithms from Macenko et al. and Vahadane et al.
 
-    After estimating the stain matrix for an image_ref, the next step is to assign stain concentrations to each pixel.
+    After estimating the stain matrix for an image, the next step is to assign stain concentrations to each pixel.
     Each pixel is assumed to be a linear combination of the two stain vectors, where the coefficients are the
-    intensities of each stain vector at that pixel. TO solve for the intensities, we use least squares in Macenko
+    intensities of each stain vector at that pixel. To solve for the intensities, we use least squares in Macenko
     method and lasso in vahadane method.
 
-    The image_ref can then be reconstructed by applying those pixel intensities to a stain matrix. This allows you to
-    standardize the appearance of an image_ref by reconstructing it using a reference stain matrix. Using this method of
+    The image can then be reconstructed by applying those pixel intensities to a stain matrix. This allows you to
+    standardize the appearance of an image by reconstructing it using a reference stain matrix. Using this method of
     normalization may help account for differences in slide appearance arising from variations in staining procedure,
     differences between scanners, etc. Images can also be reconstructed using only a single stain vector, e.g. to
-    separate the hematoxylin and eosin channels of an H&E image_ref.
+    separate the hematoxylin and eosin channels of an H&E image.
 
     This code is based in part on StainTools: https://github.com/Peter554/StainTools
 
@@ -382,9 +385,9 @@ class StainNormalizationHE(Transform):
         optical_density_threshold (float): Threshold for removing low-optical density pixels when estimating stain
             vectors. Defaults to 0.15
         sparsity_regularizer (float): Regularization parameter for dictionary learning when estimating stain vector
-            using vahadane method. Ignored if ``concentration_estimation_method!="vahadane"``. Defaults to 1.0
+            using vahadane method. Ignored if ``concentration_estimation_method!='vahadane'``. Defaults to 1.0
         angular_percentile (float): Percentile for stain vector selection when estimating stain vector
-            using Macenko method. Ignored if ``concentration_estimation_method!="macenko"``. Defaults to 0.01
+            using Macenko method. Ignored if ``concentration_estimation_method != 'macenko'``. Defaults to 0.01
         regularizer_lasso (float): regularization parameter for lasso solver. Defaults to 0.01.
             Ignored if ``method != 'lasso'``
         background_intensity (int): Intensity of background light. Must be an integer between 0 and 255.
@@ -393,10 +396,10 @@ class StainNormalizationHE(Transform):
             Matrix of H and E stain vectors in optical density (OD) space.
             Stain matrix is (3, 2) and first column corresponds to hematoxylin.
             Default stain matrix can be used, or you can also fit to a reference slide of your choosing by calling
-            :meth:`~pathml.preprocessing.stains.StainNormalizationHE.fit_to_reference`.
+            :meth:`~pathml.preprocessing.transforms.StainNormalizationHE.fit_to_reference`.
         max_c_target (np.ndarray): Maximum concentrations of each stain in reference slide.
             Default can be used, or you can also fit to a reference slide of your choosing by calling
-            :meth:`~pathml.preprocessing.stains.StainNormalizationHE.fit_to_reference`.
+            :meth:`~pathml.preprocessing.transforms.StainNormalizationHE.fit_to_reference`.
 
     References:
         Macenko, M., Niethammer, M., Marron, J.S., Borland, D., Woosley, J.T., Guan, X., Schmitt, C. and Thomas, N.E.,
@@ -703,7 +706,8 @@ class NucleusDetectionHE(Transform):
         im_interpolated = SuperpixelInterpolation(
             region_size = self.superpixel_region_size, n_iter = self.n_iter
         ).F(im_hematoxylin)
-        thresholded = BinaryThreshold(use_otsu = True).F(im_interpolated)
+        im_interp_grey = RGB_to_GREY(im_interpolated)
+        thresholded = BinaryThreshold(use_otsu = True).F(im_interp_grey)
         # flip sign so that nuclei regions are TRUE (255)
         thresholded = ~thresholded
         return thresholded

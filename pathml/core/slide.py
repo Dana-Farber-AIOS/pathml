@@ -1,7 +1,7 @@
 import os
 
 
-class BaseSlide:
+class Slide:
     """
     Base class for slides.
     """

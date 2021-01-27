@@ -1,6 +1,6 @@
 import numpy as np
 
-from pathml.core import Masks
+from pathml.core.masks import Masks
 
 
 class Tile:
@@ -14,7 +14,7 @@ class Tile:
             The (i,j) coordinate system is based on labelling the top-leftmost pixel as (0, 0)
         slidetype (str): type of image (e.g. "HE")
     """
-    def __init__(self, image, coords, masks=None):
+    def __init__(self, image, coords, slidetype, masks=None):
         assert isinstance(image, np.ndarray), f"image of type {type(image)} must be a np.ndarray"
         if masks is not None:
             assert isinstance(masks, Masks), f"masks of type {type(masks)} must be pathml.core.Masks"
@@ -23,6 +23,8 @@ class Tile:
         self.image = image
         self.coords = coords
         self.masks = masks
+        self.slidetype = slidetype
 
     def __repr__(self):
-        return f"Tile(image shape {self.image.shape}, mask={repr(self.masks)}, coords={self.coords})"
+        return f"Tile(image shape {self.image.shape}, slidetype={self.slidetype}, " \
+               f"mask={repr(self.masks)}, coords={self.coords})"

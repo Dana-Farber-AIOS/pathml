@@ -4,14 +4,14 @@ import cv2
 from matplotlib.testing.decorators import check_figures_equal
 from matplotlib.patches import Rectangle
 
-from pathml.preprocessing.tiling import Tile
+from pathml.core.tile import Tile
 from pathml.utils import (
     segmentation_lines, contour_centroid, sort_points_clockwise,
     pad_or_crop, _pad_or_crop_1d, upsample_array, plot_mask, plot_extracted_tiles,
     RGB_to_HSV, RGB_to_OD, RGB_to_HSI, RGB_to_GREY, RGB_to_LAB,
     normalize_matrix_cols, normalize_matrix_rows, label_artifact_tile_HE, label_whitespace_HE
 )
-from pathml.preprocessing.wsi import HESlide
+from pathml.core.slide_he import HESlide
 
 
 @pytest.fixture(scope = "module")

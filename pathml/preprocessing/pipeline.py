@@ -2,9 +2,10 @@ import concurrent.futures
 import os
 import pickle
 
-from pathml.core.slide import BaseSlide
+from pathml.core.slide import Slide
 from pathml.datasets.base import BaseDataset
-from pathml.core import Transform, Tile
+from pathml.core.tile import Tile
+from pathml.preprocessing.transforms import Transform
 
 
 class Pipeline(Transform):
@@ -57,7 +58,7 @@ class Pipeline(Transform):
                 If -1, then all available cores are used. Defaults to -1.
             kwargs (dict): Additional arguments passed to each individual call of self.run_single(target)
         """
-        if isinstance(target, BaseSlide):
+        if isinstance(target, Slide):
             # only need to run on a single input slide
             self.run_single(slide = target, **kwargs)
         elif isinstance(target, BaseDataset):
