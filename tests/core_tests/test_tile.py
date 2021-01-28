@@ -1,4 +1,4 @@
-from pathml.core import Tile
+from pathml.core.tile import Tile
 
 ## pytest.fixture to make a Tile object
 

@@ -11,12 +11,12 @@ def emptytiles():
     return Tiles()
 
 @pytest.fixture
-def tile_nomasks(shape = (224,224,3), i=1, j=3)
+def tile_nomasks(shape = (224,224,3), i=1, j=3):
     testtile = Tile(np.random.randn(shape), i=i, j=j)
     return testtile
 
 @pytest.fixture
-def tile_withmasks(shape = (224,224,3), i=1, j=3, stack = 50, labeltype = str)
+def tile_withmasks(shape = (224,224,3), i=1, j=3, stack = 50, labeltype = str):
     if labeltype == str:
         letters = string.ascii_letters + string.digits
         maskdict = {}
@@ -29,11 +29,11 @@ def tile_withmasks(shape = (224,224,3), i=1, j=3, stack = 50, labeltype = str)
 @pytest.mark.parametrize("incorrect_input", ["string", None, True, 5, [5,4,3], {"dict":"testing"}])
 def test_init_incorrect_input(incorrect_input):
     with pytest.raises(ValueError):
-        tiles = Tiles(
+        tiles = Tiles(incorrect_input)
 
 def test_init(tile_withmasks):
     tilelist = [tile_withmasks(i=k,j=k) for k in range(20)]
-    tiledict = {(k,k):tile_withmasks(i=k,j=k) for k in range(20)]
+    tiledict = {(k,k):tile_withmasks(i=k,j=k) for k in range(20)}
     tiles = Tiles(tilelist)
     tiles2 = Tiles(tiledict)
     assert tiles[(0,0)] == tilelist[0]
@@ -54,7 +54,7 @@ def test_add_get_nomasks(emptytiles, tile_nomasks):
     assert tiles[(1, 3)] == tile
     assert tiles[0] == tile
 
-def test_add_get_withmasks(emptytiles, tile_withmasks)
+def test_add_get_withmasks(emptytiles, tile_withmasks):
     tiles = emptytiles()
     tile = tile_withmasks()
     testmask = tile.masks[0]

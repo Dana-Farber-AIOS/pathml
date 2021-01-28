@@ -3,9 +3,9 @@ import sys
 import os
 import numpy as np
 
-from pathml.preprocessing.slide_data import SlideData
-from pathml.preprocessing.base import Slide2d
-from pathml.preprocessing.masks import Masks
+from pathml.core.slide_data import SlideData
+from pathml.core.slide import Slide
+from pathml.core.masks import Masks
 
 import bioformats
 import javabridge
@@ -31,7 +31,7 @@ def check_mac_java_home():
 check_mac_java_home()
 
 
-class MultiparametricSlide2d(Slide2d):
+class MultiparametricSlide2d(Slide):
     """
     Represents multiparametric IF/IHC images. Backend based on ``bioformats``.
 
@@ -57,23 +57,23 @@ class MultiparametricSlide2d(Slide2d):
         reader.setMetadataStore(omeMeta)
         reader.setId(self.path)
         sizex, sizey, sizez, sizec = reader.getSizeX(), reader.getSizeY(), reader.getSizeZ(), reader.getSizeC()
-        self.2dshape = (sizex, sizey)
-        self.3dshape = (sizex, sizey, sizez)
-        self.4dshape = (sizex, sizey, sizez, sizec)
+        self.twodshape = (sizex, sizey)
+        self.threedshape = (sizex, sizey, sizez)
+        self.fourdshape = (sizex, sizey, sizez, sizec)
         self.imsize = sizex*sizey*sizez*sizec
 
         if masks:
             # supports 2d (birdseye), 3d (volumetric), and 4d (volumetric by channel) masking 
             for val in masks.values():
                 if len(val) == 2:
-                    if val.shape != self.2dshape:
-                        raise ValueError(f"mask is of shape {val.shape} but must match slide shape {self.2dshape}")
-                if len(val) == 3:
-                    if val.shape != self.3dshape:
-                        raise ValueError(f"mask is of shape {val.shape} but must match slide shape {self.3dshape}")
+                    if val.shape != self.twodshape:
+                        raise ValueError(f"mask is of shape {val.shape} but must match slide shape {self.twodshape}")
+                elif len(val) == 3:
+                    if val.shape != self.threedshape:
+                        raise ValueError(f"mask is of shape {val.shape} but must match slide shape {self.threedshape}")
                 elif len(val) == 4:
-                    if val.shape != self.4dshape:
-                        raise ValueError(f"mask is of shape {val.shape} but must match slide shape {self.4dshape}"
+                    if val.shape != self.fourdshape:
+                        raise ValueError(f"mask is of shape {val.shape} but must match slide shape {self.fourdshape}")
                 else: 
                     raise ValueError(f"mask must be 2d (birdseye), 3d (volumetric), or 4d (volumetric with channel masking) but received mask of dimension {len(val)}")
             self.masks = Masks(masks)
