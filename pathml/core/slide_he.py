@@ -99,7 +99,11 @@ class HESlide(RGBSlide):
                     level = level, size = (size, size)
                 )
                 region_rgb = pil_to_rgb(region)
-                # TODO: test. switch i and j?
                 if self.masks is not None:
-                    masks_chunk = self.masks.slice([int(ix_j*stride):int(ix_j*stride)+size,int(ix_i*stride):int(ix_i*stride)+size, ...])
+                    # TODO: switch i and j? 
+                    slices = [
+                            slice(int(ix_j*stride),int(ix_j*stride+size)), 
+                            slice(int(ix_i*stride),int(ix_i*stride)+size)
+                    ]
+                    masks_chunk = self.masks.slice(slices)
                 yield region_rgb, masks_chunk

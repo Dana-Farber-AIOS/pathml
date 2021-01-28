@@ -7,6 +7,7 @@ from pathlib import Path
 from collections import OrderedDict
 import h5py
 
+from pathml.core.tile import Tile
 from pathml.core.masks import Masks
 from pathml.core.h5managers import _tiles_h5_manager
 from pathml.core.tile import Tile

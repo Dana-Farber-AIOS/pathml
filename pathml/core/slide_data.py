@@ -1,4 +1,6 @@
 import numpy as np
+from typing import Optional, Literal, Union, Any
+from os import PathLike
 
 from pathml.core.slide import Slide
 from pathml.core.masks import Masks
@@ -55,7 +57,7 @@ class SlideData:
         for tile in self.generate_tiles(level = tilelevel, shape = tileshape, stride = tilestride, pad = tilepad):
             pipeline(tile, **kwargs)
 
-    def generate_tiles(self, level=None, shape=3000, stride=shape, pad=False):
+    def generate_tiles(self, level=None, shape=3000, stride=None, pad=False):
         """
         Generator over tiles.
         All pipelines must be composed of transforms acting on tiles.
@@ -73,6 +75,8 @@ class SlideData:
         """
         if isinstance(shape, int):
             shape = (shape, shape)
+        if stride is None:
+            stride = shape
         if self.slide.backend == 'openslide': 
             if level == None:
                 # TODO: is this the right default for openslide?
@@ -99,9 +103,14 @@ class SlideData:
                     )
                     region_rgb = pil_to_rgb(region)
                     coords = (ix_i, ix_j)
+                    masks_chunk = None
                     if self.masks is not None:
                         # TODO: test this line
-                        masks_chunk = self.masks.slice([int(ix_j*stride_j):int(ix_j*stride_j)+size,int(ix_i*stride_i):int(ix_i*stride_i)+size, ...])
+                        slices = [
+                                slice(int(ix_j*stride),int(ix_j*stride+size)), 
+                                slice(int(ix_i*stride),int(ix_i*stride)+size)
+                        ]
+                        masks_chunk = self.masks.slice(slices)
                     yield Tile(region_rgb, masks_chunk, coords)
 
         elif self.slide.backend == 'bioformats':

@@ -49,21 +49,22 @@ class _tiles_h5_manager:
                     data = np.array(tile.labels, dtype='S')
             )
 
-    def slice(self, coordinates, slicedict):
+    def slice(self, slices):
         """
         Generator to slice all tiles in self.h5 extending numpy array slicing
 
         Args:
-            coordinates(tuple[int]): coordinates denoting slice i.e. 'selection' https://numpy.org/doc/stable/reference/arrays.indexing.html
+            slices: list where each element is an object of type slice indicating
+                    how the dimension should be sliced
 
         Yields:
             key(str): tile coordinates
             val(`~pathml.core.tile.Tile`): tile
         """
-        raise NotImplementedError
-        # how to pass numpy indexing style from tiles
+        if not isinstance(slices,list[slice]):
+            raise KeyError(f"slices must of of type list[slice] but is {type(slices)} with elements {type(slices[0])}")
         for key, val in self.h5.items():
-            val = val[coordinates]
+            val = val[slices:...]
             yield key, val
 
     def get(self, item):
@@ -133,7 +134,7 @@ class _masks_h5_manager:
             bytes(str(key), encoding='utf-8'),
             data = mask
         )
-
+                           
     def update(self, key, mask):
         """
         Update an existing mask
@@ -152,20 +153,22 @@ class _masks_h5_manager:
 
         self.h5['masks'][key][...] = mask
 
-
-    def slice(self, coordinates):
+                           
+    def slice(self, slices):
         """
         Generator to slice all masks in self.h5 extending numpy array slicing
 
         Args:
-            coordinates(tuple[int]): coordinates denoting slice i.e. 'selection' https://numpy.org/doc/stable/reference/arrays.indexing.html
-
+            slices: list where each element is an object of type slice indicating
+                    how the dimension should be sliced
         Yields:
             key(str): mask key
             val(np.ndarray): mask
         """
+        if not isinstance(slices,list[slice]):
+            raise KeyError(f"slices must of of type list[slice] but is {type(slices)} with elements {type(slices[0])}")
         for key, val in self.h5.items():
-            val = val[coordinates]
+            val = val[slices:...]
             yield key, val
 
     def get(self, item):

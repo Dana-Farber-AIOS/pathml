@@ -58,14 +58,16 @@ class Masks:
         """
         self.h5manager.add(key, mask)
 
-    def slice(self, coordinates):
+    def slice(self, slices):
         """
         Slice all masks in self.h5manager extending of numpy array slicing.
         Args:
-            coordinates(tuple[int]): coordinates denoting slice i.e. 'selection' https://numpy.org/doc/stable/reference/arrays.indexing.html 
+            slices: list where each element is an object of type slice indicating
+                    how the dimension should be sliced
+        TODO: examples
         """
         sliced = Masks()
-        for key, val in self.h5manager.slice(coordinates):
+        for key, val in self.h5manager.slice(slices):
             sliced.add(key, val)
         return sliced
 
