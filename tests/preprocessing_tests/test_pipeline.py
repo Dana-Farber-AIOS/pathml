@@ -12,6 +12,7 @@ from pathml.preprocessing.transforms import (
 from pathml.utils import RGB_to_GREY
 
 
+# make an example pipeline
 def test_pipeline(tileHE):
     pipe = Pipeline([
         MedianBlur(),
@@ -48,4 +49,5 @@ def test_pipeline_save(tmp_path):
 
     pipeline_loaded = pickle.load(open(fp, "rb"))
 
-    assert pipeline_loaded == pipeline
+    assert repr(pipeline_loaded) == repr(pipeline)
+    assert type(pipeline_loaded) == type(pipeline)

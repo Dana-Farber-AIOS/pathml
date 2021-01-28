@@ -155,32 +155,27 @@ class MorphOpen(Transform):
         kernel_size (int): Size of kernel for default square kernel. Ignored if a custom kernel is specified.
             Defaults to 5.
         n_iterations (int): Number of opening operations to perform. Defaults to 1.
-        custom_kernel (np.ndarray): Optionally specify a custom kernel to use instead of default square kernel.
         mask_name (str): Name of mask on which to apply transform
     """
-    def __init__(self, kernel_size=5, n_iterations=1, custom_kernel=None, mask_name=None):
+    def __init__(self, kernel_size=5, n_iterations=1, mask_name=None):
         self.kernel_size = kernel_size
         self.n_iterations = n_iterations
-        self.custom_kernel = custom_kernel
         self.mask_name = mask_name
 
     def __repr__(self):
         return f"MorphOpen(kernel_size={self.kernel_size}, n_iterations={self.n_iterations}, " \
-               f"custom_kernel={self.custom_kernel}, mask_name={self.mask_name})"
+               f"mask_name={self.mask_name})"
 
     def F(self, mask):
         assert mask.dtype == np.uint8, f"mask type {mask.dtype} must be np.uint8"
-        if self.custom_kernel is None:
-            k = np.ones(self.kernel_size, dtype = np.uint8)
-        else:
-            k = self.custom_kernel
+        k = np.ones((self.kernel_size, self.kernel_size), dtype = np.uint8)
         out = cv2.morphologyEx(src = mask, kernel = k, op = cv2.MORPH_OPEN, iterations = self.n_iterations)
         return out
 
     def apply(self, tile):
         assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
         assert self.mask_name is not None, f"Must enter a mask name"
-        m = tile.masks[self.mask_name]
+        m = np.copy(tile.masks[self.mask_name])
         out = self.F(m)
         tile.masks[self.mask_name] = out
 
@@ -195,33 +190,28 @@ class MorphClose(Transform):
         kernel_size (int): Size of kernel for default square kernel. Ignored if a custom kernel is specified.
             Defaults to 5.
         n_iterations (int): Number of opening operations to perform. Defaults to 1.
-        custom_kernel (np.ndarray): Optionally specify a custom kernel to use instead of default square kernel.
         mask_name (str): Name of mask on which to apply transform
     """
 
-    def __init__(self, kernel_size=5, n_iterations=1, custom_kernel=None, mask_name=None):
+    def __init__(self, kernel_size=5, n_iterations=1, mask_name=None):
         self.kernel_size = kernel_size
         self.n_iterations = n_iterations
-        self.custom_kernel = custom_kernel
         self.mask_name = mask_name
 
     def __repr__(self):
         return f"MorphClose(kernel_size={self.kernel_size}, n_iterations={self.n_iterations}, " \
-               f"custom_kernel={self.custom_kernel}, mask_name={self.mask_name})"
+               f"mask_name={self.mask_name})"
 
     def F(self, mask):
         assert mask.dtype == np.uint8, f"mask type {mask.dtype} must be np.uint8"
-        if self.custom_kernel is None:
-            k = np.ones(self.kernel_size, dtype = np.uint8)
-        else:
-            k = self.custom_kernel
+        k = np.ones((self.kernel_size, self.kernel_size), dtype = np.uint8)
         out = cv2.morphologyEx(src = mask, kernel = k, op = cv2.MORPH_CLOSE, iterations = self.n_iterations)
         return out
 
     def apply(self, tile):
         assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
         assert self.mask_name is not None, f"Must enter a mask name"
-        m = tile.masks[self.mask_name]
+        m = np.copy(tile.masks[self.mask_name])
         out = self.F(m)
         tile.masks[self.mask_name] = out
 
@@ -506,7 +496,7 @@ class StainNormalizationHE(Transform):
             raise Exception(f"Provided target {self.target} invalid")
         return C
 
-    def _estimate_stain_vectors_vahadane(self, image):
+    def _estimate_stain_vectors_vahadane(self, image, random_seed=0):
         """
         Estimate stain vectors using dictionary learning method from Vahadane et al.
 
