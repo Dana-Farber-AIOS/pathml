@@ -9,6 +9,8 @@ import h5py
 
 from pathml.core.masks import Masks
 from pathml.core.h5managers import _tiles_h5_manager
+from pathml.core.tile import Tile
+
 
 class Tiles:
     # TODO: 
@@ -24,18 +26,17 @@ class Tiles:
     Args:
         tiles (Union[dict[tuple[int], `~pathml.core.tiles.Tile`], list]): tile objects  
     """
-    def __init__(self,
-            tiles =  None
-        ):
+    def __init__(self, tiles=None):
         if tiles:
-            if not isinstance(tiles, (dict, list[Tile])):
-                raise ValueError(f"tiles must be passed as dicts of the form coordinate1:Tile1,... or lists of Tile objects containing i,j")
+            if not isinstance(tiles, dict) or (isinstance(tiles, list) and all([isinstance(t, Tile) for t in tiles])):
+                raise ValueError(f"tiles must be passed as dicts of the form coordinate1:Tile1,... "
+                                 f"or lists of Tile objects containing i,j")
             if isinstance(tiles, dict):
                 for val in tiles.values():
                     if not isinstance(val, Tile):
                         raise ValueError(f"dict vals must be Tile")
                 for key in tiles.values():
-                    if not isinstance(key, tuple[int]):
+                    if not isinstance(key, tuple) and all([isinstance(c, int) for c in key]):
                         raise ValueError(f"dict keys must be tuple[int]")
                 self._tiles = OrderedDict(tiles)
             else:
@@ -114,60 +115,3 @@ class Tiles:
         #shutil.move(self.h5manager.h5path, newh5)
         for dataset in self.h5manager.h5.keys():
             self.h5manager.h5.copy(self.h5manager.h5[dataset], newh5)
-
-class Tile:
-    """
-    Object representing a tile extracted from an image. Holds the image for the tile, as well as the (i,j)
-    coordinates of the top-left corner of the tile in the original image. The (i,j) coordinate system is based
-    on labelling the top-leftmost pixel as (0, 0)
-
-    Args:
-        array (np.ndarray): tile image 
-        masks (dict, Masks): tile masks 
-        i (int): vertical coordinate of top-left corner of tile, in original image
-        j (int): horizontal coordinate of top-left corner of tile, in original image
-    """
-    def __init__(self, array, labels=None, masks=None, i=None, j=None):
-        assert isinstance(array, np.ndarray), "Array must be a np.ndarray"
-        self.array = array
-        self.shape = array.shape
-        self.i = i  # i coordinate of top left corner pixel
-        self.j = j  # j coordinate of top left corner pixel
-        assert isinstance(masks, (type(None), Masks, dict)), f"masks is of type {type(masks)} but must be of type pathml.core.masks.Masks or dict"
-        if isinstance(masks, Masks):
-            self.masks = masks
-        # populate Masks object by dict
-        if isinstance(masks, dict): 
-            for val in masks.values():
-                if val.shape != self.array.shape[:2]:
-                    raise ValueError(f"mask is of shape {val.shape} but must match tile shape {self.array.shape}")
-            self.masks = Masks(masks)
-        elif masks == None:
-            self.masks = masks 
-        assert isinstance(labels, (type(None), dict))
-        self.labels = labels
-
-    def __repr__(self):  # pragma: no cover
-        return f"Tile(array shape {self.array.shape}, " \
-               f"i={self.i if self.i is not None else 'None'}, " \
-               f"j={self.j if self.j is not None else 'None'})"
-
-if __name__ == '__main__':
-    import random
-    import string
-    maskdict = {}
-    letters = string.ascii_letters + string.digits
-    for i in range(50):
-        randomkey = 'test' + ''.join(random.choice(letters) for j in range(i))
-        maskdict[randomkey] = np.random.randint(2, size=(224,224,3))
-    masks = Masks(maskdict)
-    testtile = Tile(np.random.random_sample((224,224,3)), i=3, j=4, masks=masks)
-    tiles = Tiles()
-    tiles.add((2, 4), testtile)
-    print(tiles.h5manager.h5.keys())
-    print(tiles.h5manager.h5['(2, 4)'].keys())
-    print(tiles.h5manager.h5['(2, 4)']['masks'].keys())
-    print(tiles[(2, 4)].labels)
-    print(tiles[0])
-    tiles.remove((2,4))
-    print(tiles)
