@@ -24,15 +24,16 @@ class SlideData:
         labels (collections.OrderedDict, optional): dictionary containing {key,label} pairs
         history (list): the history of operations applied to the SlideData object
     """
-    def __init__(self, slide=None, masks=None, tiles=None, labels=None, h5=None):
+    def __init__(self, name=None, slide=None, masks=None, tiles=None, labels=None, h5=None):
+        self.name = name
         assert isinstance(slide, Slide), f"slide is of type {type(slide)} but must be a subclass of pathml.core.slide.Slide"
         self.slide = slide
         self._slidetype = type(slide)
         self.name = slide.name
         self.shape = None if slide is None else slide.shape
-        assert isinstance(masks, (None, Masks)), f"mask are of type {type(masks)} but must be of type pathml.core.masks.Masks"
+        assert isinstance(masks, (type(None), Masks)), f"mask are of type {type(masks)} but must be of type pathml.core.masks.Masks"
         self.masks = masks 
-        assert isinstance(tiles, (None, Tiles)), f"tiles are of type {type(tiles)} but must be of type pathml.core.tiles.Tiles" 
+        assert isinstance(tiles, (type(None), Tiles)), f"tiles are of type {type(tiles)} but must be of type pathml.core.tiles.Tiles"
         self.tiles = tiles
         assert isinstance(labels, dict), f"labels are of type {type(labels)} but must be of type dict. array-like labels should be stored in masks."
         self.labels = labels
@@ -48,14 +49,14 @@ class SlideData:
         out += f"history={self.history})"
         return out 
 
-    def run(pipeline, **kwargs):
+    def run(self, pipeline, **kwargs):
         assert isinstance(pipeline, Pipeline), f"pipeline is of type {type(pipeline)} but must be of type pathml.preprocessing.pipeline.Pipeline"
         tileshape = kwargs.pop("tileshape", 3000)
         tilelevel = kwargs.pop("tilelevel", None)
         tilestride = kwargs.pop("tilestride", tileshape)
         tilepad = kwargs.pop("tilepad", False)
         for tile in self.generate_tiles(level = tilelevel, shape = tileshape, stride = tilestride, pad = tilepad):
-            pipeline(tile, **kwargs)
+            pipeline.apply(tile)
 
     def generate_tiles(self, level=None, shape=3000, stride=None, pad=False):
         """
@@ -119,7 +120,6 @@ class SlideData:
 
     def plot():
         """
-
         Args:
             location
             tile = True

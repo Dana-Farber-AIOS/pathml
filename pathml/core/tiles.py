@@ -64,7 +64,7 @@ class Tiles:
     def __getitem__(self, item):
         name, tile, maskdict, labels = self.h5manager.get(item) 
         if isinstance(item, tuple):
-            return Tile(tile, masks=Masks(maskdict), labels=labels, i=item[0], j=item[1]) 
+            return Tile(tile, masks=Masks(maskdict), labels=labels, coords = (item[0], item[1]))
         return Tile(tile, masks=Masks(maskdict), labels=labels)
 
     def add(self, coordinates, tile):
