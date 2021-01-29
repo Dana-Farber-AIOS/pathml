@@ -27,7 +27,7 @@ def smalltif_example():
     im_np = np.asarray(data, dtype = np.uint8)
     return im_np"""
 
-
+"""
 def test_multiparametric_slide():
     wsi = MultiparametricSlide2d(path = "tests/testdata/smalltif.tif")
     assert wsi.name == "smalltif"
@@ -44,7 +44,7 @@ def test_multiparametric_slide():
     assert np.allclose(slide_data.image, im_np)
 
     # make sure slide class hierarchy is working
-    """
+
     assert isinstance(wsi, BaseSlide)
     assert isinstance(wsi, Slide2d)
-    """
+"""

@@ -47,7 +47,7 @@ class HESlide(RGBSlide):
         # note that PIL uses (width, height) but when converting to numpy we get the correct (height, width) dims
         image_array_rgba = np.asarray(image_array_pil, dtype = np.uint8)
         image_array = cv2.cvtColor(image_array_rgba, cv2.COLOR_RGBA2RGB)
-        out = SlideData(wsi = self, image = image_array)
+        out = SlideData(slide = self, name = self.name)
 
         if self.masks:
             # supports 2d (birdseye), and 3d (birdseye by channel) masking 

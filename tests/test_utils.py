@@ -109,12 +109,14 @@ def test_plot_mask_downsample(fig_test, fig_ref):
 
 
 def example_slide_data():
-    wsi = HESlide(path = "tests/testdata/CMU-1-Small-Region.svs")
+    wsi = HESlide(path = "tests/testdata/small_HE.svs")
     slide_data = wsi.load_data(level = 0, location = (900, 800), size = (100, 100))
-    slide_data.tiles = [
-        Tile(i = 10, j = 10, array = slide_data.image[10:40, 10:40, :]),
-        Tile(i = 50, j = 55, array = slide_data.image[50:80, 55:85, :]),
-    ]
+
+    tile1 = Tile(coords = (10, 10), image = slide_data.image[10:40, 10:40, :])
+    tile2 = Tile(coords = (50, 55), image = slide_data.image[50:80, 55:85, :])
+
+    slide_data.tiles.add(key = "tile1", tile = tile1)
+    slide_data.tiles.add(key = "tile2", tile = tile2)
     return slide_data
 
 

@@ -14,28 +14,30 @@ class _tiles_h5_manager:
         self.h5path = path
         self.shape = None
 
-    def add(self, coordinates, tile):
+    def add(self, key, tile):
         """
-        Add tile as dataset indexed by coordinate to self.h5.
+        Add tile as dataset indexed by key to self.h5.
 
         Args:
-            coordinates(tuple[int]): location of tile on slide
+            key(str): location of tile on slide
             tile(`~pathml.core.tile.Tile`): Tile object 
         """
-        if not isinstance(coordinates, tuple):
-            raise ValueError(f"can not add type {type(key)}, key must be of type tuple[int]")
-        if str(coordinates) in self.h5.keys():
-            print(f"overwriting tile at {coordinates}")
+
+        if not isinstance(key, (str, tuple)):
+            raise ValueError(f"can not add type {type(key)}, key must be a str or tuple")
+        if str(key) in self.h5.keys():
+            print(f"overwriting tile at {key}")
         if self.shape == None:
-            self.shape = tile.array.shape
-        if tile.array.shape != self.shape:
-            raise ValueError(f"Tiles contains tiles of shape {self.shape}, provided tile is of shape {tile.array.shape}. We enforce that all Tile in Tiles must have matching shapes.")
-        tilegroup = self.h5.create_group(str(coordinates))
+            self.shape = tile.image.shape
+        if tile.image.shape != self.shape:
+            raise ValueError(f"Tiles contains tiles of shape {self.shape}, provided tile is of shape {tile.image.shape}"
+                             f". We enforce that all Tile in Tiles must have matching shapes.")
+        tilegroup = self.h5.create_group(str(key))
         masksgroup = tilegroup.create_group('masks')
         labelsgroup = tilegroup.create_group('labels')
         addtile = tilegroup.create_dataset(
             'tile',
-            data = tile.array
+            data = tile.image
         )
         if tile.masks:
             for mask in tile.masks.h5manager.h5['masks']: 
@@ -70,7 +72,7 @@ class _tiles_h5_manager:
     def get(self, item):
         if isinstance(item, tuple):
             if str(item) not in self.h5.keys():
-                raise KeyError('key {item} does not exist')
+                raise KeyError(f'key {item} does not exist')
             tile = self.h5[str(item)]['tile'][:]
             maskdict = {key:self.h5[str(item)]['masks'][key][:] for key in self.h5[str(item)]['masks'].keys()}
             # TODO: decide on type for labels so they can be read back to tile
