@@ -14,7 +14,7 @@ class Tile:
         masks (pathml.core.Masks): corresponding masks for region
         coords (tuple): Coordinates of tile relative to maximum resolution of whole-slide image.
             The (i,j) coordinate system is based on labelling the top-leftmost pixel as (0, 0)
-        slidetype (str): type of image (e.g. "HE"). Defaults to None.
+        slidetype: type of image (e.g. pathml.HESlide). Defaults to None.
         labels: labels for the tile
     """
     def __init__(self, image, coords, slidetype=None, masks=None, labels=None):
