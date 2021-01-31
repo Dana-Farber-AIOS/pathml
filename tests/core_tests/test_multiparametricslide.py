@@ -3,19 +3,9 @@ import numpy as np
 
 from pathml.core.multiparametric_slide import MultiparametricSlide2d
 
-try:
-    import javabridge
-    import bioformats
-except ImportError:
-    warn(
-            """MultiparametricSlide2d requires a jvm to interface with java bioformats library.
-            See: https://pythonhosted.org/javabridge/installation.html. You can install using:
-                
-                sudo apt-get install openjdk-8-jdk
-                pip install javabridge
-                pip install python-bioformats
-            """
-    )
+import javabridge
+import bioformats
+
 
 # there's something that causes pytest to hang...
 # may be related to: https://github.com/microsoft/vscode-python/issues/7055

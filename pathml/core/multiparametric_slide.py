@@ -12,25 +12,8 @@ import bioformats.formatreader as biordr
 from bioformats.formatreader import ImageReader
 from bioformats.metadatatools import createOMEXMLMetadata
 
-def check_mac_java_home():
-    is_mac = sys.platform == 'darwin'
-    if is_mac and "JAVA_HOME" not in os.environ:
-        warn("""
-            It looks like you are using a mac, and the $JAVA_HOME variable was not found in your environment.
-            This means that the javabridge may not work correctly!
 
-            Try these steps to resolve:
-                1. Find the path to JAVA SDK 8: 
-                    os.system('/usr/libexec/java_home -V')
-                2. export that path to JAVA_HOME:
-                    os.environ["JAVA_HOME"] = '/Library/Java/JavaVirtualMachines/jdk1.8.0_261.jdk/Contents/Home'
-                    (the path on your machine may be different)
-            """)
-
-check_mac_java_home()
-
-
-class MultiparametricSlide2d(Slide):
+class MultiparametricSlide2d(SlideData):
     """
     Represents multiparametric IF/IHC images. Backend based on ``bioformats``.
 
