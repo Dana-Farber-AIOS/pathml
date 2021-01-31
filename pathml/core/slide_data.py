@@ -2,7 +2,6 @@ import numpy as np
 from typing import Optional, Literal, Union, Any
 from os import PathLike
 
-from pathml.core.slide import Slide
 from pathml.core.masks import Masks
 from pathml.core.tiles import Tile, Tiles
 from pathml.preprocessing.transforms import Transform

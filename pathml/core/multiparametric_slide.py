@@ -4,7 +4,6 @@ import os
 import numpy as np
 
 from pathml.core.slide_data import SlideData
-from pathml.core.slide import Slide
 from pathml.core.masks import Masks
 
 import bioformats
