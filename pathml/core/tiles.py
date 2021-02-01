@@ -14,38 +14,32 @@ from pathml.core.tile import Tile
 
 
 class Tiles:
-    # TODO: 
-    # 1. do we want to be able to tiles[tile].masks, tiles[tile].masks.add(), tiles[tile].masks.remove()
-    #    at the moment we getitem the whole tile object, modify it, add it back
-    # 2. connected to ^ we keep a copy of masks in the reference to the tile (redundant)
-    # both of these problems are connected to the question whether h5 should be one file (we could hold 
-    # reference to tile.masks giving us (1) but this gives us 2+ objects)
-    # 3. label type
     """
-    Object holding tiles.
+    Object wrapping a dict of tiles.
 
     Args:
         tiles (Union[dict[tuple[int], `~pathml.core.tiles.Tile`], list]): tile objects  
     """
     def __init__(self, tiles=None):
         if tiles:
-            if not isinstance(tiles, dict) or (isinstance(tiles, list) and all([isinstance(t, Tile) for t in tiles])):
+            if not (isinstance(tiles, dict) or (isinstance(tiles, list) and all([isinstance(t, Tile) for t in tiles]))):
                 raise ValueError(f"tiles must be passed as dicts of the form coordinate1:Tile1,... "
                                  f"or lists of Tile objects containing i,j")
             if isinstance(tiles, dict):
                 for val in tiles.values():
                     if not isinstance(val, Tile):
                         raise ValueError(f"dict vals must be Tile")
-                for key in tiles.values():
-                    if not isinstance(key, tuple) and all([isinstance(c, int) for c in key]):
-                        raise ValueError(f"dict keys must be tuple[int]")
+                for key in tiles.keys():
+                    if not (isinstance(key, tuple) and list(map(type, key)) == [int, int]) or isinstance(key, str):
+                        raise ValueError(f"dict keys must be of type str or tuple[int]")
                 self._tiles = OrderedDict(tiles)
             else:
                 tiledictionary = {}
                 for tile in tiles:
                     if not isinstance(tile, Tile):
                         raise ValueError(f"Tiles expects a list of type Tile but was given {type(tile)}")
-                    tiledictionary[(tile.i, tile.j)] = tiles[tile]
+                    name = tile.name if tile.name is not None else str(tile.coords)
+                    tiledictionary[name] = tiles[tile]
                 self._tiles = OrderedDict(tiledictionary)
         else:
             self._tiles = OrderedDict()
@@ -64,8 +58,9 @@ class Tiles:
     def __getitem__(self, item):
         name, tile, maskdict, labels = self.h5manager.get(item) 
         if isinstance(item, tuple):
-            return Tile(tile, masks=Masks(maskdict), labels=labels, coords = (item[0], item[1]))
-        return Tile(tile, masks=Masks(maskdict), labels=labels)
+            return Tile(tile, masks=Masks(maskdict), labels=labels, coords = (item[0], item[1]), name=name)
+        # TODO: better handle coords
+        return Tile(tile, masks=Masks(maskdict), labels=labels, name=name)
 
     def add(self, coordinates, tile):
         """
@@ -78,17 +73,25 @@ class Tiles:
         if not isinstance(tile, Tile):
             raise ValueError(f"can not add {type(tile)}, tile must be of type pathml.core.tiles.Tile")
         self.h5manager.add(coordinates, tile)
+        del tile
 
-    def slice(self, coordinates):
+    def slice(self, slices):
         """
         Slice all tiles in self.h5manager extending numpy array slicing
 
         Args:
-            coordinates(tuple[int]): coordinates denoting slice i.e. 'selection' https://numpy.org/doc/stable/reference/arrays.indexing.html
+            slices: list where each element is an object of type slice indicating
+                    how the dimension should be sliced
         """
+        if not isinstance(slices,list[slice]):
+            raise KeyError(f"slices must of of type list[slice] but is {type(slices)} with elements {type(slices[0])}")
         sliced = Tiles()
-        for key, val in self.h5manager.slice(coordinates):
-            sliced.add(key, val)
+        for name, tile, maskdict, labels in self.h5manager.slice(slices):
+            # rebuild as tile
+            tile = Tile(name, image=tile, masks=Masks(maskdict), labels=labels)
+            tile.image = tile.image(slices)
+            tile.masks
+            sliced.add(name, tile)
         return sliced
 
     def remove(self, key):

@@ -17,13 +17,13 @@ class Tile:
         slidetype (str): type of image (e.g. "HE"). Defaults to None.
         labels: labels for the tile
     """
-    def __init__(self, image, coords, slidetype=None, masks=None, labels=None):
-        # check inputs
+    def __init__(self, image, name=None, coords=None, slidetype=None, masks=None, labels=None):
         assert isinstance(image, np.ndarray), f"image of type {type(image)} must be a np.ndarray"
         assert isinstance(masks, (type(None), Masks, dict)), \
             f"masks is of type {type(masks)} but must be of type pathml.core.masks.Masks or dict"
-        assert isinstance(coords, tuple) and len(coords) == 2, "coords must be a tuple of (i, j)"
+        assert (isinstance(coords, tuple) and len(coords) == 2) or isinstance(coords, None), "coords must be a tuple of (i, j)"
         assert isinstance(labels, (type(None), dict))
+        assert isinstance(name, (str, type(None))), f"name is of type {type(name)} but must be of type str or None"
 
         if isinstance(masks, Masks):
             self.masks = masks
@@ -35,6 +35,7 @@ class Tile:
             self.masks = Masks(masks)
         elif masks is None:
             self.masks = masks
+        self.name = name
         self.image = image
         self.coords = coords
         self.masks = masks
@@ -43,4 +44,4 @@ class Tile:
 
     def __repr__(self):
         return f"Tile(image shape {self.image.shape}, slidetype={self.slidetype}, " \
-               f"mask={repr(self.masks)}, coords={self.coords}, labels={list(self.labels.keys())})"
+               f"mask={repr(self.masks)}, coords={self.coords}, labels={None if self.labels is None else list(self.labels.keys())})"

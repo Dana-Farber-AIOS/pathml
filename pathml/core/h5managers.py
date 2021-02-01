@@ -3,6 +3,23 @@ import tempfile
 
 import numpy as np
 
+class h5_manager:
+    """
+    Abstract class for h5 data management
+    """
+    def __init__(self):
+        path = tempfile.TemporaryFile()
+        f = h5py.File(path, 'w')
+        self.h5 = f
+        self.h5path = path
+        self.shape = None
+
+    def add(self, key, val):
+        raise NotImplementedError
+
+    def 
+
+
 class _tiles_h5_manager:
     """
     Interface between tiles object and data management on disk by h5py. 
@@ -52,6 +69,9 @@ class _tiles_h5_manager:
             )
 
     def slice(self, slices):
+        '''
+        shouldn't slice be rewritten as reshape?
+        '''
         """
         Generator to slice all tiles in self.h5 extending numpy array slicing
 
@@ -63,14 +83,12 @@ class _tiles_h5_manager:
             key(str): tile coordinates
             val(`~pathml.core.tile.Tile`): tile
         """
-        if not isinstance(slices,list[slice]):
-            raise KeyError(f"slices must of of type list[slice] but is {type(slices)} with elements {type(slices[0])}")
-        for key, val in self.h5.items():
-            val = val[slices:...]
-            yield key, val
+        for key in self.h5.keys():
+            name, tile, maskdict, labels = self.get(key) 
+            yield name, tile, maskdict, labels 
 
     def get(self, item):
-        if isinstance(item, tuple):
+        if isinstance(item, (str, tuple)):
             if str(item) not in self.h5.keys():
                 raise KeyError(f'key {item} does not exist')
             tile = self.h5[str(item)]['tile'][:]
