@@ -1,18 +1,21 @@
 import openslide
 from typing import Tuple, Union
+import bioformats
+import javabridge
+from bioformats.metadatatools import createOMEXMLMetadata
 
 from pathml.utils import pil_to_rgb
 
 
 class SlideBackend:
     """base class for classes to interface with slides on disk"""
-    def extract_tile(self, location, size, level):
+    def extract_tile(self, location, size, **kwargs):
         raise NotImplementedError
 
-    def get_thumbnail(self, *args, **kwargs):
+    def get_thumbnail(self, size, **kwargs):
         raise NotImplementedError
 
-    def get_image_shape(self, level):
+    def get_image_shape(self, **kwargs):
         raise NotImplementedError
 
 
@@ -70,7 +73,7 @@ class OpenSlideBackend(SlideBackend):
         j, i = self.slide.level_dimensions[level]
         return i, j
 
-    def get_thumbnail(self, size):
+    def get_thumbnail(self, size, **kwargs):
         """
         Get a thumbnail of the slide.
 
@@ -87,14 +90,39 @@ class OpenSlideBackend(SlideBackend):
 
 class BioFormatsBackend(SlideBackend):
     """
-    Class for using BioFormats to interface with image files
+    Class for using BioFormats to interface with image files.
+
+    Built on `python-bioformats <https://github.com/CellProfiler/python-bioformats>`_ which wraps ome bioformats
+    java library, parses pixel and metadata of proprietary formats, and
+    converts all formats to OME-TIFF. Please cite: https://pubmed.ncbi.nlm.nih.gov/20513764/
 
     Args:
         filename (str): path to image file on disk
     """
     def __init__(self, filename):
         self.filename = filename
+        # init java virtual machine
+        javabridge.start_vm(class_path = bioformats.JARS)
+        # java maximum array size of 2GB constrains image size
+        ImageReader = bioformats.formatreader.make_image_reader_class()
+        FormatTools = bioformats.formatreader.make_format_tools_class()
+        reader = ImageReader()
+        omeMeta = createOMEXMLMetadata()
+        reader.setMetadataStore(omeMeta)
+        reader.setId(self.filename)
+        sizex, sizey, sizez, sizec = reader.getSizeX(), reader.getSizeY(), reader.getSizeZ(), reader.getSizeC()
+        self.twodshape = (sizex, sizey)
+        self.threedshape = (sizex, sizey, sizez)
+        self.fourdshape = (sizex, sizey, sizez, sizec)
+        self.imsize = sizex * sizey * sizez * sizec
         raise NotImplementedError
+
+    def extract_tile(self, location, size, **kwargs):
+        raise NotImplementedError
+
+    def get_thumbnail(self, size, **kwargs):
+        raise NotImplementedError
+
 
 
 class DICOMBackend(SlideBackend):
