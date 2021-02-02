@@ -11,7 +11,7 @@ from pathml.utils import (
     RGB_to_HSV, RGB_to_OD, RGB_to_HSI, RGB_to_GREY, RGB_to_LAB,
     normalize_matrix_cols, normalize_matrix_rows, label_artifact_tile_HE, label_whitespace_HE
 )
-from pathml.core.slide_he import HESlide
+from pathml.core.slide_classes import HESlide
 
 
 @pytest.fixture(scope = "module")
@@ -109,7 +109,7 @@ def test_plot_mask_downsample(fig_test, fig_ref):
 
 
 def example_slide_data():
-    wsi = HESlide(path = "tests/testdata/small_HE.svs")
+    wsi = HESlide(filepath = "tests/testdata/small_HE.svs")
     slide_data = wsi.load_data(level = 0, location = (900, 800), size = (100, 100))
 
     tile1 = Tile(coords = (10, 10), image = slide_data.image[10:40, 10:40, :])
