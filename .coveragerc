@@ -8,3 +8,10 @@ command_line = -m pytest
 
 [html]
 directory = coverage_report_html
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if self.debug:
+    raise NotImplementedError
