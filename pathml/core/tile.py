@@ -11,6 +11,7 @@ class Tile:
 
     Args:
         image (np.ndarray): image
+        name (str): name of tile
         masks (pathml.core.Masks): corresponding masks for region
         coords (tuple): Coordinates of tile relative to maximum resolution of whole-slide image.
             The (i,j) coordinate system is based on labelling the top-leftmost pixel as (0, 0)
@@ -27,7 +28,6 @@ class Tile:
 
         if isinstance(masks, Masks):
             self.masks = masks
-        # populate Masks object by dict
         if isinstance(masks, dict):
             for val in masks.values():
                 if val.shape != self.array.shape[:2]:
