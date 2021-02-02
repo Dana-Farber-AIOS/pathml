@@ -5,30 +5,17 @@ from pathml.core.slide_backends import OpenSlideBackend
 class RGBSlide(SlideData):
     """
     Class for any RGB slide. Uses OpenSlide backend.
+    Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
     """
-    def __init__(self, filepath, name=None, masks=None, labels=None, tiles=None, h5=None):
-        super().__init__(
-            filepath = filepath,
-            name = name,
-            slide = OpenSlideBackend(filepath),
-            masks = masks,
-            tiles = tiles,
-            labels = labels,
-            h5 = h5
-        )
+    def __init__(self, *args, **kwargs):
+        kwargs["slide_backend"] = OpenSlideBackend
+        super().__init__(*args, **kwargs)
 
 
 class HESlide(RGBSlide):
     """
-    Class for H&E stained slides. Uses OpenSlide backend.
+    Class for any H&E slide. Uses OpenSlide backend.
+    Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
     """
-    def __init__(self, filepath, name=None, masks=None, labels=None, tiles=None, h5=None):
-        super().__init__(
-            filepath = filepath,
-            name = name,
-            slide = OpenSlideBackend(filepath),
-            masks = masks,
-            tiles = tiles,
-            labels = labels,
-            h5 = h5
-        )
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)

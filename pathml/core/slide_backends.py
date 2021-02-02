@@ -70,6 +70,7 @@ class OpenSlideBackend(SlideBackend):
         Returns:
             Tuple[int, int]: Shape of image at target level.
         """
+        assert isinstance(level, int), f"level {level} invalid. Must be an int."
         j, i = self.slide.level_dimensions[level]
         return i, j
 

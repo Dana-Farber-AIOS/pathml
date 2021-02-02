@@ -18,10 +18,10 @@ def test_he(he_slide):
     assert isinstance(he_slide.slide, OpenSlideBackend)
 
 
-@pytest.mark.parametrize("shape", [None, 500, (500, 400)])
+@pytest.mark.parametrize("shape", [500, (500, 400)])
 @pytest.mark.parametrize("stride", [None, 1000])
 @pytest.mark.parametrize("pad", [True, False])
-@pytest.mark.parametrize("level", [None, 0])
+@pytest.mark.parametrize("level", [0])
 def test_generate_tiles_he(he_slide, shape, stride, pad, level):
     for tile in he_slide.generate_tiles(shape = shape, stride = stride, pad = pad, level = level):
         assert isinstance(tile, Tile)

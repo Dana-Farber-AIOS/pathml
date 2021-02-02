@@ -3,7 +3,9 @@ from typing import Optional, Literal, Union, Any
 from os import PathLike
 
 from pathml.core.masks import Masks
-from pathml.core.tiles import Tile, Tiles
+from pathml.core.tile import Tile
+from pathml.core.tiles import Tiles
+from pathml.core.slide_backends import SlideBackend, OpenSlideBackend
 from pathml.preprocessing.transforms import Transform
 from pathml.preprocessing.pipeline import Pipeline
 
@@ -11,42 +13,44 @@ from pathml.preprocessing.pipeline import Pipeline
 class SlideData:
     """
     Main class representing a slide and its annotations. 
-    Preprocessing pipelines change the state of this object.
-    Declared by subclassing Slide
 
-    Attributes:
+    Args:
         filepath (str): Path to slide file on disk.
         name (str): name of slide
-        size (int): total size of slide in pixels 
-        slide (`~pathml.core.slide_backends.SlideBackend`): slide backend object
+        slide_backend (`~pathml.core.slide_backends.SlideBackend`): slide backend object for interfacing with slide on disk.
+            If ``None`` defaults to :class:`~pathml.core.slide_backends.OpenSlideBackend`
         masks (`~pathml.core.masks.Masks`, optional): object containing {key, mask} pairs
         tiles (`~pathml.core.tiles.Tiles`, optional): object containing {coordinates, tile} pairs
         labels (collections.OrderedDict, optional): dictionary containing {key, label} pairs
-        history (list): the history of operations applied to the SlideData object
     """
-    def __init__(self, filepath, name=None, slide=None, masks=None, tiles=None, labels=None, h5=None):
-        self.filepath = filepath
+    def __init__(self, filepath=None, name=None, slide_backend=None, masks=None, tiles=None, labels=None, h5=None):
+        # check inputs
+        assert masks is None or isinstance(masks, Masks), \
+            f"mask are of type {type(masks)} but must be of type pathml.core.masks.Masks"
+        assert labels is None or isinstance(labels, dict), \
+            f"labels are of type {type(labels)} but must be of type dict. array-like labels should be stored in masks."
+        assert tiles is None or isinstance(tiles, Tiles), \
+            f"tiles are of type {type(tiles)} but must be of type pathml.core.tiles.Tiles"
+        assert slide_backend is None or issubclass(slide_backend, SlideBackend), \
+            f"slide_backend is of type {type(slide_backend)} but must be a subclass of pathml.core.slide_backends.SlideBackend"
+
+        if slide_backend is None:
+            slide_backend = OpenSlideBackend
+
         self.name = name
-        assert isinstance(slide, Slide), f"slide is of type {type(slide)} but must be a subclass of pathml.core.slide.Slide"
-        self.slide = slide
-        self._slidetype = type(slide)
-        self.name = slide.name
-        self.shape = None if slide is None else slide.shape
-        assert isinstance(masks, (type(None), Masks)), f"mask are of type {type(masks)} but must be of type pathml.core.masks.Masks"
-        self.masks = masks 
-        assert isinstance(tiles, (type(None), Tiles)), f"tiles are of type {type(tiles)} but must be of type pathml.core.tiles.Tiles"
+        self.slide = slide_backend(filepath)
+        self.masks = masks
         self.tiles = tiles
-        assert isinstance(labels, dict), f"labels are of type {type(labels)} but must be of type dict. array-like labels should be stored in masks."
         self.labels = labels
-        self.history = []
+        self.history = None
         self.h5 = h5
 
     def __repr__(self): 
-        out = f"{self.__class__.__name__}(slide={repr(self.slide)}, "
-        out += f"slide={self.slide.shape}, "
+        out = f"{self.__class__.__name__}(name={self.name}, "
+        out += f"slide = {repr(self.slide)}, "
         out += f"masks={repr(self.masks)}, "
         out += f"tiles={repr(self.tiles)}, "
-        out += f"labels={self.labels}, "
+        out += f"labels={repr(self.labels)}, "
         out += f"history={self.history})"
         return out 
 
@@ -74,9 +78,10 @@ class SlideData:
         for tile in self.generate_tiles(level = level, shape = tile_size, stride = tile_stride, pad = tile_pad):
             pipeline.apply(tile)
             # what should the key be?
+            key = str(tile.coords)
             self.tiles.add(key, tile)
 
-    def generate_tiles(self, shape=3000, stride=None, pad=False, level=None):
+    def generate_tiles(self, shape=3000, stride=None, pad=False, level=0):
         """
         Generator over tiles.
         All pipelines must be composed of transforms acting on tiles.
@@ -90,15 +95,23 @@ class SlideData:
                 symmetrically and yielded with the other chunks. If ``False``, incomplete edge chunks will be ignored.
                 Defaults to ``False``.
             level (int, optional): For slides with multiple levels, which level to extract tiles from.
-                Defaults to ``None``.
+                Defaults to 0 (highest resolution)
 
         Yields:
             np.ndarray: Extracted chunk of dimension (size, size, 3)
         """
+        assert isinstance(shape, int) or (isinstance(shape, tuple) and len(shape) == 2), \
+            f"input shape {shape} invalid. Must be a tuple of (H, W), or a single integer for square tiles"
         if isinstance(shape, int):
             shape = (shape, shape)
+        assert stride is None or isinstance(stride, int) or (isinstance(stride, tuple) and len(stride) == 2), \
+            f"input stride {stride} invalid. Must be a tuple of (stridH, W), or a single integer for square tiles"
+        assert isinstance(level, int), f"level {level} invalid. Must be an int."
+
         if stride is None:
             stride = shape
+        elif isinstance(stride, int):
+            stride = (stride, stride)
 
         i, j = self.slide.get_image_shape(level = level)
 
@@ -128,23 +141,16 @@ class SlideData:
                     tile_masks = self.masks.slice(slices)
                 yield Tile(image = tile_im, coords = coords, masks = tile_masks, slidetype = type(self))
 
-    def plot():
-        """
-        Args:
-            location
-            tile = True
-            size
-            downsample
-            mask(str)
-            save
-        """
-        raise NotImplementedError() 
+    def plot(self):
+        raise NotImplementedError
 
-    def write_h5(
+    def save(self):
+        raise NotImplementedError
+
+    def _write_h5(
         self,
         filename: Optional[PathLike] = None,
         compression: Optional[Literal["gzip", "lzf"]] = None,
         compression_opts: Union[int, Any] = None,
     ):
-        raise NotImplementedError()
-
+        raise NotImplementedError
