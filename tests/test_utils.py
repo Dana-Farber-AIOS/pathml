@@ -2,16 +2,13 @@ import numpy as np
 import pytest
 import cv2
 from matplotlib.testing.decorators import check_figures_equal
-from matplotlib.patches import Rectangle
 
-from pathml.core.tile import Tile
 from pathml.utils import (
     segmentation_lines, contour_centroid, sort_points_clockwise,
-    pad_or_crop, _pad_or_crop_1d, upsample_array, plot_mask, plot_extracted_tiles,
+    pad_or_crop, _pad_or_crop_1d, upsample_array, plot_mask,
     RGB_to_HSV, RGB_to_OD, RGB_to_HSI, RGB_to_GREY, RGB_to_LAB,
     normalize_matrix_cols, normalize_matrix_rows, label_artifact_tile_HE, label_whitespace_HE
 )
-from pathml.core.slide_classes import HESlide
 
 
 @pytest.fixture(scope = "module")
@@ -106,31 +103,6 @@ def test_plot_mask_downsample(fig_test, fig_ref):
     fig_ref.gca().axis('off')
     # plot_mask on fig_test
     plot_mask(im = im, mask_in = mask, ax = fig_test.gca(), downsample_factor = 2)
-
-
-def example_slide_data():
-    wsi = HESlide(filepath = "tests/testdata/small_HE.svs")
-    slide_data = wsi.load_data(level = 0, location = (900, 800), size = (100, 100))
-
-    tile1 = Tile(coords = (10, 10), image = slide_data.image[10:40, 10:40, :])
-    tile2 = Tile(coords = (50, 55), image = slide_data.image[50:80, 55:85, :])
-
-    slide_data.tiles.add(key = "tile1", tile = tile1)
-    slide_data.tiles.add(key = "tile2", tile = tile2)
-    return slide_data
-
-
-@check_figures_equal(extensions = [".png"])
-def test_plot_extracted_tiles(fig_test, fig_ref):
-    # not using fixture as arg because check_figures_equal requires there to be only
-    #   two arguments, named specifically fig_test and fig_ref
-    data = example_slide_data()
-    # manual plotting on fig_test
-    fig_ref.gca().imshow(data.image)
-    for t in data.tiles:
-        fig_ref.gca().add_patch(Rectangle(xy = (t.j, t.i), width = 30, height = -30))
-
-    plot_extracted_tiles(data, downsample_factor = 1, ax = fig_test.gca())
 
 
 def test_upsample_array(simple_mask):
