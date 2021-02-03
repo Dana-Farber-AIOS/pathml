@@ -14,21 +14,20 @@ def emptytiles():
 
 
 @pytest.fixture
-def tile_nomasks(shape=(224, 224, 3), i=1, j=3):
-    testtile = Tile(np.random.randn(*shape), coords = (i, j))
+def tile_nomasks():
+    testtile = Tile(np.random.randn((224, 224, 3)), name='test', coords = (1, 3), slidetype=None)
     return testtile
 
 
 @pytest.fixture
-def tile_withmasks(shape=(224, 224, 3), coords=(1, 3), stack=50, labeltype=str):
-    if labeltype == str:
-        letters = string.ascii_letters + string.digits
-        maskdict = {}
-        for i in range(stack):
-            randomkey = 'test' + ''.join(random.choice(letters) for _ in range(i))
-            maskdict[randomkey] = np.random.randint(2, size = shape)
-        masks = Masks(maskdict)
-    return Tile(np.random.random_sample(shape), coords = coords, masks = masks)
+def tile_withmasks():
+    letters = string.ascii_letters + string.digits
+    maskdict = {}
+    for i in range(50):
+        randomkey = 'test' + ''.join(random.choice(letters) for _ in range(i))
+        maskdict[randomkey] = np.random.randint(2, size = (224,224,3))
+    masks = Masks(maskdict)
+    return Tile(np.random.random_sample((224,224,3)), name='test', coords = (1,3), masks = masks, slidetype=None)
 
 
 @pytest.mark.parametrize("incorrect_input", ["string", True, 5, [5, 4, 3], {"dict": "testing"}])
@@ -60,16 +59,21 @@ def test_add_get_nomasks(emptytiles, tile_nomasks):
     tile = tile_nomasks
     tiles.add((1, 3), tile)
     assert (tiles[(1, 3)].image == tile.image).all()
+    assert tiles[(1, 3)].name = tile.name
+    assert tiles[(1, 3)].coords = tile.coords
+    assert tiles[(1, 3)].labels = tile.labels
+    assert tiles[(1, 3)].slidetype = tile.slidetype
     assert (tiles[0].image == tile.image).all()
 
 
 def test_add_get_withmasks(emptytiles, tile_withmasks):
     tiles = emptytiles
-    testmask = tile_withmasks.masks[0]
-    tile = tile_withmasks
+    test = tile_withmasks
+    tile = test 
     tiles.add((1, 3), tile)
-    assert (tiles[(1, 3)].masks[0] == testmask).all()
-    assert (tiles[0].masks[0] == testmask).all()
+    for mask in test.masks:
+        assert (tiles[(1, 3)].masks[mask] == test.masks[mask]).all()
+        assert (tiles[0].masks[mask] == test.masks[mask]).all()
 
 
 @pytest.mark.parametrize("incorrect_input", ["string", None, True, 5, [5, 4, 3], {"dict": "testing"}])

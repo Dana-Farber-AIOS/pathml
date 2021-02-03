@@ -59,11 +59,8 @@ class Tiles:
         return len(self.h5manager.h5.keys())
 
     def __getitem__(self, item):
-        name, tile, maskdict, labels = self.h5manager.get(item) 
-        if isinstance(item, tuple):
-            return Tile(tile, masks=Masks(maskdict), labels=labels, coords = (item[0], item[1]), name=name)
-        # TODO: better handle coords
-        return Tile(tile, masks=Masks(maskdict), labels=labels, name=name)
+        name, tile, maskdict, labels, coords, slidetype = self.h5manager.get(item) 
+        return Tile(tile, masks=Masks(maskdict), labels=labels, name=name, coords=coords, slidetype=slidetype)
 
     def add(self, coordinates, tile):
         """
@@ -78,6 +75,9 @@ class Tiles:
         self.h5manager.add(coordinates, tile)
         del tile
 
+    def update(self, key, val, target='all'):
+        self.h5manager.update(key, val, target)
+
     def slice(self, slices):
         """
         Slice all tiles in self.h5manager extending numpy array slicing
@@ -89,11 +89,13 @@ class Tiles:
         if not isinstance(slices,list[slice]):
             raise KeyError(f"slices must of of type list[slice] but is {type(slices)} with elements {type(slices[0])}")
         sliced = Tiles()
-        for name, tile, maskdict, labels in self.h5manager.slice(slices):
-            # rebuild as tile
-            tile = Tile(name, image=tile, masks=Masks(maskdict), labels=labels)
-            tile.image = tile.image(slices)
-            tile.masks
+        for name, tile, maskdict, labels, coords, slidetype in self.h5manager.slice(slices):
+            tile = Tile(name, image=tile, masks=Masks(maskdict), labels=labels, coords=coords, slidetype=slidetype)
+            tile.image = tile.image[slices]
+            newmasks = {}
+            for key, val in tile.masks.items():
+                newmasks[key] = val[slices]
+            tile.masks = newmasks 
             sliced.add(name, tile)
         return sliced
 
