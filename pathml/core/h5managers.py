@@ -17,19 +17,28 @@ class h5_manager:
     def add(self, key, val):
         raise NotImplementedError
 
-    def 
+    def update(self, key, val):
+        raise NotImplementedError
+
+    def reshape(self, targetshape):
+        raise NotImplementedError
+
+    def slice(self, slices):
+        raise NotImplementedError
+
+    def get(self, item):
+        raise NotImplementedError
+
+    def remove(self, key):
+        raise NotImplementedError
 
 
-class _tiles_h5_manager:
+class _tiles_h5_manager(h5_manager):
     """
     Interface between tiles object and data management on disk by h5py. 
     """
     def __init__(self):
-        path = tempfile.TemporaryFile()
-        f = h5py.File(path, 'w')
-        self.h5 = f
-        self.h5path = path
-        self.shape = None
+        super().__init__()
 
     def add(self, key, tile):
         """
@@ -68,24 +77,8 @@ class _tiles_h5_manager:
                     data = np.array(tile.labels, dtype='S')
             )
 
-    def slice(self, slices):
-        '''
-        shouldn't slice be rewritten as reshape?
-        '''
-        """
-        Generator to slice all tiles in self.h5 extending numpy array slicing
-
-        Args:
-            slices: list where each element is an object of type slice indicating
-                    how the dimension should be sliced
-
-        Yields:
-            key(str): tile coordinates
-            val(`~pathml.core.tile.Tile`): tile
-        """
-        for key in self.h5.keys():
-            name, tile, maskdict, labels = self.get(key) 
-            yield name, tile, maskdict, labels 
+    def update(self, key, tile):
+        raise NotImplementedError
 
     def get(self, item):
         if isinstance(item, (str, tuple)):
@@ -106,8 +99,33 @@ class _tiles_h5_manager:
         labels = None
         return list(self.h5.keys())[item], tile, maskdict, labels
 
-    def update(self, key, tile):
-        raise NotImplementedError
+    def slice(self, slices):
+        """
+        Generator to slice all tiles in self.h5 extending numpy array slicing
+
+        Args:
+            slices: list where each element is an object of type slice indicating
+                    how the dimension should be sliced
+
+        Yields:
+            key(str): tile coordinates
+            val(`~pathml.core.tile.Tile`): tile
+        """
+        for key in self.h5.keys():
+            name, tile, maskdict, labels = self.get(key) 
+            yield name, tile, maskdict, labels 
+
+    def reshape(self, shape):
+        """
+        Resample tiles to new shape. 
+
+        Args:
+            shape: new shape of tile.
+
+        
+        (support change inplace and return copy) 
+        """
+
 
     def remove(self, key):
         """
@@ -120,17 +138,13 @@ class _tiles_h5_manager:
         del self.h5[str(key)]
 
 
-class _masks_h5_manager:
+class _masks_h5_manager(h5_manager):
     """
     Interface between masks object and data management on disk by h5py. 
     """
     def __init__(self):
-        path = tempfile.TemporaryFile()
-        f = h5py.File(path, 'w')
+        super().__init__()
         f.create_group("masks")
-        self.h5 = f
-        self.h5path = path
-        self.shape = None
 
     def add(self, key, mask):
         """
@@ -157,7 +171,7 @@ class _masks_h5_manager:
                            
     def update(self, key, mask):
         """
-        Update an existing mask
+        Update an existing mask.
 
         Args:
             key(str): key labeling mask
@@ -172,11 +186,10 @@ class _masks_h5_manager:
                                                   f"of shape {mask.shape}. Shapes must match."
 
         self.h5['masks'][key][...] = mask
-
                            
     def slice(self, slices):
         """
-        Generator to slice all masks in self.h5 extending numpy array slicing
+        Generator to slice all masks in self.h5 extending numpy array slicing.
 
         Args:
             slices: list where each element is an object of type slice indicating
@@ -190,6 +203,9 @@ class _masks_h5_manager:
         for key, val in self.h5.items():
             val = val[slices:...]
             yield key, val
+
+    def reshape(self, targetshape):
+        pass
 
     def get(self, item):
         if isinstance(item, str):
@@ -211,6 +227,7 @@ class _masks_h5_manager:
         if key not in self.h5['masks'].keys():
             raise KeyError('key is not in Masks')
         del self.h5['masks'][key]
+
 
 def read_h5(path):
     raise NotImplementedError
