@@ -14,8 +14,11 @@ def emptytiles():
 
 
 @pytest.fixture
-def tile_nomasks(shape=(224, 224, 3), i=1, j=3):
-    testtile = Tile(np.random.randn(*shape), coords = (i, j))
+def tile_nomasks():
+    shape = (224, 224, 3)
+    coords = (1, 3)
+    im = np.arange(np.product(shape)).reshape(shape)
+    testtile = Tile(image = im, coords = coords)
     return testtile
 
 
