@@ -33,3 +33,7 @@ def test_generate_tiles_padding(he_slide, pad):
     pass
 
 
+@pytest.mark.parametrize("slide", [HESlide, RGBSlide])
+def test_repr(slide):
+    s = slide("tests/testdata/small_HE.svs")
+    repr(s)

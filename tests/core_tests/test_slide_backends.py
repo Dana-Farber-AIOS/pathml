@@ -25,3 +25,8 @@ def test_openslide_get_level_shape(wsi_HE):
 
 def test_openslide_get_thumbnail(wsi_HE):
     pass
+
+
+def test_openslide_repr():
+    backend = OpenSlideBackend("tests/testdata/small_HE.svs")
+    repr(backend)
