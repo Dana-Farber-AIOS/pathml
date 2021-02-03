@@ -1,4 +1,3 @@
-import numpy as np
 from typing import Optional, Literal, Union, Any
 from os import PathLike
 
@@ -6,7 +5,6 @@ from pathml.core.masks import Masks
 from pathml.core.tile import Tile
 from pathml.core.tiles import Tiles
 from pathml.core.slide_backends import SlideBackend, OpenSlideBackend
-from pathml.preprocessing.transforms import Transform
 from pathml.preprocessing.pipeline import Pipeline
 
 
@@ -15,10 +13,11 @@ class SlideData:
     Main class representing a slide and its annotations. 
 
     Args:
-        filepath (str): Path to slide file on disk.
-        name (str): name of slide
-        slide_backend (`~pathml.core.slide_backends.SlideBackend`): slide backend object for interfacing with slide on disk.
-            If ``None`` defaults to :class:`~pathml.core.slide_backends.OpenSlideBackend`
+        filepath (str, optional): Path to slide file on disk.
+        name (str, optional): name of slide
+        slide_backend (`~pathml.core.slide_backends.SlideBackend`, optional): slide backend object for interfacing with
+            slide on disk.
+            If ``None``, and a filepath is provided, defaults to :class:`~pathml.core.slide_backends.OpenSlideBackend`
         masks (`~pathml.core.masks.Masks`, optional): object containing {key, mask} pairs
         tiles (`~pathml.core.tiles.Tiles`, optional): object containing {coordinates, tile} pairs
         labels (collections.OrderedDict, optional): dictionary containing {key, label} pairs
@@ -34,11 +33,15 @@ class SlideData:
         assert slide_backend is None or issubclass(slide_backend, SlideBackend), \
             f"slide_backend is of type {type(slide_backend)} but must be a subclass of pathml.core.slide_backends.SlideBackend"
 
-        if slide_backend is None:
-            slide_backend = OpenSlideBackend
+        # load slide using OpenSlideBackend if path is provided and backend is not specified
+        if filepath is not None:
+            if slide_backend is None:
+                slide_backend = OpenSlideBackend
+            self.slide = slide_backend(filepath)
+        else:
+            self.slide = None
 
         self.name = name
-        self.slide = slide_backend(filepath)
         self.masks = masks
         self.tiles = tiles
         self.labels = labels
@@ -71,13 +74,13 @@ class SlideData:
         """
         assert isinstance(pipeline, Pipeline), \
             f"pipeline is of type {type(pipeline)} but must be of type pathml.preprocessing.pipeline.Pipeline"
+        assert self.slide is not None, "cannot run pipeline because self.slide is None"
 
         if tile_stride is None:
             tile_stride = tile_size
 
         for tile in self.generate_tiles(level = level, shape = tile_size, stride = tile_stride, pad = tile_pad):
             pipeline.apply(tile)
-            # what should the key be?
             key = str(tile.coords)
             self.tiles.add(key, tile)
 
@@ -129,11 +132,10 @@ class SlideData:
             for ix_j in range(n_chunk_j):
                 coords = (int(ix_j * stride_j), int(ix_i * stride_i))
                 # get image for tile
-                tile_im = self.slide.extract_tile(location = coords, size = shape, level = level)
+                tile_im = self.slide.extract_region(location = coords, size = shape, level = level)
                 # get mask(s) for tile
                 tile_masks = None
                 if self.masks is not None:
-                    # TODO: test this line
                     slices = [
                         slice(int(ix_j * stride), int(ix_j * stride + shape[0])),
                         slice(int(ix_i * stride), int(ix_i * stride) + shape[1])

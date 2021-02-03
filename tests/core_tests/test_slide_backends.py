@@ -14,7 +14,7 @@ def wsi_HE():
 @pytest.mark.parametrize("size", [100, (500, 200)])
 @pytest.mark.parametrize("level", [None, 0])
 def test_openslide_extract_tile(wsi_HE, location, size, level):
-    region = wsi_HE.extract_tile(location = location, size = size, level = level)
+    region = wsi_HE.extract_region(location = location, size = size, level = level)
     assert isinstance(region, np.ndarray)
     assert region.dtype == np.uint8
 

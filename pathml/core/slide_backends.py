@@ -9,7 +9,7 @@ from pathml.utils import pil_to_rgb
 
 class SlideBackend:
     """base class for classes to interface with slides on disk"""
-    def extract_tile(self, location, size, **kwargs):
+    def extract_region(self, location, size, **kwargs):
         raise NotImplementedError
 
     def get_thumbnail(self, size, **kwargs):
@@ -30,7 +30,7 @@ class OpenSlideBackend(SlideBackend):
         self.filename = filename
         self.slide = openslide.OpenSlide(filename = filename)
 
-    def extract_tile(self, location, size, level=None):
+    def extract_region(self, location, size, level=None):
         """
         Extract a region of the image
 
@@ -118,7 +118,7 @@ class BioFormatsBackend(SlideBackend):
         self.imsize = sizex * sizey * sizez * sizec
         raise NotImplementedError
 
-    def extract_tile(self, location, size, **kwargs):
+    def extract_region(self, location, size, **kwargs):
         raise NotImplementedError
 
     def get_thumbnail(self, size, **kwargs):
