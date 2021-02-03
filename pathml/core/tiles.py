@@ -18,13 +18,14 @@ class Tiles:
     Object wrapping a dict of tiles.
 
     Args:
-        tiles (Union[dict[tuple[int], `~pathml.core.tiles.Tile`], list]): tile objects  
+        tiles (Union[dict[tuple[int], `~pathml.core.tiles.Tile`], list[`~pathml.core.tiles.Tile`]]): tile objects  
     """
     def __init__(self, tiles=None):
         if tiles:
             if not (isinstance(tiles, dict) or (isinstance(tiles, list) and all([isinstance(t, Tile) for t in tiles]))):
                 raise ValueError(f"tiles must be passed as dicts of the form coordinate1:Tile1,... "
                                  f"or lists of Tile objects containing i,j")
+            # create Tiles from dict
             if isinstance(tiles, dict):
                 for val in tiles.values():
                     if not isinstance(val, Tile):
@@ -33,6 +34,7 @@ class Tiles:
                     if not (isinstance(key, tuple) and list(map(type, key)) == [int, int]) or isinstance(key, str):
                         raise ValueError(f"dict keys must be of type str or tuple[int]")
                 self._tiles = OrderedDict(tiles)
+            # create Tiles from list
             else:
                 tiledictionary = {}
                 for tile in tiles:
@@ -43,6 +45,7 @@ class Tiles:
                 self._tiles = OrderedDict(tiledictionary)
         else:
             self._tiles = OrderedDict()
+        # move Tiles to .h5
         self.h5manager = _tiles_h5_manager() 
         for key in self._tiles:
             self.h5manager.add(key, self._tiles[key])
@@ -53,7 +56,7 @@ class Tiles:
         return rep
 
     def __len__(self):
-        return len(self.h5manager.h5['tiles'].keys())
+        return len(self.h5manager.h5.keys())
 
     def __getitem__(self, item):
         name, tile, maskdict, labels = self.h5manager.get(item) 

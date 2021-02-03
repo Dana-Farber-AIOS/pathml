@@ -18,6 +18,7 @@ def tile_nomasks(shape=(224, 224, 3), i=1, j=3):
     testtile = Tile(np.random.randn(*shape), coords = (i, j))
     return testtile
 
+
 @pytest.fixture
 def tile_withmasks(shape=(224, 224, 3), coords=(1, 3), stack=50, labeltype=str):
     if labeltype == str:
