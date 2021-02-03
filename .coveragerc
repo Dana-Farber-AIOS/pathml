@@ -2,8 +2,6 @@
 
 [run]
 source = pathml
-omit =
-    pathml/preprocessing/base_*
 command_line = -m pytest
 
 [html]
