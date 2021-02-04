@@ -41,7 +41,7 @@ class Tiles:
                     if not isinstance(tile, Tile):
                         raise ValueError(f"Tiles expects a list of type Tile but was given {type(tile)}")
                     name = tile.name if tile.name is not None else str(tile.coords)
-                    tiledictionary[name] = tiles[tile]
+                    tiledictionary[name] = tile 
                 self._tiles = OrderedDict(tiledictionary)
         else:
             self._tiles = OrderedDict()
@@ -60,7 +60,7 @@ class Tiles:
 
     def __getitem__(self, item):
         name, tile, maskdict, labels, coords, slidetype = self.h5manager.get(item) 
-        return Tile(tile, masks=Masks(maskdict), labels=labels, name=name, coords=coords, slidetype=slidetype)
+        return Tile(tile, masks=Masks(maskdict), labels=labels, name=str(name), coords=coords, slidetype=slidetype)
 
     def add(self, coordinates, tile):
         """
@@ -86,18 +86,20 @@ class Tiles:
             slices: list where each element is an object of type slice indicating
                     how the dimension should be sliced
         """
-        if not isinstance(slices,list[slice]):
+        if not isinstance(slices,list) and (isinstance(slicer,slice) for slicer in slices):
             raise KeyError(f"slices must of of type list[slice] but is {type(slices)} with elements {type(slices[0])}")
         sliced = Tiles()
         for name, tile, maskdict, labels, coords, slidetype in self.h5manager.slice(slices):
-            tile = Tile(name, image=tile, masks=Masks(maskdict), labels=labels, coords=coords, slidetype=slidetype)
-            tile.image = tile.image[slices]
+            tile = Tile(image=tile, masks=Masks(maskdict), labels=labels, coords=coords, name=name, slidetype=slidetype)
+            newimage = tile.image[slices]
             newmasks = {}
-            for key, val in tile.masks.items():
-                newmasks[key] = val[slices]
-            tile.masks = newmasks 
-            sliced.add(name, tile)
-        return sliced
+            for key, val in tile.masks.h5manager.h5['masks'].items():
+                print(key, val)
+                newmasks[str(key)] = val[:][slices]
+            newtile = Tile(image=newimage, masks = newmasks, labels=labels, coords=coords, name=name, slidetype=slidetype) 
+
+            sliced.add(name, newtile)
+            return sliced
 
     def remove(self, key):
         """

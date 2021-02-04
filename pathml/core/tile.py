@@ -25,18 +25,18 @@ class Tile:
         assert (isinstance(coords, tuple) and len(coords) == 2) or isinstance(coords, None), "coords must be a tuple of (i, j)"
         assert isinstance(labels, (type(None), dict))
         assert isinstance(name, (str, type(None))), f"name is of type {type(name)} but must be of type str or None"
-
+        self.image = image
+        # TODO: check that masks have right shape
         if isinstance(masks, Masks):
             self.masks = masks
         if isinstance(masks, dict):
             for val in masks.values():
-                if val.shape != self.array.shape[:2]:
-                    raise ValueError(f"mask is of shape {val.shape} but must match tile shape {self.array.shape}")
+                if val.shape[:2] != self.image.shape[:2]:
+                    raise ValueError(f"mask is of shape {val.shape} but must match tile shape {self.image.shape}")
             self.masks = Masks(masks)
         elif masks is None:
             self.masks = masks
         self.name = name
-        self.image = image
         self.coords = coords
         self.masks = masks
         self.slidetype = slidetype
