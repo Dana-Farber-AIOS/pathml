@@ -1,11 +1,12 @@
 import h5py
 import tempfile
+import ast
 
 import numpy as np
 
-class _tiles_h5_manager:
+class h5_manager:
     """
-    Interface between tiles object and data management on disk by h5py. 
+    Abstract class for h5 data management
     """
     def __init__(self):
         path = tempfile.TemporaryFile()
@@ -14,42 +15,159 @@ class _tiles_h5_manager:
         self.h5path = path
         self.shape = None
 
+    def add(self, key, val):
+        raise NotImplementedError
+
+    def update(self, key, val):
+        raise NotImplementedError
+
+    def reshape(self, targetshape):
+        raise NotImplementedError
+
+    def slice(self, slices):
+        raise NotImplementedError
+
+    def get(self, item):
+        raise NotImplementedError
+
+    def remove(self, key):
+        raise NotImplementedError
+
+
+class _tiles_h5_manager(h5_manager):
+    """
+    Interface between tiles object and data management on disk by h5py. 
+    """
+    def __init__(self):
+        super().__init__()
+
     def add(self, key, tile):
         """
-        Add tile as dataset indexed by key to self.h5.
+        Add tile to self.h5 as dataset indexed by key.
 
         Args:
-            key(str): location of tile on slide
+            key(str or tuple): key will become tile name 
             tile(`~pathml.core.tile.Tile`): Tile object 
         """
 
         if not isinstance(key, (str, tuple)):
-            raise ValueError(f"can not add type {type(key)}, key must be a str or tuple")
+            raise ValueError(f"can not add type {type(key)}, key must be of type str or tuple")
         if str(key) in self.h5.keys():
-            print(f"overwriting tile at {key}")
-        if self.shape == None:
+            print(f"overwriting data at {key}")
+        if self.shape is None:
             self.shape = tile.image.shape
         if tile.image.shape != self.shape:
             raise ValueError(f"Tiles contains tiles of shape {self.shape}, provided tile is of shape {tile.image.shape}"
                              f". We enforce that all Tile in Tiles must have matching shapes.")
         tilegroup = self.h5.create_group(str(key))
         masksgroup = tilegroup.create_group('masks')
-        labelsgroup = tilegroup.create_group('labels')
         addtile = tilegroup.create_dataset(
             'tile',
             data = tile.image
         )
         if tile.masks:
-            for mask in tile.masks.h5manager.h5['masks']: 
-                addmask = masksgroup.create_dataset(
-                        str(mask),
-                        data = tile.masks[mask]
-                )
+            try:
+                for mask in tile.masks.h5manager.h5['masks']: 
+                    addmask = masksgroup.create_dataset(
+                            str(mask),
+                            data = tile.masks.h5manager.h5['masks'][mask][:]
+                    )
+            except:
+                for mask in tile.masks: 
+                    addmask = masksgroup.create_dataset(
+                            str(mask),
+                            data = tile.masks[mask]
+                    )
+        # convert label dict to numpy array containing str objects
+        # h5 coerces: 
+        #   str -> variable length UTF-8
+        #   bytes (from str) -> ASCII
         if tile.labels:
-            addlabels = labelsgroup.create_dataset(
+            names = ['key','val']
+            formats = ['object','object']
+            dtype = dict(names = names, formats = formats)
+            labelarray = np.array(list(tile.labels.items()), dtype=dtype)
+            addlabels = tilegroup.create_dataset(
                     'labels',
-                    data = np.array(tile.labels, dtype='S')
+                    data = labelarray 
             )
+
+        if tile.coords:
+            coordsarray = np.array(str(tile.coords), dtype=object)
+            addcoords = tilegroup.create_dataset(
+                    'coords',
+                    data=coordsarray
+            )
+
+        if tile.slidetype:
+            slidetypearray = np.array(str(tile.slidetype), dtype=object)
+            addslidetype = tilegroup.create_dataset(
+                    'slidetype',
+                    data = slidetypearray
+            )
+
+        if tile.name:
+            namearray = np.array(str(tile.name), dtype=object)
+            addname = tilegroup.create_dataset(
+                    'name',
+                    data = namearray
+            )
+
+    def update(self, key, val, target):
+        if key not in self.h5.keys():
+            raise ValueError(f"key {key} does not exist. Use add.")
+
+        original_tile = self.get(key)
+        
+        if target == 'all':
+            assert isinstance(val, Tile), f"when replacing whole tile, must pass a Tile object"
+            assert original_tile.shape == val.image.shape, f"Cannot update a tile of shape {original_tile.shape} with a tile" \
+                                                  f"of shape {val.image.shape}. Shapes must match."
+            self.remove(key)
+            self.add(key, val)
+
+        elif target == 'image':
+            assert isinstance(val, np.ndarray), f"when replacing tile image must pass np.ndarray"
+            assert original_tile.shape == val.shape, f"Cannot update a tile of shape {original_tile.shape} with a tile" \
+                                                  f"of shape {val.shape}. Shapes must match."
+            self.h5[key]['tile'][...] = val
+
+        elif target == 'masks':
+            raise NotImplementedError
+
+        elif target == 'labels':
+            assert isinstance(val, collections.OrderedDict), f"when replacing labels must pass collections.OrderedDict of labels"
+            names = ['key','val']
+            formats = ['object','object']
+            dtype = dict(names = names, formats = formats)
+            labelarray = np.array(list(val.items()), dtype=dtype)
+            self.h5[key]['labels'][...] = labelarray
+
+        else:
+            raise KeyError('target must be all, image, masks, or labels')
+
+    def get(self, item):
+        if isinstance(item, (str, tuple)):
+            if str(item) not in self.h5.keys():
+                raise KeyError(f'key {item} does not exist')
+            tile = self.h5[str(item)]['tile'][:]
+            maskdict = {key:self.h5[str(item)]['masks'][key][...] for key in self.h5[str(item)]['masks'].keys()} if 'masks' in self.h5[str(item)].keys() else None 
+            name = self.h5[str(item)]['name'][...].item().decode('UTF-8') if 'name' in self.h5[str(item)].keys() else None
+            labels = self.h5[str(item)]['labels'][...] if 'labels' in self.h5[str(item)].keys() else None
+            coords = eval(self.h5[str(item)]['coords'][...].item()) if 'coords' in self.h5[str(item)].keys() else None
+            slidetype = self.h5[str(item)]['slidetype'][...].item().decode('UTF-8') if 'slidetype' in self.h5[str(item)].keys() else None 
+            return name, tile, maskdict, labels, coords, slidetype
+        if not isinstance(item, int):
+            raise KeyError(f"must getitem by coordinate(type tuple[int]) or index(type int)")
+        if item > len(self.h5)-1:
+            raise KeyError(f"index out of range, valid indices are ints in [0,{len(self.h5)-1}]")
+        tile = self.h5[list(self.h5.keys())[item]]['tile'][:]
+        maskdict = {key : self.h5[list(self.h5.keys())[item]]['masks'][key][...] for key in self.h5[list(self.h5.keys())[item]]['masks'].keys()} if 'masks' in self.h5[list(self.h5.keys())[item]].keys() else None 
+        name = self.h5[list(self.h5.keys())[item]]['name'][...].item().decode('UTF-8') if 'name' in self.h5[list(self.h5.keys())[item]].keys() else None
+        labels = self.h5[list(self.h5.keys())[item]]['labels'][...] if 'labels' in self.h5[list(self.h5.keys())[item]].keys() else None
+        coords = eval(self.h5[list(self.h5.keys())[item]]['coords'][...].item()) if 'coords' in self.h5[list(self.h5.keys())[item]].keys() else None
+        slidetype = self.h5[list(self.h5.keys())[item]]['slidetype'][...].item().decode('UTF-8') if 'slidetype' in self.h5[list(self.h5.keys())[item]].keys() else None
+        return name, tile, maskdict, labels, coords, slidetype
 
     def slice(self, slices):
         """
@@ -63,32 +181,19 @@ class _tiles_h5_manager:
             key(str): tile coordinates
             val(`~pathml.core.tile.Tile`): tile
         """
-        if not isinstance(slices,list[slice]):
-            raise KeyError(f"slices must of of type list[slice] but is {type(slices)} with elements {type(slices[0])}")
-        for key, val in self.h5.items():
-            val = val[slices:...]
-            yield key, val
+        for key in self.h5.keys():
+            name, tile, maskdict, labels, coords, slidetype = self.get(key) 
+            yield name, tile, maskdict, labels, coords, slidetype
 
-    def get(self, item):
-        if isinstance(item, tuple):
-            if str(item) not in self.h5.keys():
-                raise KeyError(f'key {item} does not exist')
-            tile = self.h5[str(item)]['tile'][:]
-            maskdict = {key:self.h5[str(item)]['masks'][key][:] for key in self.h5[str(item)]['masks'].keys()}
-            # TODO: decide on type for labels so they can be read back to tile
-            labels = None
-            return item, tile, maskdict, labels
-        if not isinstance(item, int):
-            raise KeyError(f"must getitem by coordinate(type tuple[int]) or index(type int)")
-        if item > len(self.h5)-1:
-            raise KeyError(f"index out of range, valid indices are ints in [0,{len(self.h5['tiles'].keys())-1}]")
-        tile = self.h5[list(self.h5.keys())[item]]['tile'][:]
-        maskdict = {key:self.h5[list(self.h5.keys())[item]]['masks'][key][:] for key in self.h5[list(self.h5.keys())[item]]['masks'].keys()} 
-        # TODO: decide on type for labels so they can be read back to tile
-        labels = None
-        return list(self.h5.keys())[item], tile, maskdict, labels
+    def reshape(self, shape):
+        """
+        Resample tiles to new shape. 
 
-    def update(self, key, tile):
+        Args:
+            shape: new shape of tile.
+
+        (support change inplace and return copy) 
+        """
         raise NotImplementedError
 
     def remove(self, key):
@@ -96,23 +201,19 @@ class _tiles_h5_manager:
         Remove tile from self.h5 by key.
         """
         if not isinstance(key, (str,tuple)):
-            raise KeyError(f'key must represent tuple, check valid keys in repr')
+            raise KeyError(f'key must be str or tuple, check valid keys in repr')
         if str(key) not in self.h5.keys():
             raise KeyError(f'key {key} is not in Tiles')
         del self.h5[str(key)]
 
 
-class _masks_h5_manager:
+class _masks_h5_manager(h5_manager):
     """
     Interface between masks object and data management on disk by h5py. 
     """
     def __init__(self):
-        path = tempfile.TemporaryFile()
-        f = h5py.File(path, 'w')
-        f.create_group("masks")
-        self.h5 = f
-        self.h5path = path
-        self.shape = None
+        super().__init__()
+        self.h5.create_group("masks")
 
     def add(self, key, mask):
         """
@@ -139,7 +240,7 @@ class _masks_h5_manager:
                            
     def update(self, key, mask):
         """
-        Update an existing mask
+        Update an existing mask.
 
         Args:
             key(str): key labeling mask
@@ -154,11 +255,10 @@ class _masks_h5_manager:
                                                   f"of shape {mask.shape}. Shapes must match."
 
         self.h5['masks'][key][...] = mask
-
                            
     def slice(self, slices):
         """
-        Generator to slice all masks in self.h5 extending numpy array slicing
+        Generator to slice all masks in self.h5 extending numpy array slicing.
 
         Args:
             slices: list where each element is an object of type slice indicating
@@ -172,6 +272,9 @@ class _masks_h5_manager:
         for key, val in self.h5.items():
             val = val[slices:...]
             yield key, val
+
+    def reshape(self, targetshape):
+        pass
 
     def get(self, item):
         if isinstance(item, str):
@@ -194,10 +297,6 @@ class _masks_h5_manager:
             raise KeyError('key is not in Masks')
         del self.h5['masks'][key]
 
+
 def read_h5(path):
     raise NotImplementedError
-    f = h5py.File(path, 'r+')
-    if f['tiles']:
-        pass
-    if f['masks']:
-        pass
