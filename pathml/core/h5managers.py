@@ -53,7 +53,7 @@ class _tiles_h5_manager(h5_manager):
         if not isinstance(key, (str, tuple)):
             raise ValueError(f"can not add type {type(key)}, key must be of type str or tuple")
         if str(key) in self.h5.keys():
-            print(f"overwriting data at {key}")
+           raise KeyError(f"Tile is already in tiles. Call remove or replace.") 
         if self.shape is None:
             self.shape = tile.image.shape
         if tile.image.shape != self.shape:
@@ -114,13 +114,15 @@ class _tiles_h5_manager(h5_manager):
             )
 
     def update(self, key, val, target):
+        key = str(key)
         if key not in self.h5.keys():
             raise ValueError(f"key {key} does not exist. Use add.")
 
-        original_tile = self.get(key)
+        _, original_tile, _, _, _, _ = self.get(key)
         
         if target == 'all':
-            assert isinstance(val, Tile), f"when replacing whole tile, must pass a Tile object"
+            #TODO: check somewhere
+            # assert isinstance(val, Tile), f"when replacing whole tile, must pass a Tile object"
             assert original_tile.shape == val.image.shape, f"Cannot update a tile of shape {original_tile.shape} with a tile" \
                                                   f"of shape {val.image.shape}. Shapes must match."
             self.remove(key)
@@ -136,7 +138,7 @@ class _tiles_h5_manager(h5_manager):
             raise NotImplementedError
 
         elif target == 'labels':
-            assert isinstance(val, collections.OrderedDict), f"when replacing labels must pass collections.OrderedDict of labels"
+            assert isinstance(val, (collections.OrderedDict, dict)), f"when replacing labels must pass collections.OrderedDict of labels"
             names = ['key','val']
             formats = ['object','object']
             dtype = dict(names = names, formats = formats)
