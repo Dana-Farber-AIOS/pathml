@@ -1,12 +1,13 @@
 import os
-
 import cv2
 import numpy as np
 import spams
 
-from pathml.utils import RGB_to_GREY, RGB_to_HSV, normalize_matrix_cols, RGB_to_OD
+import pathml.core
+# from pathml.core.tile import Tile
+# from pathml.core.slide_classes import HESlide
 
-from pathml.core.tile import Tile
+from pathml.utils import RGB_to_GREY, RGB_to_HSV, normalize_matrix_cols, RGB_to_OD
 
 
 # Base class
@@ -48,7 +49,7 @@ class MedianBlur(Transform):
         return cv2.medianBlur(image, ksize = self.kernel_size)
 
     def apply(self, tile):
-        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        assert isinstance(tile, pathml.core.tile.Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
         tile.image = self.F(tile.image)
 
 
@@ -73,7 +74,7 @@ class GaussianBlur(Transform):
         return out
 
     def apply(self, tile):
-        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        assert isinstance(tile, pathml.core.tile.Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
         tile.image = self.F(tile.image)
 
 
@@ -95,7 +96,7 @@ class BoxBlur(Transform):
         return cv2.boxFilter(image, ksize = (self.kernel_size, self.kernel_size), ddepth = -1)
 
     def apply(self, tile):
-        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        assert isinstance(tile, pathml.core.tile.Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
         tile.image = self.F(tile.image)
 
 
@@ -133,10 +134,10 @@ class BinaryThreshold(Transform):
         return out.astype(np.uint8)
 
     def apply(self, tile):
-        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        assert isinstance(tile, pathml.core.tile.Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
         assert self.mask_name is not None, f"Must enter a mask name"
         # TODO fix this type checking
-        if tile.slidetype in ["RGB", "HE", "IHC"]:
+        if issubclass(tile.slidetype, pathml.core.slide_classes.RGBSlide):
             im = RGB_to_GREY(tile.image)
         else:
             im = np.squeeze(tile.image)
@@ -173,7 +174,7 @@ class MorphOpen(Transform):
         return out
 
     def apply(self, tile):
-        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        assert isinstance(tile, pathml.core.tile.Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
         assert self.mask_name is not None, f"Must enter a mask name"
         m = np.copy(tile.masks[self.mask_name])
         out = self.F(m)
@@ -209,7 +210,7 @@ class MorphClose(Transform):
         return out
 
     def apply(self, tile):
-        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        assert isinstance(tile, pathml.core.tile.Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
         assert self.mask_name is not None, f"Must enter a mask name"
         m = np.copy(tile.masks[self.mask_name])
         out = self.F(m)
@@ -296,7 +297,7 @@ class ForegroundDetection(Transform):
         return mask_out.astype(np.uint8)
 
     def apply(self, tile):
-        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        assert isinstance(tile, pathml.core.tile.Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
         assert self.mask_name is not None, f"Must enter a mask name"
         m = tile.masks[self.mask_name]
         mask_out = self.F(m)
@@ -341,7 +342,7 @@ class SuperpixelInterpolation(Transform):
         return out
 
     def apply(self, tile):
-        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        assert isinstance(tile, pathml.core.tile.Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
         tile.image = self.F(tile.image)
 
 
@@ -652,8 +653,9 @@ class StainNormalizationHE(Transform):
         return im_reconstructed
 
     def apply(self, tile):
-        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
-        assert tile.slidetype == "HE", f"Input chunk has slidetype {tile.slidetype}. Must be HE"
+        assert isinstance(tile, pathml.core.tile.Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        assert issubclass(tile.slidetype, pathml.core.slide_classes.HESlide), \
+            f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
         tile.image = self.F(tile.image)
 
 
@@ -704,8 +706,9 @@ class NucleusDetectionHE(Transform):
         return thresholded
 
     def apply(self, tile):
-        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
-        assert tile.slidetype == "HE", f"Input chunk has slidetype {tile.slidetype}. Must be HE"
+        assert isinstance(tile, pathml.core.tile.Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        assert issubclass(tile.slidetype, pathml.core.slide_classes.HESlide), \
+            f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
         assert self.mask_name is not None, f"Must enter a mask name"
         nucleus_mask = self.F(tile.image)
         tile.masks.add(key = self.mask_name, mask = nucleus_mask)
@@ -771,7 +774,8 @@ class TissueDetectionHE(Transform):
         return tissue
 
     def apply(self, tile):
-        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
-        assert tile.slidetype == "HE"
+        assert isinstance(tile, pathml.core.tile.Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        assert issubclass(tile.slidetype, pathml.core.slide_classes.HESlide), \
+            f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
         mask = self.F(tile.image)
         tile.masks.add(key = self.mask_name, mask = mask)
