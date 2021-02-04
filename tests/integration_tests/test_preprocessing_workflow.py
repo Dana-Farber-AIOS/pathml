@@ -1,10 +1,10 @@
-from pathml.core.slide_he import HESlide
+from pathml.core.slide_classes import HESlide
 from pathml.preprocessing.pipeline import Pipeline
 from pathml.preprocessing.transforms import GaussianBlur, TissueDetectionHE
 
 
 def test_pipeline_1():
-    slide = HESlide("../testdata/small_HE.svs")
+    slide = HESlide("tests/testdata/small_HE.svs")
     pipeline = Pipeline([
         GaussianBlur(),
         TissueDetectionHE()

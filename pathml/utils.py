@@ -73,31 +73,6 @@ def plot_mask(im, mask_in, ax=None, color='red', downsample_factor=None):
     return ax
 
 
-def plot_extracted_tiles(data, downsample_factor=10, ax=None):
-    """
-    After extracting tiles, plot the locations of extracted tiles for visualization.
-    Overlays patch locations over original image.
-    """
-    assert data.tiles is not None, "Input data must have tiles"
-    # get size of tiles. Assumes all tiles are same size, and square
-    tile_size = data.tiles[0].array.shape[0]
-
-    if ax is None:
-        fig, ax = plt.subplots()
-
-    patches = []
-
-    for tile in data.tiles:
-        bbox = Rectangle(xy = (np.floor(tile.j / downsample_factor), np.floor(tile.i / downsample_factor)),
-                         width = np.floor(tile_size / downsample_factor),
-                         height = -np.floor(tile_size / downsample_factor))
-        patches.append(bbox)
-    p = PatchCollection(patches, edgecolor = 'None')
-    ax.imshow(data.image[::downsample_factor, ::downsample_factor])
-    ax.add_collection(p)
-    return ax
-
-
 def contour_centroid(contour):
     """
     Return the centroid of a contour, calculated using moments.
