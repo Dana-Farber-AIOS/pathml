@@ -54,7 +54,7 @@ class _tiles_h5_manager(h5_manager):
             raise ValueError(f"can not add type {type(key)}, key must be of type str or tuple")
         if str(key) in self.h5.keys():
             print(f"overwriting data at {key}")
-        if self.shape == None:
+        if self.shape is None:
             self.shape = tile.image.shape
         if tile.image.shape != self.shape:
             raise ValueError(f"Tiles contains tiles of shape {self.shape}, provided tile is of shape {tile.image.shape}"
@@ -122,12 +122,14 @@ class _tiles_h5_manager(h5_manager):
         if target == 'all':
             assert isinstance(val, Tile), f"when replacing whole tile, must pass a Tile object"
             assert original_tile.shape == val.image.shape, f"Cannot update a tile of shape {original_tile.shape} with a tile" \
-                                                  f"of shape {tile.image.shape}. Shapes must match."
+                                                  f"of shape {val.image.shape}. Shapes must match."
             self.remove(key)
             self.add(key, val)
 
         elif target == 'image':
             assert isinstance(val, np.ndarray), f"when replacing tile image must pass np.ndarray"
+            assert original_tile.shape == val.shape, f"Cannot update a tile of shape {original_tile.shape} with a tile" \
+                                                  f"of shape {val.shape}. Shapes must match."
             self.h5[key]['tile'][...] = val
 
         elif target == 'masks':
@@ -199,7 +201,7 @@ class _tiles_h5_manager(h5_manager):
         Remove tile from self.h5 by key.
         """
         if not isinstance(key, (str,tuple)):
-            raise KeyError(f'key must represent tuple, check valid keys in repr')
+            raise KeyError(f'key must be str or tuple, check valid keys in repr')
         if str(key) not in self.h5.keys():
             raise KeyError(f'key {key} is not in Tiles')
         del self.h5[str(key)]

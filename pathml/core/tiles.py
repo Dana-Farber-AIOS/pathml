@@ -31,7 +31,7 @@ class Tiles:
                     if not isinstance(val, Tile):
                         raise ValueError(f"dict vals must be Tile")
                 for key in tiles.keys():
-                    if not (isinstance(key, tuple) and list(map(type, key)) == [int, int]) or isinstance(key, str):
+                    if not ((isinstance(key, tuple) and list(map(type, key)) == [int, int]) or isinstance(key, str)):
                         raise ValueError(f"dict keys must be of type str or tuple[int]")
                 self._tiles = OrderedDict(tiles)
             # create Tiles from list
@@ -59,6 +59,7 @@ class Tiles:
         return len(self.h5manager.h5.keys())
 
     def __getitem__(self, item):
+        # TODO: Should move this logic into h5manager if possible. Fix recursive import problem
         name, tile, maskdict, labels, coords, slidetype = self.h5manager.get(item) 
         return Tile(tile, masks=Masks(maskdict), labels=labels, name=str(name), coords=coords, slidetype=slidetype)
 
@@ -99,7 +100,7 @@ class Tiles:
             newtile = Tile(image=newimage, masks = newmasks, labels=labels, coords=coords, name=name, slidetype=slidetype) 
 
             sliced.add(name, newtile)
-            return sliced
+        return sliced
 
     def remove(self, key):
         """
