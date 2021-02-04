@@ -106,7 +106,7 @@ class BinaryThreshold(Transform):
 
     Args:
         use_otsu (bool): Whether to use Otsu's method to automatically determine optimal threshold. Defaults to True.
-        threshold (int): Specified threshold. Ignored if use_otsu==True. Defaults to 0.
+        threshold (int): Specified threshold. Ignored if ``use_otsu is True``. Defaults to 0.
         mask_name (str): Name of mask that is created.
 
     References:
@@ -225,7 +225,7 @@ class ForegroundDetection(Transform):
     Args:
         min_region_size (int): Minimum area of detected foreground regions, in pixels. Defaults to 5000.
         max_hole_size (int): Maximum size of allowed holes in foreground regions, in pixels.
-            Ignored if outer_contours_only=True. Defaults to 1500.
+            Ignored if ``outer_contours_only is True``. Defaults to 1500.
         outer_contours_only (bool): If true, ignore holes in detected foreground regions. Defaults to False.
         mask_name (str): Name of mask on which to apply transform
 
@@ -375,7 +375,7 @@ class StainNormalizationHE(Transform):
         optical_density_threshold (float): Threshold for removing low-optical density pixels when estimating stain
             vectors. Defaults to 0.15
         sparsity_regularizer (float): Regularization parameter for dictionary learning when estimating stain vector
-            using vahadane method. Ignored if ``concentration_estimation_method!='vahadane'``. Defaults to 1.0
+            using vahadane method. Ignored if ``concentration_estimation_method != 'vahadane'``. Defaults to 1.0
         angular_percentile (float): Percentile for stain vector selection when estimating stain vector
             using Macenko method. Ignored if ``concentration_estimation_method != 'macenko'``. Defaults to 0.01
         regularizer_lasso (float): regularization parameter for lasso solver. Defaults to 0.01.
@@ -610,7 +610,8 @@ class StainNormalizationHE(Transform):
     def _reconstruct_image(self, pixel_intensities):
         """
         Reconstruct an image from pixel intensities. Uses reference stain matrix and max_c
-        from `fit_to_reference`, if that method has been called, otherwise uses defaults.
+        from :func:`~pathml.preprocessing.transforms.StainNormalizationHE.fit_to_reference`, if that method has been
+        called, otherwise uses defaults.
 
         Args:
             pixel_intensities (np.ndarray): matrix of stain intensities for each pixel.
@@ -717,7 +718,7 @@ class TissueDetectionHE(Transform):
     foreground detection.
 
     Args:
-        :param use_saturation (bool): Whether to convert to HSV and use saturation channel for tissue detection.
+        use_saturation (bool): Whether to convert to HSV and use saturation channel for tissue detection.
             If False, convert from RGB to greyscale and use greyscale image_ref for tissue detection. Defaults to True.
         blur_ksize (int): kernel size used to apply median blurring. Defaults to 15.
         threshold (int): threshold for binary thresholding. If None, uses Otsu's method. Defaults to None.

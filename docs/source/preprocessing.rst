@@ -9,16 +9,6 @@ Getting started with premade pipelines
 
 The general preprocessing workflow is:
 
-Annotating Images
------------------
-.. autoclass:: pathml.preprocessing.masks.Masks
-    :members:
-
-Tiling Images
--------------
-.. automodule:: pathml.preprocessing.tiling
-    :members:
-
 .. image:: _static/images/preprocess_schematic_single.png
 
 PathML comes with preprocessing pipelines ready to use out of the box.
