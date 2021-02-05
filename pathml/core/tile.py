@@ -1,4 +1,5 @@
 import numpy as np
+from collections import OrderedDict
 
 from pathml.core.masks import Masks
 
@@ -23,7 +24,7 @@ class Tile:
         assert isinstance(masks, (type(None), Masks, dict)), \
             f"masks is of type {type(masks)} but must be of type pathml.core.masks.Masks or dict"
         assert (isinstance(coords, tuple) and len(coords) == 2) or isinstance(coords, None), "coords must be a tuple of (i, j)"
-        assert isinstance(labels, (type(None), dict))
+        assert isinstance(labels, (type(None), dict, type(OrderedDict)))
         assert isinstance(name, (str, type(None))), f"name is of type {type(name)} but must be of type str or None"
         self.image = image
         # TODO: check that masks have right shape

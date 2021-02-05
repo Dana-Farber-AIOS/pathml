@@ -1,6 +1,7 @@
 import h5py
 import tempfile
 import ast
+from collections import OrderedDict
 
 import numpy as np
 
@@ -83,10 +84,7 @@ class _tiles_h5_manager(h5_manager):
         #   str -> variable length UTF-8
         #   bytes (from str) -> ASCII
         if tile.labels:
-            names = ['key','val']
-            formats = ['object','object']
-            dtype = dict(names = names, formats = formats)
-            labelarray = np.array(list(tile.labels.items()), dtype=dtype)
+            labelarray = np.array(list(tile.labels.items()), dtype=object)
             addlabels = tilegroup.create_dataset(
                     'labels',
                     data = labelarray 
@@ -138,11 +136,8 @@ class _tiles_h5_manager(h5_manager):
             raise NotImplementedError
 
         elif target == 'labels':
-            assert isinstance(val, (collections.OrderedDict, dict)), f"when replacing labels must pass collections.OrderedDict of labels"
-            names = ['key','val']
-            formats = ['object','object']
-            dtype = dict(names = names, formats = formats)
-            labelarray = np.array(list(val.items()), dtype=dtype)
+            assert isinstance(val, (OrderedDict, dict)), f"when replacing labels must pass collections.OrderedDict of labels"
+            labelarray = np.array(list(val.items()), dtype=object)
             self.h5[key]['labels'][...] = labelarray
 
         else:
@@ -155,7 +150,7 @@ class _tiles_h5_manager(h5_manager):
             tile = self.h5[str(item)]['tile'][:]
             maskdict = {key:self.h5[str(item)]['masks'][key][...] for key in self.h5[str(item)]['masks'].keys()} if 'masks' in self.h5[str(item)].keys() else None 
             name = self.h5[str(item)]['name'][...].item().decode('UTF-8') if 'name' in self.h5[str(item)].keys() else None
-            labels = self.h5[str(item)]['labels'][...] if 'labels' in self.h5[str(item)].keys() else None
+            labels = dict(self.h5[str(item)]['labels'][...].astype(str)) if 'labels' in self.h5[str(item)].keys() else None
             coords = eval(self.h5[str(item)]['coords'][...].item()) if 'coords' in self.h5[str(item)].keys() else None
             slidetype = self.h5[str(item)]['slidetype'][...].item().decode('UTF-8') if 'slidetype' in self.h5[str(item)].keys() else None 
             return name, tile, maskdict, labels, coords, slidetype
