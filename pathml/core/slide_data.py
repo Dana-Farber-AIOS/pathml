@@ -79,6 +79,9 @@ class SlideData:
         if tile_stride is None:
             tile_stride = tile_size
 
+        if self.tiles is None:
+            self.tiles = Tiles()
+
         for tile in self.generate_tiles(level = level, shape = tile_size, stride = tile_stride, pad = tile_pad):
             pipeline.apply(tile)
             key = str(tile.coords)

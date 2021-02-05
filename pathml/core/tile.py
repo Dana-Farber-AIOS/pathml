@@ -35,10 +35,9 @@ class Tile:
                     raise ValueError(f"mask is of shape {val.shape} but must match tile shape {self.image.shape}")
             self.masks = Masks(masks)
         elif masks is None:
-            self.masks = masks
+            self.masks = Masks()
         self.name = name
         self.coords = coords
-        self.masks = masks
         self.slidetype = slidetype
         self.labels = labels
 
