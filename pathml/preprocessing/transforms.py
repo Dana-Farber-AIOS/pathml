@@ -253,12 +253,12 @@ class ForegroundDetection(Transform):
             # no contours found --> return empty mask
             mask_out = np.zeros_like(mask)
         elif self.outer_contours_only:
-            # remove regions below area threshold
-            contour_thresh = np.array([cv2.contourArea(c) > self.min_region_size for c in contours])
-            final_contours = np.array(contours, dtype=object)[contour_thresh]
             out = np.zeros_like(mask, dtype = np.int8)
-            # fill contours
-            cv2.fillPoly(out, final_contours, 255)
+            for c in contours:
+                # ignore contours below size threshold
+                if cv2.contourArea(c) > self.min_region_size:
+                    # fill contours
+                    cv2.fillPoly(out, [c], 255)
             mask_out = out
         else:
             # separate outside and inside contours (region boundaries vs. holes in regions)
@@ -274,23 +274,27 @@ class ForegroundDetection(Transform):
             # holes must have parents above area threshold
             hole_parent_thresh = [p in np.argwhere(contour_size_thresh).flatten() for p in hierarchy[:, 3]]
 
-            # convert to np arrays so that we can do vectorized '&'. see: https://stackoverflow.com/a/22647006
-            contours = np.array(contours, dtype=object)
             outside_contours = np.array(outside_contours)
             hole_contours = np.array(hole_contours)
             contour_size_thresh = np.array(contour_size_thresh)
             hole_size_thresh = np.array(hole_size_thresh)
             hole_parent_thresh = np.array(hole_parent_thresh)
 
-            final_outside_contours = contours[outside_contours & contour_size_thresh]
-            final_hole_contours = contours[hole_contours & hole_size_thresh & hole_parent_thresh]
-
             # now combine outside and inside contours into final mask
             out1 = np.zeros_like(mask, dtype = np.int8)
             out2 = np.zeros_like(mask, dtype = np.int8)
-            # fill outside contours, inside contours, then subtract
-            cv2.fillPoly(out1, final_outside_contours, 255)
-            cv2.fillPoly(out2, final_hole_contours, 255)
+
+            # loop thru contours
+            for cnt, outside, size_thresh, hole, hole_size_thresh, hole_parent_thresh in zip(
+                    contours, outside_contours, contour_size_thresh, hole_contours, hole_size_thresh, hole_parent_thresh
+            ):
+                if outside and size_thresh:
+                    # in this case, the contour is an outside contour
+                    cv2.fillPoly(out1, [cnt], 255)
+                if hole and hole_size_thresh and hole_parent_thresh:
+                    # in this case, the contour is an inside contour
+                    cv2.fillPoly(out2, [cnt], 255)
+
             mask_out = (out1 - out2)
 
         return mask_out.astype(np.uint8)
