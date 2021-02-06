@@ -29,8 +29,19 @@ def test_generate_tiles_he(he_slide, shape, stride, pad, level):
 
 @pytest.mark.parametrize("pad", [True, False])
 def test_generate_tiles_padding(he_slide, pad):
-    # calc by hand how many tiles we expect to get with/without padding for small_HE.svs with specified tile size
-    pass
+    shape = 300
+    stride = 300
+
+    tiles = list(he_slide.generate_tiles(shape = shape, stride = stride, pad = pad))
+
+    # he_slide.slide.get_image_shape() --> (2967, 2220)
+    # if no padding, expect: 9*7 = 63 tiles
+    # if padding, expect: 10*8 - 80 tiles
+
+    if not pad:
+        assert len(tiles) == 63
+    else:
+        assert len(tiles) == 80
 
 
 @pytest.mark.parametrize("slide", [HESlide, RGBSlide])
