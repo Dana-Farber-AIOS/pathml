@@ -13,8 +13,8 @@ whole-slide pathology images, including defining preprocessing pipelines, traini
 benchmarking model performance on standardized datasets, sharing preprocessing pipelines and pretrained models,
 and more.
 
-Development is led by the Data Science Team in the Department of Informatics and Analytics at Dana-Farber Cancer
-Institute.
+Development is led by the AI Operations and Data Science Group in the Department of Informatics and Analytics at
+Dana-Farber Cancer Institute.
 
 
 .. toctree::
@@ -28,6 +28,7 @@ Institute.
    :maxdepth: 2
    :caption: Preprocessing
 
+   loading_slides
    preprocessing
    custom_pipelines
    pipeline_repo
@@ -50,7 +51,9 @@ Institute.
    :maxdepth: 2
    :caption: Examples
 
-   examples
+   examples/link_stain_normalization
+   examples/link_nucleus_detection
+   examples/link_preprocessing_pipeline
 
 .. toctree::
    :maxdepth: 2

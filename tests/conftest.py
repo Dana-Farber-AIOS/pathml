@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 import openslide
 
-
+from pathml.core.slide_classes import HESlide
 from pathml.core.tile import Tile
 from pathml.core.masks import Masks
 
@@ -25,5 +25,5 @@ def tileHE():
     mask[200:400, 200:300] = 1
 
     m = Masks(masks = {"testmask" : mask})
-    tile = Tile(image = im_np_rgb, coords = (0, 0), masks = m, slidetype = "HE")
+    tile = Tile(image = im_np_rgb, coords = (0, 0), masks = m, slidetype = HESlide)
     return tile

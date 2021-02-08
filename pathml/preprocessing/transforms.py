@@ -1,12 +1,13 @@
 import os
-
 import cv2
 import numpy as np
 import spams
 
-from pathml.utils import RGB_to_GREY, RGB_to_HSV, normalize_matrix_cols, RGB_to_OD
+import pathml.core
+# from pathml.core.tile import Tile
+# from pathml.core.slide_classes import HESlide
 
-from pathml.core.tile import Tile
+from pathml.utils import RGB_to_GREY, RGB_to_HSV, normalize_matrix_cols, RGB_to_OD
 
 
 # Base class
@@ -48,7 +49,7 @@ class MedianBlur(Transform):
         return cv2.medianBlur(image, ksize = self.kernel_size)
 
     def apply(self, tile):
-        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
         tile.image = self.F(tile.image)
 
 
@@ -73,7 +74,7 @@ class GaussianBlur(Transform):
         return out
 
     def apply(self, tile):
-        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
         tile.image = self.F(tile.image)
 
 
@@ -95,7 +96,7 @@ class BoxBlur(Transform):
         return cv2.boxFilter(image, ksize = (self.kernel_size, self.kernel_size), ddepth = -1)
 
     def apply(self, tile):
-        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
         tile.image = self.F(tile.image)
 
 
@@ -105,15 +106,15 @@ class BinaryThreshold(Transform):
     If input image is RGB it is first converted to greyscale, otherwise the input must have 1 channel.
 
     Args:
-        use_otsu (bool): Whether to use Otsu's method to automatically determine optimal threshold. Defaults to True.
-        threshold (int): Specified threshold. Ignored if use_otsu==True. Defaults to 0.
         mask_name (str): Name of mask that is created.
+        use_otsu (bool): Whether to use Otsu's method to automatically determine optimal threshold. Defaults to True.
+        threshold (int): Specified threshold. Ignored if ``use_otsu is True``. Defaults to 0.
 
     References:
         Otsu, N., 1979. A threshold selection method from gray-level histograms. IEEE transactions on systems,
         man, and cybernetics, 9(1), pp.62-66.
     """
-    def __init__(self, use_otsu=True, threshold=0, mask_name=None):
+    def __init__(self, mask_name=None, use_otsu=True, threshold=0):
         self.threshold = threshold
         self.max_value = 255
         self.use_otsu = use_otsu
@@ -133,10 +134,9 @@ class BinaryThreshold(Transform):
         return out.astype(np.uint8)
 
     def apply(self, tile):
-        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
-        assert self.mask_name is not None, f"Must enter a mask name"
-        # TODO fix this type checking
-        if tile.slidetype in ["RGB", "HE", "IHC"]:
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        assert self.mask_name is not None, "mask_name is None. Must supply a valid mask name"
+        if issubclass(tile.slidetype, pathml.core.slide_classes.RGBSlide):
             im = RGB_to_GREY(tile.image)
         else:
             im = np.squeeze(tile.image)
@@ -152,12 +152,12 @@ class MorphOpen(Transform):
     Operates on a binary mask.
 
     Args:
+        mask_name (str): Name of mask on which to apply transform
         kernel_size (int): Size of kernel for default square kernel. Ignored if a custom kernel is specified.
             Defaults to 5.
         n_iterations (int): Number of opening operations to perform. Defaults to 1.
-        mask_name (str): Name of mask on which to apply transform
     """
-    def __init__(self, kernel_size=5, n_iterations=1, mask_name=None):
+    def __init__(self, mask_name=None, kernel_size=5, n_iterations=1):
         self.kernel_size = kernel_size
         self.n_iterations = n_iterations
         self.mask_name = mask_name
@@ -173,8 +173,8 @@ class MorphOpen(Transform):
         return out
 
     def apply(self, tile):
-        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
-        assert self.mask_name is not None, f"Must enter a mask name"
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        assert self.mask_name is not None, "mask_name is None. Must supply a valid mask name"
         m = np.copy(tile.masks[self.mask_name])
         out = self.F(m)
         tile.masks[self.mask_name] = out
@@ -187,13 +187,13 @@ class MorphClose(Transform):
     Operates on a binary mask.
 
     Args:
+        mask_name (str): Name of mask on which to apply transform
         kernel_size (int): Size of kernel for default square kernel. Ignored if a custom kernel is specified.
             Defaults to 5.
         n_iterations (int): Number of opening operations to perform. Defaults to 1.
-        mask_name (str): Name of mask on which to apply transform
     """
 
-    def __init__(self, kernel_size=5, n_iterations=1, mask_name=None):
+    def __init__(self, mask_name=None, kernel_size=5, n_iterations=1):
         self.kernel_size = kernel_size
         self.n_iterations = n_iterations
         self.mask_name = mask_name
@@ -209,8 +209,8 @@ class MorphClose(Transform):
         return out
 
     def apply(self, tile):
-        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
-        assert self.mask_name is not None, f"Must enter a mask name"
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        assert self.mask_name is not None, "mask_name is None. Must supply a valid mask name"
         m = np.copy(tile.masks[self.mask_name])
         out = self.F(m)
         tile.masks[self.mask_name] = out
@@ -225,7 +225,7 @@ class ForegroundDetection(Transform):
     Args:
         min_region_size (int): Minimum area of detected foreground regions, in pixels. Defaults to 5000.
         max_hole_size (int): Maximum size of allowed holes in foreground regions, in pixels.
-            Ignored if outer_contours_only=True. Defaults to 1500.
+            Ignored if ``outer_contours_only is True``. Defaults to 1500.
         outer_contours_only (bool): If true, ignore holes in detected foreground regions. Defaults to False.
         mask_name (str): Name of mask on which to apply transform
 
@@ -234,7 +234,7 @@ class ForegroundDetection(Transform):
         Weakly Supervised Computational Pathology on Whole Slide Images. arXiv preprint arXiv:2004.09666.
     """
 
-    def __init__(self, min_region_size=5000, max_hole_size=1500, outer_contours_only=False, mask_name=None):
+    def __init__(self, mask_name=None, min_region_size=5000, max_hole_size=1500, outer_contours_only=False):
         self.min_region_size = min_region_size
         self.max_hole_size = max_hole_size
         self.outer_contours_only = outer_contours_only
@@ -253,12 +253,12 @@ class ForegroundDetection(Transform):
             # no contours found --> return empty mask
             mask_out = np.zeros_like(mask)
         elif self.outer_contours_only:
-            # remove regions below area threshold
-            contour_thresh = np.array([cv2.contourArea(c) > self.min_region_size for c in contours])
-            final_contours = np.array(contours)[contour_thresh]
             out = np.zeros_like(mask, dtype = np.int8)
-            # fill contours
-            cv2.fillPoly(out, final_contours, 255)
+            for c in contours:
+                # ignore contours below size threshold
+                if cv2.contourArea(c) > self.min_region_size:
+                    # fill contours
+                    cv2.fillPoly(out, [c], 255)
             mask_out = out
         else:
             # separate outside and inside contours (region boundaries vs. holes in regions)
@@ -274,30 +274,34 @@ class ForegroundDetection(Transform):
             # holes must have parents above area threshold
             hole_parent_thresh = [p in np.argwhere(contour_size_thresh).flatten() for p in hierarchy[:, 3]]
 
-            # convert to np arrays so that we can do vectorized '&'. see: https://stackoverflow.com/a/22647006
-            contours = np.array(contours)
             outside_contours = np.array(outside_contours)
             hole_contours = np.array(hole_contours)
             contour_size_thresh = np.array(contour_size_thresh)
             hole_size_thresh = np.array(hole_size_thresh)
             hole_parent_thresh = np.array(hole_parent_thresh)
 
-            final_outside_contours = contours[outside_contours & contour_size_thresh]
-            final_hole_contours = contours[hole_contours & hole_size_thresh & hole_parent_thresh]
-
             # now combine outside and inside contours into final mask
             out1 = np.zeros_like(mask, dtype = np.int8)
             out2 = np.zeros_like(mask, dtype = np.int8)
-            # fill outside contours, inside contours, then subtract
-            cv2.fillPoly(out1, final_outside_contours, 255)
-            cv2.fillPoly(out2, final_hole_contours, 255)
+
+            # loop thru contours
+            for cnt, outside, size_thresh, hole, hole_size_thresh, hole_parent_thresh in zip(
+                    contours, outside_contours, contour_size_thresh, hole_contours, hole_size_thresh, hole_parent_thresh
+            ):
+                if outside and size_thresh:
+                    # in this case, the contour is an outside contour
+                    cv2.fillPoly(out1, [cnt], 255)
+                if hole and hole_size_thresh and hole_parent_thresh:
+                    # in this case, the contour is an inside contour
+                    cv2.fillPoly(out2, [cnt], 255)
+
             mask_out = (out1 - out2)
 
         return mask_out.astype(np.uint8)
 
     def apply(self, tile):
-        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
-        assert self.mask_name is not None, f"Must enter a mask name"
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        assert self.mask_name is not None, "mask_name is None. Must supply a valid mask name"
         m = tile.masks[self.mask_name]
         mask_out = self.F(m)
         tile.masks[self.mask_name] = mask_out
@@ -341,7 +345,7 @@ class SuperpixelInterpolation(Transform):
         return out
 
     def apply(self, tile):
-        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
         tile.image = self.F(tile.image)
 
 
@@ -375,7 +379,7 @@ class StainNormalizationHE(Transform):
         optical_density_threshold (float): Threshold for removing low-optical density pixels when estimating stain
             vectors. Defaults to 0.15
         sparsity_regularizer (float): Regularization parameter for dictionary learning when estimating stain vector
-            using vahadane method. Ignored if ``concentration_estimation_method!='vahadane'``. Defaults to 1.0
+            using vahadane method. Ignored if ``concentration_estimation_method != 'vahadane'``. Defaults to 1.0
         angular_percentile (float): Percentile for stain vector selection when estimating stain vector
             using Macenko method. Ignored if ``concentration_estimation_method != 'macenko'``. Defaults to 0.01
         regularizer_lasso (float): regularization parameter for lasso solver. Defaults to 0.01.
@@ -610,7 +614,8 @@ class StainNormalizationHE(Transform):
     def _reconstruct_image(self, pixel_intensities):
         """
         Reconstruct an image from pixel intensities. Uses reference stain matrix and max_c
-        from `fit_to_reference`, if that method has been called, otherwise uses defaults.
+        from :func:`~pathml.preprocessing.transforms.StainNormalizationHE.fit_to_reference`, if that method has been
+        called, otherwise uses defaults.
 
         Args:
             pixel_intensities (np.ndarray): matrix of stain intensities for each pixel.
@@ -651,8 +656,9 @@ class StainNormalizationHE(Transform):
         return im_reconstructed
 
     def apply(self, tile):
-        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
-        assert tile.slidetype == "HE", f"Input chunk has slidetype {tile.slidetype}. Must be HE"
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        assert issubclass(tile.slidetype, pathml.core.slide_classes.HESlide), \
+            f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
         tile.image = self.F(tile.image)
 
 
@@ -675,8 +681,8 @@ class NucleusDetectionHE(Transform):
         biomedical and health informatics, 23(3), pp.1316-1328.
     """
 
-    def __init__(self, stain_estimation_method="vahadane", superpixel_region_size=10,
-                 n_iter=30, mask_name=None, **stain_kwargs):
+    def __init__(self, mask_name=None, stain_estimation_method="vahadane", superpixel_region_size=10,
+                 n_iter=30, **stain_kwargs):
         self.stain_estimation_method = stain_estimation_method
         self.superpixel_region_size = superpixel_region_size
         self.n_iter = n_iter
@@ -684,7 +690,8 @@ class NucleusDetectionHE(Transform):
         self.mask_name = mask_name
 
     def __repr__(self):
-        return f"NucleusDetectionHE(stain_estimation_method={self.stain_estimation_method}, " \
+        return f"NucleusDetectionHE(mask_name={self.mask_name}, " \
+               f"stain_estimation_method={self.stain_estimation_method}, " \
                f"superpixel_region_size={self.superpixel_region_size}, n_iter={self.n_iter}, " \
                f"stain_kwargs={self.stain_kwargs})"
 
@@ -703,9 +710,10 @@ class NucleusDetectionHE(Transform):
         return thresholded
 
     def apply(self, tile):
-        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
-        assert tile.slidetype == "HE", f"Input chunk has slidetype {tile.slidetype}. Must be HE"
-        assert self.mask_name is not None, f"Must enter a mask name"
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        assert self.mask_name is not None, "mask_name is None. Must supply a valid mask name"
+        assert issubclass(tile.slidetype, pathml.core.slide_classes.HESlide), \
+            f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
         nucleus_mask = self.F(tile.image)
         tile.masks.add(key = self.mask_name, mask = nucleus_mask)
 
@@ -717,7 +725,7 @@ class TissueDetectionHE(Transform):
     foreground detection.
 
     Args:
-        :param use_saturation (bool): Whether to convert to HSV and use saturation channel for tissue detection.
+        use_saturation (bool): Whether to convert to HSV and use saturation channel for tissue detection.
             If False, convert from RGB to greyscale and use greyscale image_ref for tissue detection. Defaults to True.
         blur_ksize (int): kernel size used to apply median blurring. Defaults to 15.
         threshold (int): threshold for binary thresholding. If None, uses Otsu's method. Defaults to None.
@@ -730,8 +738,8 @@ class TissueDetectionHE(Transform):
         mask_name (str): name for new mask
     """
 
-    def __init__(self, use_saturation=True, blur_ksize=17, threshold=None, morph_n_iter=3, morph_k_size=7,
-                 min_region_size=5000, max_hole_size=1500, outer_contours_only=False, mask_name=None):
+    def __init__(self, mask_name=None, use_saturation=True, blur_ksize=17, threshold=None, morph_n_iter=3, morph_k_size=7,
+                 min_region_size=5000, max_hole_size=1500, outer_contours_only=False):
         self.use_sat = use_saturation
         self.blur_ksize = blur_ksize
         self.threshold = threshold
@@ -743,11 +751,10 @@ class TissueDetectionHE(Transform):
         self.mask_name = mask_name
 
     def __repr__(self):
-        return f"TissueDetectionHE(use_sat = {self.use_sat}, blur_ksize = {self.blur_ksize}, " \
-               f"threshold = {self.threshold}, morph_n_iter = {self.morph_n_iter}, " \
-               f"morph_k_size = {self.morph_k_size}, min_region_size = {self.min_region_size}, " \
-               f"max_hole_size = {self.max_hole_size}, outer_contours_only = {self.outer_contours_only}, " \
-               f"mask_name = {self.mask_name})"
+        return f"TissueDetectionHE(mask_name={self.mask_name}, use_sat={self.use_sat}, blur_ksize={self.blur_ksize}, " \
+               f"threshold={self.threshold}, morph_n_iter={self.morph_n_iter}, " \
+               f"morph_k_size={self.morph_k_size}, min_region_size={self.min_region_size}, " \
+               f"max_hole_size={self.max_hole_size}, outer_contours_only={self.outer_contours_only})"
 
     def F(self, image):
         assert image.dtype == np.uint8, f"Input image dtype {image.dtype} must be np.uint8"
@@ -770,7 +777,9 @@ class TissueDetectionHE(Transform):
         return tissue
 
     def apply(self, tile):
-        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
-        assert tile.slidetype == "HE"
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        assert self.mask_name is not None, "mask_name is None. Must supply a valid mask name"
+        assert issubclass(tile.slidetype, pathml.core.slide_classes.HESlide), \
+            f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
         mask = self.F(tile.image)
         tile.masks.add(key = self.mask_name, mask = mask)

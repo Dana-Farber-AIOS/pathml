@@ -101,7 +101,7 @@ class BioFormatsBackend(SlideBackend):
         filename (str): path to image file on disk
     """
     def __init__(self, filename):
-        self.filename = filename
+        """self.filename = filename
         # init java virtual machine
         javabridge.start_vm(class_path = bioformats.JARS)
         # java maximum array size of 2GB constrains image size
@@ -115,7 +115,7 @@ class BioFormatsBackend(SlideBackend):
         self.twodshape = (sizex, sizey)
         self.threedshape = (sizex, sizey, sizez)
         self.fourdshape = (sizex, sizey, sizez, sizec)
-        self.imsize = sizex * sizey * sizez * sizec
+        self.imsize = sizex * sizey * sizez * sizec"""
         raise NotImplementedError
 
     def extract_region(self, location, size, **kwargs):
