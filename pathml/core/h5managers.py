@@ -56,7 +56,7 @@ class _tiles_h5_manager(_h5_manager):
         if not isinstance(key, (str, tuple)):
             raise ValueError(f"can not add type {type(key)}, key must be of type str or tuple")
         if str(key) in self.h5.keys():
-            print(f"overwriting data at {key}")
+           raise KeyError(f"Tile is already in tiles. Call remove or replace.") 
         if self.shape is None:
             self.shape = tile.image.shape
         if tile.image.shape != self.shape:
@@ -86,10 +86,7 @@ class _tiles_h5_manager(_h5_manager):
         #   str -> variable length UTF-8
         #   bytes (from str) -> ASCII
         if tile.labels:
-            names = ['key', 'val']
-            formats = ['object', 'object']
-            dtype = dict(names = names, formats = formats)
-            labelarray = np.array(list(tile.labels.items()), dtype = dtype)
+            labelarray = np.array(list(tile.labels.items()), dtype=object)
             addlabels = tilegroup.create_dataset(
                 'labels',
                 data = labelarray
@@ -117,13 +114,15 @@ class _tiles_h5_manager(_h5_manager):
             )
 
     def update(self, key, val, target):
+        key = str(key)
         if key not in self.h5.keys():
             raise ValueError(f"key {key} does not exist. Use add.")
-
-        original_tile = self.get(key)
-
+         
+        _, original_tile, _, _, _, _ = self.get(key)
+        
         if target == 'all':
-            assert isinstance(val, Tile), f"when replacing whole tile, must pass a Tile object"
+            #TODO: check somewhere
+            # assert isinstance(val, Tile), f"when replacing whole tile, must pass a Tile object"
             assert original_tile.shape == val.image.shape, f"Cannot update a tile of shape {original_tile.shape} with a tile" \
                                                            f"of shape {val.image.shape}. Shapes must match."
             self.remove(key)
@@ -139,11 +138,8 @@ class _tiles_h5_manager(_h5_manager):
             raise NotImplementedError
 
         elif target == 'labels':
-            assert isinstance(val, OrderedDict), f"when replacing labels must pass collections.OrderedDict of labels"
-            names = ['key', 'val']
-            formats = ['object', 'object']
-            dtype = dict(names = names, formats = formats)
-            labelarray = np.array(list(val.items()), dtype = dtype)
+            assert isinstance(val, (OrderedDict, dict)), f"when replacing labels must pass collections.OrderedDict of labels"
+            labelarray = np.array(list(val.items()), dtype=object)
             self.h5[key]['labels'][...] = labelarray
 
         else:
@@ -154,11 +150,9 @@ class _tiles_h5_manager(_h5_manager):
             if str(item) not in self.h5.keys():
                 raise KeyError(f'key {item} does not exist')
             tile = self.h5[str(item)]['tile'][:]
-            maskdict = {key: self.h5[str(item)]['masks'][key][...] for key in
-                        self.h5[str(item)]['masks'].keys()} if 'masks' in self.h5[str(item)].keys() else None
-            name = self.h5[str(item)]['name'][...].item().decode('UTF-8') if 'name' in self.h5[
-                str(item)].keys() else None
-            labels = self.h5[str(item)]['labels'][...] if 'labels' in self.h5[str(item)].keys() else None
+            maskdict = {key:self.h5[str(item)]['masks'][key][...] for key in self.h5[str(item)]['masks'].keys()} if 'masks' in self.h5[str(item)].keys() else None 
+            name = self.h5[str(item)]['name'][...].item().decode('UTF-8') if 'name' in self.h5[str(item)].keys() else None
+            labels = dict(self.h5[str(item)]['labels'][...].astype(str)) if 'labels' in self.h5[str(item)].keys() else None
             coords = eval(self.h5[str(item)]['coords'][...].item()) if 'coords' in self.h5[str(item)].keys() else None
             slidetype = self.h5[str(item)]['slidetype'][...].item().decode('UTF-8') if 'slidetype' in self.h5[
                 str(item)].keys() else None
@@ -196,9 +190,8 @@ class _tiles_h5_manager(_h5_manager):
             val(pathml.core.tile.Tile): tile
         """
         for key in self.h5.keys():
-            name, tile, maskdict, labels, coords, slidetype = self.get(key)
-            yield name, tile, maskdict, labels, coords, slidetype
-
+            yield self.get(key)
+            
     def reshape(self, shape):
         """
         Resample tiles to new shape. 
@@ -283,11 +276,8 @@ class _masks_h5_manager(_h5_manager):
             key(str): mask key
             val(np.ndarray): mask
         """
-        if not isinstance(slices, list) and all([isinstance(s, slice) for s in slices]):
-            raise KeyError(f"slices must of of type list[slice] but is {type(slices)} with elements {type(slices[0])}")
-        for key, val in self.h5.items():
-            val = val[slices:...]
-            yield key, val
+        for key in self.h5['masks'].keys():
+            yield key, self.get(key) 
 
     def reshape(self, targetshape):
         pass

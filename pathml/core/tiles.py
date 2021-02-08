@@ -87,7 +87,7 @@ class Tiles:
             slices: list where each element is an object of type slice indicating
                     how the dimension should be sliced
         """
-        if not isinstance(slices,list) and (isinstance(slicer,slice) for slicer in slices):
+        if not (isinstance(slices,list) and (isinstance(a,slice) for a in slices)):
             raise KeyError(f"slices must of of type list[slice] but is {type(slices)} with elements {type(slices[0])}")
         sliced = Tiles()
         for name, tile, maskdict, labels, coords, slidetype in self.h5manager.slice(slices):
