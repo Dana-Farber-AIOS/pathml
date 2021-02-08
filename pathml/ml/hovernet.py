@@ -686,7 +686,7 @@ def post_process_batch_hovernet(outputs, n_classes, small_obj_size_thresh=10, ke
         assert len(outputs) == 3, f"n_classes={n_classes} but outputs has {len(outputs)} elements. Expecting a list " \
                                   f"of length 3, one for each of np, hv, and nc branches"
         np_out, hv_out, nc_out = outputs
-        # send ouputs to cpu as np arrays
+        # send ouputs to cpu
         np_out = np_out.detach().cpu()
         hv_out = hv_out.detach().cpu()
         nc_out = nc_out.detach().cpu()

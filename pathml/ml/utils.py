@@ -85,12 +85,14 @@ def dice_score(pred, truth, eps=1e-3):
     Args:
         pred (np.ndarray): Predictions
         truth (np.ndarray): ground truth
+        eps (float, optional): Constant used for numerical stability to avoid divide-by-zero errors. Defaults to 1e-3.
         
     Returns:
         float: Dice score
     """    
-    assert isinstance(truth, np.ndarray) and isinstance(pred, np.ndarray), "inputs must be torch.Tensor or np.ndarray"
-    assert pred.shape == truth.shape
+    assert isinstance(truth, np.ndarray) and isinstance(pred, np.ndarray), \
+        f"pred is of type {type(pred)} and truth is type {type(truth)}. Both must be np.ndarray"
+    assert pred.shape == truth.shape, f"pred shape {pred.shape} does not match truth shape {truth.shape}"
     # turn into binary if not already
     pred = pred != 0
     truth = truth != 0
