@@ -31,7 +31,7 @@ def test_hovernet_forward_pass(n_classes):
     """Make sure that dimensions of outputs are as expected from forward pass"""
     batch_size = 1
     ims, _, _ = fake_hovernet_inputs(n_classes, batch_size = batch_size)
-    hover_net = hovernet.HoverNet(n_classes = n_classes)
+    hover_net = hovernet.HoVerNet(n_classes = n_classes)
     with torch.no_grad():
         outputs = hover_net(ims)
 
@@ -50,7 +50,7 @@ def test_hovernet_loss(n_classes):
     ims, masks, hv = fake_hovernet_inputs(n_classes)
     truth = [masks, hv]
     outputs = fake_hovernet_output(n_classes)
-    l = hovernet.loss_HoVerNet(outputs, truth, n_classes = n_classes)
+    l = hovernet.loss_hovernet(outputs, truth, n_classes = n_classes)
     assert l.item() > 0
 
 #TODO test each individual loss function
