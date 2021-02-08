@@ -97,9 +97,16 @@ def test_tissue_detectionHE(tileHE, threshold, use_saturation):
     assert np.array_equal(tileHE.masks["testing"], m)
 
 
-@pytest.mark.parametrize("t", [MedianBlur, GaussianBlur, BoxBlur, BinaryThreshold,
-                               MorphOpen, MorphClose, ForegroundDetection, SuperpixelInterpolation,
-                               StainNormalizationHE, NucleusDetectionHE, TissueDetectionHE])
-def test_repr(t):
-    transform = t()
+@pytest.mark.parametrize("transform", [MedianBlur(),
+                                       GaussianBlur(),
+                                       BoxBlur(),
+                                       BinaryThreshold(),
+                                       MorphOpen(),
+                                       MorphClose(),
+                                       ForegroundDetection(),
+                                       SuperpixelInterpolation(),
+                                       StainNormalizationHE(),
+                                       NucleusDetectionHE(),
+                                       TissueDetectionHE()])
+def test_repr(transform):
     repr(transform)

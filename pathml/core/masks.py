@@ -1,24 +1,23 @@
 import numpy as np
 import os
-import cv2
-import shutil
-from typing import Union
 from pathlib import Path
 from collections import OrderedDict
 import h5py
 
 from pathml.core.h5managers import _masks_h5_manager
 
+
 class Masks:
-    '''
-    Object holding masks.  
+    """
+    Object holding masks.
 
     Args:
-        masks(dict): Mask objects representing ex. labels, segmentations. 
-    '''
-    def __init__(self, 
-            masks=None
-        ):
+        masks(dict): Mask objects representing ex. labels, segmentations.
+    """
+
+    def __init__(self,
+                 masks=None
+                 ):
         if masks:
             if not isinstance(masks, dict):
                 raise ValueError(f"masks must be passed as dicts of the form key1:mask1,key2:mask2,...")
@@ -27,7 +26,7 @@ class Masks:
                     raise ValueError(f"can not add {type(val)}, mask must be of type np.ndarray")
             for key in masks.keys():
                 if not isinstance(key, str):
-                    raise ValueError(f"can not add {type(key)}, key must be of type str") 
+                    raise ValueError(f"can not add {type(key)}, key must be of type str")
             self._masks = OrderedDict(masks)
         else:
             self._masks = OrderedDict()
@@ -53,18 +52,19 @@ class Masks:
         """
         Add mask indexed by key to self.h5manager.
 
-        :type key: str
-        :type mask: np.ndarray with elements of type int8
+        Args:
+            key (str): key
+            mask (np.ndarray): array of mask. Must contain elements of type int8
         """
         self.h5manager.add(key, mask)
 
     def slice(self, slices):
         """
         Slice all masks in self.h5manager extending of numpy array slicing.
+
         Args:
             slices: list where each element is an object of type slice indicating
                     how the dimension should be sliced
-        TODO: examples
         """
         if not (isinstance(slices,list) and (isinstance(a, slice) for a in slices)):
             raise KeyError(f"slices must of of type list[slice] but is {type(slices)} with elements {type(slices[0])}")
@@ -91,12 +91,12 @@ class Masks:
             filename(str) file name
         """
         savepath = Path(out_dir) / Path(filename)
-        Path(out_dir).mkdir(parents=True, exist_ok=True)
+        Path(out_dir).mkdir(parents = True, exist_ok = True)
         # abspath resolves documented h5py bug
         newfile = os.path.abspath(str(savepath.with_suffix('.h5')))
         newh5 = h5py.File(newfile, 'w')
 
-        #shutil.move(self.h5manager.h5path, newh5)
+        # shutil.move(self.h5manager.h5path, newh5)
         for dataset in self.h5manager.h5.keys():
             self.h5manager.h5.copy(self.h5manager.h5[dataset], newh5)
 
