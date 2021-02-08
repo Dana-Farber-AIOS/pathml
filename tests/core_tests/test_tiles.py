@@ -70,6 +70,26 @@ def test_init(tile_withmasks):
     assert (tiles2[0].image == tiledict[(0,0)].image).all()
 
 
+@pytest.mark.parametrize("incorrect_input", [None, True, 5])
+def test_init_incorrect_input(tile_withmasks, incorrect_input):
+    tiledict = {incorrect_input: tile_withmasks for k in range(20)}
+    tilelist = [incorrect_input for k in range(20)]
+    with pytest.raises(ValueError):
+        tiles = Tiles(tiledict)
+    with pytest.raises(ValueError):
+        tiles2 = Tiles(tilelist)
+
+
+def test_repr(tile_withmasks):
+    assert tile_withmasks 
+
+
+def test_len(tile_withmasks):
+    tiledict = {(k,k): tile_withmasks for k in range(20)}
+    tiles = Tiles(tiledict)
+    assert len(tiles) == 20
+
+
 @pytest.mark.parametrize("incorrect_input", ["string", None, True, 5, [5, 4, 3], {"dict": "testing"}])
 @pytest.mark.parametrize("incorrect_input_get", [None, True, [5, 4, 3], {"dict": "testing"}])
 def test_add_get_incorrect_input(incorrect_input, incorrect_input_get, emptytiles, tile_nomasks):

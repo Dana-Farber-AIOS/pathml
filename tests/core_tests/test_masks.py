@@ -34,13 +34,13 @@ def test_add_get_incorrect_input(emptymasks, smallmasks, incorrect_input):
         mask = masks[incorrect_input]
 
 
-@pytest.mark.parametrize("incorrect_input", ["string", True, 5, [5, 4, 3], {"dict": "testing"}])
+@pytest.mark.parametrize("incorrect_input", ["string", True, [5, 4, 3], {"dict": "testing"}])
 def test_slice(smallmasks, incorrect_input):
     masks = smallmasks
     slices = [slice(2,5)]
     test = masks.slice(slices)
     assert test.h5manager.shape == (3,224,3)
-    with pytest.raises(KeyError):
+    with pytest.raises(Exception):
         test = masks.slice(incorrect_input)
 
 

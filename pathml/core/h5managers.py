@@ -179,8 +179,7 @@ class _tiles_h5_manager(h5_manager):
             val(`~pathml.core.tile.Tile`): tile
         """
         for key in self.h5.keys():
-            name, tile, maskdict, labels, coords, slidetype = self.get(key) 
-            yield name, tile, maskdict, labels, coords, slidetype
+            yield self.get(key)
 
     def reshape(self, shape):
         """
@@ -264,11 +263,8 @@ class _masks_h5_manager(h5_manager):
             key(str): mask key
             val(np.ndarray): mask
         """
-        if not isinstance(slices,list[slice]):
-            raise KeyError(f"slices must of of type list[slice] but is {type(slices)} with elements {type(slices[0])}")
-        for key, val in self.h5.items():
-            val = val[slices:...]
-            yield key, val
+        for key in self.h5['masks'].keys():
+            yield key, self.get(key) 
 
     def reshape(self, targetshape):
         pass
