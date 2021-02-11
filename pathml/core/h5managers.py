@@ -237,11 +237,12 @@ class _masks_h5_manager(_h5_manager):
             raise ValueError(f"invalid type {type(key)}, key must be of type str")
         if key in self.h5['masks'].keys():
             raise ValueError(f"key {key} already exists. Cannot add. Must update to modify existing mask.")
-        if self.shape == None:
+        if self.shape is None:
             self.shape = mask.shape
         if mask.shape != self.shape:
             raise ValueError(
-                f"Masks contains masks of shape {self.shape}, provided mask is of shape {mask.shape}. We enforce that all Mask in Masks must have matching shapes.")
+                f"Masks contains masks of shape {self.shape}, provided mask is of shape {mask.shape}. "
+                f"We enforce that all Mask in Masks must have matching shapes.")
         newkey = self.h5['masks'].create_dataset(
             bytes(str(key), encoding = 'utf-8'),
             data = mask
@@ -283,15 +284,20 @@ class _masks_h5_manager(_h5_manager):
         pass
 
     def get(self, item):
+        # check type of input
+        # must check bool separately, since isinstance(True, int) --> True
+        if isinstance(item, bool) or not (isinstance(item, str) or isinstance(item, int)):
+            raise KeyError(f"key of type {type(item)} must be of type str or int")
+
         if isinstance(item, str):
             if item not in self.h5['masks'].keys():
                 raise KeyError(f'key {item} does not exist')
             return self.h5['masks'][item][:]
-        if not isinstance(item, int):
-            raise KeyError(f"must getitem by name (type str) or index(type int)")
-        if item > len(self.h5['masks']) - 1:
-            raise KeyError(f"index out of range, valid indices are ints in [0,{len(self.h5['masks'].keys()) - 1}]")
-        return self.h5['masks'][list(self.h5['masks'].keys())[item]][:]
+
+        else:
+            if item > len(self.h5['masks']) - 1:
+                raise KeyError(f"index out of range, valid indices are ints in [0,{len(self.h5['masks'].keys()) - 1}]")
+            return self.h5['masks'][list(self.h5['masks'].keys())[item]][:]
 
     def remove(self, key):
         """

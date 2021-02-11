@@ -13,7 +13,7 @@ def emptymasks():
 def smallmasks():
     shape = (224, 224, 3)
     im = np.arange(np.product(shape)).reshape(shape)
-    testmasks = Masks({'mask1':im, 'mask2':im})
+    testmasks = Masks({'mask1': im, 'mask2': im})
     return testmasks
 
 
@@ -25,21 +25,19 @@ def test_init_incorrect_input(incorrect_input):
 
 @pytest.mark.parametrize("incorrect_input", ["string", True, 5, [5, 4, 3], {"dict": "testing"}])
 def test_add_get_incorrect_input(emptymasks, smallmasks, incorrect_input):
-    masks = emptymasks
     with pytest.raises(ValueError):
-        masks.add(incorrect_input, np.arange(np.product((224,224,3))).reshape((224,224,3)))
-        masks.add('newmask', incorrect_input)
-    masks = smallmasks
+        emptymasks.add(incorrect_input, np.arange(np.product((224, 224, 3))).reshape((224, 224, 3)))
+        emptymasks.add('newmask', incorrect_input)
     with pytest.raises(KeyError):
-        mask = masks[incorrect_input]
+        mask = smallmasks[incorrect_input]
 
 
 @pytest.mark.parametrize("incorrect_input", ["string", True, [5, 4, 3], {"dict": "testing"}])
 def test_slice(smallmasks, incorrect_input):
     masks = smallmasks
-    slices = [slice(2,5)]
+    slices = [slice(2, 5)]
     test = masks.slice(slices)
-    assert test.h5manager.shape == (3,224,3)
+    assert test.h5manager.shape == (3, 224, 3)
     with pytest.raises(Exception):
         test = masks.slice(incorrect_input)
 

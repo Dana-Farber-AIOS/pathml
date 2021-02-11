@@ -5,11 +5,8 @@ Utilities for manipulating images.
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
-from matplotlib.collections import PatchCollection
 from matplotlib.colors import TABLEAU_COLORS
 
-from pathml.preprocessing.utils import segmentation_lines
 
 def upsample_array(arr, factor):
     """
