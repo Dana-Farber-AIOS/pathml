@@ -1,6 +1,7 @@
 # Utilities for ML module
 import torch
 from torch.nn import functional as F
+import numpy as np
 
 
 def center_crop_im_batch(batch, dims, batch_order = "BCHW"):
@@ -76,6 +77,31 @@ def dice_loss(true, logits, eps=1e-3):
     return loss
 
 
+def dice_score(pred, truth, eps=1e-3):
+    """
+    Calculate dice score for two tensors of the same shape.
+    If tensors are not already binary, they are converted to bool by zero/non-zero.
+    
+    Args:
+        pred (np.ndarray): Predictions
+        truth (np.ndarray): ground truth
+        eps (float, optional): Constant used for numerical stability to avoid divide-by-zero errors. Defaults to 1e-3.
+        
+    Returns:
+        float: Dice score
+    """    
+    assert isinstance(truth, np.ndarray) and isinstance(pred, np.ndarray), \
+        f"pred is of type {type(pred)} and truth is type {type(truth)}. Both must be np.ndarray"
+    assert pred.shape == truth.shape, f"pred shape {pred.shape} does not match truth shape {truth.shape}"
+    # turn into binary if not already
+    pred = pred != 0
+    truth = truth != 0
+    
+    num = 2 * np.sum(pred.flatten() * truth.flatten())
+    denom = np.sum(pred) + np.sum(truth) + eps
+    return float(num / denom)
+
+
 def get_sobel_kernels(size, dt=torch.float32):
     """
     Create horizontal and vertical Sobel kernels for approximating gradients
@@ -96,3 +122,40 @@ def get_sobel_kernels(size, dt=torch.float32):
 
     return kernel_h, kernel_v
 
+
+def wrap_transform_multichannel(transform):
+    """
+    Wrapper to make albumentations transform compatible with a multichannel mask.
+    Channel should be in first dimension, i.e. (n_mask_channels, H, W)
+    
+    Args:
+        transform: Albumentations transform. Must have 'additional_targets' parameter specified with 
+            a total of `n_channels` key,value pairs. All values must be 'mask' but the keys don't matter.
+            e.g. for a mask with 3 channels, you could use:
+            `additional targets = {'mask1' : 'mask', 'mask2' : 'mask', 'pathml' : 'mask'}`
+    
+    Returns:
+        function that can be called with a multichannel mask argument
+    """
+    targets = transform.additional_targets    
+    n_targets = len(targets)
+    
+    # make sure that everything is correct so that transform is correctly applied
+    assert all([v == "mask" for v in targets.values()]), \
+        f"error all values in transform.additional_targets must be 'mask'." 
+    
+    def transform_out(*args, **kwargs):
+        mask = kwargs.pop("mask")
+        assert mask.ndim == 3, f"input mask shape {mask.shape} must be 3-dimensions ()"
+        assert mask.shape[0] == n_targets, \
+            f"input mask shape {mask.shape} doesn't match additional_targets {transform.additional_targets}"
+        
+        mask_to_dict = {key : mask[i, :, :] for i, key in enumerate(targets.keys())}
+        kwargs.update(mask_to_dict)
+        out = transform(*args, **kwargs)
+        mask_out = np.stack([out.pop(key) for key in targets.keys()], axis=0)
+        assert mask_out.shape == mask.shape
+        out["mask"] = mask_out
+        return out
+    
+    return transform_out

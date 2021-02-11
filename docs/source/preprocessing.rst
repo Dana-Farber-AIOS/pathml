@@ -9,6 +9,10 @@ Getting started with premade pipelines
 
 The general preprocessing workflow is:
 
+1. Load whole-slide image from disk
+2. Perform preprocessing
+3. Write output to disk
+
 .. image:: _static/images/preprocess_schematic_single.png
 
 Get started by loading a WSI from disk and running a preprocessing pipeline in 10 lines of code:

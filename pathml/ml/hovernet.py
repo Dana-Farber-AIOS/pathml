@@ -189,7 +189,7 @@ class _HoverNetDecoder(nn.Module):
         return out
 
 
-class HoverNet(nn.Module):
+class HoVerNet(nn.Module):
     """
     Model for simultaneous segmentation and classification based on HoVer-Net.
     Can also be used for segmentation only, if class labels are not supplied.
@@ -426,6 +426,11 @@ def _get_gradient_hv(hv_batch, kernel_size=5):
     """
     assert hv_batch.shape[1] == 2, f"inputs have shape {hv_batch.shape}. Expecting tensor of shape (B, 2, H, W)"
     h_kernel, v_kernel = get_sobel_kernels(kernel_size, dt = hv_batch.dtype)
+    
+    # move kernels to same device as batch
+    h_kernel = h_kernel.to(hv_batch.device)
+    v_kernel = v_kernel.to(hv_batch.device)
+    
     # add extra dims so we can convolve with a batch
     h_kernel = h_kernel.unsqueeze(0).unsqueeze(0)
     v_kernel = v_kernel.unsqueeze(0).unsqueeze(0)
@@ -436,7 +441,10 @@ def _get_gradient_hv(hv_batch, kernel_size=5):
 
     h_grad = F.conv2d(h_inputs, h_kernel, stride = 1, padding = 2)
     v_grad = F.conv2d(v_inputs, v_kernel, stride = 1, padding = 2)
-
+    
+    del h_kernel
+    del v_kernel
+    
     return h_grad, v_grad
 
 
@@ -478,7 +486,7 @@ def _loss_hv_mse(hv_out, true_hv):
     return loss
 
 
-def loss_HoVerNet(outputs, ground_truth, n_classes=None):
+def loss_hovernet(outputs, ground_truth, n_classes=None):
     """
     Compute loss for HoVer-Net.
     Equation (1) in Graham et al.
@@ -505,7 +513,6 @@ def loss_HoVerNet(outputs, ground_truth, n_classes=None):
         Medical Image Analysis, 58, p.101563.
     """
     true_mask, true_hv = ground_truth
-    true_hv = true_hv.float()
     # unpack outputs, and also calculate nucleus masks
     if n_classes is None:
         np_out, hv = outputs
@@ -574,8 +581,8 @@ def _post_process_single_hovernet(np_out, hv_out, small_obj_size_thresh=10, kern
     https://github.com/vqdang/hover_net/blob/14c5996fa61ede4691e87905775e8f4243da6a62/models/hovernet/post_proc.py#L27
 
     Args:
-        np_out: Output of NP branch. Tensor of shape (2, H, W) of logit predictions for binary classification
-        hv_out: Output of HV branch. Tensor of shape (2, H, W) of predictions for horizontal/vertical maps
+        np_out (torch.Tensor): Output of NP branch. Tensor of shape (2, H, W) of logit predictions for binary classification
+        hv_out (torch.Tensor): Output of HV branch. Tensor of shape (2, H, W) of predictions for horizontal/vertical maps
         small_obj_size_thresh (int): Minimum number of pixels in regions. Defaults to 10.
         kernel_size (int): Width of Sobel kernel used to compute horizontal and vertical gradients.
         h (float): hyperparameter for thresholding nucleus probabilities. Defaults to 0.5.
@@ -584,7 +591,7 @@ def _post_process_single_hovernet(np_out, hv_out, small_obj_size_thresh=10, kern
     """
     # compute pixel probabilities from logits, apply threshold, and get into np array
     np_preds = F.softmax(np_out, dim = 0)[1, :, :]
-    np_preds = np_preds.detach().clone().numpy()
+    np_preds = np_preds.numpy()
 
     np_preds[np_preds >= h] = 1
     np_preds[np_preds < h] = 0
@@ -596,8 +603,9 @@ def _post_process_single_hovernet(np_out, hv_out, small_obj_size_thresh=10, kern
     tau_q_h = np_preds
 
     # normalize hv predictions, and compute horizontal and vertical gradients, and normalize again
-    h_out = hv_out[0, ...].detach().clone().numpy().astype(np.float32)
-    v_out = hv_out[1, ...].detach().clone().numpy().astype(np.float32)
+    hv_out = hv_out.numpy().astype(np.float32)
+    h_out = hv_out[0, ...]
+    v_out = hv_out[1, ...]
     # https://stackoverflow.com/a/39037135
     h_normed = cv2.normalize(h_out, None, alpha = 0, beta = 1, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
     v_normed = cv2.normalize(v_out, None, alpha = 0, beta = 1, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
@@ -657,10 +665,10 @@ def post_process_batch_hovernet(outputs, n_classes, small_obj_size_thresh=10, ke
             segmentation. Defaults to 0.5.
 
     Returns:
-        If n_classes is None, returns det_out. In classification setting, returns (det_out, class_out).
+        np.ndarray: If n_classes is None, returns det_out. In classification setting, returns (det_out, class_out).
 
-            - det_out is a Tensor of shape (B, H, W)
-            - class_out is a Tensor of shape (B, n_classes, H, W)
+            - det_out is np.ndarray of shape (B, H, W)
+            - class_out is np.ndarray of shape (B, n_classes, H, W)
 
             Each pixel is labelled from 0 to n, where n is the number of individual nuclei detected. 0 pixels indicate
             background. Pixel values i indicate that the pixel belongs to the ith nucleus.
@@ -668,14 +676,20 @@ def post_process_batch_hovernet(outputs, n_classes, small_obj_size_thresh=10, ke
 
     assert len(outputs) in {2, 3}, f"outputs has size {len(outputs)}. Must have size 2 (for segmentation) or 3 (for " \
                                    f"classification)"
-
     if n_classes is None:
         np_out, hv_out = outputs
+        # send ouputs to cpu
+        np_out = np_out.detach().cpu()
+        hv_out = hv_out.detach().cpu()
         classification = False
     else:
         assert len(outputs) == 3, f"n_classes={n_classes} but outputs has {len(outputs)} elements. Expecting a list " \
                                   f"of length 3, one for each of np, hv, and nc branches"
         np_out, hv_out, nc_out = outputs
+        # send ouputs to cpu
+        np_out = np_out.detach().cpu()
+        hv_out = hv_out.detach().cpu()
+        nc_out = nc_out.detach().cpu()
         classification = True
 
     batchsize = hv_out.shape[0]
@@ -691,12 +705,13 @@ def post_process_batch_hovernet(outputs, n_classes, small_obj_size_thresh=10, ke
         # get the pixel-level class predictions from the logits
         nc_out_preds = F.softmax(nc_out, dim = 1).argmax(dim = 1)
 
-        out_classification = np.zeros_like(nc_out, dtype = np.uint8)
+        out_classification = np.zeros_like(nc_out.numpy(), dtype = np.uint8)
 
         for batch_ix, nuc_preds in enumerate(out_detection_list):
             # get labels of nuclei from nucleus detection
             nucleus_labels = list(np.unique(nuc_preds))
-            nucleus_labels.remove(0)  # 0 is background
+            if 0 in nucleus_labels:
+                nucleus_labels.remove(0)  # 0 is background
             nucleus_class_preds = nc_out_preds[batch_ix, ...]
 
             out_class_preds_single = out_classification[batch_ix, ...]
@@ -769,40 +784,3 @@ def _vis_outputs_single(images, preds, n_classes, index=0, ax=None, markersize=5
                 x, y = segmentation_lines(nuclei_mask.astype(np.uint8))
                 ax.scatter(x, y, color = palette[i], marker = ".", s = markersize)
     ax.axis("off")
-
-
-def vis_outputs(images, preds, n_classes, n_images, markersize=5, palette=None):
-    """
-    Plot the results of HoVer-Net predictions for multiple images in a batch, overlayed over
-    original images.
-
-    Args:
-        images: Input RGB image batch. Tensor of shape (B, 3, H, W).
-        preds: Postprocessed outputs of HoVer-Net. From post_process_batch_hovernet(). Each pixel should be either 0
-            for background or an integer n indicating that the pixel is part of the nth nucleus. Can be either:
-            - Tensor of shape (B, H, W), in the context of nucleus detection.
-            - Tensor of shape (B, n_classes, H, W), in the context of nucleus classification.
-        n_classes (int): Number of classes for classification setting, or None to indicate detection setting.
-        n_images (int): number of images to plot. Must be a multiple of 4.
-        markersize: Size of markers used to outline nuclei
-        palette (list): list of colors to use for plotting. If None, uses matplotlib.colors.TABLEAU_COLORS.
-            Defaults to None
-    """
-    if palette is None:
-        palette = list(TABLEAU_COLORS.values())
-
-    if n_classes is not None:
-        assert n_classes == preds.shape[1], f"preds dimension {preds.shape[1]} doesn't match n_classes {n_classes}"
-        assert len(palette) >= n_classes, f"len(palette)={len(palette)} < n_classes={n_classes}."
-
-    assert len(preds.shape) in [3, 4], f"Preds shape is {preds.shape}. Must be (B, H, W) or (B, n_classes, H, W)"
-    assert n_images <= images.shape[0], f"input n_images {n_images} is larger than batch size {images.shape[0]}"
-    assert n_images % 4 == 0, f"input n_images {n_images} must be a multiple of 4"
-
-    nr = int(np.ceil(n_images / 4))
-    fig, ax = plt.subplots(nrows = nr, ncols = 4, figsize = (10, 4 * nr))
-
-    for i, ax in enumerate(ax.ravel()):
-        _vis_outputs_single(images, preds, n_classes, ax = ax, index = i, markersize = markersize, palette = palette)
-
-    plt.tight_layout()
