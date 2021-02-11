@@ -5,7 +5,7 @@ channels:
   - pytorch
 
 dependencies:
-  - python>=3.7
+  - python>=3.8
   - numpy>=1.18.1
   - scipy>=1.4.1
   - scikit-image>=0.16.2
@@ -14,6 +14,7 @@ dependencies:
   - pip>=20.0.2
   - pytorch>=1.7.0
   - openjdk==8.0.152
+  - h5py>=3.1.0
   - pip:
       - opencv-contrib-python>=4.1.1
       - openslide-python>=1.1.1

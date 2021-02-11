@@ -1,30 +1,34 @@
 Full API Reference
 ==================
 
+Core
+----
+
+.. automodule:: pathml.core.slide_data
+    :members:
+.. automodule:: pathml.core.slide_classes
+    :members:
+.. automodule:: pathml.core.slide_backends
+    :members:
+.. automodule:: pathml.core.tile
+    :members:
+.. automodule:: pathml.core.tiles
+    :members:
+.. automodule:: pathml.core.masks
+    :members:
+.. automodule:: pathml.core.h5managers
+    :members:
+
 Preprocessing
 -------------
 
-.. automodule:: pathml.preprocessing.wsi
-    :members:
-.. automodule:: pathml.preprocessing.multiparametricslide
-    :members:
-.. automodule:: pathml.preprocessing.slide_data
-    :members:
 .. automodule:: pathml.preprocessing.pipeline
     :members:
 .. automodule:: pathml.preprocessing.tiling
     :members:
-.. automodule:: pathml.preprocessing.stains
-    :members:
 .. automodule:: pathml.preprocessing.transforms
     :members:
-.. automodule:: pathml.preprocessing.transforms_HandE
-    :members:
-.. automodule:: pathml.preprocessing.utils
-    :members:
-.. automodule:: pathml.preprocessing.base
-    :members:
-
+    :undoc-members:
 
 Datasets
 --------

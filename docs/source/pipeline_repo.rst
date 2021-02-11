@@ -1,9 +1,10 @@
 Pipeline Repository
 ===================
 
-The PathML Pipeline Repository enables sharing of preprocessing pipelines.
+The ``PathML`` Pipeline Repository enables sharing of preprocessing pipelines.
 
-``Pipeline`` objects can be written to disk, and the file can be uploaded to a central repository.
+:class:`~pathml.preprocessing.pipeline.Pipeline` objects can be written to disk,
+and the file can be uploaded to a central repository.
 From the repository, other users of PathML are able to download files, load them into local copies of the Pipeline
 objects, and run them on local data.
 

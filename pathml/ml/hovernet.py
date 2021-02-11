@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import TABLEAU_COLORS
 from warnings import warn
 
-from pathml.preprocessing.utils import segmentation_lines
+from pathml.utils import segmentation_lines
 from pathml.ml.utils import center_crop_im_batch, dice_loss, get_sobel_kernels
 
 
