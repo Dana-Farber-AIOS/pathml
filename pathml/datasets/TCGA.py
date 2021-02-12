@@ -129,7 +129,7 @@ class TCGA():
         print('Downloading in batches of', [x.shape for x in splits])
 
         #choose a name for the download file
-        filename = "TCGA_LUNG.sh"
+        filename = "TCGA_dl.sh"
         #.sh extension = bash script
 
         #Write into the chosen file
