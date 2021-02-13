@@ -22,6 +22,9 @@ def write_h5path(
     slidedata,
     path
     ) -> None:
+    path = Path(path)
+    path.mkdir(parents=True, exist_ok=True) 
+    path = os.path.abspath(str(path.with_suffix('.h5')))
     f = h5py.File(path, 'w')
     fieldsgroup = f.create_group('fields')
     masksgroup = f.create_group('masks')

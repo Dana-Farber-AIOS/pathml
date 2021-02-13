@@ -5,6 +5,7 @@ from pathml.core.masks import Masks
 from pathml.core.tile import Tile
 from pathml.core.tiles import Tiles
 from pathml.core.slide_backends import SlideBackend, OpenSlideBackend
+from pathml.core.h5path import read_h5path
 from pathml.preprocessing.pipeline import Pipeline
 
 
@@ -148,13 +149,5 @@ class SlideData:
     def plot(self):
         raise NotImplementedError
 
-    def save(self):
-        raise NotImplementedError
-
-    def _write_h5(
-        self,
-        filename: Optional[PathLike] = None,
-        compression: Optional[Literal["gzip", "lzf"]] = None,
-        compression_opts: Union[int, Any] = None,
-    ):
-        raise NotImplementedError
+    def write(self, path):
+        write_h5path(self, path)
