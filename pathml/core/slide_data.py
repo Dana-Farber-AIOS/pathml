@@ -22,7 +22,7 @@ class SlideData:
         tiles (pathml.core.tiles.Tiles, optional): object containing {coordinates, tile} pairs
         labels (collections.OrderedDict, optional): dictionary containing {key, label} pairs
     """
-    def __init__(self, filepath=None, name=None, slide_backend=None, masks=None, tiles=None, labels=None, h5=None):
+    def __init__(self, filepath=None, name=None, slide_backend=None, masks=None, tiles=None, labels=None, history=None):
         # check inputs
         assert masks is None or isinstance(masks, Masks), \
             f"mask are of type {type(masks)} but must be of type pathml.core.masks.Masks"
@@ -45,8 +45,7 @@ class SlideData:
         self.masks = masks
         self.tiles = tiles
         self.labels = labels
-        self.history = None
-        self.h5 = h5
+        self.history = history
 
     def __repr__(self): 
         out = f"{self.__class__.__name__}(name={self.name}, "
