@@ -12,12 +12,15 @@ class _h5_manager:
     Abstract class for h5 data management
     """
 
-    def __init__(self):
+    def __init__(self, h5 = None):
         path = tempfile.TemporaryFile()
         f = h5py.File(path, 'w')
         self.h5 = f
         self.h5path = path
         self.shape = None
+        if h5:
+            for ds in h5.keys():
+                h5.copy(ds, f)
 
     def add(self, key, val):
         raise NotImplementedError
@@ -43,8 +46,8 @@ class _tiles_h5_manager(_h5_manager):
     Interface between tiles object and data management on disk by h5py. 
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, h5 = None):
+        super().__init__(h5 = h5)
 
     def add(self, key, tile):
         """
@@ -194,8 +197,8 @@ class _masks_h5_manager(_h5_manager):
     Interface between masks object and data management on disk by h5py. 
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, h5 = None):
+        super().__init__(h5 = h5)
         self.h5.create_group("masks")
 
     def add(self, key, mask):

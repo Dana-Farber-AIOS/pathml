@@ -1,6 +1,12 @@
 from pathlib import Path, PurePath
+import h5py
+import os
 
-from pathml.core.slide_data import SlideData
+import pathml.core.slide_data 
+from pathml.core.tiles import Tiles
+from pathml.core.masks import Masks
+from pathml.core.slide_backends import OpenSlideBackend, BioFormatsBackend, DICOMBackend
+from pathml.core.utils import writestringh5, writedicth5 
 
 pathmlext = {
     'h5',
@@ -21,34 +27,32 @@ validexts = pathmlext | openslideext | bioformatsext
 def write_h5path(
     slidedata,
     path
-    ) -> None:
+    ):
     path = Path(path)
-    path.mkdir(parents=True, exist_ok=True) 
-    path = os.path.abspath(str(path.with_suffix('.h5')))
-    f = h5py.File(path, 'w')
-    fieldsgroup = f.create_group('fields')
-    masksgroup = f.create_group('masks')
-    tilesgroup = f.create_Group('tiles')
-    if slidedata.slide:
-        writestringh5(fieldsgroup, 'slide_backend', str(type(slidedata.slide)))
-    if slidedata.name:
-        writestringh5(fieldsgroup, 'name', str(slidedata.name))
-    if slidedata.labels:
-        writedicth5(fieldsgroup, 'labels', slidedata.labels)
-    if slidedata.history:
-        pass
-    if slidedata.masks:
-        for ds in slidedata.masks.keys():
-            # slidedata.masks.copy(ds, f['masks'])
-            slidedata.masks.copy(ds, f)
-    if slidedata.tiles:
-        for ds in slidedata.tiles.keys():
-            # slidedata.tiles.copy(ds, f['tiles'])
-            slidedata.tiles.copy(ds, f)
+    pathdir = Path(os.path.dirname(path)) 
+    pathdir.mkdir(parents=True, exist_ok=True) 
+    with h5py.File(path, 'w') as f:
+        fieldsgroup = f.create_group('fields')
+        if slidedata.slide:
+            writestringh5(fieldsgroup, 'slide_backend', slidedata.slide_backend)
+        if slidedata.name:
+            writestringh5(fieldsgroup, 'name', str(slidedata.name))
+        if slidedata.labels:
+            writedicth5(fieldsgroup, 'labels', slidedata.labels)
+        if slidedata.history:
+            pass
+        if slidedata.masks:
+            masksgroup = f.create_group('masks')
+            for ds in slidedata.masks.h5manager.h5.keys():
+                slidedata.masks.h5manager.h5.copy(ds, f['masks'])
+        if slidedata.tiles:
+            tilesgroup = f.create_group('tiles')
+            for ds in slidedata.tiles.h5manager.h5.keys():
+                slidedata.tiles.h5manager.h5.copy(ds, f['tiles'])
 
 def read(
     path
-    ) -> SlideData:
+    ):
     """
     Read file and return :class:`~pathml.slide_data.SlideData` object.
 
@@ -59,37 +63,43 @@ def read(
     if not path.exists():
         raise ValueError(f"Path does not exist.")
     if is_valid_path(path):
-        ext = is_valid_path(path)
-            if ext not in validexts:
-                raise ValueError(
-                    f"Can only read files with extensions {validexts}"
-                )
-            if ext in pathmlext: 
-                return read_h5path(path)
-            elif ext in openslideext:
-                return read_openslide(path)
-            elif exit in bioformatsext:
-                return read_bioformats(path)
+        ext = is_valid_path(path, return_ext = True)
+        if ext not in validexts:
+            raise ValueError(
+                f"Can only read files with extensions {validexts}"
+            )
+        if ext in pathmlext: 
+            return read_h5path(path)
+        elif ext in openslideext:
+            return read_openslide(path)
+        elif ext in bioformatsext:
+            return read_bioformats(path)
 
 def read_h5path(
     path
-    ) -> SlideData:
+    ):
     """
     Read h5path formatted file using h5py and return :class:`~pathml.slide_data.SlideData` object.
     """
     with h5py.File(path, "r") as f:
-        tiles = f['tiles'] if 'tiles' in f.keys() else None 
-        masks = f['masks'] if 'masks' in f.keys() else None
-        slide_backend = str(f['fields/slide_backend'][...]) if 'slide_backend' in f['fields'].keys() else None
-        name = str(f['fields/name'][...]) if 'name' in f['fields'].keys() else None
+        tiles = Tiles(h5 = f['tiles']) if 'tiles' in f.keys() else None 
+        masks = Masks(h5 = f['masks']) if 'masks' in f.keys() else None
+        backend = f['fields/slide_backend'][...].item().decode('UTF-8') if 'slide_backend' in f['fields'].keys() else None
+        if backend == "<class 'pathml.core.slide_backend.BioFormatsBackend'>":
+            slide_backend = BioformatsBackend
+        elif backend == "<class 'pathml.core.slide_backends.DICOMBackend'>":
+            slide_backend = DICOMBackend
+        else:
+            slide_backend = OpenSlideBackend
+        name = f['fields/name'][...].item().decode('UTF-8') if 'name' in f['fields'].keys() else None
         labels = dict(f['fields/labels'][...]) if 'labels' in f['fields'].keys() else None 
         # TODO: implement history
         history = None
-    return SlideData(name = name, slide_backend = slide_backend, masks = masks, tiles = tiles, labels = labels) 
+    return pathml.core.slide_data.SlideData(name = name, slide_backend = slide_backend, masks = masks, tiles = tiles, labels = labels) 
 
 def read_openslide(
     path
-    ) -> SlideData:
+    ):
     """
     Read wsi file using openslide and return :class:`~pathml.slide_data.SlideData` object.
     """
@@ -98,23 +108,23 @@ def read_openslide(
 
 def read_bioformats(
     path
-    ) -> SlideData:
+    ):
     """
     Read bioformat supported imaging format and return :class:`~pathml.slide_data.SlideData` object.
     """
-    return SlideData(filepath = path, slide_backend='Bioformats') 
+    return pathml.core.slide_data.SlideData(filepath = path, slide_backend='Bioformats') 
 
 def read_directory(
     tilepath,
     maskpath
-    ) -> SlideData:
+    ):
     """
-    Read slidedata files from directories of tile and mask objects. 
+    Read a directory of tiles or masks into a SlideData object. 
     """
     raise NotImplementedError
 
 def is_valid_path(
-    path: Path
+    path: Path,
     return_ext = False
     ):
     """
@@ -124,7 +134,8 @@ def is_valid_path(
         path (str): Path to slide file on disk.
         return_ext (bool): If True function return file extension, if False return bool indicating whether the file format is supported. 
     """
-    ext = filename.suffixes
+    path = Path(path)
+    ext = path.suffixes
     if len(ext) > 2:
         print(f"Your path has more than two extensions: {ext}. Only considering {ext[-2]}.")
         ext = ext[-2]
