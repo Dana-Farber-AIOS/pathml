@@ -93,7 +93,7 @@ def read_h5path(
             slide_backend = OpenSlideBackend
         name = f['fields/name'][...].item().decode('UTF-8') if 'name' in f['fields'].keys() else None
         labels = dict(f['fields/labels'][...]) if 'labels' in f['fields'].keys() else None 
-        # TODO: implement history
+        labels = {k.decode('UTF-8') : v.decode('UTF-8') for k,v in labels.items()}
         history = None
     return pathml.core.slide_data.SlideData(name = name, slide_backend = slide_backend, masks = masks, tiles = tiles, labels = labels) 
 

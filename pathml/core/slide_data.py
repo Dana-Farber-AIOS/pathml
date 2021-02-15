@@ -142,8 +142,8 @@ class SlideData:
                 tile_masks = None
                 if self.masks is not None:
                     slices = [
-                        slice(int(ix_j * stride_j), int(ix_j * stride_j + shape[0])),
-                        slice(int(ix_i * stride_i), int(ix_i * stride_i) + shape[1])
+                        slice(int(ix_i * stride_i), int(ix_i * stride_i) + shape[0]),
+                        slice(int(ix_j * stride_j), int(ix_j * stride_j) + shape[1])
                     ]
                     tile_masks = self.masks.slice(slices)
                 yield Tile(image = tile_im, coords = coords, masks = tile_masks, slidetype = type(self))

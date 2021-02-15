@@ -199,7 +199,8 @@ class _masks_h5_manager(_h5_manager):
 
     def __init__(self, h5 = None):
         super().__init__(h5 = h5)
-        self.h5.create_group("masks")
+        if "masks" not in self.h5:
+            self.h5.create_group("masks")
 
     def add(self, key, mask):
         """

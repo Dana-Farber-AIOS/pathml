@@ -12,7 +12,7 @@ from pathml.preprocessing.transforms import BoxBlur, TissueDetectionHE
 @pytest.fixture
 def he_slidedata():
     masks = Masks({'example' : np.ones((2967, 2220))})
-    wsi = HESlide("tests/testdata/small_HE.svs", name = "test", masks = masks)
+    wsi = HESlide("tests/testdata/small_HE.svs", name = "test", masks = masks, labels={'testkey':'testval'})
     pipeline = Pipeline([
         BoxBlur(kernel_size=15),
         TissueDetectionHE(mask_name = "tissue", min_region_size = 500,
