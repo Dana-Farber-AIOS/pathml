@@ -28,6 +28,12 @@ def write_h5path(
     slidedata,
     path
     ):
+    """
+    Write h5path formatted file from SlideData object.
+    
+    Args:
+        path (str): Path to save destination
+    """
     path = Path(path)
     pathdir = Path(os.path.dirname(path)) 
     pathdir.mkdir(parents=True, exist_ok=True) 
@@ -80,6 +86,9 @@ def read_h5path(
     ):
     """
     Read h5path formatted file using h5py and return :class:`~pathml.slide_data.SlideData` object.
+
+    Args:
+        path (str): Path to h5path formatted file on disk 
     """
     with h5py.File(path, "r") as f:
         tiles = Tiles(h5 = f['tiles']) if 'tiles' in f.keys() else None 
@@ -95,13 +104,16 @@ def read_h5path(
         labels = dict(f['fields/labels'][...]) if 'labels' in f['fields'].keys() else None 
         labels = {k.decode('UTF-8') : v.decode('UTF-8') for k,v in labels.items()}
         history = None
-    return pathml.core.slide_data.SlideData(name = name, slide_backend = slide_backend, masks = masks, tiles = tiles, labels = labels) 
+    return pathml.core.slide_data.SlideData(name = name, slide_backend = slide_backend, masks = masks, tiles = tiles, labels = labels, history = history) 
 
 def read_openslide(
     path
     ):
     """
     Read wsi file using openslide and return :class:`~pathml.slide_data.SlideData` object.
+
+    Args:
+        path (str): Path to slide file of supported Openslide format on disk
     """
     return HESlide(filepath = path) 
 
@@ -111,6 +123,9 @@ def read_bioformats(
     ):
     """
     Read bioformat supported imaging format and return :class:`~pathml.slide_data.SlideData` object.
+
+    Args:
+        path (str): Path to image file of supported BioFormats format on disk
     """
     return pathml.core.slide_data.SlideData(filepath = path, slide_backend='Bioformats') 
 
@@ -130,6 +145,7 @@ def is_valid_path(
     """
     Determine if file format is supported.
     Includes support for compressed files.
+
     Args:
         path (str): Path to slide file on disk.
         return_ext (bool): If True function return file extension, if False return bool indicating whether the file format is supported. 
