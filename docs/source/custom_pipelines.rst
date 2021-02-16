@@ -1,113 +1,74 @@
 Custom Preprocessing Pipelines
 ==============================
 
-``PathML`` comes with a set of pre-made pipelines ready to use out of the box.
-However, it may also be necessary in many cases to create custom preprocessing pipelines tailored to the specific
-application at hand.
+``PathML`` makes designing preprocessing pipelines easy. In this section we will walk through how to define a
+:class:`~pathml.preprocessing.pipeline.Pipeline` object by composing pre-made
+:class:`~pathml.preprocessing.transforms.Transform`s, and how to implement a
+new custom :class:`~pathml.preprocessing.transforms.Transform`.
 
 Pipeline basics
 ---------------
 
-Preprocessing pipelines are defined in objects that inherit from the BasePipeline abstract class.
-The preprocessing logic for a single slide is defined in the ``run_single()`` method.
-Then, when the ``run()`` method is called, the input is checked to see whether it is a single slide or a dataset of
-slides. The ``run_single()`` method is then called as appropriate, and multiprocessing is automatically handled in the
-case of processing an entire dataset.
+Preprocessing pipelines are defined in :class:`~pathml.preprocessing.pipeline.Pipeline` objects.
+When :meth:`~pathml.core.slide_data.SlideData.run`
+is called, tiles are lazily extracted from the slide by
+:meth:`~pathml.core.slide_data.SlideData.generate_tiles` and passed to the
+:class:`~pathml.preprocessing.pipeline.Pipeline`, which modifies the :class:`~pathml.core.tile.Tile` object in place.
+Finally, the processed tile is saved.
+This design facilitates preprocessing of gigapixel-scale whole-slide images, because :class:`~pathml.core.tile.Tile`
+objects are small enough to fit in memory.
 
-To define a new pipeline, all that is necessary is to define the ``run_single()`` method.
-The method should take a ``BaseSlide`` object as input (or a specific type of slide inheriting from the ``BaseSlide``
-class), and should write the processed output to disk. Because the ``run()`` method is just a wrapper around the
-``run_single()`` method, there is no need to override the default ``run()``.
+Composing a Pipeline
+--------------------
 
-A ``SlideData`` object can be used to hold intermediate outputs, so that a preprocessing step can have access to
-outputs from earlier steps.
+In many cases, a preprocessing pipeline can be thought of as a sequence of transformations.
+:class:`~pathml.preprocessing.pipeline.Pipeline` objects can be created by composing
+a list of :class:`~pathml.preprocessing.transforms.Transform`:
 
-Interacting with slides
-------------------------
+.. code-block:: python
 
-Pipelines must take ``BaseSlide`` objects as input.
-This interaction between Pipelines and Slides is very important - design choices here can affect pipeline execution
-times by orders of magnitude!
-This is because whole-slide images can be very large, even exceeding the amount of available memory in most machines!
+    pipeline = Pipeline([
+        BoxBlur(kernel_size=15),
+        TissueDetectionHE(mask_name = "tissue", min_region_size=500,
+                          threshold=30, outer_contours_only=True)
+    ])
+..
 
-.. note::
-
-    Naively loading an entire WSI into memory at high-resolution should therefore be avoided in most cases!
-
-Consider these best-practices when designing custom pipelines:
-
-- Make use of the ``BaseSlide.chunks()`` method to process the WSI in smaller chunks
-- Perform operations on lower-resolution image levels, when possible (i.e. when the slide has multiple resolutions
-  available and the operation will not suffer from decreased resolution)
-- Be cognizant of memory requirements at each step in the pipeline
-- Avoid loading entire slides into memory at high-resolution!
-
-Using Transforms
--------------------
-
-``PathML`` provides a set of modular Transformation objects to make it easier to define custom preprocessing pipelines.
-Individual low-level operations are implemented in ``Transform`` objects, through the ``apply()`` method.
-This consistent API makes it convenient to use complex operations in pipelines, and combine them modularly.
-There are several types of Transforms, as defined by their inputs and outputs:
-
-================== ========== ===========
-Transform type     Input      Output
-================== ========== ===========
-ImageTransform     image      image
-Segmentation       image      mask
-MaskTransform      mask       mask
-================== ========== ===========
-
-Some things to consider when implementing a custom pipeline:
-
-- Use existing Transforms when possible! This will save time compared to implementing the entire pipeline from scratch.
-- If implementing a new transformation or pipeline operation, consider contributing it to ``PathML`` so that other
-  users in the community can benefit from your hard work! See: contributing
-- Be aware of memory and computation requirements of your pipeline.
+In this example, the preprocessing pipeline will first apply a box blur kernel, and then apply tissue detection.
+It is that easy to compose pipelines by mixing and matching :class:`~pathml.preprocessing.transforms.Transform` objects!
 
 
-Examples
---------
+Custom Transforms
+-----------------
 
-In this example we'll define a Pipeline which reads chunks of the input slide, applies a box blur with a given kernel
-size, and then writes the blurred image to disk.
+A :class:`~pathml.preprocessing.pipeline.Pipeline` is a special case of
+a :class:`~pathml.preprocessing.transforms.Transform` which makes it easy
+to compose several :class:`~pathml.preprocessing.transforms.Transform`s sequentially.
+However, in some cases, you may want to implement a :class:`~pathml.preprocessing.transforms.Transform` from scratch.
+For example, you may want to apply a transformation which is not already implemented in ``PathML``.
+Or, perhaps you want to apply a preprocessing pipeline which is not perfectly sequential.
 
-.. code-block::
+To define a new custom :class:`~pathml.preprocessing.transforms.Transform`,
+all you need to do is create a class which inherits from :class:`~pathml.preprocessing.transforms.Transform` and
+implements an ``apply()`` method which takes a :class:`~pathml.core.tile.Tile` as an argument and modifies it in place.
+You may also implement a functional method ``F()``, although that is not strictly required.
 
-    import os
-    import cv2
-    from pathml.preprocessing.base import BasePipeline
-    from pathml.preprocessing.transforms import BoxBlur
-    from pathml.preprocessing.wsi import HESlide
+For example, let's take a look at how :class:`~pathml.preprocessing.transforms.BoxBlur` is implemented:
 
-    class ExamplePipeline(BasePipeline):
-        def __init__(self, kernel_size):
+.. code-block:: python
+
+    class BoxBlur(Transform):
+        """Box (average) blur kernel."""
+        def __init__(self, kernel_size=5):
             self.kernel_size = kernel_size
 
-        def run_single(self, slide, output_dir):
-            blur = BoxBlur(kernel_size)
-            for i, chunk in enumerate(slide.chunks(level = 0, size = 1000)):
-                blurred_chunk = blur.apply(chunk)
-                fname = os.path.join(output_dir, f"chunk{i}.jpg")
-                cv2.imwrite(fname, blurred_chunk)
+        def F(self, image):
+            return cv2.boxFilter(image, ksize = (self.kernel_size, self.kernel_size), ddepth = -1)
 
-    # usage
-    wsi = HESlide("/path/to/wsi.svs")
-    ExamplePipeline(kernel_size = 11).run(wsi)
+        def apply(self, tile):
+            tile.image = self.F(tile.image)
+..
 
-
-In this example, we define a Transform which changes the order of the channels in the input RGB image.
-
-.. code-block::
-
-    from pathml.preprocessing.base import ImageTransform
-
-    class ChannelSwitch(ImageTransform):
-        def apply(self, image):
-            # make sure that the input image has 3 channels
-            assert image.shape[2] == 3
-            out = image
-            out[:, :, 0] = image[:, :, 2]
-            out[:, :, 1] = image[:, :, 0]
-            out[:, :, 2] = image[:, :, 1]
-            return out
+That's it! Once you define your custom :class:`~pathml.preprocessing.transforms.Transform`,
+you can plug it in with any of the other :class:`~pathml.preprocessing.transforms.Transform`s,
+compose :class:`~pathml.preprocessing.pipeline.Pipeline`, etc.

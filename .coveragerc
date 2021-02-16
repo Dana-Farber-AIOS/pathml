@@ -2,10 +2,13 @@
 
 [run]
 source = pathml
-omit =
-    pathml/ml/*
-    pathml/preprocessing/base_*
 command_line = -m pytest
 
 [html]
 directory = coverage_report_html
+
+[report]
+exclude_lines =
+    pragma: no cover
+    if self.debug:
+    raise NotImplementedError

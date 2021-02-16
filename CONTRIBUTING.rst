@@ -47,14 +47,16 @@ Here's how to contribute code, documentation, etc.
 6. Write new tests as needed to maintain code coverage
 7. Ensure that all tests still pass
 8. Commit your changes and submit a pull request reference the corresponding issue
+9. Respond to discussion/feedback about the pull request. Make changes as necessary.
 
 Documentation Standards
 =======================
 
 All code should be documented, including docstrings for users AND inline comments for
 other developers whenever possible! Both are crucial for ensuring long-term usability and maintainability.
-Documentation is automatically generated using the Sphinx `autodoc`_ extension from properly formatted docstrings.
-All documentation (including docstrings) are written in `reStructuredText`_ format.
+Documentation is automatically generated using the Sphinx `autodoc`_ and `napoleon`_ extensions from
+properly formatted Google-style docstrings.
+All documentation (including docstrings) is written in `reStructuredText`_ format.
 See this `docstring example`_ to get started.
 
 To build documentation:
@@ -65,10 +67,12 @@ To build documentation:
     cd docs                 # enter docs directory
     make html               # build docs in html format
 
+Open ``docs/build/html/index.html`` in your favorite web browser.
+
 Testing Standards
 =================
 
-All new code should be accompanied by tests, whenever possible, to maintain good code coverage.
+All new code should be accompanied by tests, whenever possible, to maintain good code coverage (target >90%).
 We use the `pytest`_ testing framework.
 All tests should pass for new code, and new tests should be added as necessary when fixing bugs.
 
@@ -91,4 +95,5 @@ Thank you for helping make ``PathML`` better!
 .. _pytest: https://docs.pytest.org/en/stable/
 .. _autodoc: https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
 .. _reStructuredText: https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
-.. _docstring example: https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html
+.. _docstring example: https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
+.. _napoleon: https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html

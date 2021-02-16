@@ -1,6 +1,8 @@
 name: Python Package using Conda
 
-on: [pull_request]
+on: 
+  pull_request:
+    branches: [dev, master]
 
 jobs:
   build-linux:
@@ -8,7 +10,7 @@ jobs:
     strategy:
       max-parallel: 5
       matrix:
-        python-version: [3.7]
+        python-version: [3.8]
 
     steps:
     - uses: actions/checkout@v2
@@ -45,3 +47,10 @@ jobs:
       run: |
         conda install pytest
         python -m pytest
+    - name: Compile docs
+      shell: bash -l {0}
+      run: |
+        sudo apt-get install pandoc
+        pip install ipython sphinx nbsphinx nbsphinx-link sphinx-rtd-theme
+        cd docs
+        make html
