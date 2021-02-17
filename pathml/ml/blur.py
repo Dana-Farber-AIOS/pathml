@@ -8,6 +8,27 @@ from torch.nn import functional as F
 from pathml.preprocessing.wsi import HESlide
 from pathml.ml.efficientnet import EfficientNet
 
+from pathml.datasets.deepfocus import DeepFocusDataModule 
+
+def main():
+    net = EfficientNetBlur()
+    datamodule = DeepFocusDataModule(
+            data_dir = "tests/testdata/deepfocus/" 
+            batch_size = 8, 
+            download = True, 
+            transforms = None
+    )
+    model = EfficientNetBlur().to(device)
+    train_loader = datamodule.train_dataloader()
+    test_loader = datamodule.test_dataloader()
+    optimizer = optim.Adam(model.parameters(), lr=1e-3)
+    # train on deepfocus data
+    for epoch in range(1, 100):
+        train(epoch)
+        test(epoch)
+    # finetune on synthetic data mixed with deepfocus data
+
+
 class EfficientNetBlur(nn.Module):
     '''
     Frame blur detection as regression task.
@@ -23,25 +44,38 @@ class EfficientNetBlur(nn.Module):
     def forward(self, x):
         return self.en(x)
 
-class ResNetBlur(nn.Module):
-    def __init__(self):
-        super(ResNetBlur, self).__init__()
+    def loss(preds, targets):
         pass
 
-    def forward(self, x):
-        pass
 
-    def infer(self, x):
-        pass
+def train(epoch):
+    model.train()
+    train_loss = 0
+    for batch_idx, data in enumerate(train_loader):
+        imgs, targets = data.float().to(device)
+        optimizer.zero_grad()
+        pred = model(imgs)
+        loss = model.loss(pred, targets)
+        loss.backward()
+        train_loss += loss.item()
+        optimizer.step()
+        print(f"{Epoch} Average Training Loss: {train_loss/len(train_loader.dataset)}")
 
-def pretrain(model, dataset):
-    """
-    Pretrain model on DeepFocus data
-    """
+def test(epoch):
+    model.eval()
+    test_loss = 0
+    with torch.no_grad():
+        for i, data in enumerate(test_loader):
+            imgs, targets = data.float().to(device)
+            pred = model(imgs)
+            loss = model.loss(pred, targets)
+            test_loss += loss.item()
+            print(f"{Epoch} Test Loss: {test_loss}")
+
 
 def finetune(model, dataset, n_augmented = None):
     """
-    fine tune model by mixing held out fold of pretraining set with synthetic blur from dataset of interest
+    Fine tune model by mixing held out fold of pretraining set with synthetic blur from dataset of interest
     """
     # generate augmented dataset
 
@@ -49,9 +83,6 @@ def finetune(model, dataset, n_augmented = None):
 
     # train model
 
-
-def train(model, dataset):
-    pass
 
 
 def syntheticblur(patch, sigma, filtertype='gaussian'):

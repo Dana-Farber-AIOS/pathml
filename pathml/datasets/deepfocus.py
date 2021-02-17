@@ -3,7 +3,7 @@ import ntpath
 import h5py
 from pathlib import Path
 
-import torch.utils.data
+import torch.utils.data as data
 from torch.utils.data import Dataset, DataLoader
 
 from pathml.datasets.base import BaseDataModule, BaseDataset
@@ -22,6 +22,7 @@ class DeepFocusDataModule(BaseDataModule):
             batch_size=8
     ):
         self.data_dir = Path(data_dir)
+        self.data_dir.mkdir(parents=True, exist_ok=True)
         if download:
             self._download_deepfocus(self.data_dir) 
         else:
@@ -54,10 +55,10 @@ class DeepFocusDataModule(BaseDataModule):
                 shuffle = self.shuffle
         )
     
-    def _get_dataset(self, fold_idx = None):
+    def _get_dataset(self, fold_ix = None):
         return DeepFocusDataset(
                 data_dir = self.data_dir,
-                fold_idx = fold_idx,
+                fold_ix = fold_ix,
                 transforms = self.transforms
         )
 
@@ -67,7 +68,6 @@ class DeepFocusDataModule(BaseDataModule):
             return
         # TODO: add md5 checksum
         download_from_url('https://zenodo.org/record/1134848/files/outoffocus2017_patches5Classification.h5', root)
-        # TODO: clean dataset
 
     def _check_integrity(self) -> bool:
         # TODO: check hash of file
@@ -78,8 +78,8 @@ class DeepFocusDataset(BaseDataset):
             data_dir,
             fold_ix=None,
             transforms=None):
-        self.datah5 = h5py.File(str(data_dir + 'outoffocus2017_patches5Classification.h5'), 'r')
-        # TODO: this is extremely jank and must be improved
+        self.datah5 = h5py.File(str(data_dir / Path('outoffocus2017_patches5Classification.h5')), 'r')
+        # all
         if fold_ix == None:
             self.X = self.datah5['X']
             self.Y = self.datah5['Y']
