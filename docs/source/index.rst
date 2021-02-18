@@ -54,6 +54,7 @@ Dana-Farber Cancer Institute.
    examples/link_stain_normalization
    examples/link_nucleus_detection
    examples/link_preprocessing_pipeline
+   examples/link_train_hovernet
 
 .. toctree::
    :maxdepth: 2
