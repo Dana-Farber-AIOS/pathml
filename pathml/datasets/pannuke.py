@@ -7,6 +7,7 @@ from warnings import warn
 from pathlib import Path
 import re
 import cv2
+import shutil
 
 from pathml.datasets.base import BaseTileDataset, BaseDataModule
 from pathml.datasets.utils import download_from_url
@@ -31,6 +32,9 @@ class PanNukeDataset(BaseTileDataset):
 
     Args:
         data_dir: Path to PanNuke data. Should contain an 'images' directory and a 'masks' directory.
+            Images should be 256x256 RGB in a format that can be read by `cv2.imread()` (e.g. png).
+            Masks should be .npy files of shape (6, 256, 256).
+            Image and mask files should be named in 'fold<fold_ix>_<i>_<tissue>' format.
         fold_ix: Index of which fold of PanNuke data to use. One of 1, 2, or 3. If ``None``, ignores the folds and uses
             the entire PanNuke dataset. Defaults to ``None``.
         transforms: Transforms to use for data augmentation. Must accept two arguments (image and mask) and return a
@@ -70,18 +74,21 @@ class PanNukeDataset(BaseTileDataset):
         assert maskdir.is_dir(), f"Error: 'masks' directory not found: {maskdir}"
 
         if self.fold_ix is None:
-            self.impaths = list(imdir.glob("*"))
-            self.maskpaths = list(maskdir.glob("*"))
+            paths = list(imdir.glob("*"))
         else:
-            self.impaths = list(imdir.glob(f"fold{fold_ix}*"))
-            self.maskpaths = list(maskdir.glob(f"fold{fold_ix}*"))
+            paths = list(imdir.glob(f"fold{fold_ix}*"))
+
+        self.imdir = imdir
+        self.maskdir = maskdir
+        self.paths = [p.stem for p in paths]
 
     def __len__(self):
-        return len(self.impaths)
+        return len(self.paths)
 
     def __getitem__(self, ix):
-        impath = self.impaths[ix]
-        maskpath = self.maskpaths[ix]
+        stem = self.paths[ix]
+        impath = self.imdir / f"{stem}.png"
+        maskpath = self.maskdir / f"{stem}.npy"
         tissue_type = str(impath.stem).split(sep = "_")[2]
 
         im = cv2.imread(str(impath))
@@ -89,7 +96,7 @@ class PanNukeDataset(BaseTileDataset):
 
         if self.nucleus_type_labels is False:
             # only look at "background" mask in last channel
-            mask = mask[:, :, 5]
+            mask = mask[5, :, :]
             # invert so that ones are nuclei pixels
             mask = 1 - mask
 
@@ -101,10 +108,7 @@ class PanNukeDataset(BaseTileDataset):
         # swap channel dim to pytorch standard (C, H, W)
         im = im.transpose((2, 0, 1))
 
-        # only need to swap axes if multiclass labels. Otherwise the mask is just (H, W)
-        if self.nucleus_type_labels:
-            mask = mask.transpose((2, 0, 1))
-        
+        # compute hv map
         if self.hovernet_preprocess:
             if self.nucleus_type_labels:
                 # sum across mask channels to squash mask channel dim to size 1
@@ -113,10 +117,13 @@ class PanNukeDataset(BaseTileDataset):
             else:
                 mask_1c = mask
             hv_map = compute_hv_map(mask_1c)
-            return torch.from_numpy(im), torch.from_numpy(mask), torch.from_numpy(hv_map), tissue_type
 
+        if self.hovernet_preprocess:
+            out = torch.from_numpy(im), torch.from_numpy(mask), torch.from_numpy(hv_map), tissue_type
         else:
-            return torch.from_numpy(im), torch.from_numpy(mask), tissue_type
+            out = torch.from_numpy(im), torch.from_numpy(mask), tissue_type
+
+        return out
 
 
 def pannuke_multiclass_mask_to_nucleus_mask(multiclass_mask):
@@ -124,7 +131,7 @@ def pannuke_multiclass_mask_to_nucleus_mask(multiclass_mask):
     Convert multiclass mask from PanNuke to a single channel nucleus mask.
     Assumes each pixel is assigned to one and only one class. Sums across channels, except the last mask channel
     which indicates background pixels in PanNuke.
-    Operates on a single masks.
+    Operates on a single mask.
 
     Args:
         multiclass_mask (torch.Tensor): Mask from PanNuke, in classification setting. (i.e. ``nucleus_type_labels=True``).
@@ -135,9 +142,9 @@ def pannuke_multiclass_mask_to_nucleus_mask(multiclass_mask):
     """
     # verify shape of input
     assert multiclass_mask.ndim == 3 and multiclass_mask.shape[0] == 6, \
-        f"Expecting a batch of masks with dims (6, 256, 256). Got input of shape {multiclass_mask.shape}"
+        f"Expecting a mask with dims (6, 256, 256). Got input of shape {multiclass_mask.shape}"
     assert multiclass_mask.shape[1] == 256 and multiclass_mask.shape[2] == 256, \
-        f"Expecting a batch of masks with dims (6, 256, 256). Got input of shape {multiclass_mask.shape}"
+        f"Expecting a mask with dims (6, 256, 256). Got input of shape {multiclass_mask.shape}"
     # ignore last channel
     out = np.sum(multiclass_mask[:-1, :, :], axis = 0)
     return out
@@ -287,10 +294,10 @@ class PanNukeDataModule(BaseDataModule):
                 tissue_type = types_fold[j]
                 # change underscores in tissue type label to dashes
                 tissue_type = re.sub(pattern = "_", repl = "-", string = tissue_type)
-
-                im_fname = imdir / f"fold{fold_ix}_{j}_{tissue_type}.png"
+                file_basename = f"fold{fold_ix}_{j}_{tissue_type}"
+                im_fname = imdir / f"{file_basename}.png"
                 im_fname = str(im_fname.resolve())
-                mask_fname = maskdir / f"fold{fold_ix}_{j}_{tissue_type}.npy"
+                mask_fname = maskdir / f"{file_basename}.npy"
                 mask_fname = str(mask_fname.resolve())
 
                 cv2.imwrite(im_fname, im)
@@ -305,7 +312,7 @@ class PanNukeDataModule(BaseDataModule):
             zip_file = p / f"fold_{fold_ix}.zip"
             downloaded_dir = p / f"Fold {fold_ix}"
             zip_file.unlink()
-            downloaded_dir.rmdir()
+            shutil.rmtree(downloaded_dir)
 
 
     @property
@@ -317,7 +324,8 @@ class PanNukeDataModule(BaseDataModule):
         return data.DataLoader(
             dataset = self._get_dataset(fold_ix = self.split),
             batch_size = self.batch_size,
-            shuffle = self.shuffle
+            shuffle = self.shuffle, 
+            pin_memory=True
         )
 
     @property
@@ -333,7 +341,8 @@ class PanNukeDataModule(BaseDataModule):
         return data.DataLoader(
             self._get_dataset(fold_ix = fold_ix),
             batch_size = self.batch_size,
-            shuffle = self.shuffle
+            shuffle = self.shuffle, 
+            pin_memory=True
         )
 
     @property
@@ -349,5 +358,6 @@ class PanNukeDataModule(BaseDataModule):
         return data.DataLoader(
             self._get_dataset(fold_ix = fold_ix),
             batch_size = self.batch_size,
-            shuffle = self.shuffle
+            shuffle = self.shuffle, 
+            pin_memory=True
         )

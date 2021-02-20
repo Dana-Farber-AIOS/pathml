@@ -1,71 +1,53 @@
 import pytest
+import pickle
+import numpy as np
 
 from pathml.preprocessing.pipeline import Pipeline
-from pathml.preprocessing.base import (
-    BaseSlideLoader, BaseSlidePreprocessor, BaseTileExtractor, BaseTilePreprocessor, BasePipeline)
+
+from pathml.preprocessing.transforms import (
+    MedianBlur, GaussianBlur, BoxBlur, BinaryThreshold,
+    MorphOpen, MorphClose, ForegroundDetection, SuperpixelInterpolation,
+    StainNormalizationHE, NucleusDetectionHE, TissueDetectionHE
+)
+from pathml.utils import RGB_to_GREY
 
 
-@pytest.fixture
-def dummy_pipeline():
-    class DummyPipeline(BasePipeline):
-        """create a dummy pipeline for testing"""
-        def __init__(self):
-            self.record = {}
+# make an example pipeline
+def test_pipeline(tileHE):
+    pipe = Pipeline([
+        MedianBlur(),
+        GaussianBlur(),
+        BoxBlur(),
+        BinaryThreshold(mask_name = "testing"),
+        MorphOpen(mask_name = "testing"),
+        MorphClose(mask_name = "testing")
+    ])
 
-        def run_single(self, slide):
-            # add an entry to record so we know the slide was touched by this pipeline
-            self.record[slide.name] = True
-            return slide
-    return DummyPipeline()
+    assert len(pipe) == 6
+
+    orig_im = tileHE.image
+    pipe.apply(tileHE)
+
+    im = MedianBlur().F(orig_im)
+    im = GaussianBlur().F(im)
+    im = BoxBlur().F(im)
+    m = BinaryThreshold().F(RGB_to_GREY(im))
+    m = MorphOpen().F(m)
+    m = MorphClose().F(m)
+
+    assert np.array_equal(tileHE.image, im)
+    assert np.array_equal(tileHE.masks["testing"], m)
 
 
-def test_base_pipeline_single_slide(example_he_slide, dummy_pipeline):
-    _ = dummy_pipeline.run(example_he_slide)
-    assert dummy_pipeline.record[example_he_slide.name]
 
+def test_pipeline_save(tmp_path):
+    # tmp_path is a temporary path used for testing
+    fp = tmp_path / "test"
 
-# @pytest.mark.parametrize("n_jobs", [-1, None, 1, 3, 20])
-@pytest.mark.parametrize("n_jobs", [None, 1])
-def test_base_pipeline_dataset(example_slide_dataset, dummy_pipeline, n_jobs):
-    _ = dummy_pipeline.run(target = example_slide_dataset, n_jobs = n_jobs)
-    for slide in example_slide_dataset:
-        assert dummy_pipeline.record[slide.name]
+    pipeline = Pipeline([MedianBlur()])
+    pipeline.save(fp)
 
+    pipeline_loaded = pickle.load(open(fp, "rb"))
 
-def test_pipeline(example_he_slide):
-    # define dummy preprocessors amd dummy data class for testing
-    # we are testing the pipeline, not the preprocessors themselves
-    class MySlideLoader(BaseSlideLoader):
-        def apply(self, slide):
-            data = {"slide_loaded": True}
-            return data
-
-    class MySlidePreprocessor(BaseSlidePreprocessor):
-        def apply(self, data):
-            data["slide_preprocessed"] = True
-            return data
-
-    class MyTileExtractor(BaseTileExtractor):
-        def apply(self, data):
-            data["tiles_extracted"] = True
-            return data
-
-    class MyTilePreprocessor(BaseTilePreprocessor):
-        def apply(self, data):
-            data["tiles_preprocessed"] = True
-            return data
-
-    # now create pipeline to string these together and check that it worked properly
-    my_pipeline = Pipeline(
-        slide_loader = MySlideLoader(),
-        slide_preprocessor = MySlidePreprocessor(),
-        tile_extractor = MyTileExtractor(),
-        tile_preprocessor = MyTilePreprocessor()
-    )
-
-    test_data = my_pipeline.run_single(example_he_slide)
-
-    assert test_data["slide_loaded"]
-    assert test_data["slide_preprocessed"]
-    assert test_data["tiles_extracted"]
-    assert test_data["tiles_preprocessed"]
+    assert repr(pipeline_loaded) == repr(pipeline)
+    assert type(pipeline_loaded) == type(pipeline)
