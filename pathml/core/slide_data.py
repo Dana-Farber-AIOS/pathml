@@ -1,10 +1,12 @@
 from typing import Optional, Literal, Union, Any
 from os import PathLike
+import h5py
 
 from pathml.core.masks import Masks
 from pathml.core.tile import Tile
 from pathml.core.tiles import Tiles
 from pathml.core.slide_backends import SlideBackend, OpenSlideBackend
+import pathml.core.h5path 
 from pathml.preprocessing.pipeline import Pipeline
 
 
@@ -22,13 +24,13 @@ class SlideData:
         tiles (pathml.core.tiles.Tiles, optional): object containing {coordinates, tile} pairs
         labels (collections.OrderedDict, optional): dictionary containing {key, label} pairs
     """
-    def __init__(self, filepath=None, name=None, slide_backend=None, masks=None, tiles=None, labels=None, h5=None):
+    def __init__(self, filepath=None, name=None, slide_backend=None, masks=None, tiles=None, labels=None, history=None):
         # check inputs
-        assert masks is None or isinstance(masks, Masks), \
-            f"mask are of type {type(masks)} but must be of type pathml.core.masks.Masks"
+        assert masks is None or isinstance(masks, (Masks, h5py._hl.group.Group)), \
+            f"mask are of type {type(masks)} but must be type Masks or h5 group"
         assert labels is None or isinstance(labels, dict), \
             f"labels are of type {type(labels)} but must be of type dict. array-like labels should be stored in masks."
-        assert tiles is None or isinstance(tiles, Tiles), \
+        assert tiles is None or isinstance(tiles, (Tiles, h5py._hl.group.Group)), \
             f"tiles are of type {type(tiles)} but must be of type pathml.core.tiles.Tiles"
         assert slide_backend is None or issubclass(slide_backend, SlideBackend), \
             f"slide_backend is of type {type(slide_backend)} but must be a subclass of pathml.core.slide_backends.SlideBackend"
@@ -41,12 +43,12 @@ class SlideData:
         else:
             self.slide = None
 
+        self.slide_backend = slide_backend
         self.name = name
         self.masks = masks
         self.tiles = tiles
         self.labels = labels
-        self.history = None
-        self.h5 = h5
+        self.history = history
 
     def __repr__(self): 
         out = f"{self.__class__.__name__}(name={self.name}, "
@@ -140,8 +142,8 @@ class SlideData:
                 tile_masks = None
                 if self.masks is not None:
                     slices = [
-                        slice(int(ix_j * stride), int(ix_j * stride + shape[0])),
-                        slice(int(ix_i * stride), int(ix_i * stride) + shape[1])
+                        slice(int(ix_i * stride_i), int(ix_i * stride_i) + shape[0]),
+                        slice(int(ix_j * stride_j), int(ix_j * stride_j) + shape[1])
                     ]
                     tile_masks = self.masks.slice(slices)
                 yield Tile(image = tile_im, coords = coords, masks = tile_masks, slidetype = type(self))
@@ -149,13 +151,5 @@ class SlideData:
     def plot(self):
         raise NotImplementedError
 
-    def save(self):
-        raise NotImplementedError
-
-    def _write_h5(
-        self,
-        filename: Optional[PathLike] = None,
-        compression: Optional[Literal["gzip", "lzf"]] = None,
-        compression_opts: Union[int, Any] = None,
-    ):
-        raise NotImplementedError
+    def write(self, path):
+        pathml.core.h5path.write_h5path(self, path)

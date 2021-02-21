@@ -125,7 +125,6 @@ class BioFormatsBackend(SlideBackend):
         raise NotImplementedError
 
 
-
 class DICOMBackend(SlideBackend):
     """
     Class for interfacing with DICOM images on disk
