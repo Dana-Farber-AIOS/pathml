@@ -1,5 +1,7 @@
 import zipfile
 import os
+import shutil
+import sys
 import numpy as np
 import torch
 import torch.utils.data as data
@@ -9,6 +11,8 @@ import cv2
 
 from pathml.datasets.base import BaseSlideDataset, BaseDataModule
 from pathml.datasets.utils import download_from_url
+from pathml.preprocessing.transforms import TissueDetectionHE
+from pathml.preprocessing.pipeline import Pipeline
 
 class PesoDataModule(BaseDataModule):
     def __init__(self,
@@ -35,24 +39,57 @@ class PesoDataModule(BaseDataModule):
         return f"repr=(DataModule for PESO segmentation dataset)"
 
     def _download_peso(self, download_dir):
-        # remove trailing path
-        if download_dir.endswith(os.sep):
-            download_dir = download_dir[:-1]
         # throw exception if download directory exists
         # TODO: check hash
         if not os.path.isdir(download_dir):
-            print("Downloading Peso Dataset")
+            x.
+            print("Downloading Peso Dataset. Total file size is ~100GB, please wait.")
             files = ['peso_testset_mapping.csv','peso_testset_png.zip','peso_testset_png_padded.zip','peso_testset_regions.zip','peso_testset_wsi_1.zip','peso_testset_wsi_2.zip','peso_testset_wsi_3.zip','peso_testset_wsi_4.zip','peso_training_colordeconvolution.zip','peso_training_masks.zip','peso_training_masks_corrected.zip','peso_training_wsi_1.zip','peso_training_wsi_2.zip','peso_training_wsi_3.zip','peso_training_wsi_4.zip','peso_training_wsi_5.zip','peso_training_wsi_6.zip']
-            files = ['peso_training_wsi_3.zip','peso_training_wsi_4.zip','peso_training_wsi_5.zip','peso_training_wsi_6.zip']
             url = f'https://zenodo.org/record/1485967/files/'
             for file in files:
                 print(f"downloading {file}")
-                download_from_url(f"{url}{file}", f"{download_dir}/{os.path.splitext(file)[0]}") 
-                if zipfile.is_zipfile(file):
-                    with zipfile.ZipFile(f"{download_dir}/{file}",'r') as zip_ref:
-                        zip_ref.extractall(f"{download_dir}/{file}")
+                download_from_url(f"{url}{file}", f"{download_dir}") 
+            for root, _, files in os.walk(download_dir): 
+                for file in files:
+                    print(f"unzipping {file}")
+                    if zipfile.is_zipfile(f"{root}/{file}"):
+                        with zipfile.ZipFile(f"{root}/{file}",'r') as zip_ref:
+                            zip_ref.extractall(f"{root}/{Path(file).stem}")
+                        os.remove(f"{root}/{file}")
+            trainingwsifolders = [
+                    'peso_training_wsi_1',
+                    'peso_training_wsi_2',
+                    'peso_training_wsi_3',
+                    'peso_training_wsi_4',
+                    'peso_training_wsi_5',
+                    'peso_training_wsi_6'
+            ]
+            for trainingwsifolder in trainingwsifolders:
+                for file in os.listdir(Path(download_dir)/Path(trainingwsifolder)):
+                    if file.endswith('.tif'):
+                        name = '_'.join(file.split('_')[:-1])
+                        maskpath = Path(name+'_HE_training_mask.tif') 
+                        mask = HESlide(filepath = Path(download_dir)/Path('peso_training_masks')/maskpath, name = name)
+                        shape1, shape2 = mask.slide.get_image_shape()
+                        shape = (shape2, shape1)
+                        mask = mask.slide.slide.read_region(((0,0)), 0, shape)
+                        mask, _, _, _ = mask.split()
+                        # mask.point(lambda x: x * 255) # optionally convert to 255 for img
+                        masks = {'stroma': mask}
+                        wsi = HESlide(file , masks = masks)
+                        pipeline = Pipeline([
+                            TissueDetectionHE(mask_name = 'tissue', min_region_size = 500,
+                                threshold = 30, outer_contours_only = True)
+                            ])
+                        # TODO: choose tile size
+                        slide.run(pipeline, tile_size=224)
+                        wsi.write(Path(download_dir)/Path('h5')/Path(name+'.h5'))
+                        os.remove(Path(download_dir)/Path(traininwsifolder)/Path(file))
+                        os.remove(Path(download_dir)/Path('peso_training_masks')/maskpath)
+
         else:
             warn(f'download_dir exists, download canceled')
+
 
     @property
     def train_dataloader(self):
@@ -84,7 +121,7 @@ class PesoDataModule(BaseDataModule):
     def test_dataloader(self):
         """
         Dataloader for test set.
-        """
+            """
         if self.split in [1, 2]:
             fold_ix = 3
         else:
@@ -98,11 +135,10 @@ class PesoDataModule(BaseDataModule):
 class PesoDataset(BaseSlideDataset):
     """
     Dataset object for Peso dataset.
-    
-    training data:
-    training masks (n=62) with labels __
+    Raw data downloads:
+    IHC color deconvolution (n=62) with p63, ck8/18 stainings
+    training masks (n=62) generated by segmenting IHC with UNet 
     training masks corrected (n=25) with manual annotations
-    training masks color deconvolution (n=62) with p63, ck8/18 stainings
     wsis (n=62) wsis at 0.48 \mu/pix
 
     testing data:
@@ -111,32 +147,41 @@ class PesoDataset(BaseSlideDataset):
     testset png padded 3500x3500 pixel regions 500pixel padding
     testset mapping csv file maps test set (1-160) to xml files, benign/cancer labels
     testset wsi (n=40) at 0.48 \mu/pix
+
+    Each WSI and associated mask is loaded as SlideData and saved in h5path format
     """
 
     def __init__(self,
             data_dir,
             fold_ix = None,
             transforms = None):
-        self.data_dir = data_dir
         self.fold_ix = fold_ix
         self.transforms = transforms
 
-        data_dir = Path(data_dir)
+        self.data_dir = Path(data_dir)
 
         assert data_dir.isdir(), f"Error: data not found at {data_dir}"
 
-        if not any(fname.endswith('.h5') for fname in os.listdir(self.data_dir)):
-            self._makeh5()
-        self.data = data_dir / 'peso.h5' 
+        if not any(fname.endswith('.h5') for fname in os.listdir(self.data_dir / Path('h5'))):
+            raise Exception('must download dataset from pathml.datasets') 
+         
+        getitemdict = {}
+        items = 0
+        for h5 in os.listdir(self.data_dir / Path('h5')):
+            wsi = read(self.data_dir / Path('h5') / Path(file))
+            for i in range(len(wsi.tile)):
+                getitemdict[items] = (wsi.name, i) 
+                items = items + 1
+        self.getitemdict = getitemdict
+        self.wsi = None
 
     def __len__(self):
-        pass
+        return len(self.getitemdict)
 
     def __getitem__(self, ix):
-        pass
-
-    def _makeh5(self):
-        pass
-        
-
+        wsiname, index = self.getitemdict[ix]
+        if self.wsi is None or self.wsi.name != wsiname:
+            self.wsi = read(self.data_dir / Path('h5') / Path(wsiname + '.h5'))
+        tile = self.wsi.tiles[index] 
+        return tile
 
