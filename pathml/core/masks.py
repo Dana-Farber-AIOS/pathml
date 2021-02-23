@@ -15,25 +15,27 @@ class Masks:
         masks(dict): Mask objects representing ex. labels, segmentations.
     """
 
-    def __init__(self,
-                 masks=None
-                 ):
-        if masks:
-            if not isinstance(masks, dict):
-                raise ValueError(f"masks must be passed as dicts of the form key1:mask1,key2:mask2,...")
-            for val in masks.values():
-                if not isinstance(val, np.ndarray):
-                    raise ValueError(f"can not add {type(val)}, mask must be of type np.ndarray")
-            for key in masks.keys():
-                if not isinstance(key, str):
-                    raise ValueError(f"can not add {type(key)}, key must be of type str")
-            self._masks = OrderedDict(masks)
+    def __init__(self, masks = None, h5 = None):
+        if h5 is None:
+            if masks:
+                if not isinstance(masks, dict):
+                    raise ValueError(f"masks must be passed as dicts of the form key1:mask1,key2:mask2,...")
+                for val in masks.values():
+                    if not isinstance(val, np.ndarray):
+                        raise ValueError(f"can not add {type(val)}, mask must be of type np.ndarray")
+                for key in masks.keys():
+                    if not isinstance(key, str):
+                        raise ValueError(f"can not add {type(key)}, key must be of type str")
+                self._masks = OrderedDict(masks)
+            else:
+                self._masks = OrderedDict()
+            self.h5manager = _masks_h5_manager()
+            for mask in self._masks:
+                self.h5manager.add(mask, self._masks[mask])
+            del self._masks
+
         else:
-            self._masks = OrderedDict()
-        self.h5manager = _masks_h5_manager()
-        for mask in self._masks:
-            self.h5manager.add(mask, self._masks[mask])
-        del self._masks
+            self.h5manager = _masks_h5_manager(h5)
 
     def __repr__(self):
         rep = f"Masks(keys={self.h5manager.h5['masks'].keys()})"

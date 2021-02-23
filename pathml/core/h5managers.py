@@ -4,18 +4,23 @@ import ast
 from collections import OrderedDict
 import numpy as np
 
+from pathml.core.utils import writedataframeh5, writestringh5, writedicth5, writetupleh5
+
 
 class _h5_manager:
     """
     Abstract class for h5 data management
     """
 
-    def __init__(self):
+    def __init__(self, h5 = None):
         path = tempfile.TemporaryFile()
         f = h5py.File(path, 'w')
         self.h5 = f
         self.h5path = path
         self.shape = None
+        if h5:
+            for ds in h5.keys():
+                h5.copy(ds, f)
 
     def add(self, key, val):
         raise NotImplementedError
@@ -41,8 +46,8 @@ class _tiles_h5_manager(_h5_manager):
     Interface between tiles object and data management on disk by h5py. 
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, h5 = None):
+        super().__init__(h5 = h5)
 
     def add(self, key, tile):
         """
@@ -52,7 +57,6 @@ class _tiles_h5_manager(_h5_manager):
             key(str or tuple): key will become tile name 
             tile(pathml.core.tile.Tile): Tile object
         """
-
         if not isinstance(key, (str, tuple)):
             raise ValueError(f"can not add type {type(key)}, key must be of type str or tuple")
         if str(key) in self.h5.keys():
@@ -62,56 +66,30 @@ class _tiles_h5_manager(_h5_manager):
         if tile.image.shape != self.shape:
             raise ValueError(f"Tiles contains tiles of shape {self.shape}, provided tile is of shape {tile.image.shape}"
                              f". We enforce that all Tile in Tiles must have matching shapes.")
+
         tilegroup = self.h5.create_group(str(key))
         masksgroup = tilegroup.create_group('masks')
-        addtile = tilegroup.create_dataset(
-            'tile',
-            data = tile.image
-        )
+        writedataframeh5(tilegroup, 'tile', tile.image)
+
         if tile.masks:
             try:
                 for mask in tile.masks.h5manager.h5['masks']:
-                    addmask = masksgroup.create_dataset(
-                        str(mask),
-                        data = tile.masks.h5manager.h5['masks'][mask][:]
-                    )
+                    writedataframeh5(masksgroup, str(mask), tile.masks.h5manager.h5['masks'][mask][:])
             except:
                 for mask in tile.masks:
-                    addmask = masksgroup.create_dataset(
-                        str(mask),
-                        data = tile.masks[mask]
-                    )
-        # convert label dict to numpy array containing str objects
-        # h5 coerces: 
-        #   str -> variable length UTF-8
-        #   bytes (from str) -> ASCII
+                    writedataframeh5(masksgroup, str(mask), tile.masks[mask])
+
         if tile.labels:
-            labelarray = np.array(list(tile.labels.items()), dtype=object)
-            addlabels = tilegroup.create_dataset(
-                'labels',
-                data = labelarray
-            )
+            writedicth5(tilegroup, 'labels', tile.labels)
 
         if tile.coords:
-            coordsarray = np.array(str(tile.coords), dtype = object)
-            addcoords = tilegroup.create_dataset(
-                'coords',
-                data = coordsarray
-            )
+            writetupleh5(tilegroup, 'coords', tile.coords)
 
         if tile.slidetype:
-            slidetypearray = np.array(str(tile.slidetype), dtype = object)
-            addslidetype = tilegroup.create_dataset(
-                'slidetype',
-                data = slidetypearray
-            )
+            writestringh5(tilegroup, 'slidetype', tile.slidetype)
 
         if tile.name:
-            namearray = np.array(str(tile.name), dtype = object)
-            addname = tilegroup.create_dataset(
-                'name',
-                data = namearray
-            )
+            writestringh5(tilegroup, 'name', tile.name)
 
     def update(self, key, val, target):
         key = str(key)
@@ -219,9 +197,10 @@ class _masks_h5_manager(_h5_manager):
     Interface between masks object and data management on disk by h5py. 
     """
 
-    def __init__(self):
-        super().__init__()
-        self.h5.create_group("masks")
+    def __init__(self, h5 = None):
+        super().__init__(h5 = h5)
+        if "masks" not in self.h5:
+            self.h5.create_group("masks")
 
     def add(self, key, mask):
         """
@@ -308,16 +287,3 @@ class _masks_h5_manager(_h5_manager):
         if key not in self.h5['masks'].keys():
             raise KeyError('key is not in Masks')
         del self.h5['masks'][key]
-
-
-def read_h5(filepath):
-    """
-    Load SlideData saved to disk in hdf5 file
-
-    Args:
-        path (str): filepath
-
-    Returns:
-        pathml.core.slide_data.SlideData: Loaded SlideData object
-    """
-    raise NotImplementedError
