@@ -16,6 +16,9 @@ from pathml.preprocessing.pipeline import Pipeline
 from pathml.core.slide_classes import HESlide
 from pathml.core.masks import Masks
 
+import cProfile
+import pstats
+
 class PesoDataModule(BaseDataModule):
     def __init__(self,
             data_dir,
@@ -67,6 +70,10 @@ class PesoDataModule(BaseDataModule):
         for trainingwsifolder in trainingwsifolders:
             for file in os.listdir(Path(download_dir)/Path(trainingwsifolder)):
                 if file.endswith('.tif'):
+                    
+                    profile = cProfile.Profile()
+                    profile.enable()
+
                     name = '_'.join(file.split('_')[:-1])
                     maskpath = Path(name+'_HE_training_mask.tif') 
                     mask = HESlide(filepath = str(Path(download_dir)/Path('peso_training_masks')/maskpath), name = name)
@@ -85,7 +92,10 @@ class PesoDataModule(BaseDataModule):
                             threshold = 30, outer_contours_only = True)
                         ])
                     # TODO: choose tile size
-                    wsi.run(pipeline, tile_size=3000)
+                    wsi.run(pipeline, tile_size=250)
+                    profile.disable()
+                    ps = pstats.Stats(profile)
+                    ps.print_stats()
                     wsi.write(str(Path(download_dir)/Path('h5')/Path(name+'.h5')))
                     os.remove(str(Path(download_dir)/Path(traininwsifolder)/Path(file)))
                     os.remove(str(Path(download_dir)/Path('peso_training_masks')/maskpath))
