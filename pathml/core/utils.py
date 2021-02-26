@@ -34,4 +34,3 @@ def writetupleh5(h5, name, tup):
 
 
 # TODO: read h5 methods?
-

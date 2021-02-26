@@ -21,8 +21,12 @@ bioformatsext = {
     'tiff'
 }
 
+dicomext = {
+    'dicom'
+}
 
-validexts = pathmlext | openslideext | bioformatsext
+
+validexts = pathmlext | openslideext | bioformatsext | dicomext
 
 def write_h5path(
     slidedata,
@@ -57,29 +61,46 @@ def write_h5path(
                 slidedata.tiles.h5manager.h5.copy(ds, f['tiles'])
 
 def read(
-    path
+    path,
+    backend = None,
+    tma = False,
+    stain = 'HE'
     ):
     """
     Read file and return :class:`~pathml.slide_data.SlideData` object.
 
     Args:
         path (str): Path to slide file on disk 
+        tma (bool): Flag indicating whether the slide is a tissue microarray 
+        stain (str): One of {'HE','IHC','Fluor'}. Flag indicating type of slide stain.
     """
+    # TODO: Pass TMA to read. Create slide_class supporting TMAs. 
+    # TODO: Pass stain to read. Add stains to class hierarchy. 
     path = Path(path)
     if not path.exists():
         raise ValueError(f"Path does not exist.")
     if is_valid_path(path):
         ext = is_valid_path(path, return_ext = True)
-        if ext not in validexts:
-            raise ValueError(
-                f"Can only read files with extensions {validexts}"
-            )
-        if ext in pathmlext: 
-            return read_h5path(path)
-        elif ext in openslideext:
+        if backend is None: 
+            if ext not in validexts:
+                raise ValueError(
+                    f"Can only read files with extensions {validexts}. Convert to supported filetype or specify backend."
+                )
+            if ext in pathmlext: 
+                return read_h5path(path)
+            elif ext in openslideext:
+                return read_openslide(path)
+            elif ext in bioformatsext:
+                return read_bioformats(path)
+            elif ext in dicomext:
+                return read_dicom(path)
+        elif backend == 'openslide':
             return read_openslide(path)
-        elif ext in bioformatsext:
-            return read_bioformats(path)
+        elif backend == 'bioformats':
+            return read_openslide(path)
+        elif backend == 'dicom':
+            return read_dicom(path)
+        raise Exception("Must specify valid backend.")
 
 def read_h5path(
     path
@@ -127,7 +148,18 @@ def read_bioformats(
     Args:
         path (str): Path to image file of supported BioFormats format on disk
     """
-    return pathml.core.slide_data.SlideData(filepath = path, slide_backend='Bioformats') 
+    return pathml.core.slide_data.SlideData(filepath = path, slide_backend = 'bioformats') 
+
+def read_dicom(
+    path
+    ):
+    """
+    Read dicom imaging format and return :class:`~pathml.slide_data.SlideData` object.
+    
+    Args:
+        path (str): Path to image file of supported dicom format on disk
+    """
+    return pathml.core.slide_data.SlideData(filepath = path, slide_backend = 'dicom')
 
 def read_directory(
     tilepath,
