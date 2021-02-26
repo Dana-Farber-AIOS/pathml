@@ -114,16 +114,16 @@ def read_h5path(
     with h5py.File(path, "r") as f:
         tiles = Tiles(h5 = f['tiles']) if 'tiles' in f.keys() else None 
         masks = Masks(h5 = f['masks']) if 'masks' in f.keys() else None
-        backend = f['fields/slide_backend'][...].item().decode('UTF-8') if 'slide_backend' in f['fields'].keys() else None
+        backend = f['fields'].attrs['slide_backend'] if 'slide_backend' in f['fields'].attrs.keys() else None
         if backend == "<class 'pathml.core.slide_backend.BioFormatsBackend'>":
             slide_backend = BioformatsBackend
         elif backend == "<class 'pathml.core.slide_backends.DICOMBackend'>":
             slide_backend = DICOMBackend
         else:
             slide_backend = OpenSlideBackend
-        name = f['fields/name'][...].item().decode('UTF-8') if 'name' in f['fields'].keys() else None
-        labels = dict(f['fields/labels'][...]) if 'labels' in f['fields'].keys() else None 
-        labels = {k.decode('UTF-8') : v.decode('UTF-8') for k,v in labels.items()}
+        name = f['fields'].attrs['name'] if 'name' in f['fields'].attrs.keys() else None
+        labels = dict(f['fields'].attrs['labels']) if 'labels' in f['fields'].attrs.keys() else None 
+        labels = {k : v for k,v in labels.items()}
         history = None
     return pathml.core.slide_data.SlideData(name = name, slide_backend = slide_backend, masks = masks, tiles = tiles, labels = labels, history = history) 
 

@@ -118,7 +118,7 @@ class _tiles_h5_manager(_h5_manager):
         elif target == 'labels':
             assert isinstance(val, (OrderedDict, dict)), f"when replacing labels must pass collections.OrderedDict of labels"
             labelarray = np.array(list(val.items()), dtype=object)
-            self.h5[key]['labels'][...] = labelarray
+            self.h5[key].attrs['labels'] = labelarray
 
         else:
             raise KeyError('target must be all, image, masks, or labels')
@@ -129,11 +129,11 @@ class _tiles_h5_manager(_h5_manager):
                 raise KeyError(f'key {item} does not exist')
             tile = self.h5[str(item)]['tile'][:]
             maskdict = {key:self.h5[str(item)]['masks'][key][...] for key in self.h5[str(item)]['masks'].keys()} if 'masks' in self.h5[str(item)].keys() else None 
-            name = self.h5[str(item)]['name'][...].item().decode('UTF-8') if 'name' in self.h5[str(item)].keys() else None
-            labels = dict(self.h5[str(item)]['labels'][...].astype(str)) if 'labels' in self.h5[str(item)].keys() else None
-            coords = eval(self.h5[str(item)]['coords'][...].item()) if 'coords' in self.h5[str(item)].keys() else None
-            slidetype = self.h5[str(item)]['slidetype'][...].item().decode('UTF-8') if 'slidetype' in self.h5[
-                str(item)].keys() else None
+            name = self.h5[str(item)].attrs['name'] if 'name' in self.h5[str(item)].attrs.keys() else None
+            labels = dict(self.h5[str(item)].attrs['labels'].astype(str)) if 'labels' in self.h5[str(item)].attrs.keys() else None
+            coords = eval(self.h5[str(item)].attrs['coords']) if 'coords' in self.h5[str(item)].attrs.keys() else None
+            slidetype = self.h5[str(item)].attrs['slidetype'] if 'slidetype' in self.h5[
+                str(item)].attrs.keys() else None
             return name, tile, maskdict, labels, coords, slidetype
         if not isinstance(item, int):
             raise KeyError(f"must getitem by coordinate(type tuple[int]) or index(type int)")
@@ -143,16 +143,16 @@ class _tiles_h5_manager(_h5_manager):
         maskdict = {key: self.h5[list(self.h5.keys())[item]]['masks'][key][...] for key in
                     self.h5[list(self.h5.keys())[item]]['masks'].keys()} if 'masks' in self.h5[
             list(self.h5.keys())[item]].keys() else None
-        name = self.h5[list(self.h5.keys())[item]]['name'][...].item().decode('UTF-8') if 'name' in self.h5[
-            list(self.h5.keys())[item]].keys() else None
-        labels = self.h5[list(self.h5.keys())[item]]['labels'][...] if 'labels' in self.h5[
-            list(self.h5.keys())[item]].keys() else None
-        coords = eval(self.h5[list(self.h5.keys())[item]]['coords'][...].item()) if 'coords' in self.h5[
-            list(self.h5.keys())[item]].keys() else None
-        slidetype = self.h5[list(self.h5.keys())[item]]['slidetype'][...].item().decode('UTF-8') if 'slidetype' in \
+        name = self.h5[list(self.h5.keys())[item]].attrs['name'] if 'name' in self.h5[
+            list(self.h5.keys())[item]].attrs.keys() else None
+        labels = self.h5[list(self.h5.keys())[item]].attrs['labels'] if 'labels' in self.h5[
+            list(self.h5.keys())[item]].attrs.keys() else None
+        coords = eval(self.h5[list(self.h5.keys())[item]].attrs['coords']) if 'coords' in self.h5[
+            list(self.h5.keys())[item]].attrs.keys() else None
+        slidetype = self.h5[list(self.h5.keys())[item]].attrs['slidetype'] if 'slidetype' in \
                                                                                                     self.h5[list(
                                                                                                         self.h5.keys())[
-                                                                                                        item]].keys() else None
+                                                                                                        item]].attrs.keys() else None
         return name, tile, maskdict, labels, coords, slidetype
 
     def slice(self, slices):
