@@ -47,7 +47,8 @@ class PesoDataModule(BaseDataModule):
         # TODO: check hash
         if not os.path.isdir(download_dir):
             print("Downloading Peso Dataset. Total file size is ~100GB, please wait.")
-            files = ['peso_testset_mapping.csv','peso_testset_png.zip','peso_testset_png_padded.zip','peso_testset_regions.zip','peso_testset_wsi_1.zip','peso_testset_wsi_2.zip','peso_testset_wsi_3.zip','peso_testset_wsi_4.zip','peso_training_colordeconvolution.zip','peso_training_masks.zip','peso_training_masks_corrected.zip','peso_training_wsi_1.zip','peso_training_wsi_2.zip','peso_training_wsi_3.zip','peso_training_wsi_4.zip','peso_training_wsi_5.zip','peso_training_wsi_6.zip']
+            files = ['peso_training_colordeconvolution.zip','peso_training_masks.zip','peso_training_masks_corrected.zip','peso_training_wsi_1.zip','peso_training_wsi_2.zip','peso_training_wsi_3.zip','peso_training_wsi_4.zip','peso_training_wsi_5.zip','peso_training_wsi_6.zip']
+            testfiles =['peso_testset_mapping.csv','peso_testset_png.zip','peso_testset_png_padded.zip','peso_testset_regions.zip','peso_testset_wsi_1.zip','peso_testset_wsi_2.zip','peso_testset_wsi_3.zip','peso_testset_wsi_4.zip']
             url = f'https://zenodo.org/record/1485967/files/'
             for file in files:
                 print(f"downloading {file}")
@@ -70,7 +71,6 @@ class PesoDataModule(BaseDataModule):
         for trainingwsifolder in trainingwsifolders:
             for file in os.listdir(Path(download_dir)/Path(trainingwsifolder)):
                 if file.endswith('.tif'):
-                    
                     profile = cProfile.Profile()
                     profile.enable()
 
@@ -92,12 +92,14 @@ class PesoDataModule(BaseDataModule):
                             threshold = 30, outer_contours_only = True)
                         ])
                     # TODO: choose tile size
-                    wsi.run(pipeline, tile_size=250)
+                    wsi.run(pipeline, tile_size=256)
+                    
                     profile.disable()
                     ps = pstats.Stats(profile)
                     ps.print_stats()
+
                     wsi.write(str(Path(download_dir)/Path('h5')/Path(name+'.h5')))
-                    os.remove(str(Path(download_dir)/Path(traininwsifolder)/Path(file)))
+                    os.remove(str(Path(download_dir)/Path(trainingwsifolder)/Path(file)))
                     os.remove(str(Path(download_dir)/Path('peso_training_masks')/maskpath))
 
         else:

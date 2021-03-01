@@ -1,5 +1,6 @@
 from typing import Optional, Literal, Union, Any
 from os import PathLike
+import numpy as np
 import h5py
 
 from pathml.core.masks import Masks
@@ -132,18 +133,6 @@ class SlideData:
         else:
             n_chunk_i = (i - shape[0]) // stride_i + 1
             n_chunk_j = (j - shape[1]) // stride_j + 1
-
-        '''
-        # TODO: check if this keeps order?
-        coordinates = np.array([(x*stride_i,y*stride_j) for x in range(n_chunk_i) for y in range(n_chunk_j)])
-        for mask in self.masks.h5managers.h5['masks'].keys():
-            m = self.masks[mask]
-            first = np.array_split(m, axis=0) 
-            masktiles = []
-            for outs in first:
-                second.append(np.array_split(outs, axis=1))
-            masks = {mask : second}
-        '''
 
         for ix_i in range(n_chunk_i):
             for ix_j in range(n_chunk_j):
