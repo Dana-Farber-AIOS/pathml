@@ -123,24 +123,55 @@ class _tiles_h5_manager(_h5_manager):
         else:
             raise KeyError('target must be all, image, masks, or labels')
 
-    def get(self, item):
+    def get(self, item, slices=None):
         if isinstance(item, (str, tuple)):
             if str(item) not in self.h5.keys():
                 raise KeyError(f'key {item} does not exist')
-            tile = self.h5[str(item)]['tile'][:]
-            maskdict = {key:self.h5[str(item)]['masks'][key][...] for key in self.h5[str(item)]['masks'].keys()} if 'masks' in self.h5[str(item)].keys() else None 
+            # str|tuple key, no slicing
+            if slices is None:
+                tile = self.h5[str(item)]['tile'][:]
+                maskdict = {key:self.h5[str(item)]['masks'][key][...] for key in self.h5[str(item)]['masks'].keys()} if 'masks' in self.h5[str(item)].keys() else None 
+                name = self.h5[str(item)].attrs['name'] if 'name' in self.h5[str(item)].attrs.keys() else None
+                labels = dict(self.h5[str(item)].attrs['labels'].astype(str)) if 'labels' in self.h5[str(item)].attrs.keys() else None
+                coords = eval(self.h5[str(item)].attrs['coords']) if 'coords' in self.h5[str(item)].attrs.keys() else None
+                slidetype = self.h5[str(item)].attrs['slidetype'] if 'slidetype' in self.h5[
+                    str(item)].attrs.keys() else None
+                return name, tile, maskdict, labels, coords, slidetype
+            # str|tuple key, with slicing
+            tile = self.h5[str(item)]['tile'][tuple(slices)]
+            maskdict = {key:self.h5[str(item)]['masks'][key][tuple(slices)] for key in self.h5[str(item)]['masks'].keys()} if 'masks' in self.h5[str(item)].keys() else None 
             name = self.h5[str(item)].attrs['name'] if 'name' in self.h5[str(item)].attrs.keys() else None
             labels = dict(self.h5[str(item)].attrs['labels'].astype(str)) if 'labels' in self.h5[str(item)].attrs.keys() else None
             coords = eval(self.h5[str(item)].attrs['coords']) if 'coords' in self.h5[str(item)].attrs.keys() else None
             slidetype = self.h5[str(item)].attrs['slidetype'] if 'slidetype' in self.h5[
                 str(item)].attrs.keys() else None
             return name, tile, maskdict, labels, coords, slidetype
+        
         if not isinstance(item, int):
             raise KeyError(f"must getitem by coordinate(type tuple[int]) or index(type int)")
         if item > len(self.h5) - 1:
             raise KeyError(f"index out of range, valid indices are ints in [0,{len(self.h5) - 1}]")
-        tile = self.h5[list(self.h5.keys())[item]]['tile'][:]
-        maskdict = {key: self.h5[list(self.h5.keys())[item]]['masks'][key][...] for key in
+        # int key, no slicing
+        if slices is None:
+            tile = self.h5[list(self.h5.keys())[item]]['tile'][:]
+            maskdict = {key: self.h5[list(self.h5.keys())[item]]['masks'][key][...] for key in
+                        self.h5[list(self.h5.keys())[item]]['masks'].keys()} if 'masks' in self.h5[
+                list(self.h5.keys())[item]].keys() else None
+            name = self.h5[list(self.h5.keys())[item]].attrs['name'] if 'name' in self.h5[
+                list(self.h5.keys())[item]].attrs.keys() else None
+            labels = self.h5[list(self.h5.keys())[item]].attrs['labels'] if 'labels' in self.h5[
+                list(self.h5.keys())[item]].attrs.keys() else None
+            coords = eval(self.h5[list(self.h5.keys())[item]].attrs['coords']) if 'coords' in self.h5[
+                list(self.h5.keys())[item]].attrs.keys() else None
+            slidetype = self.h5[list(self.h5.keys())[item]].attrs['slidetype'] if 'slidetype' in \
+                                                                                                        self.h5[list(
+                                                                                                            self.h5.keys())[
+                                                                                                            item]].attrs.keys() else None
+            return name, tile, maskdict, labels, coords, slidetype
+
+        # int key, with slicing
+        tile = self.h5[list(self.h5.keys())[item]]['tile'][tuple(slices)]
+        maskdict = {key: self.h5[list(self.h5.keys())[item]]['masks'][key][tuple(slices)] for key in
                     self.h5[list(self.h5.keys())[item]]['masks'].keys()} if 'masks' in self.h5[
             list(self.h5.keys())[item]].keys() else None
         name = self.h5[list(self.h5.keys())[item]].attrs['name'] if 'name' in self.h5[
@@ -168,7 +199,7 @@ class _tiles_h5_manager(_h5_manager):
             val(pathml.core.tile.Tile): tile
         """
         for key in self.h5.keys():
-            yield self.get(key)
+            yield self.get(key, slices=slices)
             
     def reshape(self, shape):
         """
@@ -257,12 +288,12 @@ class _masks_h5_manager(_h5_manager):
             val(np.ndarray): mask
         """
         for key in self.h5['masks'].keys():
-            yield key, self.get(key) 
+            yield key, self.get(key, slices=slices) 
 
     def reshape(self, targetshape):
         pass
 
-    def get(self, item):
+    def get(self, item, slices=None):
         # check type of input
         # must check bool separately, since isinstance(True, int) --> True
         if isinstance(item, bool) or not (isinstance(item, str) or isinstance(item, int)):
@@ -271,12 +302,16 @@ class _masks_h5_manager(_h5_manager):
         if isinstance(item, str):
             if item not in self.h5['masks'].keys():
                 raise KeyError(f'key {item} does not exist')
-            return self.h5['masks'][item][:]
+            if slices is None:
+                return self.h5['masks'][item][:]
+            return self.h5['masks'][item][tuple(slices)]
 
         else:
             if item > len(self.h5['masks']) - 1:
                 raise KeyError(f"index out of range, valid indices are ints in [0,{len(self.h5['masks'].keys()) - 1}]")
-            return self.h5['masks'][list(self.h5['masks'].keys())[item]][:]
+            if slices is None:
+                return self.h5['masks'][list(self.h5['masks'].keys())[item]][:]
+            return self.h5['masks'][list(self.h5['masks'].keys())[item]][tuple(slices)]
 
     def remove(self, key):
         """

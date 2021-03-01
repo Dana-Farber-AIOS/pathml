@@ -95,14 +95,7 @@ class Tiles:
         sliced = Tiles()
         for name, tile, maskdict, labels, coords, slidetype in self.h5manager.slice(slices):
             tile = Tile(image=tile, masks=Masks(maskdict), labels=labels, coords=coords, name=name, slidetype=slidetype)
-            newimage = tile.image[slices]
-            newmasks = {}
-            for key, val in tile.masks.h5manager.h5['masks'].items():
-                print(key, val)
-                newmasks[str(key)] = val[:][slices]
-            newtile = Tile(image=newimage, masks = newmasks, labels=labels, coords=coords, name=name, slidetype=slidetype) 
-
-            sliced.add(name, newtile)
+            sliced.add(name, tile)
         return sliced
 
     def remove(self, key):
