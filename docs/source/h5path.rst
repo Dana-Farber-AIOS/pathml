@@ -12,7 +12,7 @@ The **h5path** format, based on the hierarchical array store
 numerical data stored on disk. This feature dramatically reduces the RAM required to run a 
 ``PathML`` workflow and simplifies the reading and writing of processed WSI data.
 
-:class:`~pathml.core.slide_data` array-like fields :class:`~pathml.core.tiles` and 
+:class:`~pathml.core.slide_data.SlideData` array-like fields :class:`~pathml.core.tiles` and 
 :class:`~pathml.core.masks` contain references to temporary on disk h5py objects that can be 
 optionally saved or are automatically deleted when their reference is lost. 
 
