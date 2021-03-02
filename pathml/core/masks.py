@@ -38,11 +38,11 @@ class Masks:
             self.h5manager = _masks_h5_manager(h5)
 
     def __repr__(self):
-        rep = f"Masks(keys={self.h5manager.h5['masks'].keys()})"
+        rep = f"Masks(keys={self.h5manager.h5.keys()})"
         return rep
 
     def __len__(self):
-        return len(self.h5manager.h5['masks'].keys())
+        return len(self.h5manager.h5.keys())
 
     def __getitem__(self, item):
         return self.h5manager.get(item)

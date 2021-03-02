@@ -52,9 +52,9 @@ def write_h5path(
         if slidedata.history:
             pass
         if slidedata.masks:
-            masksgroup = f.create_group('masks')
+            masksgroup = f.create_group('masks') 
             for ds in slidedata.masks.h5manager.h5.keys():
-                slidedata.masks.h5manager.h5.copy(ds, f['masks'])
+                slidedata.masks.h5manager.h5.copy(ds, masksgroup)
         if slidedata.tiles:
             tilesgroup = f.create_group('tiles')
             for ds in slidedata.tiles.h5manager.h5.keys():

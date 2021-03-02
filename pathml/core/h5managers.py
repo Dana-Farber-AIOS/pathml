@@ -73,8 +73,8 @@ class _tiles_h5_manager(_h5_manager):
 
         if tile.masks:
             try:
-                for mask in tile.masks.h5manager.h5['masks']:
-                    writedataframeh5(masksgroup, str(mask), tile.masks.h5manager.h5['masks'][mask][:])
+                for mask in tile.masks.h5manager.h5:
+                    writedataframeh5(masksgroup, str(mask), tile.masks.h5manager.h5[mask][:])
             except:
                 for mask in tile.masks:
                     writedataframeh5(masksgroup, str(mask), tile.masks[mask])
@@ -230,8 +230,6 @@ class _masks_h5_manager(_h5_manager):
 
     def __init__(self, h5 = None):
         super().__init__(h5 = h5)
-        if "masks" not in self.h5:
-            self.h5.create_group("masks")
 
     def add(self, key, mask):
         """
@@ -245,7 +243,7 @@ class _masks_h5_manager(_h5_manager):
             raise ValueError(f"can not add {type(mask)}, mask must be of type np.ndarray")
         if not isinstance(key, str):
             raise ValueError(f"invalid type {type(key)}, key must be of type str")
-        if key in self.h5['masks'].keys():
+        if key in self.h5.keys():
             raise ValueError(f"key {key} already exists. Cannot add. Must update to modify existing mask.")
         if self.shape is None:
             self.shape = mask.shape
@@ -253,7 +251,7 @@ class _masks_h5_manager(_h5_manager):
             raise ValueError(
                 f"Masks contains masks of shape {self.shape}, provided mask is of shape {mask.shape}. "
                 f"We enforce that all Mask in Masks must have matching shapes.")
-        newkey = self.h5['masks'].create_dataset(
+        newkey = self.h5.create_dataset(
             bytes(str(key), encoding = 'utf-8'),
             data = mask
         )
@@ -266,7 +264,7 @@ class _masks_h5_manager(_h5_manager):
             key(str): key labeling mask
             mask(np.ndarray): mask
         """
-        if key not in self.h5['masks'].keys():
+        if key not in self.h5.keys():
             raise ValueError(f"key {key} does not exist. Must use add.")
 
         original_mask = self.get(key)
@@ -274,7 +272,7 @@ class _masks_h5_manager(_h5_manager):
         assert original_mask.shape == mask.shape, f"Cannot update a mask of shape {original_mask.shape} with a mask" \
                                                   f"of shape {mask.shape}. Shapes must match."
 
-        self.h5['masks'][key][...] = mask
+        self.h5[key][...] = mask
 
     def slice(self, slices):
         """
@@ -287,7 +285,7 @@ class _masks_h5_manager(_h5_manager):
             key(str): mask key
             val(np.ndarray): mask
         """
-        for key in self.h5['masks'].keys():
+        for key in self.h5.keys():
             yield key, self.get(key, slices=slices) 
 
     def reshape(self, targetshape):
@@ -300,18 +298,18 @@ class _masks_h5_manager(_h5_manager):
             raise KeyError(f"key of type {type(item)} must be of type str or int")
 
         if isinstance(item, str):
-            if item not in self.h5['masks'].keys():
+            if item not in self.h5.keys():
                 raise KeyError(f'key {item} does not exist')
             if slices is None:
-                return self.h5['masks'][item][:]
-            return self.h5['masks'][item][tuple(slices)]
+                return self.h5[item][:]
+            return self.h5[item][tuple(slices)]
 
         else:
-            if item > len(self.h5['masks']) - 1:
+            if item > len(self.h5) - 1:
                 raise KeyError(f"index out of range, valid indices are ints in [0,{len(self.h5['masks'].keys()) - 1}]")
             if slices is None:
-                return self.h5['masks'][list(self.h5['masks'].keys())[item]][:]
-            return self.h5['masks'][list(self.h5['masks'].keys())[item]][tuple(slices)]
+                return self.h5[list(self.h5.keys())[item]][:]
+            return self.h5[list(self.h5.keys())[item]][tuple(slices)]
 
     def remove(self, key):
         """
@@ -319,6 +317,6 @@ class _masks_h5_manager(_h5_manager):
         """
         if not isinstance(key, str):
             raise KeyError(f"masks keys must be of type(str) but key was passed of type {type(key)}")
-        if key not in self.h5['masks'].keys():
+        if key not in self.h5.keys():
             raise KeyError('key is not in Masks')
-        del self.h5['masks'][key]
+        del self.h5[key]
