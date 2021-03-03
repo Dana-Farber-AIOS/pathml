@@ -153,37 +153,35 @@ class _tiles_h5_manager(_h5_manager):
             raise KeyError(f"index out of range, valid indices are ints in [0,{len(self.h5) - 1}]")
         # int key, no slicing
         if slices is None:
-            tile = self.h5[list(self.h5.keys())[item]]['tile'][:]
-            maskdict = {key: self.h5[list(self.h5.keys())[item]]['masks'][key][...] for key in
-                        self.h5[list(self.h5.keys())[item]]['masks'].keys()} if 'masks' in self.h5[
-                list(self.h5.keys())[item]].keys() else None
-            name = self.h5[list(self.h5.keys())[item]].attrs['name'] if 'name' in self.h5[
-                list(self.h5.keys())[item]].attrs.keys() else None
-            labels = self.h5[list(self.h5.keys())[item]].attrs['labels'] if 'labels' in self.h5[
-                list(self.h5.keys())[item]].attrs.keys() else None
-            coords = eval(self.h5[list(self.h5.keys())[item]].attrs['coords']) if 'coords' in self.h5[
-                list(self.h5.keys())[item]].attrs.keys() else None
-            slidetype = self.h5[list(self.h5.keys())[item]].attrs['slidetype'] if 'slidetype' in \
-                                                                                                        self.h5[list(
-                                                                                                            self.h5.keys())[
-                                                                                                            item]].attrs.keys() else None
+            k = list(self.h5.keys())[item]
+            tile = self.h5[k]['tile'][:]
+            maskdict = {key: self.h5[k]['masks'][key][...] for key in
+                        self.h5[k]['masks'].keys()} if 'masks' in self.h5[
+                k].keys() else None
+            name = self.h5[k].attrs['name'] if 'name' in self.h5[
+                k].attrs.keys() else None
+            labels = self.h5[k].attrs['labels'] if 'labels' in self.h5[
+                k].attrs.keys() else None
+            coords = eval(self.h5[k].attrs['coords']) if 'coords' in self.h5[
+                k].attrs.keys() else None
+            slidetype = self.h5[k].attrs['slidetype'] if 'slidetype' in self.h5[
+                k].attrs.keys() else None
             return name, tile, maskdict, labels, coords, slidetype
 
         # int key, with slicing
-        tile = self.h5[list(self.h5.keys())[item]]['tile'][tuple(slices)]
-        maskdict = {key: self.h5[list(self.h5.keys())[item]]['masks'][key][tuple(slices)] for key in
-                    self.h5[list(self.h5.keys())[item]]['masks'].keys()} if 'masks' in self.h5[
-            list(self.h5.keys())[item]].keys() else None
-        name = self.h5[list(self.h5.keys())[item]].attrs['name'] if 'name' in self.h5[
-            list(self.h5.keys())[item]].attrs.keys() else None
-        labels = self.h5[list(self.h5.keys())[item]].attrs['labels'] if 'labels' in self.h5[
-            list(self.h5.keys())[item]].attrs.keys() else None
-        coords = eval(self.h5[list(self.h5.keys())[item]].attrs['coords']) if 'coords' in self.h5[
-            list(self.h5.keys())[item]].attrs.keys() else None
-        slidetype = self.h5[list(self.h5.keys())[item]].attrs['slidetype'] if 'slidetype' in \
-                                                                                                    self.h5[list(
-                                                                                                        self.h5.keys())[
-                                                                                                        item]].attrs.keys() else None
+        k = list(self.h5.keys())[item]
+        tile = self.h5[k]['tile'][tuple(slices)]
+        maskdict = {key: self.h5[k]['masks'][key][tuple(slices)] for key in
+                    self.h5[k]['masks'].keys()} if 'masks' in self.h5[
+            k].keys() else None
+        name = self.h5[k].attrs['name'] if 'name' in self.h5[
+            k].attrs.keys() else None
+        labels = self.h5[k].attrs['labels'] if 'labels' in self.h5[
+            k].attrs.keys() else None
+        coords = eval(self.h5[k].attrs['coords']) if 'coords' in self.h5[
+            k].attrs.keys() else None
+        slidetype = self.h5[k].attrs['slidetype'] if 'slidetype' in self.h5[
+            k].attrs.keys() else None
         return name, tile, maskdict, labels, coords, slidetype
 
     def slice(self, slices):
