@@ -18,7 +18,7 @@ def he_slidedata():
         TissueDetectionHE(mask_name = "tissue", min_region_size = 500,
                           threshold = 30, outer_contours_only = True)
     ])
-    wsi.run(pipeline, tile_size = 50)
+    wsi.run(pipeline, tile_size = 250)
     return wsi
 
 def test_read_write_heslide(he_slidedata):
