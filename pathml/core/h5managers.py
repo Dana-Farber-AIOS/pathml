@@ -156,7 +156,7 @@ class _tiles_h5_manager(_h5_manager):
             k = list(self.h5.keys())[item]
             tile = self.h5[k]['tile'][:]
             maskdict = {key: self.h5[k]['masks'][key][...] for key in
-                        self.h5[k]['masks'].keys()} if 'masks' in self.h5[
+                self.h5[k]['masks'].keys()} if 'masks' in self.h5[
                 k].keys() else None
             name = self.h5[k].attrs['name'] if 'name' in self.h5[
                 k].attrs.keys() else None
