@@ -12,7 +12,7 @@ from pathml.datasets.utils import download_from_url
 
 class DeepFocusDataModule(BaseDataModule):
     """
-    Cia lab DeepFocus data.
+    Pytorch DataModule for Cia lab DeepFocus dataset.
     https://github.com/cialab/DeepFocus
     """
     def __init__(self, 
@@ -26,7 +26,7 @@ class DeepFocusDataModule(BaseDataModule):
         if download:
             self._download_deepfocus(self.data_dir) 
         else:
-            assert self.data_dir.is_dir(), f"download is False but data directory does not exist"
+            assert self._check_integrity(), f"download is False but data directory does not exist or md5 checksum failed"
         self.shuffle = shuffle
         self.transforms = transforms
         self.batch_size = batch_size
