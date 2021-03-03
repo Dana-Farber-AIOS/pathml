@@ -2,6 +2,7 @@ import os
 import ntpath
 import h5py
 from pathlib import Path
+import hashlib
 
 import torch.utils.data as data
 from torch.utils.data import Dataset, DataLoader
@@ -22,7 +23,6 @@ class DeepFocusDataModule(BaseDataModule):
             batch_size=8
     ):
         self.data_dir = Path(data_dir)
-        self.data_dir.mkdir(parents=True, exist_ok=True)
         if download:
             self._download_deepfocus(self.data_dir) 
         else:
@@ -36,7 +36,8 @@ class DeepFocusDataModule(BaseDataModule):
         return data.DataLoader(
                 dataset = self._get_dataset(fold_ix = 1),
                 batch_size = self.batch_size,
-                shuffle = self.shuffle
+                shuffle = self.shuffle,
+                pin_memory = True
         )
     
     @property
@@ -44,7 +45,8 @@ class DeepFocusDataModule(BaseDataModule):
         return data.DataLoader(
                 dataset = self._get_dataset(fold_ix = 2),
                 batch_size = self.batch_size,
-                shuffle = self.shuffle
+                shuffle = self.shuffle,
+                pin_memory = True
         )
 
     @property
@@ -52,7 +54,8 @@ class DeepFocusDataModule(BaseDataModule):
         return data.DataLoader(
                 dataset = self._get_dataset(fold_ix = 3),
                 batch_size = self.batch_size,
-                shuffle = self.shuffle
+                shuffle = self.shuffle,
+                pin_memory = True
         )
     
     def _get_dataset(self, fold_ix = None):
@@ -64,14 +67,23 @@ class DeepFocusDataModule(BaseDataModule):
 
     def _download_deepfocus(self, root):
         if self._check_integrity():
-            print('File already downloaded')
+            print('File already downloaded with correct hash.')
             return
-        # TODO: add md5 checksum
+        self.data_dir.mkdir(parents=True, exist_ok=True)
         download_from_url('https://zenodo.org/record/1134848/files/outoffocus2017_patches5Classification.h5', root)
 
     def _check_integrity(self) -> bool:
-        # TODO: check hash of file
-        return os.path.exists(self.data_dir)
+        if os.path.exists(self.data_dir /  Path('outoffocus2017_patches5Classification.h5')):
+            filename = self.data_dir / Path('outoffocus2017_patches5Classification.h5')
+            correctmd5 = 'ba7b4a652c2a5a7079b216edd267b628' 
+            with open(filename, "rb") as f:
+                fhash = hashlib.md5()
+                while chunk := f.read(8192):
+                    fhash.update(chunk)
+                filemd5 = fhash.hexdigest()
+            return correctmd5 == filemd5 
+        return False
+        
 
 class DeepFocusDataset(BaseDataset):
     def __init__(self,
