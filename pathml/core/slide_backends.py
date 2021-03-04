@@ -1,7 +1,9 @@
 import openslide
+import numpy as np
 from typing import Tuple, Union
 import bioformats
 import javabridge
+from scipy.ndimage import zoom
 from bioformats.metadatatools import createOMEXMLMetadata
 
 from pathml.utils import pil_to_rgb
@@ -101,29 +103,85 @@ class BioFormatsBackend(SlideBackend):
         filename (str): path to image file on disk
     """
     def __init__(self, filename):
-        """self.filename = filename
+        self.filename = filename
         # init java virtual machine
         javabridge.start_vm(class_path = bioformats.JARS)
         # java maximum array size of 2GB constrains image size
         ImageReader = bioformats.formatreader.make_image_reader_class()
-        FormatTools = bioformats.formatreader.make_format_tools_class()
+        # FormatTools = bioformats.formatreader.make_format_tools_class()
         reader = ImageReader()
         omeMeta = createOMEXMLMetadata()
         reader.setMetadataStore(omeMeta)
-        reader.setId(self.filename)
-        sizex, sizey, sizez, sizec = reader.getSizeX(), reader.getSizeY(), reader.getSizeZ(), reader.getSizeC()
-        self.twodshape = (sizex, sizey)
-        self.threedshape = (sizex, sizey, sizez)
-        self.fourdshape = (sizex, sizey, sizez, sizec)
-        self.imsize = sizex * sizey * sizez * sizec"""
-        raise NotImplementedError
+        reader.setId(str(self.filename))
+        sizex, sizey, sizez, sizec, sizet = reader.getSizeX(), reader.getSizeY(), reader.getSizeZ(), reader.getSizeC(), reader.getSizeT()
+        self.shape = (sizex, sizey, sizez, sizec, sizet)
+
+    def get_image_shape(self):
+        """
+        Get the shape of the image.
+
+        Returns:
+            Tuple[int, int]: Shape of image. 
+        """
+        return self.shape 
 
     def extract_region(self, location, size, **kwargs):
-        raise NotImplementedError
+        """
+        Extract a region of the image
 
-    def get_thumbnail(self, size, **kwargs):
-        raise NotImplementedError
+        Args:
+            location (Tuple[int, int]): Location of corner of extracted region closest to the origin.
+            size (Tuple[int, int, ...]): Size of each region. Must be a tuple 
 
+        Returns:
+            np.ndarray: image at the specified region
+        """
+        if self.shape[0]*self.shape[1]*self.shape[2]*self.shape[3] > 2147483647:
+            raise Exception(f"Java arrays allocate maximum 32 bits (~2GB). Image size is {self.imsize}")
+
+        javabridge.start_vm(class_path = bioformats.JARS)
+        reader = bioformats.ImageReader(str(self.filename), perform_init=True)
+        array = np.empty(self.shape)
+        for z in range(self.shape[2]):
+            # TODO: Why doesn't c read? When I try with 7 channel image it will error out at c>1
+            for c in range(self.shape[3]):
+                for t in range(self.shape[4]):
+                    data = reader.read(z=z, t=t, c=c, rescale = False)
+                    image_array = np.asarray(data, dtype = np.uint8)
+
+        slices = [slice(location[i],location[i]+size[i]) for i in range(len(size))] 
+        image_array = image_array[tuple(slices)]
+        return image_array
+
+    def get_thumbnail(self, size=None, **kwargs):
+        """
+        Get a thumbnail of the image. Since there is no default thumbnail for multiparametric, volumetric
+        images, this function supports downsampling of the image to size. Subsequently call extract_region
+        to access a thumbnail of a particular channel, z-position, timepoint.
+
+        Args:
+            size (Tuple[int, int]): thumbnail size 
+
+        Returns:
+            np.ndarray: RGB thumbnail image
+        """
+        assert isinstance(size, (tuple, type(None))), f"Size must be a tuple of ints."
+        if size is not None:
+            assert len(size) == len(self.shape), f"image is of dimension {len(self.shape)} which does not match passed dimension of size {len(size)}"
+        if self.shape[0]*self.shape[1]*self.shape[2]*self.shape[3] > 2147483647:
+            raise Exception(f"Java arrays allocate maximum 32 bits (~2GB). Image size is {self.imsize}")
+
+        javabridge.start_vm(class_path = bioformats.JARS)
+        data = bioformats.formatreader.load_using_bioformats(str(self.filename), rescale = False)
+        # TODO: construct image as in extract region
+
+        image_array = np.asarray(data, dtype = np.uint8)
+        print(image_array.shape)
+        if size is not None:
+            ratio = tuple([x/y for x,y in zip(size, self.shape)]) 
+            print(ratio)
+            image_array = zoom(image_array, ratio) 
+        return image_array
 
 class DICOMBackend(SlideBackend):
     """
