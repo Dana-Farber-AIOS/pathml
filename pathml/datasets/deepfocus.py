@@ -1,10 +1,8 @@
 import os
-import ntpath
 import h5py
 from pathlib import Path
 import hashlib
 
-import torch.utils.data as data
 from torch.utils.data import Dataset, DataLoader
 
 from pathml.datasets.base import BaseDataModule, BaseDataset
@@ -90,7 +88,7 @@ class DeepFocusDataset(BaseDataset):
             data_dir,
             fold_ix=None,
             transforms=None):
-        self.datah5 = h5py.File(str(data_dir / Path('outoffocus2017_patches5Classification.h5')), 'r')
+        self.datah5 = h5py.File(str(data_dir / 'outoffocus2017_patches5Classification.h5'), 'r')
         # all
         if fold_ix == None:
             self.X = self.datah5['X']
