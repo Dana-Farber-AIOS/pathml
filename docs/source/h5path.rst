@@ -24,18 +24,21 @@ Hierarchical File System
 ------------------------
 
 **h5path** utilizes a self-describing hierarchical file system that mirrors 
-:class:`~pathml.core.slide_data`. Here we examine an example **h5path** file:
+:class:`~pathml.core.slide_data`. This allows for simple reading and writing
+of :class:`~pathml.core.slide_data` objects.
 
-* /root
-    * /fields (slide-level labels)
-        * ///name
-        * ///slide_backend
-        * ///history
-    * /masks 
+Here we examine an example **h5path** file:
+
+* /root ~
+    * /fields ~ 
+        * ///name ~
+        * ///slide_backend ~
+        * ///history ~
+    * /masks ~ 
         * //mask1
         * //mask2
         * ...
-    * /tiles
+    * /tiles ~
         * /tile1
             * //tile
             * ///coords
@@ -45,6 +48,8 @@ Hierarchical File System
                 * //mask2
                 * ...
 
+Directories marked by (~) are present in all **h5path** files. Unmarked directories 
+are automatically saved to **h5path** if they are present in :class:`~pathml.core.slide_data`. 
 The file system is organized through h5py.Groups. /root is a group, as are /fields, 
 /masks, and /tiles. Groups are container-like and can be queried like dictionaries.
 
@@ -56,7 +61,9 @@ The file system is organized through h5py.Groups. /root is a group, as are /fiel
 
 Within groups, array-like objects are stored as h5py.Datasets that when accessed return 
 numpy.ndArray objects. Arrays representing masks (//mask1) and tiles (//tile) are Datasets.
-
+To retrieve a numpy.ndArray object from h5py.Datasets you must slice the Dataset with
+NumPy fancy-indexing syntax: for example [...] to retrieve the full array, or [a:b, :] to
+return the array with first dimension subset to [a, b].
 
 .. code-block::
 
