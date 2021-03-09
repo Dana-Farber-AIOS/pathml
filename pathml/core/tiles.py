@@ -7,10 +7,10 @@ from pathlib import Path
 from collections import OrderedDict
 import h5py
 
-from pathml.core.tile import Tile
-from pathml.core.masks import Masks
 from pathml.core.h5managers import _tiles_h5_manager
-from pathml.core.tile import Tile
+import pathml.core.tiles
+import pathml.core.tile
+import pathml.core.masks
 
 
 class Tiles:
@@ -23,13 +23,13 @@ class Tiles:
     def __init__(self, tiles = None, h5 = None):
         if h5 is None:
             if tiles:
-                if not (isinstance(tiles, dict) or (isinstance(tiles, list) and all([isinstance(t, Tile) for t in tiles]))):
+                if not (isinstance(tiles, dict) or (isinstance(tiles, list) and all([isinstance(t, pathml.core.tile.Tile) for t in tiles]))):
                     raise ValueError(f"tiles must be passed as dicts of the form coordinate1:Tile1,... "
                                      f"or lists of Tile objects containing i,j")
                 # create Tiles from dict
                 if isinstance(tiles, dict):
                     for val in tiles.values():
-                        if not isinstance(val, Tile):
+                        if not isinstance(val, pathml.core.tile.Tile):
                             raise ValueError(f"dict vals must be Tile")
                     for key in tiles.keys():
                         if not ((isinstance(key, tuple) and list(map(type, key)) == [int, int]) or isinstance(key, str)):
@@ -39,7 +39,7 @@ class Tiles:
                 else:
                     tiledictionary = {}
                     for tile in tiles:
-                        if not isinstance(tile, Tile):
+                        if not isinstance(tile, pathml.core.tile.Tile):
                             raise ValueError(f"Tiles expects a list of type Tile but was given {type(tile)}")
                         name = tile.name if tile.name is not None else str(tile.coords)
                         tiledictionary[name] = tile 
@@ -62,9 +62,8 @@ class Tiles:
         return len(self.h5manager.h5.keys())
 
     def __getitem__(self, item):
-        # TODO: Should move this logic into h5manager if possible. Fix recursive import problem
-        name, tile, maskdict, labels, coords, slidetype = self.h5manager.get(item) 
-        return Tile(tile, masks=Masks(maskdict), labels=labels, name=str(name), coords=coords, slidetype=slidetype)
+        tile = self.h5manager.get(item) 
+        return tile 
 
     def add(self, coordinates, tile):
         """
@@ -74,7 +73,7 @@ class Tiles:
             coordinates(tuple[int]): location of tile on slide
             tile(Tile): tile object
         """
-        if not isinstance(tile, Tile):
+        if not isinstance(tile, pathml.core.tile.Tile):
             raise ValueError(f"can not add {type(tile)}, tile must be of type pathml.core.tiles.Tile")
         self.h5manager.add(coordinates, tile)
         del tile
@@ -92,10 +91,9 @@ class Tiles:
         """
         if not (isinstance(slices,list) and (isinstance(a,slice) for a in slices)):
             raise KeyError(f"slices must of of type list[slice] but is {type(slices)} with elements {type(slices[0])}")
-        sliced = Tiles()
-        for name, tile, maskdict, labels, coords, slidetype in self.h5manager.slice(slices):
-            tile = Tile(image=tile, masks=Masks(maskdict), labels=labels, coords=coords, name=name, slidetype=slidetype)
-            sliced.add(name, tile)
+        sliced = pathml.core.tiles.Tiles()
+        for tile in self.h5manager.slice(slices):
+            sliced.add(tile.name, tile)
         return sliced
 
     def remove(self, key):

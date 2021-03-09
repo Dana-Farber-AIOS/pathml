@@ -5,6 +5,8 @@ from collections import OrderedDict
 import numpy as np
 
 from pathml.core.utils import writedataframeh5, writestringh5, writedicth5, writetupleh5
+import pathml.core.masks
+import pathml.core.tile
 
 
 class _h5_manager:
@@ -96,7 +98,8 @@ class _tiles_h5_manager(_h5_manager):
         if key not in self.h5.keys():
             raise ValueError(f"key {key} does not exist. Use add.")
          
-        _, original_tile, _, _, _, _ = self.get(key)
+        tile = self.get(key)
+        original_tile = tile.image
         
         if target == 'all':
             #TODO: check somewhere
@@ -129,23 +132,24 @@ class _tiles_h5_manager(_h5_manager):
                 raise KeyError(f'key {item} does not exist')
             # str|tuple key, no slicing
             if slices is None:
-                tile = self.h5[str(item)]['tile'][:]
-                maskdict = {key:self.h5[str(item)]['masks'][key][...] for key in self.h5[str(item)]['masks'].keys()} if 'masks' in self.h5[str(item)].keys() else None 
-                name = self.h5[str(item)].attrs['name'] if 'name' in self.h5[str(item)].attrs.keys() else None
-                labels = dict(self.h5[str(item)].attrs['labels'].astype(str)) if 'labels' in self.h5[str(item)].attrs.keys() else None
-                coords = eval(self.h5[str(item)].attrs['coords']) if 'coords' in self.h5[str(item)].attrs.keys() else None
-                slidetype = self.h5[str(item)].attrs['slidetype'] if 'slidetype' in self.h5[
-                    str(item)].attrs.keys() else None
-                return name, tile, maskdict, labels, coords, slidetype
+                k = self.h5[str(item)]
+                tile = k['tile'][:]
+                maskdict = {key:k['masks'][key][...] for key in k['masks'].keys()} if 'masks' in k.keys() else None 
+                name = k.attrs['name'] if 'name' in k.attrs.keys() else None
+                labels = dict(k.attrs['labels'].astype(str)) if 'labels' in k.attrs.keys() else None
+                coords = eval(k.attrs['coords']) if 'coords' in k.attrs.keys() else None
+                slidetype = k.attrs['slidetype'] if 'slidetype' in k.attrs.keys() else None
+                return pathml.core.tile.Tile(tile, masks=pathml.core.masks.Masks(maskdict), labels=labels, name=str(name), coords=coords, slidetype=slidetype)
+
             # str|tuple key, with slicing
-            tile = self.h5[str(item)]['tile'][tuple(slices)]
-            maskdict = {key:self.h5[str(item)]['masks'][key][tuple(slices)] for key in self.h5[str(item)]['masks'].keys()} if 'masks' in self.h5[str(item)].keys() else None 
-            name = self.h5[str(item)].attrs['name'] if 'name' in self.h5[str(item)].attrs.keys() else None
-            labels = dict(self.h5[str(item)].attrs['labels'].astype(str)) if 'labels' in self.h5[str(item)].attrs.keys() else None
-            coords = eval(self.h5[str(item)].attrs['coords']) if 'coords' in self.h5[str(item)].attrs.keys() else None
-            slidetype = self.h5[str(item)].attrs['slidetype'] if 'slidetype' in self.h5[
-                str(item)].attrs.keys() else None
-            return name, tile, maskdict, labels, coords, slidetype
+            k = self.h5[str(item)]
+            tile = k['tile'][tuple(slices)]
+            maskdict = {key:k['masks'][key][tuple(slices)] for key in k['masks'].keys()} if 'masks' in k.keys() else None 
+            name = k.attrs['name'] if 'name' in k.attrs.keys() else None
+            labels = dict(k.attrs['labels'].astype(str)) if 'labels' in k.attrs.keys() else None
+            coords = eval(k.attrs['coords']) if 'coords' in k.attrs.keys() else None
+            slidetype = k.attrs['slidetype'] if 'slidetype' in k.attrs.keys() else None
+            return pathml.core.tile.Tile(tile, masks=pathml.core.masks.Masks(maskdict), labels=labels, name=str(name), coords=coords, slidetype=slidetype)
         
         if not isinstance(item, int):
             raise KeyError(f"must getitem by coordinate(type tuple[int]) or index(type int)")
@@ -153,36 +157,25 @@ class _tiles_h5_manager(_h5_manager):
             raise KeyError(f"index out of range, valid indices are ints in [0,{len(self.h5) - 1}]")
         # int key, no slicing
         if slices is None:
-            k = list(self.h5.keys())[item]
-            tile = self.h5[k]['tile'][:]
-            maskdict = {key: self.h5[k]['masks'][key][...] for key in
-                self.h5[k]['masks'].keys()} if 'masks' in self.h5[
-                k].keys() else None
-            name = self.h5[k].attrs['name'] if 'name' in self.h5[
-                k].attrs.keys() else None
-            labels = self.h5[k].attrs['labels'] if 'labels' in self.h5[
-                k].attrs.keys() else None
-            coords = eval(self.h5[k].attrs['coords']) if 'coords' in self.h5[
-                k].attrs.keys() else None
-            slidetype = self.h5[k].attrs['slidetype'] if 'slidetype' in self.h5[
-                k].attrs.keys() else None
-            return name, tile, maskdict, labels, coords, slidetype
+            k = self.h5[list(self.h5.keys())[item]]
+            tile = k['tile'][:]
+            maskdict = {key: k['masks'][key][...] for key in k['masks'].keys()} if 'masks' in k.keys() else None
+            name = k.attrs['name'] if 'name' in k.attrs.keys() else None
+            labels = k.attrs['labels'] if 'labels' in k.attrs.keys() else None
+            coords = eval(k.attrs['coords']) if 'coords' in k.attrs.keys() else None
+            slidetype = k.attrs['slidetype'] if 'slidetype' in k.attrs.keys() else None
+            return pathml.core.tile.Tile(tile, masks=pathml.core.masks.Masks(maskdict), labels=labels, name=str(name), coords=coords, slidetype=slidetype)
 
+        # TODO: move slicing logic
         # int key, with slicing
-        k = list(self.h5.keys())[item]
-        tile = self.h5[k]['tile'][tuple(slices)]
-        maskdict = {key: self.h5[k]['masks'][key][tuple(slices)] for key in
-                    self.h5[k]['masks'].keys()} if 'masks' in self.h5[
-            k].keys() else None
-        name = self.h5[k].attrs['name'] if 'name' in self.h5[
-            k].attrs.keys() else None
-        labels = self.h5[k].attrs['labels'] if 'labels' in self.h5[
-            k].attrs.keys() else None
-        coords = eval(self.h5[k].attrs['coords']) if 'coords' in self.h5[
-            k].attrs.keys() else None
-        slidetype = self.h5[k].attrs['slidetype'] if 'slidetype' in self.h5[
-            k].attrs.keys() else None
-        return name, tile, maskdict, labels, coords, slidetype
+        k = self.h5[list(self.h5.keys())[item]]
+        tile = k['tile'][tuple(slices)]
+        maskdict = {key: k['masks'][key][tuple(slices)] for key in k['masks'].keys()} if 'masks' in k.keys() else None
+        name = k.attrs['name'] if 'name' in k.attrs.keys() else None
+        labels = k.attrs['labels'] if 'labels' in k.attrs.keys() else None
+        coords = eval(k.attrs['coords']) if 'coords' in k.attrs.keys() else None
+        slidetype = k.attrs['slidetype'] if 'slidetype' in k.attrs.keys() else None
+        return pathml.core.tile.Tile(tile, masks=pathml.core.masks.Masks(maskdict), labels=labels, name=str(name), coords=coords, slidetype=slidetype)
 
     def slice(self, slices):
         """
