@@ -108,7 +108,7 @@ class DeepFocusDataset(BaseDataset):
             transforms=None):
         self.datah5 = h5py.File(str(data_dir / 'outoffocus2017_patches5Classification.h5'), 'r')
         # all
-        if fold_ix == None:
+        if fold_ix is None:
             self.X = self.datah5['X']
             self.Y = self.datah5['Y']
         # train 80%
