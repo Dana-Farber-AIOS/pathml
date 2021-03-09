@@ -143,15 +143,16 @@ class BioFormatsBackend(SlideBackend):
         reader = bioformats.ImageReader(str(self.filename), perform_init=True)
         array = np.empty(self.shape)
         for z in range(self.shape[2]):
-            # TODO: Why doesn't c read? When I try with 7 channel image it will error out at c>1
             for c in range(self.shape[3]):
                 for t in range(self.shape[4]):
-                    data = reader.read(z=z, t=t, c=c, rescale = False)
-                    image_array = np.asarray(data, dtype = np.uint8)
-
+                    data = reader.read(z=z, t=t, series=0, rescale = False)
+                    #type=uint8?
+                    slice_array = np.asarray(data)
+                    print(slice_array)
+                    array[:,:,z,c,t] = np.transpose(slice_array)
         slices = [slice(location[i],location[i]+size[i]) for i in range(len(size))] 
-        image_array = image_array[tuple(slices)]
-        return image_array
+        array = array[tuple(slices)]
+        return array 
 
     def get_thumbnail(self, size=None, **kwargs):
         """

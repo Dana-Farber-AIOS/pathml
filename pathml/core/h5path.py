@@ -18,7 +18,8 @@ openslideext = {
 }
 
 bioformatsext = {
-    'tiff'
+    'tiff',
+    'tif'
 }
 
 dicomext = {
@@ -97,7 +98,7 @@ def read(
         elif backend == 'openslide':
             return read_openslide(path)
         elif backend == 'bioformats':
-            return read_openslide(path)
+            return read_bioformats(path)
         elif backend == 'dicom':
             return read_dicom(path)
         raise Exception("Must specify valid backend.")
@@ -148,7 +149,7 @@ def read_bioformats(
     Args:
         path (str): Path to image file of supported BioFormats format on disk
     """
-    return pathml.core.slide_data.SlideData(filepath = path, slide_backend = 'bioformats') 
+    return pathml.core.slide_data.SlideData(filepath = path, slide_backend = BioFormatsBackend) 
 
 def read_dicom(
     path
@@ -159,7 +160,7 @@ def read_dicom(
     Args:
         path (str): Path to image file of supported dicom format on disk
     """
-    return pathml.core.slide_data.SlideData(filepath = path, slide_backend = 'dicom')
+    return pathml.core.slide_data.SlideData(filepath = path, slide_backend = DICOMBackend)
 
 def read_directory(
     tilepath,
