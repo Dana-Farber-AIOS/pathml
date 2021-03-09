@@ -10,8 +10,26 @@ from pathml.datasets.utils import download_from_url
 
 class DeepFocusDataModule(BaseDataModule):
     """
-    Pytorch DataModule for Cia lab DeepFocus dataset.
-    https://github.com/cialab/DeepFocus
+    DataModule for the DeepFocus dataset. The DeepFocus dataset comprises four slides from different patients,
+    each with four different stains (H&E, Ki67, CD21, and CD10) for a total of 16 whole-slide images. 
+    For each slide, a region of interest (ROI) of approx 6mm^2 was scanned at 40x magnification with
+    an Aperio ScanScope on nine different focal planes, generating 216,000 samples with varying amounts
+    of blurriness. Tiles with offset values between [-0.5μm, 0.5μm] are labeled as in-focus and 
+    the rest of the images are labeled as blurry.
+    
+    See: https://github.com/cialab/DeepFocus
+    
+    Args:
+        data_dir (str): file path to directory containing data.
+        download (bool, optional): Whether to download the data. If ``True``, checks whether data files exist in
+            ``data_dir`` and downloads them to ``data_dir`` if not.
+            If ``False``, checks to make sure that data files exist in ``data_dir``. Default ``False``.
+        shuffle (bool, optional): Whether to shuffle images. Defaults to ``True``.
+        transforms (optional): Data augmentation transforms to apply to images.
+        batch_size (int, optional): batch size for dataloaders. Defaults to 8.
+    
+    Reference: 
+        Senaras, C., Niazi, M.K.K., Lozanski, G. and Gurcan, M.N., 2018. DeepFocus: detection of out-of-focus regions in whole slide digital images using deep learning. PloS one, 13(10), p.e0205387.    
     """
     def __init__(self, 
             data_dir, 
