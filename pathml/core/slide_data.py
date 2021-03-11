@@ -43,7 +43,6 @@ class SlideData:
         else:
             self.slide = None
 
-        self.slide_backend = slide_backend
         self.name = name
         self.masks = masks
         self.tiles = tiles
@@ -89,64 +88,46 @@ class SlideData:
             key = str(tile.coords)
             self.tiles.add(key, tile)
 
-    def generate_tiles(self, shape=3000, stride=None, pad=False, level=0):
+    def generate_tiles(self, shape=3000, stride=None, pad=False, **kwargs):
         """
-        Generator over tiles.
-        All pipelines must be composed of transforms acting on tiles.
+        Generator over Tile objects containing regions of the image.
+        Calls ``generate_tiles()`` method of the backend.
+        Tries to add the corresponding slide-level masks to each tile, if possible.
+        Adds slide-level labels to each tile, if possible.
 
         Args:
             shape (int or tuple(int)): Size of each tile. May be a tuple of (height, width) or a single integer,
                 in which case square tiles of that size are generated.
             stride (int): stride between chunks. If ``None``, uses ``stride = size`` for non-overlapping chunks.
                 Defaults to ``None``.
-            pad (bool): How to handle chunks on the edges. If ``True``, these edge chunks will be zero-padded
-                symmetrically and yielded with the other chunks. If ``False``, incomplete edge chunks will be ignored.
+            pad (bool): How to handle tiles on the edges. If ``True``, these edge tiles will be zero-padded
+                and yielded with the other chunks. If ``False``, incomplete edge chunks will be ignored.
                 Defaults to ``False``.
-            level (int, optional): For slides with multiple levels, which level to extract tiles from.
-                Defaults to 0 (highest resolution)
+            **kwargs: Other arguments passed through to ``generate_tiles()`` method of the backend.
 
         Yields:
-            np.ndarray: Extracted chunk of dimension (size, size, 3)
+            pathml.core.tile.Tile: Extracted Tile object
         """
-        assert isinstance(shape, int) or (isinstance(shape, tuple) and len(shape) == 2), \
-            f"input shape {shape} invalid. Must be a tuple of (H, W), or a single integer for square tiles"
-        if isinstance(shape, int):
-            shape = (shape, shape)
-        assert stride is None or isinstance(stride, int) or (isinstance(stride, tuple) and len(stride) == 2), \
-            f"input stride {stride} invalid. Must be a tuple of (stride_H, stride_W), or a single int"
-        assert isinstance(level, int), f"level {level} invalid. Must be an int."
+        for tile in self.slide.generate_tiles(shape, stride, pad, **kwargs):
+            # add masks for tile, if possible
+            # i.e. if the SlideData has a Masks object, and the tile has coordinates
+            if self.masks is not None and tile.coords is not None:
+                i, j = tile.coords
+                di, dj = tile.image.shape[0:2]
+                # add the Masks object for the masks corresponding to the tile
+                # this assumes that the tile didn't already have any masks
+                # this should work since the backend reads from image only
+                # adding safety check just in case to make sure we don't overwrite any existing mask
+                # if this assertion fails, we will need to rewrite this part
+                assert tile.masks is None, \
+                    "tile yielded from backend already has a mask. slide_data.generate_tiles is trying to overwrite it"
+                tile.masks = self.masks.slice([slice(i, di), slice(j, dj)])
 
-        if stride is None:
-            stride = shape
-        elif isinstance(stride, int):
-            stride = (stride, stride)
+            # add slide-level labels to each tile, if possible
+            if self.labels is not None:
+                tile.labels = self.labels
 
-        i, j = self.slide.get_image_shape(level = level)
-
-        stride_i, stride_j = stride
-
-        if pad:
-            n_chunk_i = i // stride_i + 1
-            n_chunk_j = j // stride_j + 1
-
-        else:
-            n_chunk_i = (i - shape[0]) // stride_i + 1
-            n_chunk_j = (j - shape[1]) // stride_j + 1
-
-        for ix_i in range(n_chunk_i):
-            for ix_j in range(n_chunk_j):
-                coords = (int(ix_j * stride_j), int(ix_i * stride_i))
-                # get image for tile
-                tile_im = self.slide.extract_region(location = coords, size = shape, level = level)
-                # get mask(s) for tile
-                tile_masks = None
-                if self.masks is not None:
-                    slices = [
-                        slice(int(ix_i * stride_i), int(ix_i * stride_i) + shape[0]),
-                        slice(int(ix_j * stride_j), int(ix_j * stride_j) + shape[1])
-                    ]
-                    tile_masks = self.masks.slice(slices)
-                yield Tile(image = tile_im, coords = coords, masks = tile_masks, slidetype = type(self))
+            yield tile
 
     def plot(self):
         raise NotImplementedError
