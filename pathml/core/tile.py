@@ -44,7 +44,7 @@ class Tile:
 
     def __repr__(self):
         out = f"Tile(image shape {self.image.shape}, slidetype={self.slidetype}, " \
-              f"mask={repr(self.masks) if self.masks is not None else None}, " \
+              f"masks={repr(self.masks) if self.masks is not None else None}, " \
               f"coords={self.coords}, " \
               f"labels={list(self.labels.keys()) if self.labels is not None else None})"
         return out

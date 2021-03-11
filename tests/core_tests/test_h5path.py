@@ -9,17 +9,18 @@ from pathml.core.h5path import read
 from pathml.preprocessing.pipeline import Pipeline
 from pathml.preprocessing.transforms import BoxBlur, TissueDetectionHE
 
+
 @pytest.fixture
 def he_slidedata():
-    masks = Masks({'example' : np.ones((2967, 2220))})
-    wsi = HESlide("tests/testdata/small_HE.svs", name = "test", masks = masks, labels={'testkey':'testval'})
+    masks = Masks({'example': np.ones((2967, 2220))})
+    wsi = HESlide("tests/testdata/small_HE.svs", name = "test", masks = masks, labels={'testkey': 'testval'})
     pipeline = Pipeline([
-        BoxBlur(kernel_size=15),
-        TissueDetectionHE(mask_name = "tissue", min_region_size = 500,
-                          threshold = 30, outer_contours_only = True)
+        BoxBlur(kernel_size = 15),
+        BoxBlur(kernel_size = 5)
     ])
-    wsi.run(pipeline, tile_size = 50)
+    wsi.run(pipeline, tile_size = 250)
     return wsi
+
 
 def test_read_write_heslide(he_slidedata):
     slidedata = he_slidedata
@@ -38,6 +39,7 @@ def test_read_write_heslide(he_slidedata):
         assert readslidedata.tiles is None
     if slidedata.tiles is not None:
         assert scan_hdf5(readslidedata.tiles.h5manager.h5) == scan_hdf5(slidedata.tiles.h5manager.h5)
+
 
 def scan_hdf5(f, recursive=True, tab_step=2):
     def scan_node(g, tabs=0):

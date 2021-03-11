@@ -150,7 +150,7 @@ class OpenSlideBackend(SlideBackend):
                 coords = (int(ix_j * stride_j), int(ix_i * stride_i))
                 # get image for tile
                 tile_im = self.extract_region(location = coords, size = shape, level = level)
-                yield Tile(image = tile_im, coords = coords, slidetype = type(self))
+                yield Tile(image = tile_im, coords = coords)
 
 
 class BioFormatsBackend(SlideBackend):

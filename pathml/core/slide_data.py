@@ -35,11 +35,13 @@ class SlideData:
         assert slide_backend is None or issubclass(slide_backend, SlideBackend), \
             f"slide_backend is of type {type(slide_backend)} but must be a subclass of pathml.core.slide_backends.SlideBackend"
 
+        self.slide_backend = slide_backend
+
         # load slide using OpenSlideBackend if path is provided and backend is not specified
         if filepath is not None:
             if slide_backend is None:
-                slide_backend = OpenSlideBackend
-            self.slide = slide_backend(filepath)
+                self.slide_backend = OpenSlideBackend
+            self.slide = self.slide_backend(filepath)
         else:
             self.slide = None
 
@@ -77,9 +79,6 @@ class SlideData:
             f"pipeline is of type {type(pipeline)} but must be of type pathml.preprocessing.pipeline.Pipeline"
         assert self.slide is not None, "cannot run pipeline because self.slide is None"
 
-        if tile_stride is None:
-            tile_stride = tile_size
-
         if self.tiles is None:
             self.tiles = Tiles()
 
@@ -112,20 +111,29 @@ class SlideData:
             # add masks for tile, if possible
             # i.e. if the SlideData has a Masks object, and the tile has coordinates
             if self.masks is not None and tile.coords is not None:
-                i, j = tile.coords
-                di, dj = tile.image.shape[0:2]
-                # add the Masks object for the masks corresponding to the tile
-                # this assumes that the tile didn't already have any masks
-                # this should work since the backend reads from image only
-                # adding safety check just in case to make sure we don't overwrite any existing mask
-                # if this assertion fails, we will need to rewrite this part
-                assert tile.masks is None, \
-                    "tile yielded from backend already has a mask. slide_data.generate_tiles is trying to overwrite it"
-                tile.masks = self.masks.slice([slice(i, di), slice(j, dj)])
+                # masks not supported if pad=True
+                # to implement, need to update Mask.slice to support slices that go beyond the full mask
+                if not pad:
+                    i, j = tile.coords
+                    di, dj = tile.image.shape[0:2]
+                    # add the Masks object for the masks corresponding to the tile
+                    # this assumes that the tile didn't already have any masks
+                    # this should work since the backend reads from image only
+                    # adding safety check just in case to make sure we don't overwrite any existing mask
+                    # if this assertion fails, we will need to rewrite this part
+                    assert len(tile.masks) == 0, \
+                        "tile yielded from backend already has mask. slide_data.generate_tiles is trying to overwrite it"
+
+                    tile_slices = [slice(i, i + di), slice(j, j + dj)]
+                    tile.masks = self.masks.slice(tile_slices)
 
             # add slide-level labels to each tile, if possible
             if self.labels is not None:
                 tile.labels = self.labels
+
+            # add slidetype to tile
+            if tile.slidetype is None:
+                tile.slidetype = type(self)
 
             yield tile
 
