@@ -182,8 +182,9 @@ class _tiles_h5_manager(_h5_manager):
         Generator to slice all tiles in self.h5 extending numpy array slicing
 
         Args:
-            slices: list where each element is an object of type slice indicating
-                    how the dimension should be sliced
+            slices: List where each element is an object of type slice https://docs.python.org/3/c-api/slice.html
+                    indicating how the corresponding dimension should be sliced. The list length should correspond to the
+                    dimension of the tile. For 2D H&E images, pass a  length 2 list of slice objects.
 
         Yields:
             key(str): tile coordinates
@@ -270,8 +271,8 @@ class _masks_h5_manager(_h5_manager):
         Generator to slice all masks in self.h5 extending numpy array slicing.
 
         Args:
-            slices: list where each element is an object of type slice indicating
-                    how the dimension should be sliced
+            slices: list where each element is an object of type slice https://docs.python.org/3/c-api/slice.html
+                    indicating how the corresponding dimension should be sliced
         Yields:
             key(str): mask key
             val(np.ndarray): mask
