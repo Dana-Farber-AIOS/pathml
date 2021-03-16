@@ -23,6 +23,7 @@ def create_incomplete_deepfocus_data():
     writedataframeh5(f, 'Y', Y)
     return f
 
+
 def test_incomplete_fails(create_incomplete_deepfocus_data):
     f = create_incomplete_deepfocus_data
     target_dir = 'dftests'
@@ -30,12 +31,14 @@ def test_incomplete_fails(create_incomplete_deepfocus_data):
         DeepFocusDataModule(target_dir, download = False)
     shutil.rmtree(target_dir) 
 
+
 def check_deepfocus_data_urls():
     # make sure that the urls for the pannuke data are still valid!
     url = f'https://zenodo.org/record/1134848/files/outoffocus2017_patches5Classification.h5'
     r = urllib.request.urlopen(url)
     # HTTP status code 200 means "OK"
     assert r.getcode() == 200
+
 
 def check_wrong_path_download_false_fails():
     with pytest.raises(AssertionError):
