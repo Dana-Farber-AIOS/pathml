@@ -145,11 +145,10 @@ class BioFormatsBackend(SlideBackend):
         for z in range(self.shape[2]):
             for c in range(self.shape[3]):
                 for t in range(self.shape[4]):
-                    data = reader.read(z=z, t=t, series=0, rescale = False)
-                    #type=uint8?
+                    data = reader.read(z=z, t=t, series=c, rescale = False)
                     slice_array = np.asarray(data)
-                    print(slice_array)
                     array[:,:,z,c,t] = np.transpose(slice_array)
+        # TODO: is it possible to directly read the slices? rather than reading then slicing?
         slices = [slice(location[i],location[i]+size[i]) for i in range(len(size))] 
         array = array[tuple(slices)]
         return array 
@@ -171,17 +170,19 @@ class BioFormatsBackend(SlideBackend):
             assert len(size) == len(self.shape), f"image is of dimension {len(self.shape)} which does not match passed dimension of size {len(size)}"
         if self.shape[0]*self.shape[1]*self.shape[2]*self.shape[3] > 2147483647:
             raise Exception(f"Java arrays allocate maximum 32 bits (~2GB). Image size is {self.imsize}")
-
         javabridge.start_vm(class_path = bioformats.JARS)
-        data = bioformats.formatreader.load_using_bioformats(str(self.filename), rescale = False)
-        # TODO: construct image as in extract region
-
-        image_array = np.asarray(data, dtype = np.uint8)
-        print(image_array.shape)
+        reader = bioformats.ImageReader(str(self.filename), perform_init=True)
+        array = np.empty(self.shape)
+        for z in range(self.shape[2]):
+            for c in range(self.shape[3]):
+                for t in range(self.shape[4]):
+                    data = reader.read(z=z, t=t, series=c, rescale = False)
+                    slice_array = np.asarray(data)
+                    array[:,:,z,c,t] = np.transpose(slice_array)
         if size is not None:
             ratio = tuple([x/y for x,y in zip(size, self.shape)]) 
             print(ratio)
-            image_array = zoom(image_array, ratio) 
+            image_array = zoom(array, ratio) 
         return image_array
 
 class DICOMBackend(SlideBackend):
