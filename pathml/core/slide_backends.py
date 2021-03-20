@@ -127,7 +127,9 @@ class BioFormatsBackend(SlideBackend):
 
     def extract_region(self, location, size, **kwargs):
         """
-        Extract a region of the image
+        Extract a region of the image. All bioformats images have 5 dimensions representing
+        (x, y, z, channel, time). If a tuple with len < 5 is passed, missing dimensions will be 
+        retrieved in full.
 
         Args:
             location (Tuple[int, int]): Location of corner of extracted region closest to the origin.
@@ -135,6 +137,19 @@ class BioFormatsBackend(SlideBackend):
 
         Returns:
             np.ndarray: image at the specified region
+
+        Example:
+            Extract 2000x2000 x,y region from upper left corner of 7 channel, 2d fluorescent image.
+            data.slide.extract_region(location = (0,0), size = (2000,2000))
+            # plot single channel
+            plt.figure()
+            plt.imshow(region[:,:,0,0,0])
+
+            Extract 2000x2000 x,y region of the first channel from upper left corner.
+            region = data.slide.extract_region(location = (0,0,0,0,0), size = (2000,2000,1,1,1))
+            # plot full region
+            plt.figure()
+            plt.imshow(region[:,:,0,:,0])
         """
         if self.shape[0]*self.shape[1]*self.shape[2]*self.shape[3] > 2147483647:
             raise Exception(f"Java arrays allocate maximum 32 bits (~2GB). Image size is {self.imsize}")
@@ -156,14 +171,18 @@ class BioFormatsBackend(SlideBackend):
     def get_thumbnail(self, size=None, **kwargs):
         """
         Get a thumbnail of the image. Since there is no default thumbnail for multiparametric, volumetric
-        images, this function supports downsampling of the image to size. Subsequently call extract_region
-        to access a thumbnail of a particular channel, z-position, timepoint.
+        images, this function supports downsampling of all image dimensions. 
 
         Args:
             size (Tuple[int, int]): thumbnail size 
 
         Returns:
             np.ndarray: RGB thumbnail image
+
+        Example:
+            Get 1000x1000 thumbnail of 7 channel fluorescent image.
+            shape = data.slide.get_image_shape()
+            thumb = data.slide.get_thumbnail(size=(1000,1000, shape[2], shape[3], shape[4]))
         """
         assert isinstance(size, (tuple, type(None))), f"Size must be a tuple of ints."
         if size is not None:
