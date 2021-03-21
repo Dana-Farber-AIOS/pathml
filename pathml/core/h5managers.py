@@ -23,6 +23,7 @@ class _h5_manager:
         if h5:
             for ds in h5.keys():
                 h5.copy(ds, f)
+ 
 
     def add(self, key, val):
         raise NotImplementedError
@@ -53,12 +54,24 @@ class _tiles_h5_manager(_h5_manager):
 
     def add(self, key, tile):
         """
-        Add tile to self.h5 as dataset indexed by key.
+        Add tile to self.h5 as dataset indexed by key with metadata as attributes.
 
         Args:
             key(str or tuple): key will become tile name 
             tile(pathml.core.tile.Tile): Tile object
         """
+        # what to do with names? need to replace with coordinates
+        # refactor to store contiguous array
+        # when add a tile
+        #   if array doesn't exist 
+        #       init array self.h5['tiles']['array']
+        #       init attribute holding size self.h5['tiles']['array'].attrs['tileshape'] 
+        #       put name and coordinates in dict stored in slidedata 
+        #           at least not stored in h5 because we don't want to need read twice
+        #   if array exists
+        #       extend by size
+        #       add tile
+
         if not isinstance(key, (str, tuple)):
             raise ValueError(f"can not add type {type(key)}, key must be of type str or tuple")
         if str(key) in self.h5.keys():
