@@ -8,6 +8,22 @@ from pathml.core.utils import writedataframeh5, writestringh5, writedicth5, writ
 import pathml.core.masks
 import pathml.core.tile
 
+"""
+h5manager
+    tiledict
+    h5
+
+h5 object: 
+*fields
+*array
+*masks
+   mask1
+   mask2
+   ...
+
+put tiledict in h5 when write, remove when read
+"""
+
 
 class _h5_manager:
     """
@@ -61,7 +77,6 @@ class _tiles_h5_manager(_h5_manager):
             tile(pathml.core.tile.Tile): Tile object
         """
         # what to do with names? need to replace with coordinates
-        # refactor to store contiguous array
         # when add a tile
         #   if array doesn't exist 
         #       init array self.h5['tiles']['array']
