@@ -11,10 +11,15 @@ import pathml.core.tile
 """
 h5manager
     tiledict
+        OrderedDict (iterate over index)
+            {coords : {name,labels}} 
     h5
 
-h5 object: 
+h5: 
 *fields
+    backend
+    labels
+    history
 *array
 *masks
    mask1
@@ -36,10 +41,11 @@ class _h5_manager:
         self.h5 = f
         self.h5path = path
         self.shape = None
+        self.tiledict = OrderedDict()
         if h5:
+            # TODO: read tiledict and del from h5
             for ds in h5.keys():
                 h5.copy(ds, f)
- 
 
     def add(self, key, val):
         raise NotImplementedError
@@ -76,7 +82,6 @@ class _tiles_h5_manager(_h5_manager):
             key(str or tuple): key will become tile name 
             tile(pathml.core.tile.Tile): Tile object
         """
-        # what to do with names? need to replace with coordinates
         # when add a tile
         #   if array doesn't exist 
         #       init array self.h5['tiles']['array']
@@ -97,29 +102,75 @@ class _tiles_h5_manager(_h5_manager):
             raise ValueError(f"Tiles contains tiles of shape {self.shape}, provided tile is of shape {tile.image.shape}"
                              f". We enforce that all Tile in Tiles must have matching shapes.")
 
-        tilegroup = self.h5.create_group(str(key))
-        masksgroup = tilegroup.create_group('masks')
-        writedataframeh5(tilegroup, 'tile', tile.image)
+        if 'array' in self.h5.keys():
+            # resize array
+            coords = tile.coords
+            for i in len(coords):
+                if self.h5['array'].shape[i] < coords[i] + self.shape[i]:
+                    self.h5['array'].resize(self.h5['array'].shape[i]+self.shape[i], axis=i)
+            # add tile to array
+            slicer = [slice(coords[i], coords[i]+self.shape[i]) for i in len(coords)] 
+            self.h5['array'][tuple(slicer)] = tile.image
+
+        elif 'array' not in self.h5.keys():
+            maxshape = tuple([None]*len(self.shape))
+            self.h5.create_dataset(
+                    'array', 
+                    shape = self.shape,
+                    maxshape = maxshape,
+                    data = tile.image,
+                    chunks = True,
+                    compression = 'gzip',
+                    compression_opts = 5,
+                    shuffle = True
+            )
+            h5['array'].attr['shape'] = tile.image.shape
+
 
         if tile.masks:
+            if 'masks' not in self.h5.keys():
+                masksgroup = self.h5.create_group('masks')
             try:
                 for mask in tile.masks.h5manager.h5:
-                    writedataframeh5(masksgroup, str(mask), tile.masks.h5manager.h5[mask][:])
+                    maskarray = tile.masks.h5manager.h5[mask][:]
+                    self.h5['masks'].create_dataset(
+                            str(mask), 
+                            shape = self.shape,
+                            maxshape = maxshape,
+                            data = maskarray,
+                            chunks = True,
+                            compression = 'gzip',
+                            compression_opts = 5,
+                            shuffle = True
+                    )
             except:
                 for mask in tile.masks:
-                    writedataframeh5(masksgroup, str(mask), tile.masks[mask])
+                    if mask not in self.h5['masks'].keys()
+                    # TODO: extend mask h5['masks'][mask] and add array 
 
-        if tile.labels:
-            writedicth5(tilegroup, 'labels', tile.labels)
+                    for i in len(coords):
+                        if self.h5[''].shape[i] < coords[i] + self.shape[i]:
+                            self.h5['array'].resize(self.h5['array'].shape[i]+self.shape[i], axis=i)
 
-        if tile.coords:
-            writetupleh5(tilegroup, 'coords', tile.coords)
+                    # PICK UP FROM HERE
+                    maskarray = tile.masks[mask]
+                    self.h5['masks'].create_dataset(
+                            str(mask), 
+                            shape = self.shape,
+                            maxshape = maxshape,
+                            data = maskarray,
+                            chunks = True,
+                            compression = 'gzip',
+                            compression_opts = 5,
+                            shuffle = True
+                    )
 
-        if tile.slidetype:
-            writestringh5(tilegroup, 'slidetype', tile.slidetype)
-
-        if tile.name:
-            writestringh5(tilegroup, 'name', tile.name)
+        self.tiledict[tile.coords] = {
+                name: tile.name, 
+                labels: tile.labels,
+                coords: tile.coords, 
+                slidetype: tile.slidetype
+        }
 
     def update(self, key, val, target):
         key = str(key)

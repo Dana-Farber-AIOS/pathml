@@ -41,6 +41,7 @@ def write_h5path(
     path = Path(path)
     pathdir = Path(os.path.dirname(path)) 
     pathdir.mkdir(parents=True, exist_ok=True) 
+    # TODO: refactor
     with h5py.File(path, 'w') as f:
         fieldsgroup = f.create_group('fields')
         if slidedata.slide:
