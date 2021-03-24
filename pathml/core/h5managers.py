@@ -3,18 +3,13 @@ import tempfile
 import ast
 from collections import OrderedDict
 import numpy as np
+import itertools
 
 from pathml.core.utils import writedataframeh5, writestringh5, writedicth5, writetupleh5
 import pathml.core.masks
 import pathml.core.tile
 
 """
-h5manager
-    tiledict
-        OrderedDict (iterate over index)
-            {coords : {name,labels,etc}} 
-    h5
-
 h5: 
 *fields
     backend
@@ -232,19 +227,34 @@ class _tiles_h5_manager(_h5_manager):
         for key in self.tiledict:
             yield self.get(key, slices=slices)
             
-    def reshape(self, shape):
+    def reshape(self, shape, centercrop = False):
         """
         Resample tiles to new shape. 
+        This method does not delete any data, to restore the full image choose a shape that
+        evenly divides slide shape.
+        However this method deletes tile labels and names.
 
         Args:
-            shape: new shape of tile.
+            shape(tuple): new shape of tile.
+            centercrop(bool): if shape does not evenly divide slide shape, take center crop
         """
-        # this is simply reindexing self.h5['array']
-        # check shape of large array
-        # find coords which are valid cuts of array
-        # repopulate self.tiledict from valid cuts
+        arrayshape = list(f['array'].shape)
+        # if dimension is missing, assume this dimension is not sliced 
+        if len(arrayshape) > len(shape):
+            shape = list(shape)
+            shape = shape + arrayshape[len(shape)-1:] 
+        divisors = [range(n//d) for n,d in zip(arrayshape, shape)]
+        coordlist = itertools.product(*divisors)
+        slidetype = self.tiledict[0]['slidetype']
+        self.tiledict = OrderedDict()
+        for coord in coordlist:
+            self.tiledict[coords] = {
+                    'name': None, 
+                    'labels': None,
+                    'coords': coords, 
+                    'slidetype': slidetype
+            }
 
-    # TODO: remove doesn't make sense in the context of new framework
     def remove(self, key):
         """
         Remove tile from self.h5 by key.
