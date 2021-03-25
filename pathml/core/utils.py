@@ -38,3 +38,9 @@ def writetupleh5(h5, name, tup):
     """
     tupleasarray = np.array(str(tup), dtype = object)
     h5.attrs[str(name)] = tupleasarray
+
+def readtupleh5(h5, key):
+    """
+    Read tuple from h5.
+    """
+    return eval(h5.attrs[key]) if key in h5.attrs.keys() else None 

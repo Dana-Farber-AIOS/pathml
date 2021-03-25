@@ -41,7 +41,6 @@ def write_h5path(
     path = Path(path)
     pathdir = Path(os.path.dirname(path)) 
     pathdir.mkdir(parents=True, exist_ok=True) 
-    # TODO: refactor
     with h5py.File(path, 'w') as f:
         fieldsgroup = f.create_group('fields')
         if slidedata.slide:
@@ -52,14 +51,15 @@ def write_h5path(
             writedicth5(fieldsgroup, 'labels', slidedata.labels)
         if slidedata.history:
             pass
+        # tilesdict -> h5
+        
         if slidedata.masks:
             masksgroup = f.create_group('masks') 
             for ds in slidedata.masks.h5manager.h5.keys():
                 slidedata.masks.h5manager.h5.copy(ds, masksgroup)
         if slidedata.tiles:
-            tilesgroup = f.create_group('tiles')
             for ds in slidedata.tiles.h5manager.h5.keys():
-                slidedata.tiles.h5manager.h5.copy(ds, f['tiles'])
+                slidedata.tiles.h5manager.h5.copy(ds, f)
 
 def read(
     path,
