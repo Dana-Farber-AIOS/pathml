@@ -41,10 +41,11 @@ class _h5_manager:
         if h5:
             for ds in h5.keys():
                 h5.copy(ds, f)
+            # read tilesdict into RAM
             self.tilesdict = dict(f['tiles'].attrs['tilesdict'].astype(str)) if 'tilesdict' in f['tiles'].attrs.keys() else None 
             if self.tilesdict:
                 del f['tiles'].attrs['tilesdict']
-                # TODO: coerce each element in tilesdict to correct types 
+                # coerce each element in tilesdict to correct types 
                 for key in self.tilesdict.keys()
                     k = self.tilesdict[key]
                     k['labels'] = dict(k['labels']) 

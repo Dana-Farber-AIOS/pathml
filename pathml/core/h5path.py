@@ -51,12 +51,12 @@ def write_h5path(
             writedicth5(fieldsgroup, 'labels', slidedata.labels)
         if slidedata.history:
             pass
-        # tilesdict -> h5
-        
         if slidedata.masks:
             masksgroup = f.create_group('masks') 
             for ds in slidedata.masks.h5manager.h5.keys():
                 slidedata.masks.h5manager.h5.copy(ds, masksgroup)
+        # add tilesdict to h5
+        writedicth5(f['tiles'], 'tilesdict', slidedata.tiles.h5manager.tilesdict) 
         if slidedata.tiles:
             for ds in slidedata.tiles.h5manager.h5.keys():
                 slidedata.tiles.h5manager.h5.copy(ds, f)
