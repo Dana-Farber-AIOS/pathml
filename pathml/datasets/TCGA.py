@@ -16,15 +16,37 @@ import json
 import numpy as np
 import subprocess
 
-class TCGA():
+class TCGA_dataset(BaseSlideDataset):
+    """
+    A base class for a TCGA_dataset. 
+    """
+
+    def __len__(self):
+        # This should return the size of the dataset
+        raise NotImplementedError
+
+    def __getitem__(self, ix):
+        # this should return a (slide, label) pair for each index
+        raise NotImplementedError
 
     def __init__ (self, tissue_codes, outdir):
-        print("Creating a TCGA class")
+        # print("Creating a TCGA class")
         self.tissue_codes = tissue_codes
         self.outdir = outdir
         self.fetch_data(tissue_codes, outdir)
     
-    def fetch_data(self, tissue_codes, outdir):
+    def fetch_data(self, 
+                        tissue_codes, 
+                        tumor_types = ["Primary Tumor"], 
+                        data_type = ["Slide Image"],
+                        slide_type = ["Diagnostic Slide"],
+                        num_results = "1",
+                        num_dls_per_split = 50
+                        outdir):
+
+        # TODO CREATE INPUT FOR "files.cases.project.project_id"
+        # 
+
         fields = [
             "file_name",
             "cases.submitter_id",
@@ -59,7 +81,7 @@ class TCGA():
                 "op": "in",
                 "content":{
                     "field": "files.cases.samples.sample_type",
-                    "value": ["Primary Tumor"] #TODO look into other tumors except primary
+                    "value":  tumor_types #TODO look into other tumors except primary
                     }
                 },
                 {
@@ -67,7 +89,7 @@ class TCGA():
                 "content":{
                     "field": "files.data_type",
                     #Can retrieve other data types as necessary by adding keyword strings to this list.
-                    "value": ["Slide Image"]
+                    "value": data_type
                     }
                 },
                 {
@@ -75,7 +97,7 @@ class TCGA():
                 "content":{
                     "field": "files.experimental_strategy",
                     #NOTE - you may want to remove this entry of the dictionary when trying to download normal tissue, as these slides may not be labeled as "diagnostic"
-                    "value": ["Diagnostic Slide"]
+                    "value": slide_type
                     }
                 },
             ]
@@ -86,7 +108,7 @@ class TCGA():
             "filters": filters,
             "fields": fields,
             "format": "json",
-            "size": "2000"
+            "size": num_results 
             }
 
         # The parameters are passed to 'json' rather than 'params' in this case
@@ -96,62 +118,54 @@ class TCGA():
         # response.text
         tumor_wsi_hits = response.json()['data']['hits']
         #Check the size of the dataset
-        print(len(tumor_wsi_hits), 'total samples found')
+        # print(len(tumor_wsi_hits), 'total samples found')
 
         #create the df with two columns: one containing the file ID, and the other containing the name of the WSI file.
-        df_tumor_TGCT = pd.DataFrame({"uuid": [x['file_id'] for x in tumor_wsi_hits if "DX1" in x["file_name"]],"filename": [x['file_name'] for x in tumor_wsi_hits if "DX1" in x["file_name"]]})
+        data = {"uuid": [x['file_id'] for x in tumor_wsi_hits if "DX1" in x["file_name"]],"filename": [x['file_name'] for x in tumor_wsi_hits if "DX1" in x["file_name"]]}
 
         #now, a new column needs to be built and added to the df - this column will contain the paths from which the WSI file itself will be fetched.
         isb_root = 'gs://gdc-tcga-phs000178-open'
-        full_paths = []
+        data = []
         for x in tumor_wsi_hits:
+            temp_data = {}
             if "DX1" in x["file_name"]:
                 uuid = x['file_id']
+                temp_data['uuid'] = uuid
+
                 filename = x['file_name']
+                temp_data['filename'] = filename
+
                 full_path = "/".join([isb_root, uuid,filename])
                 full_paths.append(full_path)
-        
-        df_tumor_TGCT['full_gs_path'] = full_paths
+                temp_data['full_gs_path'] = full_path
+
+                data.append(temp_data)
 
         #display a random selection of 5 paths - a good sanity check
-        print(df_tumor_TGCT['full_gs_path'].sample(5).values)
 
         """Oftentimes, the dataset of interest can contain hundreds of WSIs, which makes for an extremely bulky download. It's therefore good practice to split the downloading process into small batches.
+        """
 
-        To do so, the paths are extracted from the database, split, and then written into a shell script, which is run directly from the command line."""
-
-
-        #Extract the paths of interest, and split them into a smaller number of batches.
-        num_splits = int(len(df_tumor_TGCT['full_gs_path']) / 50)
-        splits = np.array_split(df_tumor_TGCT['full_gs_path'].values, num_splits)
 
         #The goal is to have at most around 50 paths per batch; more than this could cause a job to crash or be terminated. Check the shapes and change the number of splits as necessary.
-        print('Downloading in batches of', [x.shape for x in splits])
+        #Extract the paths of interest, and split them into a smaller number of batches.
+        num_splits = int(len(data) / num_dls_per_split)
+        splits = [data[x:x+num_dls_per_split] for x in range(0, num_splits, num_dls_per_split)]
+        
+        split_counter = 0
+        for paths in splits:
+            tempJoin = ' '.join(paths)
+            tempCmd = 'gsutil -m cp -L split_{}.log '.format(split_counter)
+            #{} changes what's in string
+            tempCmd += tempJoin
+            tempCmd += ' '
+            tempCmd += outdir
+            #going to download to the output directory
 
-        #choose a name for the download file
-        filename = "TCGA_dl.sh"
-        #.sh extension = bash script
+            split_counter += 1
 
-        #Write into the chosen file
-        with open(filename,'w') as file:
-            file.write('#!/bin/bash/\n')
+            os.system(tempCmd)
 
-
-            split_counter = 0
-            for paths in splits:
-                tempJoin = ' '.join(paths)
-                tempCmd = 'gsutil -m cp -L split_{}.log '.format(split_counter)
-                #{} changes what's in string
-                tempCmd += tempJoin
-                tempCmd += ' '
-                tempCmd += outdir
-                #going to download to current directory
-
-                split_counter += 1
-
-                os.system(tempCmd)
-
-                file.write(tempCmd+'\n\n')
 
 """
 By this point, you will have written the .sh file which, when run, will execute the download of your chosen dataset in 50-slide batches. This process usually takes a couple of hours.
