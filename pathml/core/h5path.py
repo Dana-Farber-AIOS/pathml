@@ -6,7 +6,7 @@ import pathml.core.slide_data
 from pathml.core.tiles import Tiles
 from pathml.core.masks import Masks
 from pathml.core.slide_backends import OpenSlideBackend, BioFormatsBackend, DICOMBackend
-from pathml.core.utils import writestringh5, writedicth5 
+from pathml.core.utils import writestringh5, writedicth5, writetilesdicth5
 
 pathmlext = {
     'h5',
@@ -211,7 +211,7 @@ def write_h5path(
     Write h5path formatted file from SlideData object.
     
     Args:
-        path (str): Path to save destination
+        path (str): Path to save directory
     """
     path = Path(path)
     pathdir = Path(os.path.dirname(path)) 
@@ -234,14 +234,8 @@ def write_h5path(
             for ds in slidedata.tiles.h5manager.h5.keys():
                 slidedata.tiles.h5manager.h5.copy(ds, f)
         # add tilesdict to h5
-        writedicth5(f['tiles'], 'tilesdict', slidedata.tiles.h5manager.tilesdict) 
+        writetilesdicth5(f['tiles'], 'tilesdict', slidedata.tiles.h5manager.tilesdict)
 
-        create_ds_args = {'compression': "gzip",
-                          'shuffle': True,
-                          'fletcher32': True}
-
-        dicttoh5(city_area, "cities.h5", h5path="/area",
-                 create_dataset_args=create_ds_args)
 
 def read(
     path,

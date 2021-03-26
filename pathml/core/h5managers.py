@@ -5,7 +5,7 @@ from collections import OrderedDict
 import numpy as np
 import itertools
 
-from pathml.core.utils import writedataframeh5, writestringh5, writedicth5, writetupleh5, readtupleh5
+from pathml.core.utils import writedataframeh5, writestringh5, writetupleh5, readtupleh5, readtilesdicth5
 import pathml.core.masks
 import pathml.core.tile
 
@@ -62,22 +62,14 @@ class _tiles_h5_manager(_h5_manager):
     """
     Interface between tiles object and data management on disk by h5py. 
     """
-
     def __init__(self, h5 = None):
         super().__init__(h5 = h5)
         tilesgroup = self.h5.create_group('tiles')
         # read tilesdict into RAM
         self.tilesdict = OrderedDict()
         if 'tilesdict' in self.h5['tiles'].keys(): 
-            self.tilesdict = OrderedDict(self.h5['tiles/tilesdict'].astype(str)) if 'tilesdict' in self.h5['tiles'].keys() else None 
-        if self.tilesdict:
+            self.tilesdict = readtilesdicth5(self.h5['tiles/tilesdict']) 
             del self.h5['tiles/tilesdict']
-            # coerce each element in tilesdict to correct types 
-            for key in self.tilesdict.keys():
-                k = self.tilesdict[key]
-                k['labels'] = dict(k['labels']) 
-                k['labels'] = {k:v for k,v in k['labels'].items()}
-                k['coords'] = eval(k['coords']) 
         if 'array' in self.h5['tiles'].keys():
             self.shape = readtupleh5(self.h5['tiles/array'], 'shape')
 
@@ -187,7 +179,6 @@ class _tiles_h5_manager(_h5_manager):
             assert isinstance(val, np.ndarray), f"when replacing tile image must pass np.ndarray"
             assert self.shape == val.shape, f"Cannot update a tile of shape {self.shape} with a tile" \
                                                      f"of shape {val.shape}. Shapes must match."
-tuple(map(int, test_str.split(', ')))
             coords = list(eval(self.tilesdict[key]['coords']))
             slicer = [slice(coords[i], coords[i]+self.shape[i]) for i in len(coords)] 
             self.h5['tiles/array'][tuple(slicer)] = val 
