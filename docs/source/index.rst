@@ -51,6 +51,7 @@ Dana-Farber Cancer Institute.
    :maxdepth: 2
    :caption: Examples
 
+   examples/link_gallery
    examples/link_stain_normalization
    examples/link_nucleus_detection
    examples/link_preprocessing_pipeline
