@@ -24,16 +24,16 @@ class Tiles:
         if h5 is None:
             if tiles:
                 if not (isinstance(tiles, dict) or (isinstance(tiles, list) and all([isinstance(t, pathml.core.tile.Tile) for t in tiles]))):
-                    raise ValueError(f"tiles must be passed as dicts of the form coordinate1:Tile1,... "
-                                     f"or lists of Tile objects containing i,j")
+                    raise ValueError(f"tiles must be passed as dicts of the form coordinates1:Tile1,... "
+                                     f"or lists of Tile objects containing coords")
                 # create Tiles from dict
                 if isinstance(tiles, dict):
                     for val in tiles.values():
                         if not isinstance(val, pathml.core.tile.Tile):
                             raise ValueError(f"dict vals must be Tile")
                     for key in tiles.keys():
-                        if not ((isinstance(key, tuple) and list(map(type, key)) == [int, int]) or isinstance(key, str)):
-                            raise ValueError(f"dict keys must be of type str or tuple[int]")
+                        if not (isinstance(key, tuple) and all(isinstance(v, int) for v in key)):
+                            raise ValueError(f"dict keys must be of type tuple[int]")
                     self._tiles = OrderedDict(tiles)
                 # create Tiles from list
                 else:
@@ -41,15 +41,17 @@ class Tiles:
                     for tile in tiles:
                         if not isinstance(tile, pathml.core.tile.Tile):
                             raise ValueError(f"Tiles expects a list of type Tile but was given {type(tile)}")
-                        name = tile.name if tile.name is not None else str(tile.coords)
-                        tiledictionary[name] = tile 
+                        if tile.coords is None:
+                            raise ValueError(f"tiles must contain valid coords")
+                        coords = tile.coords
+                        tiledictionary[coords] = tile 
                     self._tiles = OrderedDict(tiledictionary)
             else:
                 self._tiles = OrderedDict()
-            # move Tiles to .h5
+            # initialize h5 from tiles 
             self.h5manager = _tiles_h5_manager() 
             for key in self._tiles:
-                self.h5manager.add(key, self._tiles[key])
+                self.h5manager.add(str(self._tiles[key].coords), self._tiles[key])
             del self._tiles
         else:
             self.h5manager = _tiles_h5_manager(h5)
@@ -59,23 +61,22 @@ class Tiles:
         return rep
 
     def __len__(self):
-        return len(self.h5manager.h5.keys())
+        return len(self.h5manager.tilesdict.keys())
 
     def __getitem__(self, item):
         tile = self.h5manager.get(item) 
         return tile 
 
-    def add(self, coordinates, tile):
+    def add(self, tile):
         """
-        Add tile indexed by coordinates to self.h5manager.
+        Add tile indexed by tile.coords to self.h5manager.
 
         Args:
-            coordinates(tuple[int]): location of tile on slide
             tile(Tile): tile object
         """
         if not isinstance(tile, pathml.core.tile.Tile):
             raise ValueError(f"can not add {type(tile)}, tile must be of type pathml.core.tiles.Tile")
-        self.h5manager.add(coordinates, tile)
+        self.h5manager.add(tile)
         del tile
 
     def update(self, key, val, target='all'):

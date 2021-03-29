@@ -33,10 +33,14 @@ def test_read_write_heslide(he_slidedata):
     if slidedata.masks is None:
         assert readslidedata.masks is None
     if slidedata.masks is not None:
+        print(scan_hdf5(readslidedata.masks.h5manager.h5))
+        print(scan_hdf5(slidedata.masks.h5manager.h5))
         assert scan_hdf5(readslidedata.masks.h5manager.h5) == scan_hdf5(slidedata.masks.h5manager.h5)
     if slidedata.tiles is None:
         assert readslidedata.tiles is None
     if slidedata.tiles is not None:
+        print(scan_hdf5(readslidedata.tiles.h5manager.h5))
+        print(scan_hdf5(slidedata.tiles.h5manager.h5))
         assert scan_hdf5(readslidedata.tiles.h5manager.h5) == scan_hdf5(slidedata.tiles.h5manager.h5)
 
 def scan_hdf5(f, recursive=True, tab_step=2):

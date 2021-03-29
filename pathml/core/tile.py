@@ -23,11 +23,10 @@ class Tile:
         assert isinstance(image, np.ndarray), f"image of type {type(image)} must be a np.ndarray"
         assert masks is None or isinstance(masks, (pathml.core.masks.Masks, dict)), \
             f"masks is of type {type(masks)} but must be of type pathml.core.masks.Masks or dict"
-        assert coords is None or (isinstance(coords, tuple) and len(coords) == 2), "coords must be a tuple of (i, j)"
+        assert isinstance(coords, tuple), "coords must be a tuple e.g. (i, j)"
         assert labels is None or isinstance(labels, dict)
         assert name is None or isinstance(name, str), f"name is of type {type(name)} but must be of type str or None"
         self.image = image
-        # TODO: check that masks have right shape
         if isinstance(masks, pathml.core.masks.Masks):
             self.masks = masks
         if isinstance(masks, dict):

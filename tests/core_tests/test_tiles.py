@@ -2,8 +2,8 @@ import pytest
 import numpy as np
 import string
 import random
-from collections import OrderedDict
-
+import copy
+from collections import OrderedDict 
 from pathml.core.tiles import Tiles
 from pathml.core.tile import Tile
 from pathml.core.masks import Masks
@@ -61,13 +61,25 @@ def test_init_incorrect_input(incorrect_input):
         tiles = Tiles(incorrect_input)
 
 
-def test_init(tile_withmasks):
-    tilelist = [tile_withmasks for k in range(20)]
-    tiledict = {(k, k): tile_withmasks for k in range(20)}
-    tiles = Tiles(tilelist)
-    tiles2 = Tiles(tiledict)
-    assert (tiles[0].image == tilelist[0].image).all()
-    assert (tiles2[0].image == tiledict[(0,0)].image).all()
+def test_init_len(tile_withmasks):
+    shape = (224, 224, 3)
+    coords = [0,0]
+    maskdict = {}
+    for i in range(50):
+        maskdict[str(i)] = np.random.randint(2, size = (224,224,3))
+    masks = Masks(maskdict)
+    tiles = {}
+    for i in range(50):
+        tile = Tile(np.random.random_sample(shape), name=str(coords), coords = tuple(coords), masks = masks, slidetype=None)
+        tiles[tuple(coords)] = tile
+        coords[0], coords[1] = coords[0] + shape[0], coords[1] + shape[1]
+    tilesdict = tiles
+    tileslist = list(tiles.values())
+    tiles = Tiles(tileslist)
+    tiles2 = Tiles(tilesdict)
+    assert (tiles[0].image == tileslist[0].image).all()
+    assert (tiles2[0].image == tilesdict[(0,0)].image).all()
+    assert len(tiles) == 50
 
 
 @pytest.mark.parametrize("incorrect_input", [None, True, 5])
@@ -82,12 +94,6 @@ def test_init_incorrect_input(tile_withmasks, incorrect_input):
 
 def test_repr(tile_withmasks):
     assert tile_withmasks 
-
-
-def test_len(tile_withmasks):
-    tiledict = {(k,k): tile_withmasks for k in range(20)}
-    tiles = Tiles(tiledict)
-    assert len(tiles) == 20
 
 
 @pytest.mark.parametrize("incorrect_input", ["string", None, True, 5, [5, 4, 3], {"dict": "testing"}])
@@ -115,8 +121,6 @@ def test_add_get_nomasks(emptytiles, tile_nomasks):
     assert tiles[(1, 3)].labels == tile.labels
     assert tiles[(1, 3)].slidetype == tile.slidetype
     assert (tiles[0].image == tile.image).all()
-    with pytest.raises(KeyError):
-        tiles.add((1,3), tile)
     im = np.arange(np.product((225,224,3))).reshape((225,224,3))
     wrongshapetile = Tile(image=im, coords = (4, 5), name='wrongshape', slidetype=None)
     with pytest.raises(ValueError):
@@ -143,7 +147,8 @@ def test_add_get_withmasks(emptytiles, tile_withmasks):
     tiles = emptytiles
     tile = tile_withmasks
     tiles.add((1, 3), tile)
-    for key in tiles.h5manager.h5['(1, 3)']['masks'].keys():
+    print(tiles.h5manager.h5['tiles'].keys())
+    for key in tiles.h5manager.h5['tiles']['masks'].keys():
         assert (tiles[(1, 3)].masks[key] == tile.masks[key]).all()
         assert (tiles[0].masks[key] == tile.masks[key]).all()
 
@@ -214,7 +219,6 @@ def test_slice_nomasks(emptytiles, tile_nomasks):
     tiles.add((1,3), tile)
     slices = [slice(2,5)]
     test = tiles.slice(slices)
-    testtile = test['test']
     assert test.h5manager.shape == (3,224,3)
 
 
@@ -224,5 +228,4 @@ def test_slice_withmasks(emptytiles, tile_withmasks):
     tiles.add((1,3), tile)
     slices = [slice(2,5)]
     test = tiles.slice(slices)
-    testtile = test['test2']
     assert test.h5manager.shape == (3,224,3)

@@ -35,9 +35,6 @@ class _h5_manager:
         self.h5 = f
         self.h5path = path
         self.shape = None
-        if h5:
-            for ds in h5.keys():
-                h5.copy(ds, f)
 
     def add(self, key, val):
         raise NotImplementedError
@@ -65,68 +62,75 @@ class _tiles_h5_manager(_h5_manager):
     def __init__(self, h5 = None):
         super().__init__(h5 = h5)
         tilesgroup = self.h5.create_group('tiles')
-        # read tilesdict into RAM
         self.tilesdict = OrderedDict()
-        if 'tilesdict' in self.h5['tiles'].keys(): 
-            self.tilesdict = readtilesdicth5(self.h5['tiles/tilesdict']) 
-            del self.h5['tiles/tilesdict']
-        if 'array' in self.h5['tiles'].keys():
-            self.shape = readtupleh5(self.h5['tiles/array'], 'shape')
+        if h5:
+            for ds in h5.keys():
+                h5.copy(ds, self.h5['tiles'])
+            # read tilesdict into RAM
+            if 'tilesdict' in h5.keys(): 
+                self.tilesdict = readtilesdicth5(self.h5['tiles/tilesdict']) 
+                del self.h5['tiles/tilesdict']
+            # read shape from h5
+            if 'array' in h5.keys():
+                self.shape = readtupleh5(self.h5['tiles/array'], 'shape')
 
-    def add(self, key, tile):
+    def add(self, tile):
         """
         Add tile to h5.
 
         Args:
             tile(pathml.core.tile.Tile): Tile object
         """
-        if not isinstance(key, (str, tuple)):
-            raise ValueError(f"can not add type {type(key)}, key must be of type str or tuple")
-        if str(key) in self.h5.keys():
-           print(f"Tile is already in tiles. Overwriting {key} inplace.") 
+        if str(tile.coords) in self.tilesdict.keys():
+           print(f"Tile is already in tiles. Overwriting {tile.coords} inplace.") 
         if self.shape is None:
             self.shape = tile.image.shape
         if tile.image.shape != self.shape:
             raise ValueError(f"Tiles contains tiles of shape {self.shape}, provided tile is of shape {tile.image.shape}"
                              f". We enforce that all Tile in Tiles must have matching shapes.")
 
-        if 'array' in self.h5.keys():
+        if 'array' in self.h5['tiles'].keys():
             # extend array if coords+shape is larger than self.h5['tiles/array'] 
             coords = tile.coords
-            for i in len(coords):
+            for i in range(len(coords)):
                 currentshape = self.h5['tiles/array'].shape[i]
-                requiredshape = coords[i] + self.shape[i] 
+                # coords index is shape - 1
+                requiredshape = coords[i] + tile.image.shape[i] + 1 
                 if  currentshape < requiredshape:
                     self.h5['tiles/array'].resize(self.h5['tiles/array'].shape[i] + requiredshape - currentshape, axis=i)
             # add tile to self.h5['tiles/array']
-            slicer = [slice(coords[i], coords[i]+self.shape[i]) for i in len(coords)] 
+            slicer = [slice(coords[i], coords[i] + tile.image.shape[i]) for i in range(len(coords))] 
             self.h5['tiles/array'][tuple(slicer)] = tile.image
 
-        # TODO: just 'else'?
         # initialize self.h5['tiles/array'] if it does not exist 
+        # note that the first tile is not necessarily (0,0) so we init with zero padding
         elif 'array' not in self.h5['tiles'].keys():
-            maxshape = tuple([None]*len(self.shape))
+            coords = list(tile.coords)
+            coords = coords + [0]*len(tile.image.shape[len(coords):]) 
+            shape = [i + j  for i,j in zip(tile.image.shape, coords)]
+            maxshape = tuple([None]*len(shape))
             self.h5['tiles'].create_dataset(
                     'array', 
-                    shape = self.shape,
+                    shape = shape,
                     maxshape = maxshape,
-                    data = tile.image,
+                    data = np.zeros(shape),
                     chunks = True,
                     compression = 'gzip',
                     compression_opts = 5,
                     shuffle = True
             )
-            # save tile shape as attribute 
-            self.h5['tiles/array'].attrs['shape'] = tile.image.shape
+            # write tile.image 
+            slicer = [slice(coords[i], coords[i] + tile.image.shape[i]) for i in range(len(coords))] 
+            self.h5['tiles/array'][tuple(slicer)] = tile.image
+            # save tile shape as attribute to enforce consistency 
+            writetupleh5(self.h5['tiles/array'], 'shape', tile.image.shape)
 
         if tile.masks:
             # create self.h5['tiles/masks']
             if 'masks' not in self.h5['tiles'].keys():
                 masksgroup = self.h5['tiles'].create_group('masks')
                 
-            # flexible initialization
             masklocation = tile.masks.h5manager.h5 if hasattr(tile.masks, 'h5manager') else tile.masks
-
             for mask in masklocation:
                 # add masks to large mask array
                 if mask in self.h5['tiles/masks'].keys():
@@ -134,30 +138,38 @@ class _tiles_h5_manager(_h5_manager):
                     coords = tile.coords
                     for i in range(len(coords)):
                         currentshape = self.h5['tiles/masks'][mask].shape[i]
-                        requiredshape = coords[i] + self.shape[i] 
+                        # coords index is shape - 1
+                        requiredshape = coords[i] + tile.image.shape[i] + 1 
                         if  currentshape < requiredshape:
                             self.h5['tiles/masks'][mask].resize(self.h5['tiles/masks'][mask].shape[i] + requiredshape - currentshape, axis=i)
                     # add mask to mask array
                     slicer = [slice(coords[i], coords[i]+self.shape[i]) for i in range(len(coords))] 
                     self.h5['tiles/masks'][mask][tuple(slicer)] = masklocation[mask][:]
 
-                # create mask array
                 else:
+                    # create mask array
                     maskarray = masklocation[mask][:]
-                    maxshape = tuple([None]*len(maskarray.shape))
+                    coords = list(tile.coords)
+                    coords = coords + [0]*len(maskarray.shape[len(coords):]) 
+                    shape = [i + j for i,j in zip(maskarray.shape, coords)]
+                    maxshape = tuple([None]*len(shape))
                     self.h5['tiles/masks'].create_dataset(
                             str(mask), 
-                            shape = maskarray.shape,
+                            shape = shape,
                             maxshape = maxshape,
-                            data = maskarray,
+                            data = np.zeros(shape),
                             chunks = True,
                             compression = 'gzip',
                             compression_opts = 5,
                             shuffle = True
                     )
-        # store dict with tile information in RAM
-        self.tilesdict[tile.coords] = {
-                'name': tile.name, 
+                    # now overwrite by mask 
+                    slicer = [slice(coords[i], coords[i] + tile.image.shape[i]) for i in range(len(coords))] 
+                    self.h5['tiles/masks'][mask][tuple(slicer)] = maskarray 
+
+        # add tile fields to tilesdict 
+        self.tilesdict[str(tile.coords)] = {
+                'name': str(tile.name), 
                 'labels': tile.labels,
                 'coords': str(tile.coords), 
                 'slidetype': tile.slidetype
@@ -180,7 +192,7 @@ class _tiles_h5_manager(_h5_manager):
             assert self.shape == val.shape, f"Cannot update a tile of shape {self.shape} with a tile" \
                                                      f"of shape {val.shape}. Shapes must match."
             coords = list(eval(self.tilesdict[key]['coords']))
-            slicer = [slice(coords[i], coords[i]+self.shape[i]) for i in len(coords)] 
+            slicer = [slice(coords[i], coords[i]+self.shape[i]) for i in range(len(coords))] 
             self.h5['tiles/array'][tuple(slicer)] = val 
             print(f'array at {key} overwritten')
 
@@ -209,24 +221,26 @@ class _tiles_h5_manager(_h5_manager):
         if not isinstance(item, (int, str, tuple)):
             raise KeyError(f'must getitem by coordinate(type tuple[int]), index(type int), or name(type str)')
         if isinstance(item, (str, tuple)):
-            if item not in self.tilesdict:
+            if str(item) not in self.tilesdict:
                 raise KeyError(f'key {item} does not exist')
+            tilemeta = self.tilesdict[str(item)]
         if isinstance(item, int):
             if item > len(self.tilesdict) - 1:
                 raise KeyError(f'index out of range, valid indices are ints in [0,{len(self.tilesdict) - 1}]')
-        # since tilesdict is OrderedDict can pass int, tuple, or string as key
-        tilemeta = self.tilesdict[item]
+            tilemeta = list(self.tilesdict.items())[item][1]
         # impute missing dimensions from self.shape 
         coords = list(eval(tilemeta['coords']))
         if len(self.shape) > len(coords):
             shape = list(self.shape)
-            coords = coords + shape[len(coords)-1:] 
+            coords = coords + [0]*len(shape[len(coords)-1:]) 
         tiler = [slice(coords[i], coords[i]+self.shape[i]) for i in range(len(self.shape))]
-        tile = self.h5['tiles/array'][tiler][:]
-        masks = pathml.core.masks.Masks({self.h5['tiles/masks'][mask][tiler][:] for mask in self.h5['tiles/masks']})
+        tile = self.h5['tiles/array'][tuple(tiler)][:]
+        masks = {mask : self.h5['tiles/masks'][mask][tuple(tiler)][:] for mask in self.h5['tiles/masks']} if 'masks' in self.h5['tiles'].keys() else None 
         if slicer:
             tile = tile[slicer]
-            masks = {mask[slicer] for mask in masks}
+            if masks is not None:
+                masks = {key : masks[key][slicer] for key in masks}
+        masks = pathml.core.masks.Masks(masks)
         return pathml.core.tile.Tile(tile, masks=masks, labels=tilemeta['labels'], name=tilemeta['name'], coords=eval(tilemeta['coords']), slidetype=tilemeta['slidetype'])
 
     def slice(self, slicer):
@@ -243,7 +257,7 @@ class _tiles_h5_manager(_h5_manager):
             val(pathml.core.tile.Tile): tile
         """
         for key in self.tilesdict:
-            yield self.get(key, slices=slices)
+            yield self.get(key, slicer=slicer)
             
     def reshape(self, shape, centercrop = False):
         """
@@ -255,17 +269,17 @@ class _tiles_h5_manager(_h5_manager):
             shape(tuple): new shape of tile.
             centercrop(bool): if shape does not evenly divide slide shape, take center crop
         """
-        arrayshape = list(f['array'].shape)
-        # impute missing dimensions of shape from f['array'].shape 
+        arrayshape = list(f['tiles/array'].shape)
+        # impute missing dimensions of shape from f['tiles/array'].shape 
         if len(arrayshape) > len(shape):
             shape = list(shape)
             shape = shape + arrayshape[len(shape)-1:] 
         divisors = [range(n//d) for n,d in zip(arrayshape, shape)]
         coordlist = itertools.product(*divisors)
-        slidetype = self.tilesdict[0]['slidetype']
+        slidetype = list(self.tilesdict.items())[0]['slidetype']
         self.tilesdict = OrderedDict()
         for coord in coordlist:
-            self.tilesdict[coords] = {
+            self.tilesdict[str(coords)] = {
                     'name': None, 
                     'labels': None,
                     'coords': str(coords), 
@@ -290,6 +304,9 @@ class _masks_h5_manager(_h5_manager):
 
     def __init__(self, h5 = None):
         super().__init__(h5 = h5)
+        if h5:
+            for ds in h5.keys():
+                h5.copy(ds, self.h5)
 
     def add(self, key, mask):
         """
