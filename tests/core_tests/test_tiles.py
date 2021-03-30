@@ -94,7 +94,6 @@ def test_init(tiles, tilesnonconsecutive, incorrect_input):
     assert (tiles3[0].image == tilesdict2[(224*2*1, 224*2*2)].image).all()
 
 
-
 def test_repr(tiles):
     assert Tiles(tiles)
 
@@ -205,3 +204,15 @@ def test_slice(emptytiles, tile, incorrect_input):
     assert test[0].masks[0].shape == (3, 224, 3) 
     with pytest.raises(KeyError):
         test = tiles.slice(incorrect_input)
+
+def test_reshape(tiles):
+    tilesdict = tiles
+    tiles1 = Tiles(tilesdict)
+    tiles1.reshape(shape=(112, 112))
+    assert tiles1[0].image.shape == (112, 112, 3)
+    tiles1.reshape(shape=(225, 225))
+    assert len(tiles1) == 1 
+    assert tiles1[0].image.shape == (225, 225, 3)
+    # centercrop
+    tiles1.reshape(shape = (446, 446, 3), centercrop = True)
+    assert tiles1[0].coords[0] == 1

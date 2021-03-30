@@ -27,29 +27,22 @@ Hierarchical File System
 :class:`~pathml.core.slide_data`. This allows for simple reading and writing
 of :class:`~pathml.core.slide_data` objects.
 
-Here we examine an example **h5path** file:
+Here we examine the **h5path** file format:
 
-* /root ~
-    * /fields ~ 
-        * ///name ~
-        * ///slide_backend ~
-        * ///history ~
-    * /masks ~ 
-        * //mask1
-        * //mask2
-        * ...
-    * /tiles ~
-        * /tile1
-            * //tile
-            * ///coords
-            * ///slidetype
-            * /masks (tile-level masks)
-                * //mask1
-                * //mask2
-                * ...
+* /root 
+    * /fields  
+        * ///name 
+        * ///slide_backend 
+        * ///history 
+        * ///labels
+    * //array 
+    * /masks  
+        * //arraymask1
+    * /tiles 
+        * //tilesdict
+        * //tilemask1
 
-Directories marked by (~) are present in all **h5path** files. Unmarked directories 
-are automatically saved to **h5path** if they are present in :class:`~pathml.core.slide_data`. 
+Objects are saved to **h5path** if they are present in :class:`~pathml.core.slide_data`. 
 The file system is organized through h5py.Groups. /root is a group, as are /fields, 
 /masks, and /tiles. Groups are container-like and can be queried like dictionaries.
 
@@ -60,10 +53,11 @@ The file system is organized through h5py.Groups. /root is a group, as are /fiel
    masks = root['masks']
 
 Within groups, array-like objects are stored as h5py.Datasets that when accessed return 
-numpy.ndArray objects. Arrays representing masks (//mask1) and tiles (//tile) are Datasets.
+numpy.ndArray objects. All tiles are stored in a single h5py.Dataset at //array.
+A dict is maintained at //tilesdict with coordinates and fields for each tile.
 To retrieve a numpy.ndArray object from h5py.Datasets you must slice the Dataset with
 NumPy fancy-indexing syntax: for example [...] to retrieve the full array, or [a:b, :] to
-return the array with first dimension subset to [a, b].
+return the array with first dimension sliced to the interval [a, b].
 
 .. code-block::
 
@@ -75,7 +69,7 @@ return the array with first dimension subset to [a, b].
 
 Attributes are small named fields attached to h5py.Dataset and h5py.Group objects. String,
 tuple, and dict type objects are stored as attributes of the Group or Dataset they describe.
-///coords and ///slidetype are attributes describing each /tile.
+///name and ///labels for SlideData are stored as attributes describing /fields.
 
 .. code-block::
 

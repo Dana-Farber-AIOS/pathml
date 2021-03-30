@@ -103,8 +103,13 @@ class Tiles:
         """
         self.h5manager.remove(key)
 
-    def resize(self, shape):
-        raise NotImplementedError
+    def reshape(self, shape, centercrop = False):
+        """
+        Reshape tiles.
+        """
+        assert isinstance(shape, tuple) and all(isinstance(n, int) for n in shape) 
+        assert isinstance(centercrop, bool)
+        self.h5manager.reshape(shape, centercrop)
 
     def write(self, out_dir, filename):
         """

@@ -9,21 +9,6 @@ from pathml.core.utils import writedataframeh5, writestringh5, writetupleh5, rea
 import pathml.core.masks
 import pathml.core.tile
 
-"""
-h5: 
-*fields
-    slide_backend
-    name
-    labels
-    history
-*array
-*tiles
-    *masks
-*masks
-   ...
-
-put tilesdict in h5 when write, remove when read
-"""
 
 class _h5_manager:
     """
@@ -269,21 +254,27 @@ class _tiles_h5_manager(_h5_manager):
             shape(tuple): new shape of tile.
             centercrop(bool): if shape does not evenly divide slide shape, take center crop
         """
-        arrayshape = list(f['tiles/array'].shape)
+        arrayshape = list(self.h5['tiles/array'].shape)
         # impute missing dimensions of shape from f['tiles/array'].shape 
         if len(arrayshape) > len(shape):
             shape = list(shape)
             shape = shape + arrayshape[len(shape)-1:] 
         divisors = [range(n//d) for n,d in zip(arrayshape, shape)]
         coordlist = itertools.product(*divisors)
-        slidetype = list(self.tilesdict.items())[0]['slidetype']
+        if centercrop:
+            offset = [n % d / 2 for n,d in zip(arrayshape, shape)]
+            offsetcoordlist = []
+            for (item1, item2) in zip(offset, coordlist):
+                offsetcoordlist.append(item1 + item2) 
+            coordlist = offsetcoordlist
+        #slidetype = self.tilesdict[0]['slidetype']
         self.tilesdict = OrderedDict()
         for coord in coordlist:
-            self.tilesdict[str(coords)] = {
+            self.tilesdict[str(tuple(coords))] = {
                     'name': None, 
                     'labels': None,
-                    'coords': str(coords), 
-                    'slidetype': slidetype
+                    'coords': str(tuple(coords)), 
+                    'slidetype': None
             }
 
     def remove(self, key):
