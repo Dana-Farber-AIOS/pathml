@@ -172,7 +172,7 @@ class _tiles_h5_manager(_h5_manager):
                 'name': str(tile.name), 
                 'labels': tile.labels,
                 'coords': str(tile.coords), 
-                'slidetype': tile.slidetype
+                'slidetype': str(tile.slidetype)
         }
 
     def update(self, key, val, target):

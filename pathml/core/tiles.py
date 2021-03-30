@@ -91,7 +91,7 @@ class Tiles:
                     how the dimension should be sliced
         """
         if not (isinstance(slices,list) and (isinstance(a,slice) for a in slices)):
-            raise KeyError(f"slices must of of type list[slice] but is {type(slices)} with elements {type(slices[0])}")
+            raise KeyError(f"slices must of of type list[slice]")
         sliced = pathml.core.tiles.Tiles()
         for tile in self.h5manager.slice(slices):
             sliced.add(tile)

@@ -54,7 +54,7 @@ def writetilesdicth5(h5, name, dic):
     Write tilesdict as h5py.Dataset.
     """
     if name not in h5.keys():
-        h5.create_group(str(name))
+        h5.create_group(str(name), track_order = True)
 
     for key in dic.keys():
         h5[str(name)].create_group(str(key))
@@ -84,7 +84,7 @@ def readtilesdicth5(h5):
     for tile in h5.keys():
         labels = dict(h5[tile]['labels']) if 'labels' in h5[tile].keys() else None 
         if labels:
-            labels = {k : v for k,v in labels.items()}
+            labels = {k.decode('UTF-8') : v.decode('UTF-8') for k,v in labels.items()}
         subdict = {
                 'name': h5[tile]['name'][...].item().decode('UTF-8') if 'name' in h5[tile].keys() else None,
                 'labels': labels,

@@ -19,6 +19,10 @@ def he_slidedata():
                           threshold = 30, outer_contours_only = True)
     ])
     wsi.run(pipeline, tile_size = 250)
+    # add labels and name to test read/write from tilesdict
+    for tile in wsi.tiles.h5manager.tilesdict:
+        wsi.tiles.h5manager.tilesdict[tile]['labels'] = {'key1' : 'val1', 'key2' : 'val2'}
+        wsi.tiles.h5manager.tilesdict[tile]['name'] = str(tile)
     return wsi
 
 def test_read_write_heslide(he_slidedata):
@@ -33,15 +37,12 @@ def test_read_write_heslide(he_slidedata):
     if slidedata.masks is None:
         assert readslidedata.masks is None
     if slidedata.masks is not None:
-        print(scan_hdf5(readslidedata.masks.h5manager.h5))
-        print(scan_hdf5(slidedata.masks.h5manager.h5))
         assert scan_hdf5(readslidedata.masks.h5manager.h5) == scan_hdf5(slidedata.masks.h5manager.h5)
     if slidedata.tiles is None:
         assert readslidedata.tiles is None
     if slidedata.tiles is not None:
-        print(scan_hdf5(readslidedata.tiles.h5manager.h5))
-        print(scan_hdf5(slidedata.tiles.h5manager.h5))
         assert scan_hdf5(readslidedata.tiles.h5manager.h5) == scan_hdf5(slidedata.tiles.h5manager.h5)
+        assert readslidedata.tiles.h5manager.tilesdict == slidedata.tiles.h5manager.tilesdict
 
 def scan_hdf5(f, recursive=True, tab_step=2):
     def scan_node(g, tabs=0):
