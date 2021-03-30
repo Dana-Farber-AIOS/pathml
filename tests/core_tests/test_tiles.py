@@ -196,7 +196,7 @@ def test_remove(emptytiles, tile, incorrect_input):
 @pytest.mark.parametrize("incorrect_input", ["string", None, True, 5, [5, 4, 3], {"dict": "testing"}])
 def test_slice(tile, incorrect_input):
     tiles = emptytiles
-    tile = tile_withmasks
+    tile = tile 
     tiles.add(tile)
     slices = [slice(2,5)]
     test = tiles.slice(slices)
