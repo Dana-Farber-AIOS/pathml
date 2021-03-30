@@ -51,7 +51,7 @@ class Tiles:
             # initialize h5 from tiles 
             self.h5manager = _tiles_h5_manager() 
             for key in self._tiles:
-                self.h5manager.add(str(self._tiles[key].coords), self._tiles[key])
+                self.h5manager.add(self._tiles[key])
             del self._tiles
         else:
             self.h5manager = _tiles_h5_manager(h5)
@@ -94,7 +94,7 @@ class Tiles:
             raise KeyError(f"slices must of of type list[slice] but is {type(slices)} with elements {type(slices[0])}")
         sliced = pathml.core.tiles.Tiles()
         for tile in self.h5manager.slice(slices):
-            sliced.add(tile.name, tile)
+            sliced.add(tile)
         return sliced
 
     def remove(self, key):

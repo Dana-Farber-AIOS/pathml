@@ -59,7 +59,7 @@ def writetilesdicth5(h5, name, dic):
     for key in dic.keys():
         h5[str(name)].create_group(str(key))
         for key2 in dic[key]:
-            if isinstance(dic[key][key2], str)
+            if isinstance(dic[key][key2], str):
                 stringasarray = np.array(str(dic[key][key2]), dtype = object)
                 h5[str(name)][str(key)].create_dataset(
                     str(key2),
@@ -82,8 +82,9 @@ def readtilesdicth5(h5):
     """
     tilesdict = OrderedDict()
     for tile in h5.keys():
-        labels = dict(h5[tile]['labels'] if 'labels' in h5[tile].keys() else None 
-        labels = {k : v for k,v in labels.items()}
+        labels = dict(h5[tile]['labels']) if 'labels' in h5[tile].keys() else None 
+        if labels:
+            labels = {k : v for k,v in labels.items()}
         subdict = {
                 'name': h5[tile]['name'][...].item().decode('UTF-8') if 'name' in h5[tile].keys() else None,
                 'labels': labels,

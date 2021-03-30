@@ -184,7 +184,7 @@ class _tiles_h5_manager(_h5_manager):
             assert self.shape == val.image.shape, f"Cannot update a tile of shape {self.shape} with a tile" \
                                                            f"of shape {val.image.shape}. Shapes must match."
             # overwrite
-            self.add(key, val)
+            self.add(val)
             print(f'tile at {key} overwritten')
 
         elif target == 'image':
