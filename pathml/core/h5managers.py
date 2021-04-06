@@ -14,7 +14,7 @@ import pathml.core.slide_classes
 
 class _h5_manager:
     """
-    Abstract class for h5 data management
+    Abstract class for h5 data management.
     """
     def __init__(self, h5 = None):
         path = tempfile.TemporaryFile()
@@ -161,6 +161,14 @@ class _tiles_h5_manager(_h5_manager):
         }
 
     def update(self, key, val, target):
+        """
+        Update a tile.
+
+        Args:
+            key(str): key of tile to be updated
+            val(str): element that will replace target at key
+            target(str): element of {all, image, labels} indicating field to be updated 
+        """
         key = str(key)
         if key not in self.tilesdict.keys():
             raise ValueError(f"key {key} does not exist. Use add.")
@@ -232,12 +240,12 @@ class _tiles_h5_manager(_h5_manager):
 
     def slice(self, slicer):
         """
-        Generator to slice all tiles in self.h5 extending numpy array slicing
+        Generator slicing all tiles, extending numpy array slicing.
 
         Args:
             slicer: List where each element is an object of type slice https://docs.python.org/3/c-api/slice.html
                     indicating how the corresponding dimension should be sliced. The list length should correspond to the
-                    dimension of the tile. For 2D H&E images, pass a  length 2 list of slice objects.
+                    dimension of the tile. For 2D H&E images, pass a length 2 list of slice objects.
 
         Yields:
             key(str): tile coordinates
@@ -248,15 +256,14 @@ class _tiles_h5_manager(_h5_manager):
             
     def reshape(self, shape, centercrop = False):
         """
-        Resample tiles to new shape. 
-        This method deletes tile labels and names.
-        Does not mutate h5['tiles']['array'].
+        Resample tiles to shape. 
+        If shape does not evenly divide current tile shape, this method deletes tile labels and names.
+        This method not mutate h5['tiles']['array'].
 
         Args:
             shape(tuple): new shape of tile.
             centercrop(bool): if shape does not evenly divide slide shape, take center crop
         """
-        # TODO: checks before reshape
         arrayshape = list(self.h5['tiles/array'].shape)
         # impute missing dimensions of shape from f['tiles/array'].shape 
         if len(arrayshape) > len(shape):
@@ -292,6 +299,7 @@ class _tiles_h5_manager(_h5_manager):
                         'slidetype': None
                 }
         else: 
+            # TODO: fix tests (monkeypatch) to implement the check above (the y/n hangs)
             '''
             choice = None
             yes = {'yes', 'y'}
@@ -311,17 +319,13 @@ class _tiles_h5_manager(_h5_manager):
                 else:
                     sys.stdout.write("Please respond with 'y' or 'n'")
             '''
-            # TODO: fix tests (monkeypatch) to implement the check above (the y/n hangs)
-            print(f"coordlist is {coordlist}")
             for coord in coordlist:
-                print(f"coord is {coord}")
                 newtilesdict[str(tuple(coord))] = {
                         'name': None, 
                         'labels': None,
                         'coords': str(tuple(coord)), 
                         'slidetype': None
                 }
-            print(f"newtilesdict is {newtilesdict}")
         self.tilesdict = newtilesdict
         self.shape = shape
 
@@ -349,11 +353,11 @@ class _masks_h5_manager(_h5_manager):
 
     def add(self, key, mask):
         """
-        Add mask as dataset indexed by key to self.h5.
+        Add mask to h5.
 
         Args:
             key(str): key labeling mask
-            mask(np.ndarray): mask  
+            mask(np.ndarray): mask array  
         """
         if not isinstance(mask, np.ndarray):
             raise ValueError(f"can not add {type(mask)}, mask must be of type np.ndarray")
@@ -374,10 +378,10 @@ class _masks_h5_manager(_h5_manager):
 
     def update(self, key, mask):
         """
-        Update an existing mask.
+        Update a mask.
 
         Args:
-            key(str): key labeling mask
+            key(str): key indicating mask to be updated
             mask(np.ndarray): mask
         """
         if key not in self.h5.keys():
@@ -390,24 +394,25 @@ class _masks_h5_manager(_h5_manager):
 
         self.h5[key][...] = mask
 
-    def slice(self, slices):
+    def slice(self, slicer):
         """
-        Generator to slice all masks in self.h5 extending numpy array slicing.
+        Generator slicing all tiles, extending numpy array slicing.
 
         Args:
-            slices: list where each element is an object of type slice https://docs.python.org/3/c-api/slice.html
-                    indicating how the corresponding dimension should be sliced
+            slicer: List where each element is an object of type slice https://docs.python.org/3/c-api/slice.html
+                    indicating how the corresponding dimension should be sliced. The list length should correspond to the
+                    dimension of the tile. For 2D H&E images, pass a length 2 list of slice objects.
         Yields:
             key(str): mask key
             val(np.ndarray): mask
         """
         for key in self.h5.keys():
-            yield key, self.get(key, slices=slices) 
+            yield key, self.get(key, slicer=slicer) 
 
     def reshape(self, targetshape):
         pass
 
-    def get(self, item, slices=None):
+    def get(self, item, slicer=None):
         # must check bool separately, since isinstance(True, int) --> True
         if isinstance(item, bool) or not (isinstance(item, str) or isinstance(item, int)):
             raise KeyError(f"key of type {type(item)} must be of type str or int")
@@ -415,20 +420,23 @@ class _masks_h5_manager(_h5_manager):
         if isinstance(item, str):
             if item not in self.h5.keys():
                 raise KeyError(f'key {item} does not exist')
-            if slices is None:
+            if slicer is None:
                 return self.h5[item][:]
-            return self.h5[item][:][tuple(slices)]
+            return self.h5[item][:][tuple(slicer)]
 
         else:
             if item > len(self.h5) - 1:
                 raise KeyError(f"index out of range, valid indices are ints in [0,{len(self.h5['masks'].keys()) - 1}]")
             if slices is None:
                 return self.h5[list(self.h5.keys())[item]][:]
-            return self.h5[list(self.h5.keys())[item]][:][tuple(slices)]
+            return self.h5[list(self.h5.keys())[item]][:][tuple(slicer)]
 
     def remove(self, key):
         """
-        Remove mask from self.h5 by key.
+        Remove mask by key.
+
+        Args:
+            key(str): key indicating mask to be removed
         """
         if not isinstance(key, str):
             raise KeyError(f"masks keys must be of type(str) but key was passed of type {type(key)}")
