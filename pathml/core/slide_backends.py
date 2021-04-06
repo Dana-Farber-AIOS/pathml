@@ -6,6 +6,8 @@ import javabridge
 from scipy.ndimage import zoom
 from bioformats.metadatatools import createOMEXMLMetadata
 
+from pathml.core.tile import Tile
+from pathml.core.slide_classes import MultiparametricSlide 
 from pathml.utils import pil_to_rgb
 
 
@@ -151,7 +153,7 @@ class BioFormatsBackend(SlideBackend):
             plt.figure()
             plt.imshow(region[:,:,0,:,0])
         """
-        if self.shape[0]*self.shape[1]*self.shape[2]*self.shape[3] > 2147483647:
+        if self.shape[0]*self.shape[1]*self.shape[2]*self.shape[3]*self.shape[4] > 2147483647:
             raise Exception(f"Java arrays allocate maximum 32 bits (~2GB). Image size is {self.imsize}")
 
         javabridge.start_vm(class_path = bioformats.JARS)
@@ -163,10 +165,11 @@ class BioFormatsBackend(SlideBackend):
                     data = reader.read(z=z, t=t, series=c, rescale = False)
                     slice_array = np.asarray(data)
                     array[:,:,z,c,t] = np.transpose(slice_array)
-        # TODO: is it possible to directly read the slices? rather than reading then slicing?
+        # TODO: read slices directly, rather than read then slice 
         slices = [slice(location[i],location[i]+size[i]) for i in range(len(size))] 
         array = array[tuple(slices)]
-        return array 
+        coords = location + [0]*(len(array)-len(location)) 
+        return Tile(image=array, coords=tuple(coords), slidetype=MultiparametricSlide) 
 
     def get_thumbnail(self, size=None, **kwargs):
         """
