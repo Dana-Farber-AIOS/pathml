@@ -5,9 +5,11 @@ from collections import OrderedDict
 import numpy as np
 import itertools
 
-from pathml.core.utils import writedataframeh5, writestringh5, writetupleh5, readtupleh5, readtilesdicth5
 import pathml.core.masks
 import pathml.core.tile
+from pathml.core.utils import writedataframeh5, writestringh5, writetupleh5, readtupleh5, readtilesdicth5
+from pathml.core.slide_backends import OpenSlideBackend, BioFormatsBackend, DICOMBackend
+import pathml.core.slide_classes
 
 
 class _h5_manager:
@@ -79,8 +81,7 @@ class _tiles_h5_manager(_h5_manager):
             coords = tile.coords
             for i in range(len(coords)):
                 currentshape = self.h5['tiles/array'].shape[i]
-                # coords index is shape - 1
-                requiredshape = coords[i] + tile.image.shape[i] + 1 
+                requiredshape = coords[i] + tile.image.shape[i] 
                 if  currentshape < requiredshape:
                     self.h5['tiles/array'].resize(self.h5['tiles/array'].shape[i] + requiredshape - currentshape, axis=i)
             # add tile to self.h5['tiles/array']
@@ -123,8 +124,7 @@ class _tiles_h5_manager(_h5_manager):
                     coords = tile.coords
                     for i in range(len(coords)):
                         currentshape = self.h5['tiles/masks'][mask].shape[i]
-                        # coords index is shape - 1
-                        requiredshape = coords[i] + tile.image.shape[i] + 1 
+                        requiredshape = coords[i] + tile.image.shape[i] 
                         if  currentshape < requiredshape:
                             self.h5['tiles/masks'][mask].resize(self.h5['tiles/masks'][mask].shape[i] + requiredshape - currentshape, axis=i)
                     # add mask to mask array
@@ -157,7 +157,7 @@ class _tiles_h5_manager(_h5_manager):
                 'name': str(tile.name), 
                 'labels': tile.labels,
                 'coords': str(tile.coords), 
-                'slidetype': str(tile.slidetype)
+                'slidetype': tile.slidetype
         }
 
     def update(self, key, val, target):
@@ -219,6 +219,7 @@ class _tiles_h5_manager(_h5_manager):
             shape = list(self.shape)
             coords = coords + [0]*len(shape[len(coords)-1:]) 
         tiler = [slice(coords[i], coords[i]+self.shape[i]) for i in range(len(self.shape))]
+        print(tiler)
         tile = self.h5['tiles/array'][tuple(tiler)][:]
         masks = {mask : self.h5['tiles/masks'][mask][tuple(tiler)][:] for mask in self.h5['tiles/masks']} if 'masks' in self.h5['tiles'].keys() else None 
         if slicer:
@@ -226,7 +227,8 @@ class _tiles_h5_manager(_h5_manager):
             if masks is not None:
                 masks = {key : masks[key][slicer] for key in masks}
         masks = pathml.core.masks.Masks(masks)
-        return pathml.core.tile.Tile(tile, masks=masks, labels=tilemeta['labels'], name=tilemeta['name'], coords=eval(tilemeta['coords']), slidetype=tilemeta['slidetype'])
+        slidetype = tilemeta['slidetype']
+        return pathml.core.tile.Tile(tile, masks=masks, labels=tilemeta['labels'], name=tilemeta['name'], coords=eval(tilemeta['coords']), slidetype=slidetype)
 
     def slice(self, slicer):
         """
@@ -248,34 +250,80 @@ class _tiles_h5_manager(_h5_manager):
         """
         Resample tiles to new shape. 
         This method deletes tile labels and names.
-        This method does not delete any pixels from the slide array, to restore the full image choose a shape that evenly divides slide shape.
+        Does not mutate h5['tiles']['array'].
 
         Args:
             shape(tuple): new shape of tile.
             centercrop(bool): if shape does not evenly divide slide shape, take center crop
         """
+        # TODO: checks before reshape
         arrayshape = list(self.h5['tiles/array'].shape)
         # impute missing dimensions of shape from f['tiles/array'].shape 
         if len(arrayshape) > len(shape):
             shape = list(shape)
-            shape = shape + arrayshape[len(shape)-1:] 
-        divisors = [range(n//d) for n,d in zip(arrayshape, shape)]
-        coordlist = itertools.product(*divisors)
+            shape = shape + arrayshape[len(shape):] 
+        divisors = [range(int(n//d)) for n,d in zip(arrayshape, shape)]
+        coordlist = list(itertools.product(*divisors))
+        # multiply each element of coordlist by shape
+        coordlist = [[int(c * s) for c,s in zip(coord, shape)] for coord in coordlist]
         if centercrop:
-            offset = [n % d / 2 for n,d in zip(arrayshape, shape)]
+            offset = [int(n % d / 2) for n,d in zip(arrayshape, shape)]
             offsetcoordlist = []
-            for (item1, item2) in zip(offset, coordlist):
-                offsetcoordlist.append(item1 + item2) 
+            for item1, item2 in zip(offset, coordlist):
+                offsetcoordlist.append(tuple([int(item1 + x) for x in item2])) 
             coordlist = offsetcoordlist
-        #slidetype = self.tilesdict[0]['slidetype']
-        self.tilesdict = OrderedDict()
-        for coord in coordlist:
-            self.tilesdict[str(tuple(coords))] = {
-                    'name': None, 
-                    'labels': None,
-                    'coords': str(tuple(coords)), 
-                    'slidetype': None
-            }
+        newtilesdict = OrderedDict()
+        # if shape evenly divides arrayshape transfer labels
+        remainders = [int(n % d) for n,d in zip(arrayshape, shape)]
+        offsetstooriginal = [[int(n % d) for n,d in zip(coord, self.shape)] for coord in coordlist] 
+        if all(x<=y for x, y in zip(shape, arrayshape)) and all(rem == 0 for rem in remainders):
+            # transfer labels
+            for coord, off in zip(coordlist, offsetstooriginal):
+                # find coordinate from which to transfer labels 
+                oldtilecoordlen = len(eval(list(self.tilesdict.keys())[0]))
+                oldtilecoord = [int(x-y) for x,y in zip(coord, off)]
+                oldtilecoord = oldtilecoord[:oldtilecoordlen]
+                labels = self.tilesdict[str(tuple(oldtilecoord))]['labels']
+                name = self.tilesdict[str(tuple(oldtilecoord))]['name']
+                newtilesdict[str(tuple(coord))] = {
+                        'name': None, 
+                        'labels': labels,
+                        'coords': str(tuple(coord)), 
+                        'slidetype': None
+                }
+        else: 
+            '''
+            choice = None
+            yes = {'yes', 'y'}
+            no = {'no', 'n'}
+            while choice not in yes or no:
+                choice = input('Reshaping to a shape that does not evenly divide old tile shape deletes labels and names. Would you like to continue? [y/n]\n').lower()
+                if choice in yes: 
+                    for coord in coordlist:
+                        newtilesdict[str(tuple(coord))] = {
+                                'name': None, 
+                                'labels': None,
+                                'coords': str(tuple(coord)), 
+                                'slidetype': None
+                        }
+                elif choice in no:
+                    raise Exception(f"User cancellation.")
+                else:
+                    sys.stdout.write("Please respond with 'y' or 'n'")
+            '''
+            # TODO: fix tests (monkeypatch) to implement the check above (the y/n hangs)
+            print(f"coordlist is {coordlist}")
+            for coord in coordlist:
+                print(f"coord is {coord}")
+                newtilesdict[str(tuple(coord))] = {
+                        'name': None, 
+                        'labels': None,
+                        'coords': str(tuple(coord)), 
+                        'slidetype': None
+                }
+            print(f"newtilesdict is {newtilesdict}")
+        self.tilesdict = newtilesdict
+        self.shape = shape
 
     def remove(self, key):
         """

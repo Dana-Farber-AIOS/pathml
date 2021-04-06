@@ -3,6 +3,9 @@ from collections import OrderedDict
 import numpy as np
 import h5py
 
+import pathml.core.slide_classes
+
+
 # TODO: Fletcher32 checksum?
 def writedataframeh5(h5, name, df):
     """
@@ -59,7 +62,13 @@ def writetilesdicth5(h5, name, dic):
     for key in dic.keys():
         h5[str(name)].create_group(str(key))
         for key2 in dic[key]:
-            if isinstance(dic[key][key2], str):
+            if key2 == 'slidetype':
+                stringasarray = np.array(str(dic[key][key2]), dtype = object)
+                h5[str(name)][str(key)].create_dataset(
+                    str(key2),
+                    data = stringasarray
+                )
+            elif isinstance(dic[key][key2], str):
                 stringasarray = np.array(str(dic[key][key2]), dtype = object)
                 h5[str(name)][str(key)].create_dataset(
                     str(key2),
@@ -70,7 +79,7 @@ def writetilesdicth5(h5, name, dic):
                 h5[str(name)][str(key)].create_dataset(
                     str(key2),
                     data = dictasarray
-                )
+                )               
 
 
 def readtilesdicth5(h5):
@@ -82,14 +91,26 @@ def readtilesdicth5(h5):
     """
     tilesdict = OrderedDict()
     for tile in h5.keys():
+        name = h5[tile]['name'][...].item().decode('UTF-8') if 'name' in h5[tile].keys() else None
         labels = dict(h5[tile]['labels']) if 'labels' in h5[tile].keys() else None 
+        coords = h5[tile]['coords'][...].item().decode('UTF-8') if 'coords' in h5[tile].keys() else None
+        slidetype = h5[tile]['slidetype'][...].item().decode('UTF-8') if 'slidetype' in h5[tile].keys() else None
+        if slidetype:
+            if slidetype == "<class 'pathml.core.slide_backends.OpenSlideBackend'>":
+                slidetype = OpenSlideBackend
+            elif slidetype == "<class 'pathml.core.slide_backends.BioFormatsBackend'>":
+                slidetype = BioFormatsBackend
+            elif slidetype == "<class 'pathml.core.slide_backends.DICOMBackend'>":
+                slidetype = DICOMBackend
+            elif slidetype == "<class 'pathml.core.slide_classes.HESlide'>":
+                slidetype = pathml.core.slide_classes.HESlide
         if labels:
             labels = {k.decode('UTF-8') : v.decode('UTF-8') for k,v in labels.items()}
         subdict = {
-                'name': h5[tile]['name'][...].item().decode('UTF-8') if 'name' in h5[tile].keys() else None,
+                'name': name,
                 'labels': labels,
-                'coords': h5[tile]['coords'][...].item().decode('UTF-8') if 'coords' in h5[tile].keys() else None,
-                'slidetype': h5[tile]['slidetype'][...].item().decode('UTF-8') if 'slidetype' in h5[tile].keys() else None 
+                'coords': coords,
+                'slidetype': slidetype 
         }
         tilesdict[tile] = subdict
     return tilesdict

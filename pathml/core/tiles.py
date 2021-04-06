@@ -57,7 +57,7 @@ class Tiles:
             self.h5manager = _tiles_h5_manager(h5)
 
     def __repr__(self):
-        rep = f"Tiles(keys={self.h5manager.h5.keys()})"
+        rep = f"Tiles(keys={self.h5manager.tilesdict})"
         return rep
 
     def __len__(self):

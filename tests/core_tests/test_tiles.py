@@ -7,6 +7,7 @@ from collections import OrderedDict
 from pathml.core.tiles import Tiles
 from pathml.core.tile import Tile
 from pathml.core.masks import Masks
+from pathml.core.slide_backends import OpenSlideBackend
 
 
 @pytest.fixture
@@ -18,7 +19,7 @@ def emptytiles():
 def tile():
     shape = (224, 224, 3)
     coords = (1, 3)
-    slidetype = "<class 'pathml.core.slide_backend.OpenSlideBackend'>" 
+    slidetype = OpenSlideBackend 
     maskdict = {str(i) : np.random.randint(2, size = shape) for i in range(20)}
     masks = Masks(maskdict)
     labels = {'label1' : 'positive', 'label2' : 'negative'}
@@ -37,7 +38,7 @@ def tiles():
             # create tile
             shape = (224, 224, 3)
             coords = (224*i, 224*j)
-            slidetype = "<class 'pathml.core.slide_backend.OpenSlideBackend'>" 
+            slidetype = OpenSlideBackend 
             name = f"{i}_{j}" 
             maskdict = {str(k) : np.random.randint(2, size = shape) for k in range(20)}
             masks = Masks(maskdict)
@@ -60,7 +61,7 @@ def tilesnonconsecutive():
             # create tile
             shape = (224, 224, 3)
             coords = (224*2*(i+1), 224*2*(j+2))
-            slidetype = "<class 'pathml.core.slide_backend.OpenSlideBackend'>" 
+            slidetype = OpenSlideBackend 
             name = f"{i}_{j}" 
             maskdict = {str(k) : np.random.randint(2, size = shape) for k in range(20)}
             masks = Masks(maskdict)
@@ -111,6 +112,8 @@ def test_add_get(emptytiles, tile, incorrect_input, incorrect_input2):
     assert tiles[(1, 3)].name == tile.name
     assert tiles[(1, 3)].coords == tile.coords
     assert tiles[(1, 3)].labels == tile.labels
+    print(tiles[(1, 3)].slidetype)
+    print(tile.slidetype)
     assert tiles[(1, 3)].slidetype == tile.slidetype
     # get masks
     for mask in tiles.h5manager.h5['tiles']['masks'].keys():
@@ -138,7 +141,7 @@ def test_update(emptytiles, tile, incorrect_target, incorrect_labels):
     # update all
     shape = (224, 224, 3)
     coords = (1, 3)
-    slidetype = "<class 'pathml.core.slide_backend.OpenSlideBackend'>" 
+    slidetype = OpenSlideBackend 
     maskdict = {str(i) : np.ones(shape) for i in range(20)}
     masks = Masks(maskdict)
     labels = {'label1' : 'new1', 'label2' : 'new2'}
@@ -201,15 +204,19 @@ def test_slice(emptytiles, tile, incorrect_input):
     test = tiles.slice(slices)
     assert test.h5manager.shape == (3, 224, 3)
     assert test[0].image.shape == (3, 224, 3)
-    assert test[0].masks[0].shape == (3, 224, 3) 
+    print(next(iter(test[0].masks.items())))
+    assert next(iter(test[0].masks.items()))[1].shape == (3, 224, 3) 
     with pytest.raises(KeyError):
         test = tiles.slice(incorrect_input)
 
-def test_reshape(tiles):
+
+def test_reshape(tiles, monkeypatch):
     tilesdict = tiles
     tiles1 = Tiles(tilesdict)
     tiles1.reshape(shape=(112, 112))
     assert tiles1[0].image.shape == (112, 112, 3)
+    # monkeypatch input to overwrite labels
+    monkeypatch.setattr('builtins.input', lambda _: "y")
     tiles1.reshape(shape=(225, 225))
     assert len(tiles1) == 1 
     assert tiles1[0].image.shape == (225, 225, 3)
