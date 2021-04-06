@@ -77,12 +77,12 @@ class Masks:
 
     def remove(self, key):
         """
-        Remove mask from self.h5manager by key.
+        Remove mask.
+
+        Args:
+            key(str): key indicating mask to be removed
         """
         self.h5manager.remove(key)
-
-    def resize(self, shape):
-        raise NotImplementedError
 
     def write(self, out_dir, filename):
         """

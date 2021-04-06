@@ -344,7 +344,6 @@ class _masks_h5_manager(_h5_manager):
     """
     Interface between masks object and data management on disk by h5py. 
     """
-
     def __init__(self, h5 = None):
         super().__init__(h5 = h5)
         if h5:
@@ -408,9 +407,6 @@ class _masks_h5_manager(_h5_manager):
         """
         for key in self.h5.keys():
             yield key, self.get(key, slicer=slicer) 
-
-    def reshape(self, targetshape):
-        pass
 
     def get(self, item, slicer=None):
         # must check bool separately, since isinstance(True, int) --> True
