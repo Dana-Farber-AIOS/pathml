@@ -203,7 +203,7 @@ class BioFormatsBackend(SlideBackend):
                     array[:,:,z,c,t] = np.transpose(slice_array)
         if size is not None:
             ratio = tuple([x/y for x,y in zip(size, self.shape)]) 
-            print(ratio)
+            assert ratio[3] == 1, f"cannot interpolate between fluor channels, resampling doesn't apply, fix size[3]")
             image_array = zoom(array, ratio) 
         return image_array
 
