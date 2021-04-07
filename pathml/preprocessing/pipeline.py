@@ -31,9 +31,13 @@ class Pipeline(Transform):
         return out
 
     def apply(self, tile):
+        # this function has side effects
+        # modifies the tile in place, but also returns the modified tile
+        # need to do this for dask distributed
         assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
         for t in self.transforms:
             t.apply(tile)
+        return tile
 
     def save(self, filename):
         """
