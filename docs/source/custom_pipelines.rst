@@ -43,7 +43,7 @@ Custom Transforms
 
 A :class:`~pathml.preprocessing.pipeline.Pipeline` is a special case of
 a :class:`~pathml.preprocessing.transforms.Transform` which makes it easy
-to compose several :class:`~pathml.preprocessing.transforms.Transform`s sequentially.
+to compose several :class:`~pathml.preprocessing.transforms.Transform` s sequentially.
 However, in some cases, you may want to implement a :class:`~pathml.preprocessing.transforms.Transform` from scratch.
 For example, you may want to apply a transformation which is not already implemented in ``PathML``.
 Or, perhaps you want to apply a preprocessing pipeline which is not perfectly sequential.

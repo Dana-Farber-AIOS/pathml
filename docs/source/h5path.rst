@@ -10,9 +10,9 @@ The **h5path** format, based on the hierarchical array store
 `HDF5 <https://en.wikipedia.org/wiki/Hierarchical_Data_Format>`_ and utilizing 
 `h5py <https://docs.h5py.org/en/stable/>`_, enables on-disk, NumPy-style manipulation 
 of multi-terabyte arrays. This feature reduces the RAM required to run a ``PathML`` workflow,
-improves data exploration utilities and simplifies the reading and writing of processed WSIs.
+improves data exploration utilities, and simplifies the reading and writing of processed WSIs.
 
-:class:`~pathml.core.slide_data.SlideData` array-like field :class:`~pathml.core.tiles` contains 
+:class:`~pathml.core.slide_data.SlideData` contains 
 references to temporary on disk h5py objects that can be optionally saved or are automatically 
 deleted when their reference is lost. 
 

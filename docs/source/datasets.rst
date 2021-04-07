@@ -28,7 +28,7 @@ PathML has built-in support for several public datasets:
     | :class:`~pathml.datasets.pannuke.PanNukeDataModule`   | Pixel-level nucleus classification,  | H&E         | | n=7901  | | [PanNuke1]_  |
     |                                                       | with 6 nucleus types and 19 tissue   |             | | 37.33 GB| | [PanNuke2]_  |
     |                                                       | types. Images are 256px RGB.         |             |           |                |
-    +=======================================================+======================================+=============+===========+================+
+    +-------------------------------------------------------+--------------------------------------+-------------+-----------+----------------+
     | :class:`~pathml.datasets.deepblur.DeepFocusDataModule`| Patch-level focus classification     | H&E         | | n=204k  | | [DeepFocus]_ |
     |                                                       | with 3 IHC and 1 H&E histologies.    | IHC         | | 10.0 GB |                |
     +-------------------------------------------------------+--------------------------------------+-------------+-----------+----------------+
