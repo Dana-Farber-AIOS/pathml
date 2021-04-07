@@ -18,6 +18,8 @@ Core
     :members:
 .. automodule:: pathml.core.h5managers
     :members:
+.. automodule:: pathml.core.h5path
+    :members:
 
 Preprocessing
 -------------
