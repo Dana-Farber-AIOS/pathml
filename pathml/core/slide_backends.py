@@ -7,7 +7,6 @@ from scipy.ndimage import zoom
 from bioformats.metadatatools import createOMEXMLMetadata
 
 from pathml.core.tile import Tile
-from pathml.core.slide_classes import MultiparametricSlide 
 from pathml.utils import pil_to_rgb
 
 
@@ -168,8 +167,9 @@ class BioFormatsBackend(SlideBackend):
         # TODO: read slices directly, rather than read then slice 
         slices = [slice(location[i],location[i]+size[i]) for i in range(len(size))] 
         array = array[tuple(slices)]
+        array = array.astype(np.int8)
         coords = location + [0]*(len(array)-len(location)) 
-        return Tile(image=array, coords=tuple(coords), slidetype=MultiparametricSlide) 
+        return Tile(image=array, coords=tuple(coords), slidetype=pathml.core.slide_classes.MultiparametricSlide) 
 
     def get_thumbnail(self, size=None, **kwargs):
         """
@@ -203,7 +203,7 @@ class BioFormatsBackend(SlideBackend):
                     array[:,:,z,c,t] = np.transpose(slice_array)
         if size is not None:
             ratio = tuple([x/y for x,y in zip(size, self.shape)]) 
-            assert ratio[3] == 1, f"cannot interpolate between fluor channels, resampling doesn't apply, fix size[3]")
+            assert ratio[3] == 1, f"cannot interpolate between fluor channels, resampling doesn't apply, fix size[3]"
             image_array = zoom(array, ratio) 
         return image_array
 
