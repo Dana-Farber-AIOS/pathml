@@ -63,7 +63,7 @@ def test_generate_tiles_padding(he_slide, pad):
         assert len(tiles) == 80
 
 
-@pytest.mark.parametrize("slide", [HESlide, RGBSlide])
+@pytest.mark.parametrize("slide", [HESlide, RGBSlide, MultiparametricSlide])
 def test_repr(slide):
     s = slide("tests/testdata/small_HE.svs")
     repr(s)
