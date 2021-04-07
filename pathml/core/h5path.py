@@ -3,10 +3,15 @@ import h5py
 import os
 
 import pathml.core.slide_data 
-from pathml.core.tiles import Tiles
-from pathml.core.masks import Masks
+import pathml.core.tiles
+import pathml.core.masks
+
+"""import pathml.core.utils
+import pathml.core.slide_backends"""
+
+import pathml.core as core
+
 from pathml.core.slide_backends import OpenSlideBackend, BioFormatsBackend, DICOMBackend
-from pathml.core.utils import writestringh5, writedicth5, writetilesdicth5
 
 pathmlext = {
     'h5',
@@ -219,11 +224,11 @@ def write_h5path(
     with h5py.File(path, 'w') as f:
         fieldsgroup = f.create_group('fields')
         if slidedata.slide:
-            writestringh5(fieldsgroup, 'slide_backend', slidedata.slide_backend)
+            core.utils.writestringh5(fieldsgroup, 'slide_backend', slidedata.slide_backend)
         if slidedata.name:
-            writestringh5(fieldsgroup, 'name', str(slidedata.name))
+            core.utils.writestringh5(fieldsgroup, 'name', str(slidedata.name))
         if slidedata.labels:
-            writedicth5(fieldsgroup, 'labels', slidedata.labels)
+            core.utils.writedicth5(fieldsgroup, 'labels', slidedata.labels)
         if slidedata.history:
             pass
         if slidedata.masks:
@@ -234,7 +239,7 @@ def write_h5path(
             for ds in slidedata.tiles.h5manager.h5.keys():
                 slidedata.tiles.h5manager.h5.copy(ds, f)
         # add tilesdict to h5
-        writetilesdicth5(f['tiles'], 'tilesdict', slidedata.tiles.h5manager.tilesdict)
+        core.utils.writetilesdicth5(f['tiles'], 'tilesdict', slidedata.tiles.h5manager.tilesdict)
 
 
 def read(
@@ -289,15 +294,15 @@ def read_h5path(
         path (str): Path to h5path formatted file on disk 
     """
     with h5py.File(path, "r") as f:
-        tiles = Tiles(h5 = f['tiles']) if 'tiles' in f.keys() else None 
-        masks = Masks(h5 = f['masks']) if 'masks' in f.keys() else None
+        tiles = pathml.core.tiles.Tiles(h5 = f['tiles']) if 'tiles' in f.keys() else None
+        masks = pathml.core.masks.Masks(h5 = f['masks']) if 'masks' in f.keys() else None
         backend = f['fields'].attrs['slide_backend'] if 'slide_backend' in f['fields'].attrs.keys() else None
         if backend == "<class 'pathml.core.slide_backend.BioFormatsBackend'>":
-            slide_backend = BioformatsBackend
+            slide_backend = core.slide_backends.BioformatsBackend
         elif backend == "<class 'pathml.core.slide_backends.DICOMBackend'>":
             slide_backend = DICOMBackend
         else:
-            slide_backend = OpenSlideBackend
+            slide_backend = core.slide_backends.OpenSlideBackend
         name = f['fields'].attrs['name'] if 'name' in f['fields'].attrs.keys() else None
         labels = dict(f['fields'].attrs['labels']) if 'labels' in f['fields'].attrs.keys() else None 
         labels = {k : v for k,v in labels.items()}
