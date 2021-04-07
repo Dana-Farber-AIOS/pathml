@@ -6,15 +6,16 @@
 Welcome to PathML's documentation!
 ==================================
 
-``PathML`` is a python package for computational pathology.
+``PathML`` is a Python package for computational pathology.
 
-``PathML`` provides a toolbox specifically designed to enable machine learning with high-resolution
-whole-slide pathology images, including defining preprocessing pipelines, training and evaluating ML models,
-benchmarking model performance on standardized datasets, sharing preprocessing pipelines and pretrained models,
-and more.
+``PathML`` is a toolbox to facilitate machine learning workflows for high-resolution whole-slide pathology 
+images. This includes modular pipelines for preprocessing, PyTorch DataLoaders for training and benchmarking 
+machine learning model performance on standardized datasets, and support for sharing preprocessing pipelines, 
+pretrained models, and more.
 
-Development is led by the AI Operations and Data Science Group in the Department of Informatics and Analytics at
-Dana-Farber Cancer Institute.
+Development is a collaboration between the AI Operations and Data Science Group in the Department of Informatics 
+and Analytics at Dana-Farber Cancer Institute and the Department of Pathology and Laboratory Medicine at Weill 
+Cornell Medicine.
 
 
 .. toctree::

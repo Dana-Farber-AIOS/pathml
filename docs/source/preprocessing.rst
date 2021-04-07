@@ -1,8 +1,8 @@
 Preprocessing Quickstart
 ========================
 
-Preprocessing pipelines define how raw images are transformed and prepared to be fed as inputs into models.
-The ``pathml.preprocessing`` module provides tools for defining preprocessing pipelines for whole-slide images.
+Preprocessing pipelines define how raw images are transformed and prepared for downstream analysis.
+The ``pathml.preprocessing`` module provides tools to define modular preprocessing pipelines for whole-slide images.
 
 Getting started with premade pipelines
 --------------------------------------
@@ -11,7 +11,7 @@ The general preprocessing workflow is:
 
 1. Load whole-slide image from disk
 2. Perform preprocessing
-3. Write output to disk
+3. Write output to .h5path file format 
 
 .. image:: _static/images/preprocess_schematic_single.png
 
@@ -33,7 +33,6 @@ Get started by loading a WSI from disk and running a preprocessing pipeline in 1
 
     wsi.run(pipeline)
 
-
 Pipelines can also be run on entire datasets, with no change to the code:
 
 .. image:: _static/images/preprocess_schematic_dataset.png
@@ -53,7 +52,7 @@ When running a pipeline on a dataset, ``PathML`` will use multiprocessing by def
 all available cores. This allows users to efficiently process large datasets by scaling up computational resources
 (local cluster, cloud machines, etc.) without needing to make any changes to the code.
 
-Currently available premade pipelines
+Premade pipelines
 -------------------------------------
 
 +--------------------------------------------+------------------------------------------------------------------------+

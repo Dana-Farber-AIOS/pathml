@@ -3,7 +3,7 @@ Custom Preprocessing Pipelines
 
 ``PathML`` makes designing preprocessing pipelines easy. In this section we will walk through how to define a
 :class:`~pathml.preprocessing.pipeline.Pipeline` object by composing pre-made
-:class:`~pathml.preprocessing.transforms.Transform`s, and how to implement a
+:class:`~pathml.preprocessing.transforms.Transform` s, and how to implement a
 new custom :class:`~pathml.preprocessing.transforms.Transform`.
 
 Pipeline basics
@@ -14,7 +14,7 @@ When :meth:`~pathml.core.slide_data.SlideData.run`
 is called, tiles are lazily extracted from the slide by
 :meth:`~pathml.core.slide_data.SlideData.generate_tiles` and passed to the
 :class:`~pathml.preprocessing.pipeline.Pipeline`, which modifies the :class:`~pathml.core.tile.Tile` object in place.
-Finally, the processed tile is saved.
+Finally, all processed tiles are aggregated into a single `~h5py.Dataset` array and a PyTorch Dataset is generated.
 This design facilitates preprocessing of gigapixel-scale whole-slide images, because :class:`~pathml.core.tile.Tile`
 objects are small enough to fit in memory.
 
