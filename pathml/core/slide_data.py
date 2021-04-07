@@ -84,8 +84,7 @@ class SlideData:
 
         for tile in self.generate_tiles(level = level, shape = tile_size, stride = tile_stride, pad = tile_pad):
             pipeline.apply(tile)
-            key = str(tile.coords)
-            self.tiles.add(key, tile)
+            self.tiles.add(tile)
 
     def generate_tiles(self, shape=3000, stride=None, pad=False, **kwargs):
         """

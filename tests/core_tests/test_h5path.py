@@ -19,6 +19,10 @@ def he_slidedata():
         BoxBlur(kernel_size = 5)
     ])
     wsi.run(pipeline, tile_size = 250)
+    # add labels and name to test read/write from tilesdict
+    for tile in wsi.tiles.h5manager.tilesdict:
+        wsi.tiles.h5manager.tilesdict[tile]['labels'] = {'key1' : 'val1', 'key2' : 'val2'}
+        wsi.tiles.h5manager.tilesdict[tile]['name'] = str(tile)
     return wsi
 
 
@@ -39,6 +43,7 @@ def test_read_write_heslide(he_slidedata):
         assert readslidedata.tiles is None
     if slidedata.tiles is not None:
         assert scan_hdf5(readslidedata.tiles.h5manager.h5) == scan_hdf5(slidedata.tiles.h5manager.h5)
+        assert readslidedata.tiles.h5manager.tilesdict == slidedata.tiles.h5manager.tilesdict
 
 
 def scan_hdf5(f, recursive=True, tab_step=2):

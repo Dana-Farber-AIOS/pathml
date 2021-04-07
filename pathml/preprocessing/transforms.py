@@ -142,7 +142,7 @@ class BinaryThreshold(Transform):
             im = np.squeeze(tile.image)
             assert im.ndim == 2, "chunk.image is not RGB and has more than 1 channel"
         thresholded_mask = self.F(im)
-        tile.masks.add(key = self.mask_name, mask = thresholded_mask)
+        tile.masks[self.mask_name] = thresholded_mask
 
 
 class MorphOpen(Transform):
@@ -715,7 +715,7 @@ class NucleusDetectionHE(Transform):
         assert issubclass(tile.slidetype, pathml.core.slide_classes.HESlide), \
             f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
         nucleus_mask = self.F(tile.image)
-        tile.masks.add(key = self.mask_name, mask = nucleus_mask)
+        tile.masks[self.mask_name] = nucleus_mask
 
 
 class TissueDetectionHE(Transform):
@@ -782,4 +782,4 @@ class TissueDetectionHE(Transform):
         assert issubclass(tile.slidetype, pathml.core.slide_classes.HESlide), \
             f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
         mask = self.F(tile.image)
-        tile.masks.add(key = self.mask_name, mask = mask)
+        tile.masks[self.mask_name] =  mask
