@@ -86,8 +86,6 @@ class SlideData:
         if client is None:
             client = dask.distributed.Client()
 
-        print(f"client = {str(client)}")
-
         # map pipeline application onto each tile
         processed_tile_futures = []
 
@@ -95,12 +93,8 @@ class SlideData:
             f = client.submit(pipeline.apply, tile)
             processed_tile_futures.append(f)
 
-        print(f"total futures: {len(processed_tile_futures)}")
-
         # as tiles are processed, add them to h5
         for future, tile in dask.distributed.as_completed(processed_tile_futures, with_results = True):
-            print(future)
-            print(tile)
             self.tiles.add(tile)
 
     def generate_tiles(self, shape=3000, stride=None, pad=False, level=0):
