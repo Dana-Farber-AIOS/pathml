@@ -31,7 +31,7 @@ In general it is recommended to use the pre-made classes for convenience. They i
 class structure which is used internally for some operations. (e.g. H&E slides are a subclass of RGB slides).
 
 It is also possible to load a slide by using the generic :class:`~pathml.core.slide_data.SlideData` class and specifying
-explicitly which backend to use:
+explicitly which backend to use (see table below):
 
 .. code-block::
 

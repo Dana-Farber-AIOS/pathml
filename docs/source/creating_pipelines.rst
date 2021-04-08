@@ -25,7 +25,7 @@ tile contains any pen marks).
     :scale: 70 %
     :align: center
 
-    Schematic diagram of a :class:`~pathml.preprocessing.transforms.Transform` operating on an image.
+    Schematic diagram of a :class:`~pathml.preprocessing.transforms.Transform` operating on a tile.
     In this example, several masks are created (represented by stacked rectangles) as well as
     several labels (depicted here as cubes).
 

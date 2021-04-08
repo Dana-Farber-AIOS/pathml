@@ -1,8 +1,8 @@
 Running Preprocessing Pipelines
 ===============================
 
-Preprocessing basics
---------------------
+How it works
+------------
 
 Whole-slide images are typically too large to load in memory.
 ``PathML`` therefore runs preprocessing on smaller regions of the image which can be held in RAM,
@@ -92,11 +92,12 @@ Several libraries exist for creating ``Clients`` on different systems, e.g.:
 * dask-kubernetes_ for kubernetes
 * dask-jobqueue_ for common job queuing systems including PBS, Slurm, MOAB, SGE, LSF, and HTCondor
   typically found in high performance supercomputers, academic research institutions, etc.
-* dask-yarn_ for Hadoop YARN clusters;
+* dask-yarn_ for Hadoop YARN clusters
 
 To take full advantage of available computational resources, users must initialize the appropriate ``Client``
 object for their system and pass it as an argument to the ``SlideData.run()`` or ``SlideDataset.run()``.
-Please refer to the linked documentation for complete information on creating ``Client`` objects to suit your needs.
+Please refer to the Dask documentation linked above for complete information on creating the ``Client``
+object to suit your needs.
 
 .. _dask-yarn: https://yarn.dask.org/
 .. _dask.distributed: https://distributed.dask.org/
