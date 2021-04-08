@@ -1,5 +1,6 @@
 import h5py
 import dask.distributed
+from torch.utils.data import Dataset
 
 import pathml.core.masks
 import pathml.core.tile
@@ -48,6 +49,7 @@ class SlideData:
         self.tiles = tiles
         self.labels = labels
         self.history = history
+        self.tile_dataset = None
 
     def __repr__(self): 
         out = f"{self.__class__.__name__}(name={self.name}, "
@@ -65,6 +67,7 @@ class SlideData:
 
         Args:
             pipeline (pathml.preprocessing.pipeline.Pipeline): Preprocessing pipeline.
+            client: dask.distributed client
             tile_size (int, optional): Size of each tile. Defaults to 3000px
             tile_stride (int, optional): Stride between tiles. If ``None``, uses ``tile_stride = tile_size``
                 for non-overlapping tiles. Defaults to ``None``.
@@ -96,6 +99,25 @@ class SlideData:
         # as tiles are processed, add them to h5
         for future, tile in dask.distributed.as_completed(processed_tile_futures, with_results = True):
             self.tiles.add(tile)
+
+        # after running preprocessing, create a pytorch dataset for the tiles
+        self.tile_dataset = self._create_tile_dataset(self)
+
+    @staticmethod
+    def _create_tile_dataset(slidedata):
+        # create a pytorch dataset for tiles, also with slide-level labels
+        class TileDataset(Dataset):
+            def __init__(self, slidedata):
+                self.tiles = slidedata.tiles
+                self.labels = slidedata.labels
+
+            def __len__(self):
+                return len(self.tiles)
+
+            def __getitem__(self, ix):
+                return self.tiles[ix], self.labels
+
+        return TileDataset(slidedata)
 
     def generate_tiles(self, shape=3000, stride=None, pad=False, level=0):
         """
