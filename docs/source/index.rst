@@ -17,6 +17,8 @@ Development is a collaboration between the AI Operations and Data Science Group 
 and Analytics at Dana-Farber Cancer Institute and the Department of Pathology and Laboratory Medicine at Weill 
 Cornell Medicine.
 
+.. image:: _static/images/dfci_cornell_joint_logos.png
+
 
 .. toctree::
    :maxdepth: 2
