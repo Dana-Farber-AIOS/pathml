@@ -32,8 +32,8 @@ Cornell Medicine.
    :caption: Preprocessing
 
    loading_slides
-   preprocessing
-   custom_pipelines
+   creating_pipelines
+   running_pipelines
    h5path
    pipeline_repo
 
@@ -58,6 +58,7 @@ Cornell Medicine.
    examples/link_stain_normalization
    examples/link_nucleus_detection
    examples/link_preprocessing_pipeline
+   examples/link_train_hovernet
 
 .. toctree::
    :maxdepth: 2

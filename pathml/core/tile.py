@@ -12,12 +12,12 @@ class Tile:
 
     Args:
         image (np.ndarray): image
-    name (str): name of tile
-    masks (pathml.core.Masks): corresponding masks for region
-    coords (tuple): Coordinates of tile relative to maximum resolution of whole-slide image.
-        The (i,j) coordinate system is based on labelling the top-leftmost pixel as (0, 0)
-    slidetype: type of image (e.g. pathml.HESlide). Defaults to None.
-    labels: labels for the tile
+        name (str): name of tile
+        masks (pathml.core.Masks): corresponding masks for region
+        coords (tuple): Coordinates of tile relative to maximum resolution of whole-slide image.
+            The (i,j) coordinate system is based on labelling the top-leftmost pixel as (0, 0)
+        slidetype: type of image (e.g. pathml.HESlide). Defaults to None.
+        labels: labels for the tile
     """
     def __init__(self, image, name=None, coords=None, slidetype=None, masks=None, labels=None):
         assert isinstance(image, np.ndarray), f"image of type {type(image)} must be a np.ndarray"
