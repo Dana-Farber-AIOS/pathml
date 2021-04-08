@@ -1,8 +1,5 @@
-import concurrent.futures
-import os
 import pickle
 
-from pathml.datasets.base import BaseDataset
 from pathml.core.tile import Tile
 from pathml.preprocessing.transforms import Transform
 
