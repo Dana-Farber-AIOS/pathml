@@ -1,7 +1,7 @@
-from torch.utils.data import ConcatDataset, DataLoader
+from torch.utils.data import ConcatDataset
 
 
-class SlideDataSet:
+class SlideDataset:
     """
     Container for a dataset of WSIs
 

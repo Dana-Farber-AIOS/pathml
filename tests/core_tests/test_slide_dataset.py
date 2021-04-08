@@ -4,7 +4,7 @@ import numpy as np
 
 from pathml.core.slide_classes import HESlide
 from pathml.core.slide_data import SlideData
-from pathml.core.slide_dataset import SlideDataSet
+from pathml.core.slide_dataset import SlideDataset
 from pathml.core.tile import Tile
 from pathml.preprocessing.pipeline import Pipeline
 from pathml.preprocessing.transforms import BoxBlur
@@ -15,7 +15,7 @@ def slide_dataset():
     n = 4
     labs = {"testing": "testlabel", "test2": np.array([2, 3, 4])}
     slide_list = [HESlide("tests/testdata/small_HE.svs", labels = labs) for _ in range(n)]
-    slide_dataset = SlideDataSet(slide_list)
+    slide_dataset = SlideDataset(slide_list)
     return slide_dataset
 
 
