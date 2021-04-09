@@ -31,7 +31,7 @@ def test_dataset_save(tmp_path, slide_dataset):
     slide_dataset.write(tmp_path)
     # now check each file
     for slide in slide_dataset:
-        fname = tmp_path / slide.name + ".h5path"
+        fname = Path(str(tmp_path / slide.name) + ".h5path")
         assert fname.is_file()
 
 

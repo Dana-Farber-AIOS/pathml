@@ -2,6 +2,7 @@
 from collections import OrderedDict
 import numpy as np
 import h5py
+import ast
 
 import pathml.core.slide_classes
 
@@ -31,10 +32,12 @@ def writestringh5(h5, name, st):
 
 def writedicth5(h5, name, dic):
     """
-    Write dict as h5 attribute.
+    Write dict as h5 dataset. This is not an attribute to accomodate vals that are not strings.
     """
-    dictasarray = np.array(list(dic.items()), dtype = object)
-    h5.attrs[str(name)] = dictasarray
+    h5.create_dataset(
+        str(name),
+        data = str(dic)
+    )               
 
 
 def writetupleh5(h5, name, tup):
@@ -75,10 +78,9 @@ def writetilesdicth5(h5, name, dic):
                     data = stringasarray
                 )
             elif isinstance(dic[key][key2], (dict, OrderedDict)):
-                dictasarray = np.array(list(dic[key][key2].items()), dtype = object)
                 h5[str(name)][str(key)].create_dataset(
                     str(key2),
-                    data = dictasarray
+                    data = str(dic[key][key2])
                 )               
 
 
@@ -92,7 +94,8 @@ def readtilesdicth5(h5):
     tilesdict = OrderedDict()
     for tile in h5.keys():
         name = h5[tile]['name'][...].item().decode('UTF-8') if 'name' in h5[tile].keys() else None
-        labels = dict(h5[tile]['labels']) if 'labels' in h5[tile].keys() else None 
+        # labels = dict(h5[tile]['labels']) if 'labels' in h5[tile].keys() else None 
+        labels = h5[tile].get('labels')[...].tolist() if 'labels' in h5[tile].keys() else None 
         coords = h5[tile]['coords'][...].item().decode('UTF-8') if 'coords' in h5[tile].keys() else None
         slidetype = h5[tile]['slidetype'][...].item().decode('UTF-8') if 'slidetype' in h5[tile].keys() else None
         if slidetype:
@@ -105,7 +108,8 @@ def readtilesdicth5(h5):
             elif slidetype == "<class 'pathml.core.slide_classes.HESlide'>":
                 slidetype = pathml.core.slide_classes.HESlide
         if labels:
-            labels = {k.decode('UTF-8') : v.decode('UTF-8') for k,v in labels.items()}
+            labels = ast.literal_eval(labels.decode('UTF-8')) 
+            print(f"labels are {labels}")
         subdict = {
                 'name': name,
                 'labels': labels,

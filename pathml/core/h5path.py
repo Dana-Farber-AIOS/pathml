@@ -1,6 +1,7 @@
 from pathlib import Path, PurePath
 import h5py
 import os
+import ast
 
 import pathml.core.slide_data 
 import pathml.core.tiles
@@ -307,8 +308,9 @@ def read_h5path(
         else:
             slide_backend = core.slide_backends.OpenSlideBackend
         name = f['fields'].attrs['name'] if 'name' in f['fields'].attrs.keys() else None
-        labels = dict(f['fields'].attrs['labels']) if 'labels' in f['fields'].attrs.keys() else None 
-        labels = {k : v for k,v in labels.items()}
+        labels = f['fields']['labels'] if 'labels' in f['fields'].keys() else None 
+        if labels:
+            labels = ast.literal_eval(labels[...].tolist().decode('UTF-8'))
         history = None
     return pathml.core.slide_data.SlideData(name = name, slide_backend = slide_backend, masks = masks, tiles = tiles, labels = labels, history = history) 
 
