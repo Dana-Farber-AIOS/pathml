@@ -219,6 +219,9 @@ def write_h5path(
         path (str): Path to save directory
     """
     path = Path(path)
+    # make sure that the path doesn't already exist:
+    if path.is_file():
+        raise ValueError(f"cannot write to input path because it already exists: {path}")
     pathdir = Path(os.path.dirname(path)) 
     pathdir.mkdir(parents=True, exist_ok=True) 
     with h5py.File(path, 'w') as f:
@@ -238,8 +241,8 @@ def write_h5path(
         if slidedata.tiles:
             for ds in slidedata.tiles.h5manager.h5.keys():
                 slidedata.tiles.h5manager.h5.copy(ds, f)
-        # add tilesdict to h5
-        core.utils.writetilesdicth5(f['tiles'], 'tilesdict', slidedata.tiles.h5manager.tilesdict)
+            # add tilesdict to h5
+            core.utils.writetilesdicth5(f['tiles'], 'tilesdict', slidedata.tiles.h5manager.tilesdict)
 
 
 def read(

@@ -1,6 +1,7 @@
 import pytest
 from dask.distributed import Client
 import numpy as np
+from pathlib import Path
 
 from pathml.core.slide_classes import HESlide
 from pathml.core.slide_data import SlideData
@@ -14,17 +15,24 @@ from pathml.preprocessing.transforms import BoxBlur
 def slide_dataset():
     n = 4
     labs = {"testing": "testlabel", "test2": np.array([2, 3, 4])}
-    slide_list = [HESlide("tests/testdata/small_HE.svs", labels = labs) for _ in range(n)]
+    slide_list = [HESlide("tests/testdata/small_HE.svs", name = f"slide{i}", labels = labs) for i in range(n)]
     slide_dataset = SlideDataset(slide_list)
     return slide_dataset
 
 
-def test_slide_dataset(slide_dataset):
+def test_dataset_len_getitem(slide_dataset):
     # check len and getitem
-    n = 4
-    assert len(slide_dataset) == n
+    assert len(slide_dataset) == 4
     for i in range(len(slide_dataset)):
         assert isinstance(slide_dataset[i], SlideData)
+
+
+def test_dataset_save(tmp_path, slide_dataset):
+    slide_dataset.write(tmp_path)
+    # now check each file
+    for slide in slide_dataset:
+        fname = tmp_path / slide.name + ".h5path"
+        assert fname.is_file()
 
 
 def test_run_pipeline_and_tile_dataset_and_reshape(slide_dataset):

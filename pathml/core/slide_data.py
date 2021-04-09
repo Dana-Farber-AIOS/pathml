@@ -1,6 +1,7 @@
 import h5py
 import dask.distributed
 from torch.utils.data import Dataset
+from pathlib import Path
 
 import pathml.core.masks
 import pathml.core.tile
@@ -16,10 +17,10 @@ class SlideData:
 
     Args:
         filepath (str, optional): Path to slide file on disk.
-        name (str, optional): name of slide
-        slide_backend (pathml.core.slide_backends.SlideBackend, optional): slide backend object for interfacing with
-            slide on disk.
-            If ``None``, and a filepath is provided, defaults to :class:`~pathml.core.slide_backends.OpenSlideBackend`
+        name (str, optional): name of slide. If ``None``, and a ``filepath`` is provided, name defaults to filepath.
+        slide_backend (pathml.core.slide_backends.SlideBackend, optional): slide_backend object for interfacing with
+            slide on disk. If ``None``, and a ``filepath`` is provided, defaults to
+             :class:`~pathml.core.slide_backends.OpenSlideBackend`
         masks (pathml.core.masks.Masks, optional): object containing {key, mask} pairs
         tiles (pathml.core.tiles.Tiles, optional): object containing {coordinates, tile} pairs
         labels (collections.OrderedDict, optional): dictionary containing {key, label} pairs
@@ -39,10 +40,15 @@ class SlideData:
         if filepath is not None:
             if slide_backend is None:
                 slide_backend = pathml.core.slide_backends.OpenSlideBackend
-            self.slide = slide_backend(filepath)
+            slide = slide_backend(filepath)
         else:
-            self.slide = None
+            slide = None
 
+        # get name from filepath if no name is provided
+        if name is None and filepath is not None:
+            name = Path(filepath).stem
+
+        self.slide = slide
         self.slide_backend = slide_backend
         self.name = name
         self.masks = masks
@@ -182,4 +188,10 @@ class SlideData:
         raise NotImplementedError
 
     def write(self, path):
+        """
+        Write contents to disk in h5path format.
+
+        Args:
+            path (Union[str, bytes, os.PathLike]): path to file to be written
+        """
         pathml.core.h5path.write_h5path(self, path)

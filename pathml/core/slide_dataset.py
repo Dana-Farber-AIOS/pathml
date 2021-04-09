@@ -1,4 +1,6 @@
 from torch.utils.data import ConcatDataset
+from typing import List
+from pathlib import Path
 
 
 class SlideDataset:
@@ -45,6 +47,31 @@ class SlideDataset:
     def reshape(self, shape, centercrop=False):
         for slide in self.slides:
             slide.tiles.reshape(shape = shape, centercrop = centercrop)
+
+    def write(self, dir, filenames=None):
+        """
+        Write all SlideData objects to the specified directory.
+        Calls .write() method for each slide in the dataset. Optionally pass a list of filenames to use,
+        otherwise filenames will be created from ``.name`` attributes of each slide.
+
+        Args:
+            dir (Union[str, bytes, os.PathLike]): Path to directory where slides are to be saved
+            filenames (List[str], optional): list of filenames to be used.
+        """
+        d = Path(dir)
+        if filenames:
+            if len(filenames) != self.__len__():
+                raise ValueError(f"input list of filenames has {len(filenames)} elements "
+                                 f"but must be same length as number of slides in dataset ({self.__len__()})")
+
+        for i, slide in enumerate(self.slides):
+            if filenames:
+                slide_path = d / (filenames[i] + ".h5path")
+            elif slide.name:
+                slide_path = d / (slide.name + ".h5path")
+            else:
+                raise ValueError("slide does not have a .name attribute. Must supply a 'filenames' argument.")
+            slide.write(slide_path)
 
     @property
     def tile_dataset(self):
