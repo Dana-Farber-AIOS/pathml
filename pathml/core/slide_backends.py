@@ -64,7 +64,8 @@ class OpenSlideBackend(SlideBackend):
 
         region = self.slide.read_region(location = location, level = level, size = size)
         region_rgb = pil_to_rgb(region)
-        return region_rgb
+        coords = location + [0]*(len(np.shape(region_rgb))-len(list(location))) 
+        return Tile(image=region_rgb, coords=tuple(coords), slidetype=pathml.core.slide_classes.RGBSlide) 
 
     def get_image_shape(self, level=0):
         """
@@ -181,7 +182,7 @@ class BioFormatsBackend(SlideBackend):
         slices = [slice(location[i],location[i]+size[i]) for i in range(len(size))] 
         array = array[tuple(slices)]
         array = array.astype(np.int8)
-        coords = location + [0]*(len(array)-len(location)) 
+        coords = location + [0]*(len(np.shape(array))-len(location)) 
         return Tile(image=array, coords=tuple(coords), slidetype=pathml.core.slide_classes.MultiparametricSlide) 
 
     def get_thumbnail(self, size=None, **kwargs):
