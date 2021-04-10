@@ -8,6 +8,7 @@ from bioformats.metadatatools import createOMEXMLMetadata
 
 from pathml.core.tile import Tile
 from pathml.utils import pil_to_rgb
+import pathml.core.slide_classes
 
 
 class SlideBackend:
@@ -25,6 +26,8 @@ class SlideBackend:
 class OpenSlideBackend(SlideBackend):
     """
     Class for using OpenSlide to interface with image files
+
+    Depends on `openslide-python <https://openslide.org/api/python/>`_ which wraps the `openslide <https://openslide.org/>`_ C library.
 
     Args:
         filename (str): path to image file on disk
@@ -96,7 +99,7 @@ class BioFormatsBackend(SlideBackend):
     """
     Class for using BioFormats to interface with image files.
 
-    Built on `python-bioformats <https://github.com/CellProfiler/python-bioformats>`_ which wraps ome bioformats
+    Depends on `python-bioformats <https://github.com/CellProfiler/python-bioformats>`_ which wraps ome bioformats
     java library, parses pixel and metadata of proprietary formats, and
     converts all formats to OME-TIFF. Please cite: https://pubmed.ncbi.nlm.nih.gov/20513764/
 
@@ -117,13 +120,15 @@ class BioFormatsBackend(SlideBackend):
         sizex, sizey, sizez, sizec, sizet = reader.getSizeX(), reader.getSizeY(), reader.getSizeZ(), reader.getSizeC(), reader.getSizeT()
         self.shape = (sizex, sizey, sizez, sizec, sizet)
 
-    def get_image_shape(self):
+    def get_image_shape(self, level = None):
         """
         Get the shape of the image.
 
         Returns:
             Tuple[int, int]: Shape of image. 
         """
+        if level not in [None, 0]:
+            raise ValueError("BioFormatsBackend does not support levels, please pass a level in [None, 0]")
         return self.shape 
 
     def extract_region(self, location, size, **kwargs):
@@ -152,6 +157,14 @@ class BioFormatsBackend(SlideBackend):
             plt.figure()
             plt.imshow(region[:,:,0,:,0])
         """
+        # this doesn't work
+        if type(size) is int:
+            size = [size] 
+        if type(location) is int:
+            location = [location]
+        else:
+            location = list(location)
+
         if self.shape[0]*self.shape[1]*self.shape[2]*self.shape[3]*self.shape[4] > 2147483647:
             raise Exception(f"Java arrays allocate maximum 32 bits (~2GB). Image size is {self.imsize}")
 
