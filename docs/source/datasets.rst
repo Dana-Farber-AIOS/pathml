@@ -22,13 +22,16 @@ PathML has built-in support for several public datasets:
 .. table::
     :widths: 10 60 10 10 10
 
-    +-----------------------------------------------------+--------------------------------------+-------------+-----------+---------------+
-    | Dataset                                             | Description                          | Image type  | Size      | Reference     |
-    +=====================================================+======================================+=============+===========+===============+
-    | :class:`~pathml.datasets.pannuke.PanNukeDataModule` | Pixel-level nucleus classification,  | H&E         | | n=7901  | | [PanNuke1]_ |
-    |                                                     | with 6 nucleus types and 19 tissue   |             | | 37.33 GB| | [PanNuke2]_ |
-    |                                                     | types. Images are 256px RGB.         |             |           |               |
-    +-----------------------------------------------------+--------------------------------------+-------------+-----------+---------------+
+    +-------------------------------------------------------+--------------------------------------+-------------+-----------+----------------+
+    | Dataset                                               | Description                          | Image type  | Size      | Reference      |
+    +=======================================================+======================================+=============+===========+================+
+    | :class:`~pathml.datasets.pannuke.PanNukeDataModule`   | Pixel-level nucleus classification,  | H&E         | | n=7901  | | [PanNuke1]_  |
+    |                                                       | with 6 nucleus types and 19 tissue   |             | | 37.33 GB| | [PanNuke2]_  |
+    |                                                       | types. Images are 256px RGB.         |             |           |                |
+    +=======================================================+======================================+=============+===========+================+
+    | :class:`~pathml.datasets.deepblur.DeepFocusDataModule`| Patch-level focus classification     | H&E         | | n=204k  | | [DeepFocus]_ |
+    |                                                       | with 3 IHC and 1 H&E histologies.    | IHC         | | 10.0 GB |                |
+    +-------------------------------------------------------+--------------------------------------+-------------+-----------+----------------+
 
 
 Using local datasets
@@ -83,3 +86,5 @@ References
         Pathology (pp. 11-19). Springer, Cham.
 .. [PanNuke2] Gamper, J., Koohbanani, N.A., Graham, S., Jahanifar, M., Khurram, S.A., Azam, A., Hewitt, K. and Rajpoot, N.,
         2020. PanNuke Dataset Extension, Insights and Baselines. arXiv preprint arXiv:2003.10778.
+.. [DeepFocus] Senaras, C., Niazi, M., Lozanski, G., Gurcan, M., 2018, October. Deepfocus: Detection of out-of-focus regions
+        in whole slide digital images using deep learning. PLOS One 13(10): e0205387.

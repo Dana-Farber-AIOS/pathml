@@ -31,6 +31,7 @@ Dana-Farber Cancer Institute.
    loading_slides
    preprocessing
    custom_pipelines
+   h5path
    pipeline_repo
 
 .. toctree::

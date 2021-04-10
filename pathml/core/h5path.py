@@ -6,7 +6,7 @@ import pathml.core.slide_data
 from pathml.core.tiles import Tiles
 from pathml.core.masks import Masks
 from pathml.core.slide_backends import OpenSlideBackend, BioFormatsBackend, DICOMBackend
-from pathml.core.utils import writestringh5, writedicth5 
+from pathml.core.utils import writestringh5, writedicth5, writetilesdicth5
 
 pathmlext = {
     'h5',
@@ -14,12 +14,187 @@ pathmlext = {
 }
 
 openslideext = {
-    'svs'
+    'svs',
+    'tif',
+    'ndpi',
+    'vms',
+    'vmu',
+    'scn',
+    'mrxs',
+    'svslide',
+    'bif'
 }
 
 bioformatsext = {
     'tiff',
-    'tif'
+    'tif',
+    'sld',
+    'aim',
+    'al3d',
+    'gel',
+    'am',
+    'amiramesh',
+    'grey',
+    'hx',
+    'labels',
+    'cif',
+    'img',
+    'hdr',
+    'sif',
+    'png',
+    'afi',
+    'htd',
+    'pnl',
+    'avi',
+    'arf',
+    'exp',
+    'spc',
+    'sdt',
+    'xml',
+    '1sc',
+    'pic',
+    'raw',
+    'scn',
+    'ims',
+    'img',
+    'cr2',
+    'crw',
+    'ch5',
+    'c01',
+    'dib',
+    'vsi',
+    'wpi',
+    'dv',
+    'r3d',
+    'rcpnl',
+    'eps',
+    'epsi',
+    'ps',
+    'fits',
+    'dm3',
+    'dm4',
+    'dm2',
+    'vff',
+    'naf',
+    'his',
+    'i2i',
+    'ics',
+    'ids',
+    'fff',
+    'seq',
+    'ipw',
+    'hed',
+    'mod',
+    'liff',
+    'obf',
+    'msr',
+    'xdce',
+    'frm',
+    'inr',
+    'hdr',
+    'ipl',
+    'ipm',
+    'dat',
+    'par',
+    'jp2',
+    'j2k',
+    'jpf',
+    'jpk',
+    'jpx',
+    'klb',
+    'xv',
+    'bip',
+    'fli',
+    'msr',
+    'lei',
+    'lif',
+    'scn',
+    'sxm',
+    'l2d',
+    'lim',
+    'stk',
+    'nd',
+    'htd',
+    'mnc',
+    'mrw',
+    'mng',
+    'stp',
+    'mrc',
+    'st',
+    'ali',
+    'map',
+    'rec',
+    'mrcs',
+    'nef',
+    'hdr',
+    'nii',
+    'nii.gz',
+    'nrrd',
+    'nhdr',
+    'apl',
+    'mtb',
+    'tnb',
+    'obsep',
+    'oib',
+    'oif',
+    'oir',
+    'ome.tiff',
+    'ome.tif',
+    'ome.tf2',
+    'ome.tf8',
+    'ome.btf',
+    'ome.xml',
+    'ome',
+    'top',
+    'pcoraw',
+    'rec',
+    'pcx',
+    'pds',
+    'im3',
+    'qptiff',
+    'pbm',
+    'pgm',
+    'ppm',
+    'psd',
+    'bin',
+    'pict',
+    'cfg',
+    'spe',
+    'afm',
+    'mov',
+    'sm2',
+    'sm3',
+    'xqd',
+    'xqf',
+    'cxd',
+    'spi',
+    'stk',
+    'tga',
+    'db',
+    'vws',
+    'tfr',
+    'ffr',
+    'zfr',
+    'zfp',
+    '2fl',
+    'sld',
+    'pr3',
+    'dat',
+    'hdr',
+    'fdf',
+    'bif',
+    'dti',
+    'xys',
+    'mvd2',
+    'acff',
+    'wat',
+    'bmp',
+    'wlz',
+    'lms',
+    'zvi',
+    'czi',
+    'lsm',
+    'mdb'
 }
 
 dicomext = {
@@ -37,7 +212,7 @@ def write_h5path(
     Write h5path formatted file from SlideData object.
     
     Args:
-        path (str): Path to save destination
+        path (str): Path to save directory
     """
     path = Path(path)
     pathdir = Path(os.path.dirname(path)) 
@@ -53,13 +228,15 @@ def write_h5path(
         if slidedata.history:
             pass
         if slidedata.masks:
-            masksgroup = f.create_group('masks')
+            masksgroup = f.create_group('masks') 
             for ds in slidedata.masks.h5manager.h5.keys():
-                slidedata.masks.h5manager.h5.copy(ds, f['masks'])
+                slidedata.masks.h5manager.h5.copy(ds, masksgroup)
         if slidedata.tiles:
-            tilesgroup = f.create_group('tiles')
             for ds in slidedata.tiles.h5manager.h5.keys():
-                slidedata.tiles.h5manager.h5.copy(ds, f['tiles'])
+                slidedata.tiles.h5manager.h5.copy(ds, f)
+        # add tilesdict to h5
+        writetilesdicth5(f['tiles'], 'tilesdict', slidedata.tiles.h5manager.tilesdict)
+
 
 def read(
     path,

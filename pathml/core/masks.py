@@ -38,11 +38,11 @@ class Masks:
             self.h5manager = _masks_h5_manager(h5)
 
     def __repr__(self):
-        rep = f"Masks(keys={self.h5manager.h5['masks'].keys()})"
+        rep = f"Masks(keys={self.h5manager.h5.keys()})"
         return rep
 
     def __len__(self):
-        return len(self.h5manager.h5['masks'].keys())
+        return len(self.h5manager.h5.keys())
 
     def __getitem__(self, item):
         return self.h5manager.get(item)
@@ -72,17 +72,17 @@ class Masks:
             raise KeyError(f"slices must of of type list[slice] but is {type(slices)} with elements {type(slices[0])}")
         sliced = Masks()
         for key, val in self.h5manager.slice(slices):
-            sliced.add(key, val[slices])
+            sliced.add(key, val)
         return sliced
 
     def remove(self, key):
         """
-        Remove mask from self.h5manager by key.
+        Remove mask.
+
+        Args:
+            key(str): key indicating mask to be removed
         """
         self.h5manager.remove(key)
-
-    def resize(self, shape):
-        raise NotImplementedError
 
     def write(self, out_dir, filename):
         """
