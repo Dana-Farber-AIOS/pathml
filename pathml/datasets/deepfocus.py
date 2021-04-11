@@ -2,11 +2,11 @@ import os
 import h5py
 from pathlib import Path
 import hashlib
-
 from torch.utils.data import Dataset, DataLoader
 
-from pathml.datasets.base import BaseDataModule, BaseDataset
+from pathml.datasets.base_data_module import BaseDataModule
 from pathml.datasets.utils import download_from_url
+
 
 class DeepFocusDataModule(BaseDataModule):
     """
@@ -49,7 +49,7 @@ class DeepFocusDataModule(BaseDataModule):
 
     @property
     def train_dataloader(self):
-        return data.DataLoader(
+        return DataLoader(
                 dataset = self._get_dataset(fold_ix = 1),
                 batch_size = self.batch_size,
                 shuffle = self.shuffle,
@@ -58,7 +58,7 @@ class DeepFocusDataModule(BaseDataModule):
     
     @property
     def valid_dataloader(self):
-        return data.DataLoader(
+        return DataLoader(
                 dataset = self._get_dataset(fold_ix = 2),
                 batch_size = self.batch_size,
                 shuffle = self.shuffle,
@@ -67,7 +67,7 @@ class DeepFocusDataModule(BaseDataModule):
 
     @property
     def test_dataloader(self):
-        return data.DataLoader(
+        return DataLoader(
                 dataset = self._get_dataset(fold_ix = 3),
                 batch_size = self.batch_size,
                 shuffle = self.shuffle,
@@ -101,7 +101,7 @@ class DeepFocusDataModule(BaseDataModule):
         return False
         
 
-class DeepFocusDataset(BaseDataset):
+class DeepFocusDataset(Dataset):
     def __init__(self,
             data_dir,
             fold_ix=None,
