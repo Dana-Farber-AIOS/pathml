@@ -13,7 +13,7 @@ def wsi_HE():
 
 @pytest.fixture
 def multiparametric_image():
-    image = BioFormatsBackend("tests/testdata/smalltif.svs") 
+    image = BioFormatsBackend("tests/testdata/smalltif.tif") 
     return image
 
 
@@ -57,5 +57,5 @@ def test_openslide_repr():
 
 
 def test_bioformats_repr():
-    backend = BioFormatsBackend("tests/testdata/smalltif.svs")
+    backend = BioFormatsBackend("tests/testdata/smalltif.tif")
     repr(backend)

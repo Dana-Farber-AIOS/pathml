@@ -8,11 +8,10 @@ from bioformats.metadatatools import createOMEXMLMetadata
 
 from pathml.core.tile import Tile
 from pathml.utils import pil_to_rgb
-import pathml.core.slide_classes
 
 
 class SlideBackend:
-    """base class for classes to interface with slides on disk"""
+    """base class for backends that interface with slides on disk"""
     def extract_region(self, location, size, **kwargs):
         raise NotImplementedError
 
@@ -25,7 +24,7 @@ class SlideBackend:
 
 class OpenSlideBackend(SlideBackend):
     """
-    Class for using OpenSlide to interface with image files
+    Use OpenSlide to interface with image files
 
     Depends on `openslide-python <https://openslide.org/api/python/>`_ which wraps the `openslide <https://openslide.org/>`_ C library.
 
@@ -64,8 +63,7 @@ class OpenSlideBackend(SlideBackend):
 
         region = self.slide.read_region(location = location, level = level, size = size)
         region_rgb = pil_to_rgb(region)
-        coords = location + [0]*(len(np.shape(region_rgb))-len(list(location))) 
-        return Tile(image=region_rgb, coords=tuple(coords), slidetype=pathml.core.slide_classes.RGBSlide) 
+        return region_rgb
 
     def get_image_shape(self, level=0):
         """
@@ -98,7 +96,7 @@ class OpenSlideBackend(SlideBackend):
 
 class BioFormatsBackend(SlideBackend):
     """
-    Class for using BioFormats to interface with image files.
+    Use BioFormats to interface with image files.
 
     Depends on `python-bioformats <https://github.com/CellProfiler/python-bioformats>`_ which wraps ome bioformats
     java library, parses pixel and metadata of proprietary formats, and
@@ -130,7 +128,7 @@ class BioFormatsBackend(SlideBackend):
         """
         if level not in [None, 0]:
             raise ValueError("BioFormatsBackend does not support levels, please pass a level in [None, 0]")
-        return self.shape 
+        return self.shape[:2] 
 
     def extract_region(self, location, size, **kwargs):
         """
@@ -181,9 +179,10 @@ class BioFormatsBackend(SlideBackend):
         # TODO: read slices directly, rather than read then slice 
         slices = [slice(location[i],location[i]+size[i]) for i in range(len(size))] 
         array = array[tuple(slices)]
-        array = array.astype(np.int8)
-        coords = location + [0]*(len(np.shape(array))-len(location)) 
-        return Tile(image=array, coords=tuple(coords), slidetype=pathml.core.slide_classes.MultiparametricSlide) 
+        array = array.astype(np.uint8)
+        print(type(array))
+        print(array.dtype)
+        return array
 
     def get_thumbnail(self, size=None, **kwargs):
         """
@@ -203,7 +202,8 @@ class BioFormatsBackend(SlideBackend):
         """
         assert isinstance(size, (tuple, type(None))), f"Size must be a tuple of ints."
         if size is not None:
-            assert len(size) == len(self.shape), f"image is of dimension {len(self.shape)} which does not match passed dimension of size {len(size)}"
+            if len(size) != len(self.shape):
+                size = size + self.shape[len(size):]
         if self.shape[0]*self.shape[1]*self.shape[2]*self.shape[3] > 2147483647:
             raise Exception(f"Java arrays allocate maximum 32 bits (~2GB). Image size is {self.imsize}")
         javabridge.start_vm(class_path = bioformats.JARS)

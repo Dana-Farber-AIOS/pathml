@@ -2,7 +2,7 @@ import pytest
 
 from pathml.core.slide_classes import HESlide, RGBSlide, MultiparametricSlide 
 from pathml.core.slide_data import SlideData
-from pathml.core.slide_backends import OpenSlideBackend
+from pathml.core.slide_backends import OpenSlideBackend, BioFormatsBackend
 from pathml.core.tile import Tile
 
 
@@ -14,7 +14,7 @@ def he_slide():
 
 @pytest.fixture
 def multiparametric_slide():
-    wsi = MultiparametricSlide("tests/testdata/smalltif.svs") 
+    wsi = MultiparametricSlide("tests/testdata/smalltif.tif") 
     return wsi
 
 
@@ -41,7 +41,7 @@ def test_generate_tiles_he(he_slide, shape, stride, pad, level):
 @pytest.mark.parametrize("shape", [500, (500, 400)])
 @pytest.mark.parametrize("stride", [None, 1000])
 @pytest.mark.parametrize("pad", [True, False])
-def test_generate_tiles_multiparametric(multiparameteric_slide, shape, stride, pad):
+def test_generate_tiles_multiparametric(multiparametric_slide, shape, stride, pad):
     for tile in multiparametric_slide.generate_tiles(shape = shape, stride = stride, pad = pad):
         assert isinstance(tile, Tile)
 

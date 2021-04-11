@@ -2,6 +2,7 @@
 from collections import OrderedDict
 import numpy as np
 import h5py
+import ast
 
 import pathml.core.slide_classes
 
