@@ -15,7 +15,6 @@ def he_slidedata():
     masks = Masks({'example': np.ones((2967, 2220))})
     wsi = HESlide("tests/testdata/small_HE.svs", name = "test", masks = masks, labels={'testkey': 'testval'})
     pipeline = Pipeline([
-        BoxBlur(kernel_size = 15),
         BoxBlur(kernel_size = 5)
     ])
     wsi.run(pipeline, tile_size = 250)
