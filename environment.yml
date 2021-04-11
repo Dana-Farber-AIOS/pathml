@@ -15,6 +15,7 @@ dependencies:
   - pytorch>=1.7.0
   - openjdk==8.0.152
   - h5py>=3.1.0
+  - dask>=2021.04.0
   - pip:
       - opencv-contrib-python>=4.1.1
       - openslide-python>=1.1.1
