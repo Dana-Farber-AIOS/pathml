@@ -9,12 +9,12 @@ import re
 import cv2
 import shutil
 
-from pathml.datasets.base import BaseTileDataset, BaseDataModule
+from pathml.datasets.base_data_module import BaseDataModule
 from pathml.datasets.utils import download_from_url
 from pathml.ml.hovernet import compute_hv_map
 
 
-class PanNukeDataset(BaseTileDataset):
+class PanNukeDataset(data.Dataset):
     """
     Dataset object for PanNuke dataset
 

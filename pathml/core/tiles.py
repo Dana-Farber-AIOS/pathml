@@ -3,7 +3,7 @@ from pathlib import Path
 from collections import OrderedDict
 import h5py
 
-import pathml.core.h5managers 
+import pathml.core.h5managers
 import pathml.core.tiles
 import pathml.core.tile
 import pathml.core.masks
@@ -45,7 +45,7 @@ class Tiles:
             else:
                 self._tiles = OrderedDict()
             # initialize h5manager 
-            self.h5manager = pathml.core.h5managers_tiles_h5_manager() 
+            self.h5manager = pathml.core.h5managers._tiles_h5_manager()
             for key in self._tiles:
                 self.h5manager.add(self._tiles[key])
             del self._tiles

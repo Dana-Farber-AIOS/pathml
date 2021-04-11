@@ -25,9 +25,9 @@ def he_slidedata():
         wsi.tiles.h5manager.tilesdict[tile]['name'] = str(tile)
     return wsi
 
-def test_read_write_heslide(he_slidedata):
+def test_read_write_heslide(tmp_path, he_slidedata):
     slidedata = he_slidedata
-    path = 'tests/testdata/testhe.h5'
+    path = tmp_path / 'testhe.h5'
     slidedata.write(path)
     readslidedata = read(path) 
     assert readslidedata.name == slidedata.name
@@ -55,3 +55,11 @@ def scan_hdf5(f, recursive=True, tab_step=2):
         return elems
     return scan_node(f)
 
+
+def test_write_to_existing_file_fails(tmp_path):
+    # trying to write to an existing file should raise an exception
+    wsi1 = HESlide("tests/testdata/small_HE.svs", name = "test1")
+    wsi2 = HESlide("tests/testdata/small_HE.svs", name = "test2")
+    wsi1.write(tmp_path / "testing.h5path")
+    with pytest.raises(ValueError):
+        wsi2.write(tmp_path / "testing.h5path")
