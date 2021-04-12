@@ -50,13 +50,10 @@ def test_generate_tiles_multiparametric(multiparametric_slide, shape, stride, pa
 def test_generate_tiles_padding(he_slide, pad):
     shape = 300
     stride = 300
-
     tiles = list(he_slide.generate_tiles(shape = shape, stride = stride, pad = pad))
-
     # he_slide.slide.get_image_shape() --> (2967, 2220)
     # if no padding, expect: 9*7 = 63 tiles
     # if padding, expect: 10*8 - 80 tiles
-
     if not pad:
         assert len(tiles) == 63
     else:
