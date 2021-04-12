@@ -10,20 +10,20 @@ from pathml.core.masks import Masks
 
 @pytest.fixture
 def tileHE():
-    """ Example of pathml.core.Tile object """
+    """
+    Example of pathml.core.Tile object
+    """
     s = openslide.open_slide("tests/testdata/small_HE.svs")
     im_image = s.read_region(level = 0, location = (900, 800), size = (500, 500))
     im_np = np.asarray(im_image)
     im_np_rgb = cv2.cvtColor(im_np, cv2.COLOR_RGBA2RGB)
 
-    mask = np.zeros((im_np_rgb.shape[0], im_np_rgb.shape[1]), dtype = np.uint8)
-    center = np.ones((50, 50))
-    center_circle = cv2.getStructuringElement(shape = cv2.MORPH_ELLIPSE, ksize = (25, 25))
-    center[12:37, 12:37] -= center_circle
-    mask[25:75, 25:75] = center
+    # make mask object
+    masks = np.random.randint(low = 1, high = 255, size = (im_np_rgb.shape[0], im_np_rgb.shape[1]), dtype = np.uint8)
+    masks = Masks(masks = {"testmask" : masks})
 
-    mask[200:400, 200:300] = 1
+    # labels dict
+    labels = {"test_str_label": "stringlabel", "test_np_array_label": np.ones(shape = (2, 3, 3))}
 
-    m = Masks(masks = {"testmask" : mask})
-    tile = Tile(image = im_np_rgb, coords = (0, 0), masks = m, slidetype = HESlide)
+    tile = Tile(image = im_np_rgb, coords = (0, 0), masks = masks, slidetype = HESlide, labels = labels)
     return tile
