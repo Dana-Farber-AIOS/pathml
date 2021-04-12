@@ -45,8 +45,8 @@ def example_slide_data():
 
 
 @pytest.fixture
-def example_slide_data_with_tiles(tile_withmasks, tile_nomasks):
-    tiles_dict = {(0, 0): tile_withmasks, (1000, 1000): tile_nomasks}
+def example_slide_data_with_tiles(tile_withmasks):
+    tiles_dict = {(42, 42): tile_withmasks}
     tiles = Tiles(tiles_dict)
     labs = {"test_string_label": "testlabel", "test_np_array_label": np.array([2, 3, 4])}
     wsi = SlideData("tests/testdata/small_HE.svs", name = f"test_array_in_labels",
@@ -57,7 +57,19 @@ def example_slide_data_with_tiles(tile_withmasks, tile_nomasks):
 @pytest.fixture()
 def slide_dataset(example_slide_data_with_tiles):
     n = 4
-    tiles_dict = {"str_key_tile": tile_withmasks, (155, 255): tile_nomasks}
+    labs = {"test_string_label": "testlabel", "test_np_array_label": np.array([2, 3, 4])}
+    slide_list = [SlideData("tests/testdata/small_HE.svs",
+                            name = f"slide{i}",
+                            labels = labs,
+                            slide_backend = OpenSlideBackend) for i in range(n)]
+    slide_dataset = SlideDataset(slide_list)
+    return slide_dataset
+
+
+@pytest.fixture()
+def slide_dataset_with_tiles(tile_withmasks, example_slide_data_with_tiles):
+    n = 4
+    tiles_dict = {(42, 42): tile_withmasks}
     tiles = Tiles(tiles_dict)
     labs = {"test_string_label": "testlabel", "test_np_array_label": np.array([2, 3, 4])}
     slide_list = [SlideData("tests/testdata/small_HE.svs",

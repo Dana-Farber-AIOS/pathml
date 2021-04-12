@@ -99,17 +99,21 @@ def readtilesdicth5(h5):
         coords = h5[tile]['coords'][...].item().decode('UTF-8') if 'coords' in h5[tile].keys() else None
         slidetype = h5[tile]['slidetype'][...].item().decode('UTF-8') if 'slidetype' in h5[tile].keys() else None
         if slidetype:
+            # TODO: better system for specifying slide classes.
+            #  Since it's saved as string here, should have a clean string identifier for each class
+            #  currently its using repr essentially
             if slidetype == "<class 'pathml.core.slide_backends.OpenSlideBackend'>":
-                slidetype = OpenSlideBackend
+                slidetype = pathml.core.slide_backends.OpenSlideBackend
             elif slidetype == "<class 'pathml.core.slide_backends.BioFormatsBackend'>":
-                slidetype = BioFormatsBackend
+                slidetype = pathml.core.slide_backends.BioFormatsBackend
             elif slidetype == "<class 'pathml.core.slide_backends.DICOMBackend'>":
-                slidetype = DICOMBackend
+                slidetype = pathml.core.slide_backends.DICOMBackend
             elif slidetype == "<class 'pathml.core.slide_classes.HESlide'>":
                 slidetype = pathml.core.slide_classes.HESlide
         if labels:
-            labels = ast.literal_eval(labels.decode('UTF-8')) 
             print(f"labels are {labels}")
+            labels = ast.literal_eval(labels.decode('UTF-8'))
+            print(f"after decoding, labels are {labels}")
         subdict = {
                 'name': name,
                 'labels': labels,
