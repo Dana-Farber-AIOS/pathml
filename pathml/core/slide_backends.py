@@ -6,7 +6,6 @@ import javabridge
 from scipy.ndimage import zoom
 from bioformats.metadatatools import createOMEXMLMetadata
 
-from pathml.core.tile import Tile
 from pathml.utils import pil_to_rgb
 
 
@@ -180,8 +179,6 @@ class BioFormatsBackend(SlideBackend):
         slices = [slice(location[i],location[i]+size[i]) for i in range(len(size))] 
         array = array[tuple(slices)]
         array = array.astype(np.uint8)
-        print(type(array))
-        print(array.dtype)
         return array
 
     def get_thumbnail(self, size=None, **kwargs):

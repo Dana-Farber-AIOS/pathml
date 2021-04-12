@@ -4,7 +4,7 @@ from pathlib import Path
 from collections import OrderedDict
 import h5py
 
-from pathml.core.h5managers import _masks_h5_manager
+import pathml.core.h5managers
 
 
 class Masks:
@@ -29,13 +29,13 @@ class Masks:
                 self._masks = OrderedDict(masks)
             else:
                 self._masks = OrderedDict()
-            self.h5manager = _masks_h5_manager()
+            self.h5manager = pathml.core.h5managers._masks_h5_manager()
             for mask in self._masks:
                 self.h5manager.add(mask, self._masks[mask])
             del self._masks
 
         else:
-            self.h5manager = _masks_h5_manager(h5)
+            self.h5manager = pathml.core.h5managers._masks_h5_manager(h5)
 
     def __repr__(self):
         rep = f"Masks(keys={self.h5manager.h5.keys()})"

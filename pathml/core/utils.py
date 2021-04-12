@@ -5,6 +5,7 @@ import h5py
 import ast
 
 import pathml.core.slide_classes
+import pathml.core.slide_backends
 
 
 # TODO: Fletcher32 checksum?
@@ -100,11 +101,11 @@ def readtilesdicth5(h5):
         slidetype = h5[tile]['slidetype'][...].item().decode('UTF-8') if 'slidetype' in h5[tile].keys() else None
         if slidetype:
             if slidetype == "<class 'pathml.core.slide_backends.OpenSlideBackend'>":
-                slidetype = OpenSlideBackend
+                slidetype = pathml.core.slide_backends.OpenSlideBackend
             elif slidetype == "<class 'pathml.core.slide_backends.BioFormatsBackend'>":
-                slidetype = BioFormatsBackend
+                slidetype = pathml.core.slide_backends.BioFormatsBackend
             elif slidetype == "<class 'pathml.core.slide_backends.DICOMBackend'>":
-                slidetype = DICOMBackend
+                slidetype = pathml.core.slide_backends.DICOMBackend
             elif slidetype == "<class 'pathml.core.slide_classes.HESlide'>":
                 slidetype = pathml.core.slide_classes.HESlide
         if labels:

@@ -3,15 +3,15 @@ import h5py
 import os
 import ast
 
-import pathml.core.slide_data 
 import pathml.core.tiles
 import pathml.core.masks
+import pathml.core.slide_data 
+import pathml.core.slide_classes
 
 """import pathml.core.utils
 import pathml.core.slide_backends"""
 
 import pathml.core as core
-
 from pathml.core.slide_backends import OpenSlideBackend, BioFormatsBackend, DICOMBackend
 
 pathmlext = {
@@ -314,8 +314,7 @@ def read_h5path(
             labels = ast.literal_eval(labels[...].tolist().decode('UTF-8'))
         history = None
 
-    from pathml.core.slide_data import SlideData 
-    return SlideData(name = name, slide_backend = slide_backend, masks = masks, tiles = tiles, labels = labels, history = history) 
+    return pathml.core.slide_data.SlideData(name = name, slide_backend = slide_backend, masks = masks, tiles = tiles, labels = labels, history = history) 
 
 def read_openslide(
     path
@@ -326,7 +325,7 @@ def read_openslide(
     Args:
         path (str): Path to slide file of supported Openslide format on disk
     """
-    return HESlide(filepath = path) 
+    return pathml.core.slide_classes.HESlide(filepath = path) 
 
 
 def read_bioformats(
@@ -338,7 +337,7 @@ def read_bioformats(
     Args:
         path (str): Path to image file of supported BioFormats format on disk
     """
-    return MultiparametricSlide(filepath = path, slide_backend = BioFormatsBackend) 
+    return pathml.core.slide_classes.MultiparametricSlide(filepath = path, slide_backend = BioFormatsBackend) 
 
 def read_dicom(
     path
