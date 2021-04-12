@@ -2,7 +2,9 @@ import openslide
 from typing import Tuple
 
 from pathml.utils import pil_to_rgb
-from pathml.core.tile import Tile
+
+import pathml.core
+
 
 
 class SlideBackend:
@@ -150,7 +152,7 @@ class OpenSlideBackend(SlideBackend):
                 coords = (int(ix_j * stride_j), int(ix_i * stride_i))
                 # get image for tile
                 tile_im = self.extract_region(location = coords, size = shape, level = level)
-                yield Tile(image = tile_im, coords = coords)
+                yield pathml.core.tile.Tile(image = tile_im, coords = coords)
 
 
 class BioFormatsBackend(SlideBackend):

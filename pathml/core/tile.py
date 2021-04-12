@@ -25,7 +25,7 @@ class Tile:
             f"masks is of type {type(masks)} but must be of type pathml.core.masks.Masks or dict"
         assert isinstance(coords, tuple), "coords must be a tuple e.g. (i, j)"
         # labels are dicts of strings or None
-        assert labels is None or (isinstance(labels, dict) and all(isinstance(key, str) and isinstance(val, str) for key, val in labels.items()))
+        assert labels is None or isinstance(labels, dict), f"labels is of type {type(labels)} but must be of type str or None"
         assert name is None or isinstance(name, str), f"name is of type {type(name)} but must be of type str or None"
         self.image = image
         if isinstance(masks, pathml.core.masks.Masks):
