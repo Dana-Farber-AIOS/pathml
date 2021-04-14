@@ -129,7 +129,7 @@ class BioFormatsBackend(SlideBackend):
             raise ValueError("BioFormatsBackend does not support levels, please pass a level in [None, 0]")
         return self.shape[:2] 
 
-    def extract_region(self, location, size, **kwargs):
+    def extract_region(self, location, size):
         """
         Extract a region of the image. All bioformats images have 5 dimensions representing
         (x, y, z, channel, time). If a tuple with len < 5 is passed, missing dimensions will be 
