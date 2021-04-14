@@ -78,7 +78,7 @@ class OpenSlideBackend(SlideBackend):
         j, i = self.slide.level_dimensions[level]
         return i, j
 
-    def get_thumbnail(self, size, **kwargs):
+    def get_thumbnail(self, size):
         """
         Get a thumbnail of the slide.
 
@@ -123,7 +123,7 @@ class BioFormatsBackend(SlideBackend):
         Get the shape of the image.
 
         Returns:
-            Tuple[int, int]: Shape of image. 
+            Tuple[int, int]: Shape of image (H, W)
         """
         if level not in [None, 0]:
             raise ValueError("BioFormatsBackend does not support levels, please pass a level in [None, 0]")
@@ -137,7 +137,9 @@ class BioFormatsBackend(SlideBackend):
 
         Args:
             location (Tuple[int, int]): Location of corner of extracted region closest to the origin.
-            size (Tuple[int, int, ...]): Size of each region. Must be a tuple 
+            size (Tuple[int, int, ...]): Size of each region. If an integer is passed, will convert to a tuple of (H, W)
+                and extract a square region. If a tuple with len < 5 is passed, missing
+                dimensions will be retrieved in full.
 
         Returns:
             np.ndarray: image at the specified region
@@ -155,13 +157,11 @@ class BioFormatsBackend(SlideBackend):
             plt.figure()
             plt.imshow(region[:,:,0,:,0])
         """
-        # this doesn't work
+        # if a single int is passed for size, convert to a tuple to get a square region
         if type(size) is int:
-            size = [size] 
-        if type(location) is int:
-            location = [location]
-        else:
-            location = list(location)
+            size = (size, size)
+        if not (isinstance(location, tuple) and len(location) == 2 and all([isinstance(x, int) for x in location])):
+            raise ValueError(f"input location {location} invalid. Must be a tuple of (i, j) integer coordinates")
 
         if self.shape[0]*self.shape[1]*self.shape[2]*self.shape[3]*self.shape[4] > 2147483647:
             raise Exception(f"Java arrays allocate maximum 32 bits (~2GB). Image size is {self.imsize}")
@@ -181,7 +181,7 @@ class BioFormatsBackend(SlideBackend):
         array = array.astype(np.uint8)
         return array
 
-    def get_thumbnail(self, size=None, **kwargs):
+    def get_thumbnail(self, size=None):
         """
         Get a thumbnail of the image. Since there is no default thumbnail for multiparametric, volumetric
         images, this function supports downsampling of all image dimensions. 
