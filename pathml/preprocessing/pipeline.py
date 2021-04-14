@@ -1,6 +1,6 @@
 import pickle
 
-from pathml.core.tile import Tile
+import pathml.core.tile
 from pathml.preprocessing.transforms import Transform
 
 
@@ -31,7 +31,7 @@ class Pipeline(Transform):
         # this function has side effects
         # modifies the tile in place, but also returns the modified tile
         # need to do this for dask distributed
-        assert isinstance(tile, Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        assert isinstance(tile, pathml.core.tile.Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
         for t in self.transforms:
             t.apply(tile)
         return tile

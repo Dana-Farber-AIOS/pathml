@@ -10,7 +10,6 @@ import pathml.core.slide_backends
 import pathml.core.h5path 
 import pathml.preprocessing.pipeline
 
-
 class SlideData:
     """
     Main class representing a slide and its annotations. 
