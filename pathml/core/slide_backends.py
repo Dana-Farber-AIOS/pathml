@@ -11,7 +11,7 @@ from pathml.utils import pil_to_rgb
 
 class SlideBackend:
     """base class for backends that interface with slides on disk"""
-    def extract_region(self, location, size, **kwargs):
+    def extract_region(self, location, size, level, **kwargs):
         raise NotImplementedError
 
     def get_thumbnail(self, size, **kwargs):
@@ -118,7 +118,7 @@ class BioFormatsBackend(SlideBackend):
         sizex, sizey, sizez, sizec, sizet = reader.getSizeX(), reader.getSizeY(), reader.getSizeZ(), reader.getSizeC(), reader.getSizeT()
         self.shape = (sizex, sizey, sizez, sizec, sizet)
 
-    def get_image_shape(self, level = None):
+    def get_image_shape(self, level=None):
         """
         Get the shape of the image.
 
@@ -129,7 +129,7 @@ class BioFormatsBackend(SlideBackend):
             raise ValueError("BioFormatsBackend does not support levels, please pass a level in [None, 0]")
         return self.shape[:2] 
 
-    def extract_region(self, location, size):
+    def extract_region(self, location, size, level=None):
         """
         Extract a region of the image. All bioformats images have 5 dimensions representing
         (x, y, z, channel, time). If a tuple with len < 5 is passed, missing dimensions will be 
@@ -140,6 +140,8 @@ class BioFormatsBackend(SlideBackend):
             size (Tuple[int, int, ...]): Size of each region. If an integer is passed, will convert to a tuple of (H, W)
                 and extract a square region. If a tuple with len < 5 is passed, missing
                 dimensions will be retrieved in full.
+            level (int): level from which to extract chunks. Level 0 is highest resolution. Must be 0 or None, since
+                BioFormatsBackend does not support multiple levels.
 
         Returns:
             np.ndarray: image at the specified region
@@ -157,14 +159,17 @@ class BioFormatsBackend(SlideBackend):
             plt.figure()
             plt.imshow(region[:,:,0,:,0])
         """
+        if level not in [None, 0]:
+            raise ValueError("BioFormatsBackend does not support levels, please pass a level in [None, 0]")
+
         # if a single int is passed for size, convert to a tuple to get a square region
         if type(size) is int:
             size = (size, size)
         if not (isinstance(location, tuple) and len(location) == 2 and all([isinstance(x, int) for x in location])):
             raise ValueError(f"input location {location} invalid. Must be a tuple of (i, j) integer coordinates")
 
-        if self.shape[0]*self.shape[1]*self.shape[2]*self.shape[3]*self.shape[4] > 2147483647:
-            raise Exception(f"Java arrays allocate maximum 32 bits (~2GB). Image size is {self.imsize}")
+        if np.prod(self.shape) > 2147483647:
+            raise Exception(f"Java arrays allocate maximum 32 bits (~2GB). Image size is {np.prod(self.shape)}")
 
         javabridge.start_vm(class_path = bioformats.JARS)
         reader = bioformats.ImageReader(str(self.filename), perform_init=True)
