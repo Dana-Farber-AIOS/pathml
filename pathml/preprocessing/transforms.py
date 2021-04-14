@@ -109,28 +109,31 @@ class BinaryThreshold(Transform):
         mask_name (str): Name of mask that is created.
         use_otsu (bool): Whether to use Otsu's method to automatically determine optimal threshold. Defaults to True.
         threshold (int): Specified threshold. Ignored if ``use_otsu is True``. Defaults to 0.
+        inverse (bool): Whether to use inverse threshold. If using inverse threshold, pixels below the threshold will
+            be returned as 1. Otherwise pixels below the threshold will be returned as 0. Defaults to ``False``.
 
     References:
         Otsu, N., 1979. A threshold selection method from gray-level histograms. IEEE transactions on systems,
         man, and cybernetics, 9(1), pp.62-66.
     """
-    def __init__(self, mask_name=None, use_otsu=True, threshold=0):
+    def __init__(self, mask_name=None, use_otsu=True, threshold=0, inverse=False):
         self.threshold = threshold
         self.max_value = 255
         self.use_otsu = use_otsu
-        if use_otsu:
-            self.type = cv2.THRESH_BINARY + cv2.THRESH_OTSU
-        else:
-            self.type = cv2.THRESH_BINARY
+        self.inverse = inverse
         self.mask_name = mask_name
+        self.type = cv2.THRESH_BINARY_INV if inverse else cv2.THRESH_BINARY
+        if use_otsu:
+            self.type += cv2.THRESH_OTSU
 
     def __repr__(self):
-        return f"BinaryThreshold(use_otsu={self.use_otsu}, threshold={self.threshold}, mask_name={self.mask_name})"
+        return f"BinaryThreshold(use_otsu={self.use_otsu}, threshold={self.threshold}, " \
+               f"mask_name={self.mask_name}, inverse={self.inverse})"
 
     def F(self, image):
         assert image.dtype == np.uint8, f"image dtype {image.dtype} must be np.uint8"
         assert image.ndim == 2, f"input image has shape {image.shape}. Must convert to 1-channel image (H, W)."
-        _, out = cv2.threshold(src = image, thresh = self.threshold, maxval = self.max_value, type = self.type)
+        _, out = cv2.threshold(src = image, thresh = self.threshold, maxval = self.max_value, type = self.type, )
         return out.astype(np.uint8)
 
     def apply(self, tile):
