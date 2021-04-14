@@ -348,7 +348,7 @@ def read_dicom(
     Args:
         path (str): Path to image file of supported dicom format on disk
     """
-    pass
+    raise NotImplementedError
 
 def is_valid_path(
     path: Path,
