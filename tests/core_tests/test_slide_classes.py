@@ -1,7 +1,6 @@
 import pytest
 
-from pathml.core.slide_classes import HESlide, RGBSlide, MultiparametricSlide 
-from pathml.core.slide_data import SlideData
+from pathml.core.slide_data import SlideData, RGBSlide, HESlide, MultiparametricSlide
 from pathml.core.slide_backends import OpenSlideBackend, BioFormatsBackend
 from pathml.core.tile import Tile
 

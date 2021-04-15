@@ -4,7 +4,7 @@ import numpy as np
 import os
 
 from pathml.core.masks import Masks
-from pathml.core.slide_classes import HESlide
+from pathml.core.slide_data import HESlide
 from pathml.core.h5path import read
 from pathml.preprocessing.pipeline import Pipeline
 from pathml.preprocessing.transforms import BoxBlur, TissueDetectionHE

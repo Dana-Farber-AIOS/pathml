@@ -6,17 +6,17 @@ The ``pathml.preprocessing`` module provides tools to define modular preprocessi
 
 In this section we will walk through how to define a
 :class:`~pathml.preprocessing.pipeline.Pipeline` object by composing pre-made
-:class:`~pathml.preprocessing.transforms.Transform` s, and how to implement a
+:class:`~pathml.preprocessing.transforms.Transform` objects, and how to implement a
 new custom :class:`~pathml.preprocessing.transforms.Transform`.
 
 
 What is a Transform?
-------------------------
+--------------------
 
 The :class:`~pathml.preprocessing.transforms.Transform` is the building block for creating preprocessing pipelines.
 Each :class:`~pathml.preprocessing.transforms.Transform` contains an operation which,
 when applied to a :class:`~pathml.core.tile.Tile` object, modifies it in some way.
-For example, :class:`~pathml.preprocessing.transforms.Transform`s may modify the image (e.g. apply a blur),
+For example, a :class:`~pathml.preprocessing.transforms.Transform` may modify the image (e.g. apply a blur),
 create/modify a mask (e.g. tissue detection), or create/modify a label (e.g. binary classification whether the
 tile contains any pen marks).
 

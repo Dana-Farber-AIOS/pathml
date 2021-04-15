@@ -10,6 +10,7 @@ import pathml.core.slide_backends
 import pathml.core.h5path 
 import pathml.preprocessing.pipeline
 
+
 class SlideData:
     """
     Main class representing a slide and its annotations. 
@@ -19,7 +20,7 @@ class SlideData:
         name (str, optional): name of slide. If ``None``, and a ``filepath`` is provided, name defaults to filepath.
         slide_backend (pathml.core.slide_backends.SlideBackend, optional): slide_backend object for interfacing with
             slide on disk. If ``None``, and a ``filepath`` is provided, defaults to
-             :class:`~pathml.core.slide_backends.OpenSlideBackend`
+            :class:`~pathml.core.slide_backends.OpenSlideBackend`
         masks (pathml.core.masks.Masks, optional): object containing {key, mask} pairs
         tiles (pathml.core.tiles.Tiles, optional): object containing {coordinates, tile} pairs
         labels (collections.OrderedDict, optional): dictionary containing {key, label} pairs
@@ -194,3 +195,32 @@ class SlideData:
             path (Union[str, bytes, os.PathLike]): path to file to be written
         """
         pathml.core.h5path.write_h5path(self, path)
+
+
+class RGBSlide(SlideData):
+    """
+    Class for any RGB slide. Uses OpenSlide backend.
+    Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
+    """
+    def __init__(self, *args, **kwargs):
+        kwargs["slide_backend"] = pathml.core.slide_backends.OpenSlideBackend
+        super().__init__(*args, **kwargs)
+
+
+class HESlide(RGBSlide):
+    """
+    Class for any H&E slide. Uses OpenSlide backend.
+    Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class MultiparametricSlide(SlideData):
+    """
+    Class for any multiparametric slide. Uses BioFormats backend.
+    Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
+    """
+    def __init__(self, *args, **kwargs):
+        kwargs["slide_backend"] = pathml.core.slide_backends.BioFormatsBackend
+        super().__init__(*args, **kwargs)

@@ -19,19 +19,23 @@ Using public datasets
 
 PathML has built-in support for several public datasets:
 
-.. table::
-    :widths: 10 60 10 10 10
+.. list-table:: Datasets
+   :widths: 20 50 10 20
+   :header-rows: 1
 
-    +-------------------------------------------------------+--------------------------------------+-------------+-----------+----------------+
-    | Dataset                                               | Description                          | Image type  | Size      | Reference      |
-    +=======================================================+======================================+=============+===========+================+
-    | :class:`~pathml.datasets.pannuke.PanNukeDataModule`   | Pixel-level nucleus classification,  | H&E         | | n=7901  | | [PanNuke1]_  |
-    |                                                       | with 6 nucleus types and 19 tissue   |             | | 37.33 GB| | [PanNuke2]_  |
-    |                                                       | types. Images are 256px RGB.         |             |           |                |
-    +-------------------------------------------------------+--------------------------------------+-------------+-----------+----------------+
-    | :class:`~pathml.datasets.deepblur.DeepFocusDataModule`| Patch-level focus classification     | H&E         | | n=204k  | | [DeepFocus]_ |
-    |                                                       | with 3 IHC and 1 H&E histologies.    | IHC         | | 10.0 GB |                |
-    +-------------------------------------------------------+--------------------------------------+-------------+-----------+----------------+
+   * - Dataset
+     - Description
+     - Image type
+     - Size
+   * - :class:`~pathml.datasets.pannuke.PanNukeDataModule`
+     - Pixel-level nucleus classification, with 6 nucleus types and 19 tissue types.
+       Images are 256px RGB. [PanNuke1]_ [PanNuke2]_
+     - H&E
+     - n=7901 (37.33 GB)
+   * - :class:`~pathml.datasets.deepblur.DeepFocusDataModule`
+     - Patch-level focus classification with 3 IHC and 1 H&E histologies. [DeepFocus]_
+     - H&E, IHC
+     - n=204k (10.0 GB)
 
 
 Using local datasets

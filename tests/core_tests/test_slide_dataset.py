@@ -3,8 +3,7 @@ from dask.distributed import Client
 import numpy as np
 from pathlib import Path
 
-from pathml.core.slide_classes import HESlide
-from pathml.core.slide_data import SlideData
+from pathml.core.slide_data import SlideData, HESlide
 from pathml.core.slide_dataset import SlideDataset
 from pathml.core.tile import Tile
 from pathml.preprocessing.pipeline import Pipeline

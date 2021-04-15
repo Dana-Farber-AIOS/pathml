@@ -7,8 +7,7 @@ import itertools
 
 import pathml.core.masks
 import pathml.core.tile
-from pathml.core.utils import writedataframeh5, writestringh5, writetupleh5, readtupleh5, readtilesdicth5
-from pathml.core.slide_backends import OpenSlideBackend, BioFormatsBackend, DICOMBackend
+from pathml.core.utils import writetupleh5, readtupleh5, readtilesdicth5
 import pathml.core.slide_classes
 
 

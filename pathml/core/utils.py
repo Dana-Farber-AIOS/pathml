@@ -9,6 +9,9 @@ import pathml.core.slide_backends
 
 
 # TODO: Fletcher32 checksum?
+import pathml.core.slide_data
+
+
 def writedataframeh5(h5, name, df):
     """
     Write dataframe as h5 dataset.
@@ -107,7 +110,7 @@ def readtilesdicth5(h5):
             elif slidetype == "<class 'pathml.core.slide_backends.DICOMBackend'>":
                 slidetype = pathml.core.slide_backends.DICOMBackend
             elif slidetype == "<class 'pathml.core.slide_classes.HESlide'>":
-                slidetype = pathml.core.slide_classes.HESlide
+                slidetype = pathml.core.slide_data.HESlide
         if labels:
             labels = ast.literal_eval(labels.decode('UTF-8')) 
             print(f"labels are {labels}")
