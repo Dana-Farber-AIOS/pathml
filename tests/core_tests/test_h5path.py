@@ -9,6 +9,7 @@ from pathml.core.h5path import read
 from pathml.preprocessing.pipeline import Pipeline
 from pathml.preprocessing.transforms import BoxBlur, TissueDetectionHE
 
+
 @pytest.fixture
 def he_slidedata():
     masks = Masks({'example' : np.ones((2967, 2220))})
@@ -24,6 +25,7 @@ def he_slidedata():
         wsi.tiles.h5manager.tilesdict[tile]['labels'] = {'key1' : 'val1', 'key2' : 'val2'}
         wsi.tiles.h5manager.tilesdict[tile]['name'] = str(tile)
     return wsi
+
 
 def test_read_write_heslide(tmp_path, he_slidedata):
     slidedata = he_slidedata
@@ -42,7 +44,13 @@ def test_read_write_heslide(tmp_path, he_slidedata):
         assert readslidedata.tiles is None
     if slidedata.tiles is not None:
         assert scan_hdf5(readslidedata.tiles.h5manager.h5) == scan_hdf5(slidedata.tiles.h5manager.h5)
-        assert readslidedata.tiles.h5manager.tilesdict == slidedata.tiles.h5manager.tilesdict
+        assert len(readslidedata.tiles) == len(slidedata.tiles)
+        # make sure that all the loaded tiles match the original tiles
+        assert all([orig == loaded for orig, loaded in zip(
+            slidedata.tiles.h5manager.tilesdict,
+            readslidedata.tiles.h5manager.tilesdict
+        )])
+
 
 def scan_hdf5(f, recursive=True, tab_step=2):
     def scan_node(g, tabs=0):

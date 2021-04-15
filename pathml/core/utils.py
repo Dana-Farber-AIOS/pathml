@@ -4,7 +4,6 @@ import numpy as np
 import h5py
 import ast
 
-import pathml.core.slide_classes
 import pathml.core.slide_backends
 
 

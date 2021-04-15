@@ -1,18 +1,14 @@
-from pathlib import Path, PurePath
+from pathlib import Path
 import h5py
 import os
 import ast
 
+import pathml.core as core
 import pathml.core.tiles
 import pathml.core.masks
-import pathml.core.slide_data 
-import pathml.core.slide_classes
+import pathml.core.slide_data
+import pathml.core.slide_backends
 
-"""import pathml.core.utils
-import pathml.core.slide_backends"""
-
-import pathml.core as core
-from pathml.core.slide_backends import OpenSlideBackend, BioFormatsBackend, DICOMBackend
 
 pathmlext = {
     'h5',
