@@ -61,7 +61,7 @@ conda env update -f environment.yml     # install dependencies
 pip install -e .                        # install pathml
 ````
 
->> to verify PyTorch installation with GPU support: `python -c "import torch; print(torch.cuda.is_available())"`
+Optionally verify PyTorch installation with GPU support: `python -c "import torch; print(torch.cuda.is_available())"`
 
 ## Generate Documentation
 
@@ -103,11 +103,6 @@ coverage html           # optionally generate HTML coverage report
 # Getting Started
 
 The [example notebooks](examples) are a good place start with `PathML`.
-
-1. [Building a basic preprocessing pipeline for H&E images](examples/basic_HE.ipynb)
-1. [Building a more efficient custom preprocessing pipeline](examples/advanced_HE_chunks.ipynb)
-1. [Stain normalization for H&E images](examples/stain_normalization.ipynb)
-1. [Nucleus detection for H&E images](examples/nucleus_detection.ipynb)
 
 # Contributing
 
