@@ -1,12 +1,18 @@
 from pathlib import Path, PurePath
 import h5py
 import os
+import ast
 
+import pathml.core.tiles
+import pathml.core.masks
 import pathml.core.slide_data 
-from pathml.core.tiles import Tiles
-from pathml.core.masks import Masks
+import pathml.core.slide_classes
+
+"""import pathml.core.utils
+import pathml.core.slide_backends"""
+
+import pathml.core as core
 from pathml.core.slide_backends import OpenSlideBackend, BioFormatsBackend, DICOMBackend
-from pathml.core.utils import writestringh5, writedicth5, writetilesdicth5
 
 pathmlext = {
     'h5',
@@ -27,6 +33,7 @@ openslideext = {
 
 bioformatsext = {
     'tiff',
+    'tif',
     'sld',
     'aim',
     'al3d',
@@ -214,16 +221,19 @@ def write_h5path(
         path (str): Path to save directory
     """
     path = Path(path)
+    # make sure that the path doesn't already exist:
+    if path.is_file():
+        raise ValueError(f"cannot write to input path because it already exists: {path}")
     pathdir = Path(os.path.dirname(path)) 
     pathdir.mkdir(parents=True, exist_ok=True) 
     with h5py.File(path, 'w') as f:
         fieldsgroup = f.create_group('fields')
         if slidedata.slide:
-            writestringh5(fieldsgroup, 'slide_backend', slidedata.slide_backend)
+            core.utils.writestringh5(fieldsgroup, 'slide_backend', slidedata.slide_backend)
         if slidedata.name:
-            writestringh5(fieldsgroup, 'name', str(slidedata.name))
+            core.utils.writestringh5(fieldsgroup, 'name', str(slidedata.name))
         if slidedata.labels:
-            writedicth5(fieldsgroup, 'labels', slidedata.labels)
+            core.utils.writedicth5(fieldsgroup, 'labels', slidedata.labels)
         if slidedata.history:
             pass
         if slidedata.masks:
@@ -233,8 +243,8 @@ def write_h5path(
         if slidedata.tiles:
             for ds in slidedata.tiles.h5manager.h5.keys():
                 slidedata.tiles.h5manager.h5.copy(ds, f)
-        # add tilesdict to h5
-        writetilesdicth5(f['tiles'], 'tilesdict', slidedata.tiles.h5manager.tilesdict)
+            # add tilesdict to h5
+            core.utils.writetilesdicth5(f['tiles'], 'tilesdict', slidedata.tiles.h5manager.tilesdict)
 
 
 def read(
@@ -274,7 +284,7 @@ def read(
         elif backend == 'openslide':
             return read_openslide(path)
         elif backend == 'bioformats':
-            return read_openslide(path)
+            return read_bioformats(path)
         elif backend == 'dicom':
             return read_dicom(path)
         raise Exception("Must specify valid backend.")
@@ -289,19 +299,21 @@ def read_h5path(
         path (str): Path to h5path formatted file on disk 
     """
     with h5py.File(path, "r") as f:
-        tiles = Tiles(h5 = f['tiles']) if 'tiles' in f.keys() else None 
-        masks = Masks(h5 = f['masks']) if 'masks' in f.keys() else None
+        tiles = pathml.core.tiles.Tiles(h5 = f['tiles']) if 'tiles' in f.keys() else None
+        masks = pathml.core.masks.Masks(h5 = f['masks']) if 'masks' in f.keys() else None
         backend = f['fields'].attrs['slide_backend'] if 'slide_backend' in f['fields'].attrs.keys() else None
         if backend == "<class 'pathml.core.slide_backend.BioFormatsBackend'>":
-            slide_backend = BioformatsBackend
+            slide_backend = core.slide_backends.BioformatsBackend
         elif backend == "<class 'pathml.core.slide_backends.DICOMBackend'>":
-            slide_backend = DICOMBackend
+            slide_backend = pathml.core.slide_backends.DICOMBackend
         else:
-            slide_backend = OpenSlideBackend
+            slide_backend = core.slide_backends.OpenSlideBackend
         name = f['fields'].attrs['name'] if 'name' in f['fields'].attrs.keys() else None
-        labels = dict(f['fields'].attrs['labels']) if 'labels' in f['fields'].attrs.keys() else None 
-        labels = {k : v for k,v in labels.items()}
+        labels = f['fields']['labels'] if 'labels' in f['fields'].keys() else None 
+        if labels:
+            labels = ast.literal_eval(labels[...].tolist().decode('UTF-8'))
         history = None
+
     return pathml.core.slide_data.SlideData(name = name, slide_backend = slide_backend, masks = masks, tiles = tiles, labels = labels, history = history) 
 
 def read_openslide(
@@ -313,7 +325,7 @@ def read_openslide(
     Args:
         path (str): Path to slide file of supported Openslide format on disk
     """
-    return HESlide(filepath = path) 
+    return pathml.core.slide_classes.HESlide(filepath = path) 
 
 
 def read_bioformats(
@@ -325,7 +337,7 @@ def read_bioformats(
     Args:
         path (str): Path to image file of supported BioFormats format on disk
     """
-    return pathml.core.slide_data.SlideData(filepath = path, slide_backend = 'bioformats') 
+    return pathml.core.slide_classes.MultiparametricSlide(filepath = path, slide_backend = BioFormatsBackend) 
 
 def read_dicom(
     path
@@ -335,15 +347,6 @@ def read_dicom(
     
     Args:
         path (str): Path to image file of supported dicom format on disk
-    """
-    return pathml.core.slide_data.SlideData(filepath = path, slide_backend = 'dicom')
-
-def read_directory(
-    tilepath,
-    maskpath
-    ):
-    """
-    Read a directory of tiles or masks into a SlideData object. 
     """
     raise NotImplementedError
 

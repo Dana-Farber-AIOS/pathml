@@ -38,7 +38,7 @@ Using local datasets
 --------------------
 
 Using "in-house" data from the local filesystem is also supported.
-Classes :class:`~pathml.datasets.base.BaseSlideDataset` and :class:`~pathml.datasets.base.BaseTileDataset` are thin
+Classes [update here]
 wrappers around ``torch.utils.data.Dataset``, used for creating datasets at the slide or tile level.
 Using a local dataset is as simple as creating a new class and implementing two special class methods: ``__len__(self)`` and ``__getitem__(self, index)``.
 
