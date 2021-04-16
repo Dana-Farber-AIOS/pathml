@@ -187,15 +187,13 @@ class BioFormatsBackend(SlideBackend):
         sizex, sizey, sizez, sizec, sizet = reader.getSizeX(), reader.getSizeY(), reader.getSizeZ(), reader.getSizeC(), reader.getSizeT()
         self.shape = (sizex, sizey, sizez, sizec, sizet)
 
-    def get_image_shape(self, level=None):
+    def get_image_shape(self):
         """
         Get the shape of the image.
 
         Returns:
             Tuple[int, int]: Shape of image (H, W)
         """
-        if level not in [None, 0]:
-            raise ValueError("BioFormatsBackend does not support levels, please pass a level in [None, 0]")
         return self.shape[:2] 
 
     def extract_region(self, location, size, level=None):
@@ -291,6 +289,63 @@ class BioFormatsBackend(SlideBackend):
             assert ratio[3] == 1, f"cannot interpolate between fluor channels, resampling doesn't apply, fix size[3]"
             image_array = zoom(array, ratio) 
         return image_array
+
+    def generate_tiles(self, shape=3000, stride=None, pad=False):
+        """
+        Generator over tiles.
+
+        Padding works as follows:
+        If ``pad is False``, then the first tile will start flush with the edge of the image, and the tile locations
+        will increment according to specified stride, stopping with the last tile that is fully contained in the image.
+        If ``pad is True``, then the first tile will start flush with the edge of the image, and the tile locations
+        will increment according to specified stride, stopping with the last tile which starts in the image. Regions
+        outside the image will be padded with 0.
+        For example, for a 5x5 image with a tile size of 3 and a stride of 2, tile generation with ``pad=False`` will
+        create 4 tiles total, compared to 6 tiles if ``pad=True``.
+
+        Args:
+            shape (int or tuple(int)): Size of each tile. May be a tuple of (height, width) or a single integer,
+                in which case square tiles of that size are generated.
+            stride (int): stride between chunks. If ``None``, uses ``stride = size`` for non-overlapping chunks.
+                Defaults to ``None``.
+            pad (bool): How to handle tiles on the edges. If ``True``, these edge tiles will be zero-padded
+                and yielded with the other chunks. If ``False``, incomplete edge chunks will be ignored.
+                Defaults to ``False``.
+
+        Yields:
+            pathml.core.tile.Tile: Extracted Tile object
+        """
+        assert isinstance(shape, int) or (isinstance(shape, tuple) and len(shape) == 2), \
+            f"input shape {shape} invalid. Must be a tuple of (H, W), or a single integer for square tiles"
+        if isinstance(shape, int):
+            shape = (shape, shape)
+        assert stride is None or isinstance(stride, int) or (isinstance(stride, tuple) and len(stride) == 2), \
+            f"input stride {stride} invalid. Must be a tuple of (stride_H, stride_W), or a single int"
+
+        if stride is None:
+            stride = shape
+        elif isinstance(stride, int):
+            stride = (stride, stride)
+
+        i, j = self.get_image_shape()
+
+        stride_i, stride_j = stride
+
+        if pad:
+            n_chunk_i = i // stride_i + 1
+            n_chunk_j = j // stride_j + 1
+
+        else:
+            n_chunk_i = (i - shape[0]) // stride_i + 1
+            n_chunk_j = (j - shape[1]) // stride_j + 1
+
+        for ix_i in range(n_chunk_i):
+            for ix_j in range(n_chunk_j):
+                coords = (int(ix_j * stride_j), int(ix_i * stride_i))
+                # get image for tile
+                tile_im = self.extract_region(location = coords, size = shape)
+                yield pathml.core.tile.Tile(image = tile_im, coords = coords)
+
 
 class DICOMBackend(SlideBackend):
     """
