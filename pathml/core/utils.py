@@ -5,6 +5,7 @@ import h5py
 import ast
 
 import pathml.core.slide_classes
+import pathml.core.slide_backends
 
 
 # TODO: Fletcher32 checksum?

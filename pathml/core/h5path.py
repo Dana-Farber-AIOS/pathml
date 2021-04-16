@@ -3,15 +3,15 @@ import h5py
 import os
 import ast
 
-import pathml.core.slide_data 
 import pathml.core.tiles
 import pathml.core.masks
+import pathml.core.slide_data 
+import pathml.core.slide_classes
 
 """import pathml.core.utils
 import pathml.core.slide_backends"""
 
 import pathml.core as core
-
 from pathml.core.slide_backends import OpenSlideBackend, BioFormatsBackend, DICOMBackend
 
 pathmlext = {
@@ -33,6 +33,7 @@ openslideext = {
 
 bioformatsext = {
     'tiff',
+    'tif',
     'sld',
     'aim',
     'al3d',
@@ -282,7 +283,7 @@ def read(
         elif backend == 'openslide':
             return read_openslide(path)
         elif backend == 'bioformats':
-            return read_openslide(path)
+            return read_bioformats(path)
         elif backend == 'dicom':
             return read_dicom(path)
         raise Exception("Must specify valid backend.")
@@ -303,7 +304,7 @@ def read_h5path(
         if backend == "<class 'pathml.core.slide_backend.BioFormatsBackend'>":
             slide_backend = core.slide_backends.BioformatsBackend
         elif backend == "<class 'pathml.core.slide_backends.DICOMBackend'>":
-            slide_backend = DICOMBackend
+            slide_backend = pathml.core.slide_backends.DICOMBackend
         else:
             slide_backend = core.slide_backends.OpenSlideBackend
         name = f['fields'].attrs['name'] if 'name' in f['fields'].attrs.keys() else None
@@ -311,6 +312,7 @@ def read_h5path(
         if labels:
             labels = ast.literal_eval(labels[...].tolist().decode('UTF-8'))
         history = None
+
     return pathml.core.slide_data.SlideData(name = name, slide_backend = slide_backend, masks = masks, tiles = tiles, labels = labels, history = history) 
 
 def read_openslide(
@@ -322,7 +324,7 @@ def read_openslide(
     Args:
         path (str): Path to slide file of supported Openslide format on disk
     """
-    return HESlide(filepath = path) 
+    return pathml.core.slide_classes.HESlide(filepath = path) 
 
 
 def read_bioformats(
@@ -334,7 +336,7 @@ def read_bioformats(
     Args:
         path (str): Path to image file of supported BioFormats format on disk
     """
-    return pathml.core.slide_data.SlideData(filepath = path, slide_backend = 'bioformats') 
+    return pathml.core.slide_classes.MultiparametricSlide(filepath = path, slide_backend = BioFormatsBackend) 
 
 def read_dicom(
     path
@@ -344,15 +346,6 @@ def read_dicom(
     
     Args:
         path (str): Path to image file of supported dicom format on disk
-    """
-    return pathml.core.slide_data.SlideData(filepath = path, slide_backend = 'dicom')
-
-def read_directory(
-    tilepath,
-    maskpath
-    ):
-    """
-    Read a directory of tiles or masks into a SlideData object. 
     """
     raise NotImplementedError
 
