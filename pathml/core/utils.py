@@ -61,27 +61,25 @@ def writetilesdicth5(h5, name, dic):
     """
     if name not in h5.keys():
         h5.create_group(str(name), track_order = True)
-
-    for key in dic.keys():
-        h5[str(name)].create_group(str(key))
-        for key2 in dic[key]:
-            if key2 == 'slidetype':
-                stringasarray = np.array(str(dic[key][key2]), dtype = object)
-                h5[str(name)][str(key)].create_dataset(
-                    str(key2),
+    assert isinstance(name, (str, tuple)), f"name of h5py.Dataset where tilesdict is written"
+    name = str(name)
+    for tile in dic.keys():
+        tile = str(tile)
+        h5[name].create_group(tile)
+        for field in dic[tile]:
+            if isinstance(dic[tile][field], (str, type(None))):
+                stringasarray = np.array(str(dic[tile][field]), dtype = object)
+                h5[name][tile].create_dataset(
+                    field,
                     data = stringasarray
                 )
-            elif isinstance(dic[key][key2], str):
-                stringasarray = np.array(str(dic[key][key2]), dtype = object)
-                h5[str(name)][str(key)].create_dataset(
-                    str(key2),
-                    data = stringasarray
-                )
-            elif isinstance(dic[key][key2], (dict, OrderedDict)):
-                h5[str(name)][str(key)].create_dataset(
-                    str(key2),
-                    data = str(dic[key][key2])
+            elif isinstance(dic[tile][field], (dict, OrderedDict)):
+                h5[name][tile].create_dataset(
+                    str(field),
+                    data = str(dic[tile][field]) 
                 )               
+            else:
+                raise Exception(f"could not write tilesdict element {dic[name][tile]}")
 
 
 def readtilesdicth5(h5):
@@ -93,11 +91,10 @@ def readtilesdicth5(h5):
     """
     tilesdict = OrderedDict()
     for tile in h5.keys():
-        name = h5[tile]['name'][...].item().decode('UTF-8') if 'name' in h5[tile].keys() else None
-        # labels = dict(h5[tile]['labels']) if 'labels' in h5[tile].keys() else None 
-        labels = h5[tile].get('labels')[...].tolist() if 'labels' in h5[tile].keys() else None 
+        name = ast.literal_eval(h5[tile]['name'][...].item().decode('UTF-8')) if 'name' in h5[tile].keys() else None
+        labels = h5[tile].get('labels')[...].tolist() if 'labels' in h5[tile].keys() else None
         coords = h5[tile]['coords'][...].item().decode('UTF-8') if 'coords' in h5[tile].keys() else None
-        slidetype = h5[tile]['slidetype'][...].item().decode('UTF-8') if 'slidetype' in h5[tile].keys() else None
+        slidetype = ast.literal_eval(h5[tile]['slidetype'][...].item().decode('UTF-8')) if 'slidetype' in h5[tile].keys() else None
         if slidetype:
             # TODO: better system for specifying slide classes.
             #  Since it's saved as string here, should have a clean string identifier for each class
@@ -111,9 +108,7 @@ def readtilesdicth5(h5):
             elif slidetype == "<class 'pathml.core.slide_classes.HESlide'>":
                 slidetype = pathml.core.slide_classes.HESlide
         if labels:
-            print(f"labels are {labels}")
             labels = ast.literal_eval(labels.decode('UTF-8'))
-            print(f"after decoding, labels are {labels}")
         subdict = {
                 'name': name,
                 'labels': labels,

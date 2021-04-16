@@ -220,9 +220,8 @@ def write_h5path(
         path (str): Path to save directory
     """
     path = Path(path)
-    # make sure that the path doesn't already exist:
     if path.is_file():
-        raise ValueError(f"cannot write to input path because it already exists: {path}")
+        raise ValueError(f"cannot write to input path because it already exists")
     pathdir = Path(os.path.dirname(path)) 
     pathdir.mkdir(parents=True, exist_ok=True) 
     with h5py.File(path, 'w') as f:
