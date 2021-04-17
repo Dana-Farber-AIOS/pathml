@@ -27,7 +27,7 @@ class Tile:
         # labels are dicts of strings or None
         assert labels is None or isinstance(labels, dict), f"labels is of type {type(labels)} but must be of type dict or None"
         if isinstance(labels, dict):
-            assert (all(isinstance(key, str) and isinstance(val, str)) for key, val in labels.items()), f"labels must have keys of type str and values of type str, np.ndarrays as labels are supported in pathml.core.masks" 
+            assert (all(isinstance(key, str) and isinstance(val, (str, int, float, np.ndarray))) for key, val in labels.items()), f"labels must have keys of type str and values of type str or np.ndarray" 
         assert name is None or isinstance(name, str), f"name is of type {type(name)} but must be of type str or None"
         self.image = image
         if isinstance(masks, pathml.core.masks.Masks):

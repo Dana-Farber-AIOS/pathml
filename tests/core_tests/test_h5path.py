@@ -1,5 +1,6 @@
 import pytest
 import h5py
+import numpy as np
 
 from pathml.core.slide_classes import HESlide
 from pathml.core.h5path import read
@@ -12,7 +13,7 @@ def test_read_write_heslide(tmp_path, example_slide_data_with_tiles):
     readslidedata = read(path) 
     assert readslidedata.name == slidedata.name
     assert readslidedata.slide_backend == slidedata.slide_backend
-    assert readslidedata.labels == slidedata.labels
+    np.testing.assert_equal(readslidedata.labels, slidedata.labels)
     assert readslidedata.history == slidedata.history
     if slidedata.masks is None:
         assert readslidedata.masks is None
@@ -22,7 +23,7 @@ def test_read_write_heslide(tmp_path, example_slide_data_with_tiles):
         assert readslidedata.tiles is None
     if slidedata.tiles is not None:
         assert scan_hdf5(readslidedata.tiles.h5manager.h5) == scan_hdf5(slidedata.tiles.h5manager.h5)
-        assert readslidedata.tiles.h5manager.tilesdict == slidedata.tiles.h5manager.tilesdict
+        np.testing.assert_equal(readslidedata.tiles.h5manager.tilesdict, slidedata.tiles.h5manager.tilesdict)
 
 
 def scan_hdf5(f, recursive=True, tab_step=2):
