@@ -1,38 +1,19 @@
 import pytest
 import h5py
 import numpy as np
-import os
 
-from pathml.core.masks import Masks
 from pathml.core.slide_classes import HESlide
 from pathml.core.h5path import read
-from pathml.preprocessing.pipeline import Pipeline
-from pathml.preprocessing.transforms import BoxBlur, TissueDetectionHE
 
-@pytest.fixture
-def he_slidedata():
-    masks = Masks({'example' : np.ones((2967, 2220))})
-    wsi = HESlide("tests/testdata/small_HE.svs", name = "test", masks = masks, labels={'testkey':'testval'})
-    pipeline = Pipeline([
-        BoxBlur(kernel_size=15),
-        TissueDetectionHE(mask_name = "tissue", min_region_size = 500,
-                          threshold = 30, outer_contours_only = True)
-    ])
-    wsi.run(pipeline, tile_size = 250)
-    # add labels and name to test read/write from tilesdict
-    for tile in wsi.tiles.h5manager.tilesdict:
-        wsi.tiles.h5manager.tilesdict[tile]['labels'] = {'key1' : 'val1', 'key2' : 'val2'}
-        wsi.tiles.h5manager.tilesdict[tile]['name'] = str(tile)
-    return wsi
 
-def test_read_write_heslide(tmp_path, he_slidedata):
-    slidedata = he_slidedata
+def test_read_write_heslide(tmp_path, example_slide_data_with_tiles):
+    slidedata = example_slide_data_with_tiles
     path = tmp_path / 'testhe.h5'
     slidedata.write(path)
     readslidedata = read(path) 
     assert readslidedata.name == slidedata.name
     assert readslidedata.slide_backend == slidedata.slide_backend
-    assert readslidedata.labels == slidedata.labels
+    np.testing.assert_equal(readslidedata.labels, slidedata.labels)
     assert readslidedata.history == slidedata.history
     if slidedata.masks is None:
         assert readslidedata.masks is None
@@ -42,7 +23,8 @@ def test_read_write_heslide(tmp_path, he_slidedata):
         assert readslidedata.tiles is None
     if slidedata.tiles is not None:
         assert scan_hdf5(readslidedata.tiles.h5manager.h5) == scan_hdf5(slidedata.tiles.h5manager.h5)
-        assert readslidedata.tiles.h5manager.tilesdict == slidedata.tiles.h5manager.tilesdict
+        np.testing.assert_equal(readslidedata.tiles.h5manager.tilesdict, slidedata.tiles.h5manager.tilesdict)
+
 
 def scan_hdf5(f, recursive=True, tab_step=2):
     def scan_node(g, tabs=0):

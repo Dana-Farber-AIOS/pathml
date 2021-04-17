@@ -35,10 +35,12 @@ def writedicth5(h5, name, dic):
     """
     Write dict as h5 dataset. This is not an attribute to accomodate vals that are not strings.
     """
-    h5.create_dataset(
-        str(name),
-        data = str(dic)
-    )               
+    h5.create_group(str(name))
+    for key, val in dic.items():
+        h5[name].attrs.create(
+            str(key),
+            data = val 
+        )               
 
 
 def writetupleh5(h5, name, tup):
@@ -62,27 +64,30 @@ def writetilesdicth5(h5, name, dic):
     """
     if name not in h5.keys():
         h5.create_group(str(name), track_order = True)
-
-    for key in dic.keys():
-        h5[str(name)].create_group(str(key))
-        for key2 in dic[key]:
-            if key2 == 'slidetype':
-                stringasarray = np.array(str(dic[key][key2]), dtype = object)
-                h5[str(name)][str(key)].create_dataset(
-                    str(key2),
-                    data = stringasarray
+    assert isinstance(name, (str, tuple)), f"name of h5py.Dataset where tilesdict is written"
+    name = str(name)
+    for tile in dic.keys():
+        tile = str(tile)
+        h5[name].create_group(tile, track_order = True)
+        for field in dic[tile]:
+            # field is name, coords, slidetype
+            if isinstance(dic[tile][field], (str, type(None))):
+                stringasarray = np.array(str(dic[tile][field]), dtype = object)
+                h5[name][tile].create_dataset(
+                    field,
+                    data = stringasarray,
+                    track_order = True
                 )
-            elif isinstance(dic[key][key2], str):
-                stringasarray = np.array(str(dic[key][key2]), dtype = object)
-                h5[str(name)][str(key)].create_dataset(
-                    str(key2),
-                    data = stringasarray
-                )
-            elif isinstance(dic[key][key2], (dict, OrderedDict)):
-                h5[str(name)][str(key)].create_dataset(
-                    str(key2),
-                    data = str(dic[key][key2])
-                )               
+            # field is labels
+            elif isinstance(dic[tile][field], (dict, OrderedDict)):
+                h5[name][tile].create_group(str(field))
+                for key, val in dic[tile][field].items():
+                    h5[name][tile][field].attrs.create(
+                        str(key),
+                        data = val 
+                    )               
+            else:
+                raise Exception(f"could not write tilesdict element {dic[name][tile]}")
 
 
 def readtilesdicth5(h5):
@@ -94,12 +99,26 @@ def readtilesdicth5(h5):
     """
     tilesdict = OrderedDict()
     for tile in h5.keys():
-        name = h5[tile]['name'][...].item().decode('UTF-8') if 'name' in h5[tile].keys() else None
-        # labels = dict(h5[tile]['labels']) if 'labels' in h5[tile].keys() else None 
-        labels = h5[tile].get('labels')[...].tolist() if 'labels' in h5[tile].keys() else None 
+        name = ast.literal_eval(h5[tile]['name'][...].item().decode('UTF-8')) if 'name' in h5[tile].keys() else None
+        labels = h5[tile]['labels'] if 'labels' in h5[tile].keys() else None
+        # read the attributes
+        if labels:
+            labeldict = {}
+            # iterate over key/val pairs stored in labels.attr
+            for attr in labels.attrs:
+                val = labels.attrs[attr]
+                # check if val is a single element 
+                # if val is bytes then decode to str, otherwise leave it (it is a float or int) 
+                if isinstance(val, bytes):
+                    val = val.decode('UTF-8')
+                labeldict[attr] = val
+            labels = labeldict
         coords = h5[tile]['coords'][...].item().decode('UTF-8') if 'coords' in h5[tile].keys() else None
-        slidetype = h5[tile]['slidetype'][...].item().decode('UTF-8') if 'slidetype' in h5[tile].keys() else None
+        slidetype = ast.literal_eval(h5[tile]['slidetype'][...].item().decode('UTF-8')) if 'slidetype' in h5[tile].keys() else None
         if slidetype:
+            # TODO: better system for specifying slide classes.
+            #  Since it's saved as string here, should have a clean string identifier for each class
+            #  currently its using repr essentially
             if slidetype == "<class 'pathml.core.slide_backends.OpenSlideBackend'>":
                 slidetype = pathml.core.slide_backends.OpenSlideBackend
             elif slidetype == "<class 'pathml.core.slide_backends.BioFormatsBackend'>":
@@ -108,9 +127,6 @@ def readtilesdicth5(h5):
                 slidetype = pathml.core.slide_backends.DICOMBackend
             elif slidetype == "<class 'pathml.core.slide_classes.HESlide'>":
                 slidetype = pathml.core.slide_classes.HESlide
-        if labels:
-            labels = ast.literal_eval(labels.decode('UTF-8')) 
-            print(f"labels are {labels}")
         subdict = {
                 'name': name,
                 'labels': labels,

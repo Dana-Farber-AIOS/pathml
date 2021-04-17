@@ -3,6 +3,7 @@ import numpy as np
 import openslide
 
 from pathml.core.slide_backends import OpenSlideBackend, DICOMBackend, BioFormatsBackend
+from pathml.core.tile import Tile
 
 
 @pytest.fixture
@@ -25,13 +26,24 @@ def test_openslide_extract_tile(wsi_HE, location, size, level):
     assert isinstance(region, np.ndarray)
     assert region.dtype == np.uint8
 
-
+    
 @pytest.mark.parametrize("location", [(0, 0), (1000, 1000)])
 @pytest.mark.parametrize("size", [100, (500, 200)])
 def test_bioformats_extract_tile(multiparametric_image, location, size):
     region = multiparametric_image.extract_region(location = location, size = size)
     assert isinstance(region, np.ndarray)
     assert region.dtype == np.uint8
+
+
+@pytest.mark.parametrize("pad", [True, False])
+def test_openslide_tile_generator(wsi_HE, pad):
+    tiles = list(wsi_HE.generate_tiles(shape = 500, stride = 500, pad = pad, level = 0))
+    # small_HE.svs has dimensions (2220, 2967)
+    if pad:
+        assert len(tiles) == 5 * 6
+    else:
+        assert len(tiles) == 4 * 5
+    assert all([isinstance(tile, Tile) for tile in tiles])
 
 
 def test_openslide_get_image_shape(wsi_HE):

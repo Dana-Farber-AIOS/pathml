@@ -25,7 +25,9 @@ class Tile:
             f"masks is of type {type(masks)} but must be of type pathml.core.masks.Masks or dict"
         assert isinstance(coords, tuple), "coords must be a tuple e.g. (i, j)"
         # labels are dicts of strings or None
-        assert labels is None or (isinstance(labels, dict) and all(isinstance(key, str) and isinstance(val, str) for key, val in labels.items()))
+        assert labels is None or isinstance(labels, dict), f"labels is of type {type(labels)} but must be of type dict or None"
+        if isinstance(labels, dict):
+            assert (all(isinstance(key, str) and isinstance(val, (str, int, float, np.ndarray))) for key, val in labels.items()), f"labels must have keys of type str and values of type str or np.ndarray" 
         assert name is None or isinstance(name, str), f"name is of type {type(name)} but must be of type str or None"
         self.image = image
         if isinstance(masks, pathml.core.masks.Masks):
@@ -48,7 +50,7 @@ class Tile:
 
     def __repr__(self):
         out = f"Tile(image shape {self.image.shape}, slidetype={self.slidetype}, " \
-              f"mask={repr(self.masks) if self.masks is not None else None}, " \
+              f"masks={repr(self.masks) if self.masks is not None else None}, " \
               f"coords={self.coords}, " \
               f"labels={list(self.labels.keys()) if self.labels is not None else None})"
         return out

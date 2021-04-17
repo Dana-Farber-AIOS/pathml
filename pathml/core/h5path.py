@@ -221,9 +221,8 @@ def write_h5path(
         path (str): Path to save directory
     """
     path = Path(path)
-    # make sure that the path doesn't already exist:
     if path.is_file():
-        raise ValueError(f"cannot write to input path because it already exists: {path}")
+        raise ValueError(f"cannot write to input path because it already exists")
     pathdir = Path(os.path.dirname(path)) 
     pathdir.mkdir(parents=True, exist_ok=True) 
     with h5py.File(path, 'w') as f:
@@ -311,7 +310,16 @@ def read_h5path(
         name = f['fields'].attrs['name'] if 'name' in f['fields'].attrs.keys() else None
         labels = f['fields']['labels'] if 'labels' in f['fields'].keys() else None 
         if labels:
-            labels = ast.literal_eval(labels[...].tolist().decode('UTF-8'))
+            labeldict = {}
+            # iterate over key/val pairs stored in labels.attr
+            for attr in labels.attrs.keys():
+                val = labels.attrs[attr]
+                # check if val is a single element 
+                # if val is bytes then decode to str, otherwise leave it (it is a float or int) 
+                if isinstance(val, bytes):
+                    val = val.decode('UTF-8')
+                labeldict[attr] = val
+        labels = labeldict
         history = None
 
     return pathml.core.slide_data.SlideData(name = name, slide_backend = slide_backend, masks = masks, tiles = tiles, labels = labels, history = history) 

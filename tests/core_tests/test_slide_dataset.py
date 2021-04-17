@@ -1,23 +1,10 @@
-import pytest
 from dask.distributed import Client
-import numpy as np
 from pathlib import Path
 
-from pathml.core.slide_classes import HESlide
 from pathml.core.slide_data import SlideData
-from pathml.core.slide_dataset import SlideDataset
 from pathml.core.tile import Tile
 from pathml.preprocessing.pipeline import Pipeline
 from pathml.preprocessing.transforms import BoxBlur
-
-
-@pytest.fixture()
-def slide_dataset():
-    n = 4
-    labs = {"testing": "testlabel", "test2": np.array([2, 3, 4])}
-    slide_list = [HESlide("tests/testdata/small_HE.svs", name = f"slide{i}", labels = labs) for i in range(n)]
-    slide_dataset = SlideDataset(slide_list)
-    return slide_dataset
 
 
 def test_dataset_len_getitem(slide_dataset):
