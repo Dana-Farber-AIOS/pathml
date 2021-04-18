@@ -2,6 +2,7 @@ import h5py
 import dask.distributed
 from torch.utils.data import Dataset
 from pathlib import Path
+import anndata
 
 import pathml.core.masks
 import pathml.core.tile
@@ -17,14 +18,16 @@ class SlideData:
     Args:
         filepath (str, optional): Path to slide file on disk.
         name (str, optional): name of slide. If ``None``, and a ``filepath`` is provided, name defaults to filepath.
+        # TODO: somehow slidedata needs to tell us what slideclass it is
         slide_backend (pathml.core.slide_backends.SlideBackend, optional): slide_backend object for interfacing with
             slide on disk. If ``None``, and a ``filepath`` is provided, defaults to
              :class:`~pathml.core.slide_backends.OpenSlideBackend`
         masks (pathml.core.masks.Masks, optional): object containing {key, mask} pairs
         tiles (pathml.core.tiles.Tiles, optional): object containing {coordinates, tile} pairs
         labels (collections.OrderedDict, optional): dictionary containing {key, label} pairs
+        counts (anndata.AnnData): object containing counts matrix associated with image quantification 
     """
-    def __init__(self, filepath=None, name=None, slide_backend=None, masks=None, tiles=None, labels=None, history=None):
+    def __init__(self, filepath=None, name=None, counts=None, slide_backend=None, masks=None, tiles=None, labels=None, history=None):
         # check inputs
         assert masks is None or isinstance(masks, (pathml.core.masks.Masks, h5py._hl.group.Group)), \
             f"mask are of type {type(masks)} but must be type Masks or h5 group"
@@ -34,6 +37,8 @@ class SlideData:
             f"tiles are of type {type(tiles)} but must be of type pathml.core.tiles.Tiles"
         assert slide_backend is None or issubclass(slide_backend, pathml.core.slide_backends.SlideBackend), \
             f"slide_backend is of type {type(slide_backend)} but must be a subclass of pathml.core.slide_backends.SlideBackend"
+        assert counts is None or isinstance(counts, anndata.AnnData), \
+            f"counts is if type {type(counts)} but must be of type anndata.AnnData" 
 
         # load slide using OpenSlideBackend if path is provided and backend is not specified
         if filepath is not None:
@@ -48,6 +53,7 @@ class SlideData:
             name = Path(filepath).stem
 
         self.slide = slide
+        self.counts = counts
         self.slide_backend = slide_backend
         self.name = name
         self.masks = masks
@@ -104,6 +110,7 @@ class SlideData:
         processed_tile_futures = []
 
         for tile in self.generate_tiles(level = level, shape = tile_size, stride = tile_stride, pad = tile_pad):
+            tile.slidetype = self.slidetype
             f = client.submit(pipeline.apply, tile)
             processed_tile_futures.append(f)
 

@@ -13,7 +13,7 @@ from pathml.utils import RGB_to_GREY
 
 
 # make an example pipeline
-def test_pipeline(tileHE):
+def test_pipeline_HE(tileHE):
     pipe = Pipeline([
         MedianBlur(),
         GaussianBlur(),
@@ -37,6 +37,25 @@ def test_pipeline(tileHE):
 
     assert np.array_equal(tileHE.image, im)
     assert np.array_equal(tileHE.masks["testing"], m)
+
+
+def test_pipeline_Vectra(tileIHC):
+    pipe = Pipeline([
+        SegmentMIF(),
+        QuantifyMIF()
+    )]
+
+
+def test_pipeline_CODEX(tileCODEX):
+    pipe = Pipeline([
+        BackgroundSubtractCODEX(),
+        DriftCompensateMIF(),
+        DeconvolveMIF(),
+        SegmentMIF(),
+        QuantifyMIF()
+    ])
+
+    assert len(pipe) == 5
 
 
 

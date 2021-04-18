@@ -11,7 +11,6 @@ from pathml.utils import pil_to_rgb
 import pathml.core
 
 
-
 class SlideBackend:
     """base class for backends that interface with slides on disk"""
     def extract_region(self, location, size, level, **kwargs):
@@ -29,7 +28,7 @@ class SlideBackend:
 
 class OpenSlideBackend(SlideBackend):
     """
-    Use OpenSlide to interface with image files
+    Use OpenSlide to interface with image files.
 
     Depends on `openslide-python <https://openslide.org/api/python/>`_ which wraps the `openslide <https://openslide.org/>`_ C library.
 
@@ -232,8 +231,8 @@ class BioFormatsBackend(SlideBackend):
         # if a single int is passed for size, convert to a tuple to get a square region
         if type(size) is int:
             size = (size, size)
-        if not (isinstance(location, tuple) and len(location) == 2 and all([isinstance(x, int) for x in location])):
-            raise ValueError(f"input location {location} invalid. Must be a tuple of (i, j) integer coordinates")
+        if not (isinstance(location, tuple) and all([isinstance(x, int) for x in location])):
+            raise ValueError(f"input location {location} invalid. Must be a tuple of integer coordinates")
 
         if np.prod(self.shape) > 2147483647:
             raise Exception(f"Java arrays allocate maximum 32 bits (~2GB). Image size is {np.prod(self.shape)}")

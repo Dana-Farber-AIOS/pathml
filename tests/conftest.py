@@ -7,6 +7,7 @@ import javabridge
 from pathml.core.slide_classes import HESlide
 from pathml.core.tile import Tile
 from pathml.core.masks import Masks
+from pathml.core.h5path import read
 
 def pytest_sessionfinish(session, exitstatus):
     """
@@ -36,3 +37,28 @@ def tileHE():
 
     tile = Tile(image = im_np_rgb, coords = (0, 0), masks = masks, slidetype = HESlide, labels = labels)
     return tile
+
+@pytest.fixture
+def tileVectra():
+    """
+    Example of pathml.core.Tile representation of Vectra image
+    """
+    slidedata = read(path="tests/testdata/vectra.tif", backend = "bioformats")
+    region = data.slide.extract_region(location=(0,0,0,0,0), size=(500,500,1,7,1))
+
+    # make mask object
+    masks = np.random.randint(low = 1, high = 255, size = (im_np_rgb.shape[0], im_np_rgb.shape[1]), dtype = np.uint8)
+    masks = Masks(masks = {"testmask" : masks})
+
+    # labels dict
+    labels = {"test_str_label": "stringlabel", "test_np_array_label": np.ones(shape = (2, 3, 3))}
+
+    tile = Tile(image = region, coords = (0,0), masks = None, slidetype = VectraSlide, labels = labels)
+    return tile
+
+@pytest.fixture
+def tileCODEX():
+    """
+    Example of pathml.core.Tile representation of CODEX image
+    """
+    pass

@@ -2,10 +2,11 @@ import os
 import cv2
 import numpy as np
 import spams
+from skimage import restoration
+import deepcell
 
 import pathml.core
-# from pathml.core.tile import Tile
-# from pathml.core.slide_classes import HESlide
+import pathml.core.slide_classes
 
 from pathml.utils import RGB_to_GREY, RGB_to_HSV, normalize_matrix_cols, RGB_to_OD
 
@@ -740,7 +741,7 @@ class TissueDetectionHE(Transform):
         outer_contours_only (bool): If true, ignore holes in detected foreground regions. Defaults to False.
         mask_name (str): name for new mask
     """
-
+    
     def __init__(self, mask_name=None, use_saturation=True, blur_ksize=17, threshold=None, morph_n_iter=3, morph_k_size=7,
                  min_region_size=5000, max_hole_size=1500, outer_contours_only=False):
         self.use_sat = use_saturation
@@ -786,3 +787,207 @@ class TissueDetectionHE(Transform):
             f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
         mask = self.F(tile.image)
         tile.masks[self.mask_name] =  mask
+
+
+class BackgroundSubtractMIF(Transform):
+    """
+    Apply background subtraction.
+
+    Does this require that there exist a background scan
+    """
+    def __init__(self, background_channel):
+        self.background_channel = background_channel
+
+    def __repr__(self):
+        pass
+    
+    def F(self, image):
+        pass
+    
+    def apply(self, tile):
+        pass
+
+
+class BackgroundSubtractCODEX(BackgroundSubtractMIF):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    
+    def __repr__(self):
+        pass
+    
+    def F(self, image):
+        pass
+    
+    def apply(self, tile):
+        pass
+
+
+class BackgroundSubtractVectra(BackgroundSubtractMIF):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    
+    def __repr__(self):
+        pass
+    
+    def F(self, image):
+        pass
+    
+    def apply(self, tile):
+        pass
+
+
+class DriftCompensateMIF(Transform):
+    def __init__(self):
+        pass
+    
+    def __repr__(self):
+        pass
+    
+    def F(self, image):
+        pass
+    
+    def apply(self, tile):
+        pass
+
+
+class DeconvolveMIF(Transform):
+    """
+    Apply image deconvolution. Models blurring/noise as caused by
+    diffraction-limited optics through convolution by a point spread 
+    function (psf). 
+
+    By default utilizes a Theoretical PSF based on microscope parameters.
+
+    Supports the use of an Experimental PSF measured by imaging beads.
+
+    Use Richardson-Lucy deconvolution algorithm.
+    # create overlay of predictions
+from deepcell.utils.plot_utils import make_outline_overlay
+    Generation of theoretical PSF requires:
+        index of refraction of media
+        numerical aperture
+        wavelength
+        longitudinal spherical aberration at max aperture
+        image pixel spacing (ccd spacing / mag)
+        slice spacing
+        width
+        height
+        depth
+        normalization
+
+    Args:
+        experimental_psf(): point spread function for microscope
+    """
+    def __init__(self, psf=None, psfparameters=None, iterations=30):
+        ij = imagej.init()
+        if psf:
+            assert isinstance(psf, np.ndarray), f"psf must be a np.ndarray" 
+            self.psf = psf
+        if psfparameters:
+            assert psf is None, f"you passed an empirical psf, cannot simultaneously use theoretical psf"
+            self.psfparameters = psfparameters
+        self.iterations = iterations
+    
+    def __repr__(self):
+        pass
+    
+    def F(self, image, slidetype):
+        # TODO: get image in skimage format
+        if self.slidetype == pathml.core.slide_classes.VectraSlide:
+            if self.psf is None and self.psfparameters:
+                # create theoretical PSF from parameters
+                pass
+            else:
+                # default theoretical PSF 
+                pass
+        elif self.slidetype == pathml.core.slide_classes.CODEXSlide:
+            if self.psf is None and self.psfparameters:
+                # create theoretical PSF from parameters
+                pass
+            else:
+                # default theoretical PSF 
+                pass
+        deconvolved = restoration.richardson_lucy(image, self.psf, iterations = self.iterations)
+        return deconvolved
+    
+    def apply(self, tile):
+        tile.image = self.F(tile.image, tile.slidetype)
+
+
+class SegmentMIF(Transform):
+    """
+    Transform applying segmentation to MIF images.
+
+    Supported models
+    Mesmer
+        Mesmer uses human-in-the-loop pipeline to train a  ResNet50 backbone w/ Feature Pyramid Network
+        segmentation model on 1.3 million cell annotations and 1.2 million nuclear annotations (TissueNet dataset)
+
+        Model outputs predictinos for centroid and boundary of every nucleus and cell, then centroid and boundary 
+        predictions are used as inputs to a watershed algorithm that creates segmentation masks.
+
+        https://www.biorxiv.org/content/10.1101/2021.03.01.431313v2.full.pdf 
+
+    Args:
+        model(str): segmentation model 
+        nuclear_channel(int): channel that defines cell nucleus
+        cytoplasm_channel(int): channel that defines cell membrane or cytoplasm
+        image_resolution(float): resolution of image in microns
+        gpu(bool): flag indicating whether gpu will be used for inference
+    """
+    def __init__(self, 
+            model='mesmer', 
+            nuclear_channel=None,
+            cytoplasm_channel=None,
+            image_resolution=0.5, 
+            gpu=True,
+            postprocess_kwargs_whole_cell = None,
+            postprocess_kwrags_nuclear = None
+        ):
+        assert isinstance(nuclear_channel, int), f"nuclear_channel must be an int indicating index"
+        assert isinstance(cytoplasm_channel, int), f"cytoplasm_channel must be an int indicating index"
+        self.nuclear_channel = nuclear_channel
+        self.cytoplasm_channel = cytoplasm_channel
+        self.image_resolution = image_resolution
+        self.gpu = gpu
+        self.model = model
+    
+    def __repr__(self):
+        return f"SegmentMIF(model={self.model}, image_resolution={self.image_resolution}, " \
+               f"gpu={self.gpu})"
+    
+    def F(self, image):
+        if model == 'mesmer':
+            from deepcell.applications import Mesmer
+            self.model = Mesmer()
+            image = np.expand_dims(image, axis=0)
+            nuc_cytoplasm = np.concatenate((image[:,:,:,self.nuclear_channel,0], image[:,:,:,self.cytoplasm_channel,0]), axis=2)
+            cell_segmentation_predictions = self.model.predict(nuc_cytoplasm)
+            nuclear_segmentation_predictions = self.model.predict(image, compartment='nuclear')
+            return cell_segmentation_predictions, nuclear_segmentation_predictions
+        else:
+            raise ValueError(f"must indicate a valid segmentation model")
+    
+    def apply(self, tile):
+        cell_segmentation, nuclear_segmentation = self.F(tile.image) 
+        tile.masks.add('cell_segmentation', cell_segmentation)
+        tile.masks.add('nuclear_segmentation', nuclear_segmentation)
+
+
+class QuantifyMIF(Transform):
+    # requires segmentation
+    # adds anndata object to slidedata.counts
+    def __init__(self):
+        pass
+
+    def __repr__(self):
+        pass
+    
+    def F(self, image):
+        # avg channels in each seg region
+        # match Akoya quantified output
+        pass
+    
+    def apply(self, tile):
+        assert tile.masks['cell_segmentation'], f"cells must be segmented to quantify"
+        tile.counts = F(tile.image, seg_mask)

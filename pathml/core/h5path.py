@@ -8,9 +8,6 @@ import pathml.core.masks
 import pathml.core.slide_data 
 import pathml.core.slide_classes
 
-"""import pathml.core.utils
-import pathml.core.slide_backends"""
-
 import pathml.core as core
 from pathml.core.slide_backends import OpenSlideBackend, BioFormatsBackend, DICOMBackend
 
@@ -245,7 +242,7 @@ def write_h5path(
             # add tilesdict to h5
             core.utils.writetilesdicth5(f['tiles'], 'tilesdict', slidedata.tiles.h5manager.tilesdict)
 
-
+# TODO: replace backend with slideclass
 def read(
     path,
     backend = None,
