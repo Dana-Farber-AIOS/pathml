@@ -105,7 +105,10 @@ class SlideData:
         processed_tile_futures = []
 
         for tile in self.generate_tiles(level = level, shape = tile_size, stride = tile_stride, pad = tile_pad):
-            f = client.submit(pipeline.apply, tile)
+            # explicitly scatter data, i.e. send the tile data out to the cluster before applying the pipeline
+            # according to dask, this can reduce scheduler burden and keep data on workers
+            big_future = client.scatter(tile)
+            f = client.submit(pipeline.apply, big_future)
             processed_tile_futures.append(f)
 
         # as tiles are processed, add them to h5
