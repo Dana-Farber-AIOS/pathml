@@ -792,50 +792,65 @@ class TissueDetectionHE(Transform):
 class BackgroundSubtractMIF(Transform):
     """
     Apply background subtraction.
+
+    Args:
+        background_reference (str): key indicating channel with background measurement
+        target_channel (str): key indicating channel to be corrected by background subtraction
     """
-    def __init__(self, background_channel):
+    def __init__(self, target_channel = None, background_channel = None):
+        self.target_channel = target_channel
         self.background_channel = background_channel
 
     def __repr__(self):
-        pass
+        return f"BackgroundSubtractMIF(background_reference={self.background_reference}, target={self.target_channel})"
     
     def F(self, image):
-        pass
+        if self.background_channel is None:
+            # infer background from darkest spot 
+            pass
+        else:
+            # subtract background_channel from target_channel
+            pass
     
     def apply(self, tile):
-        pass
+        tile.image =  F(tile.image)
+        # TODO: some flag indicating that a channel is corrected? history?
 
 
 class BackgroundSubtractCODEX(BackgroundSubtractMIF):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        assert self.background_channel is None and self.target_channel is None
     
     def __repr__(self):
-        pass
+        return f"BackgroundSubtractCODEX()"
     
     def F(self, image):
-        pass
+        # infer from codex filestructure how to subtract
     
     def apply(self, tile):
-        pass
-
-
-class BackgroundSubtractVectra(BackgroundSubtractMIF):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-    
-    def __repr__(self):
-        pass
-    
-    def F(self, image):
-        pass
-    
-    def apply(self, tile):
-        pass
+        tile.image =  F(tile.image)
 
 
 class DriftCompensateMIF(Transform):
     def __init__(self):
+        pass
+    
+    def __repr__(self):
+        pass
+    
+    def F(self, image):
+        # segment, foreground detect dapi
+        # align dapi stains
+        pass
+    
+    def apply(self, tile):
+        pass
+    
+
+class DriftCompensateCODEX(DriftCompensateMIF):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         pass
     
     def __repr__(self):
@@ -893,6 +908,9 @@ class DeconvolveMIF(Transform):
         if self.slidetype == pathml.core.slide_classes.VectraSlide:
             if self.psf is None and self.psfparameters:
                 # create theoretical PSF from parameters
+                # pip psf
+                # astropsf
+                # wetzstein lab version
                 pass
             else:
                 # default theoretical PSF 
