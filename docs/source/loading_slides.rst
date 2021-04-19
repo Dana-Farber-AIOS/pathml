@@ -1,12 +1,40 @@
 Loading Images
 ==============
 
+Individual Images
+-----------------
+
 The first step in any computational pathology workflow is to load the image from disk.
 In ``PathML`` this can be done in one line:
 
 .. code-block::
 
     wsi = HESlide("../data/CMU-1.svs", name = "example")
+
+Datasets of Images
+------------------
+
+Using "in-house" datasets from the local filesystem is also supported.
+
+Simply initialize a :class:`~pathml.core.slide_dataset.SlideDataset` object by passing a list of
+individual :class:`~pathml.core.slide_dataset.SlideData` objects:
+
+.. code-block::
+
+    from pathlib import Path
+    from pathml.core.slide_dataset import SlideDataset
+    from pathml.core.slide_data import HESlide
+
+    # assuming that all WSIs are in a single directory, all with .svs file extension
+    data_dir = Path("/path/to/data/")
+    wsi_paths = list(data_dir.glob("*.svs"))
+
+    # create a list of SlideData objects by loading each path
+    wsi_list = [HESlide(p) for p in wsi_paths]
+
+    # initialize a SlideDataset
+    dataset = SlideDataset(wsi_list)
+
 
 Supported slide types
 ---------------------
