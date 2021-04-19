@@ -7,7 +7,9 @@ from pathml.preprocessing.pipeline import Pipeline
 from pathml.preprocessing.transforms import (
     MedianBlur, GaussianBlur, BoxBlur, BinaryThreshold,
     MorphOpen, MorphClose, ForegroundDetection, SuperpixelInterpolation,
-    StainNormalizationHE, NucleusDetectionHE, TissueDetectionHE
+    StainNormalizationHE, NucleusDetectionHE, TissueDetectionHE,
+    BackgroundSubtractCODEX, DriftCompensateMIF, DeconvolveMIF,
+    SegmentMIF, QuantifyMIF
 )
 from pathml.utils import RGB_to_GREY
 
@@ -40,10 +42,24 @@ def test_pipeline_HE(tileHE):
 
 
 def test_pipeline_Vectra(tileIHC):
+    """
+    Vectra images are background subtracted during spectral deconvolution step.
+    """
     pipe = Pipeline([
+        DeconvolveMIF(),
         SegmentMIF(),
         QuantifyMIF()
     )]
+    
+    assert len(pipe) == 2
+    pipe.apply(tileIHC)
+
+    orig_im = tileIHC.image
+    segmented_mask = SegmentMIF().F(orig_im)
+    adata = QuantifyMIF().F(orig_im, segmented_mask)
+
+    assert np.array_equal(tileIHC.masks['cell_segmentation'], segmented_mask)
+    assert adata == tileIHC.counts 
 
 
 def test_pipeline_CODEX(tileCODEX):
@@ -56,6 +72,7 @@ def test_pipeline_CODEX(tileCODEX):
     ])
 
     assert len(pipe) == 5
+    pipe.apply(tileCODEX)
 
 
 

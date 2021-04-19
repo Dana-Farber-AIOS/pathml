@@ -792,8 +792,6 @@ class TissueDetectionHE(Transform):
 class BackgroundSubtractMIF(Transform):
     """
     Apply background subtraction.
-
-    Does this require that there exist a background scan
     """
     def __init__(self, background_channel):
         self.background_channel = background_channel
@@ -855,14 +853,12 @@ class DeconvolveMIF(Transform):
     Apply image deconvolution. Models blurring/noise as caused by
     diffraction-limited optics through convolution by a point spread 
     function (psf). 
-
+    
     By default utilizes a Theoretical PSF based on microscope parameters.
-
+    
     Supports the use of an Experimental PSF measured by imaging beads.
-
+    
     Use Richardson-Lucy deconvolution algorithm.
-    # create overlay of predictions
-from deepcell.utils.plot_utils import make_outline_overlay
     Generation of theoretical PSF requires:
         index of refraction of media
         numerical aperture
@@ -874,9 +870,9 @@ from deepcell.utils.plot_utils import make_outline_overlay
         height
         depth
         normalization
-
+    
     Args:
-        experimental_psf(): point spread function for microscope
+        psf(): point spread function for microscope
     """
     def __init__(self, psf=None, psfparameters=None, iterations=30):
         ij = imagej.init()
@@ -885,11 +881,12 @@ from deepcell.utils.plot_utils import make_outline_overlay
             self.psf = psf
         if psfparameters:
             assert psf is None, f"you passed an empirical psf, cannot simultaneously use theoretical psf"
-            self.psfparameters = psfparameters
+        self.psfparameters = psfparameters
         self.iterations = iterations
     
     def __repr__(self):
-        pass
+        return f"DeconvolveMIF(psf={'empirical' if psf else self.psfparameters}, iterations={self.self.iterations}, " \
+               f"gpu={self.gpu})"
     
     def F(self, image, slidetype):
         # TODO: get image in skimage format
@@ -983,11 +980,11 @@ class QuantifyMIF(Transform):
     def __repr__(self):
         pass
     
-    def F(self, image):
+    def F(self, image, segmentation):
         # avg channels in each seg region
         # match Akoya quantified output
         pass
     
     def apply(self, tile):
         assert tile.masks['cell_segmentation'], f"cells must be segmented to quantify"
-        tile.counts = F(tile.image, seg_mask)
+        tile.counts = F(tile.image, tile.masks['cell_segmentation'])
