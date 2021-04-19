@@ -47,7 +47,7 @@ def writetupleh5(h5, name, tup):
     """
     Write tuple as h5 attribute.
     """
-    tupleasarray = np.array(str(tup), dtype = object)
+    tupleasarray = np.string_(str(tup))
     h5.attrs[str(name)] = tupleasarray
 
 

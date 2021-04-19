@@ -289,7 +289,7 @@ class BioFormatsBackend(SlideBackend):
             image_array = zoom(array, ratio) 
         return image_array
 
-    def generate_tiles(self, shape=3000, stride=None, pad=False):
+    def generate_tiles(self, shape=3000, stride=None, pad=False, level=0):
         """
         Generator over tiles.
 
@@ -314,6 +314,7 @@ class BioFormatsBackend(SlideBackend):
         Yields:
             pathml.core.tile.Tile: Extracted Tile object
         """
+        assert level == 0 or level is None, f"bioformats does not support levels"
         assert isinstance(shape, int) or (isinstance(shape, tuple) and len(shape) == 2), \
             f"input shape {shape} invalid. Must be a tuple of (H, W), or a single integer for square tiles"
         if isinstance(shape, int):

@@ -227,13 +227,12 @@ class _tiles_h5_manager(_h5_manager):
             shape = list(self.shape)
             coords = coords + [0]*len(shape[len(coords)-1:]) 
         tiler = [slice(coords[i], coords[i]+self.shape[i]) for i in range(len(self.shape))]
-        print(tiler)
         tile = self.h5['tiles/array'][tuple(tiler)][:]
-        masks = {mask : self.h5['tiles/masks'][mask][tuple(tiler)][:] for mask in self.h5['tiles/masks']} if 'masks' in self.h5['tiles'].keys() else None 
+        masks = {mask : self.h5['tiles/masks'][mask][tuple(tiler[:len(self.h5['tiles/masks'][mask].shape)])][:] for mask in self.h5['tiles/masks']} if 'masks' in self.h5['tiles'].keys() else None 
         if slicer:
             tile = tile[slicer]
             if masks is not None:
-                masks = {key : masks[key][slicer] for key in masks}
+                masks = {key : masks[key][slicer[:len(masks[key].shape)]] for key in masks}
         masks = pathml.core.masks.Masks(masks)
         slidetype = tilemeta['slidetype']
         return pathml.core.tile.Tile(tile, masks=masks, labels=tilemeta['labels'], name=tilemeta['name'], coords=eval(tilemeta['coords']), slidetype=slidetype)

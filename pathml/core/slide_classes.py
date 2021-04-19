@@ -44,7 +44,7 @@ class VectraSlide(MultiparametricSlide):
     """
     Class for data in Vectra (Polaris) format.
 
-    This class enables transformations in * *  
+    This class enables transformations in * * 
     """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

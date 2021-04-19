@@ -948,27 +948,32 @@ class SegmentMIF(Transform):
         self.image_resolution = image_resolution
         self.gpu = gpu
         self.model = model
+        if self.model == 'mesmer':
+            from deepcell.applications import Mesmer
+            self.model = Mesmer()
+            print(self.model)
+        else:
+            raise ValueError(f"currently only support mesmer model")
     
     def __repr__(self):
         return f"SegmentMIF(model={self.model}, image_resolution={self.image_resolution}, " \
                f"gpu={self.gpu})"
     
     def F(self, image):
-        if model == 'mesmer':
-            from deepcell.applications import Mesmer
-            self.model = Mesmer()
-            image = np.expand_dims(image, axis=0)
-            nuc_cytoplasm = np.concatenate((image[:,:,:,self.nuclear_channel,0], image[:,:,:,self.cytoplasm_channel,0]), axis=2)
-            cell_segmentation_predictions = self.model.predict(nuc_cytoplasm)
-            nuclear_segmentation_predictions = self.model.predict(image, compartment='nuclear')
-            return cell_segmentation_predictions, nuclear_segmentation_predictions
-        else:
-            raise ValueError(f"must indicate a valid segmentation model")
+        nuc_cytoplasm = np.concatenate((image[:,:,:,self.nuclear_channel,0], image[:,:,:,self.cytoplasm_channel,0]), axis=2)
+        # add batch dimension
+        # TODO: could use this to batch tiles
+        nuc_cytoplasm = np.expand_dims(nuc_cytoplasm, axis=0)
+        cell_segmentation_predictions = self.model.predict(nuc_cytoplasm)
+        nuclear_segmentation_predictions = self.model.predict(nuc_cytoplasm, compartment='nuclear')
+        cell_segmentation_predictions = np.squeeze(cell_segmentation_predictions, axis=0)
+        nuclear_segmentation_predictions = np.squeeze(nuclear_segmentation_predictions, axis=0)
+        return cell_segmentation_predictions, nuclear_segmentation_predictions
     
     def apply(self, tile):
         cell_segmentation, nuclear_segmentation = self.F(tile.image) 
-        tile.masks.add('cell_segmentation', cell_segmentation)
-        tile.masks.add('nuclear_segmentation', nuclear_segmentation)
+        tile.masks['cell_segmentation'] = cell_segmentation
+        tile.masks['nuclear_segmentation'] = nuclear_segmentation
 
 
 class QuantifyMIF(Transform):

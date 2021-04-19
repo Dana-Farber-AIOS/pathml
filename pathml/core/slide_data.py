@@ -71,7 +71,7 @@ class SlideData:
         out += f"history={self.history})"
         return out 
 
-    def run(self, pipeline, client=None, tile_size=3000, tile_stride=None, level=0, tile_pad=False,
+    def run(self, pipeline, distributed=True, client=None, tile_size=3000, tile_stride=None, level=0, tile_pad=False,
             overwrite_existing_tiles=False):
         """
         Run a preprocessing pipeline on SlideData.
@@ -79,6 +79,7 @@ class SlideData:
 
         Args:
             pipeline (pathml.preprocessing.pipeline.Pipeline): Preprocessing pipeline.
+            distributed (bool): Whether to distribute model using client. Defaults to True.
             client: dask.distributed client
             tile_size (int, optional): Size of each tile. Defaults to 3000px
             tile_stride (int, optional): Stride between tiles. If ``None``, uses ``tile_stride = tile_size``
@@ -103,20 +104,30 @@ class SlideData:
                 raise Exception("Slide already has tiles. Running the pipeline will overwrite the existing tiles."
                                 "use overwrite_existing_tiles=True to force overwriting existing tiles.")
 
-        if client is None:
-            client = dask.distributed.Client()
+        if distributed:
+            if client is None:
+                client = dask.distributed.Client()
 
-        # map pipeline application onto each tile
-        processed_tile_futures = []
+            # map pipeline application onto each tile
+            processed_tile_futures = []
 
-        for tile in self.generate_tiles(level = level, shape = tile_size, stride = tile_stride, pad = tile_pad):
-            tile.slidetype = self.slidetype
-            f = client.submit(pipeline.apply, tile)
-            processed_tile_futures.append(f)
+            for tile in self.generate_tiles(level = level, shape = tile_size, stride = tile_stride, pad = tile_pad):
+                if not tile.slidetype:
+                    tile.slidetype = self.slidetype
+                f = client.submit(pipeline.apply, tile)
+                processed_tile_futures.append(f)
 
-        # as tiles are processed, add them to h5
-        for future, tile in dask.distributed.as_completed(processed_tile_futures, with_results = True):
-            self.tiles.add(tile)
+            # as tiles are processed, add them to h5
+            for future, tile in dask.distributed.as_completed(processed_tile_futures, with_results = True):
+                self.tiles.add(tile)
+
+        else:
+            for tile in self.generate_tiles(level = level, shape = tile_size, stride = tile_stride, pad = tile_pad):
+                if not tile.slidetype:
+                    tile.slidetype = self.slidetype
+                pipeline.apply(tile)
+                self.tiles.add(tile)
+
 
         # after running preprocessing, create a pytorch dataset for the tiles
         self.tile_dataset = self._create_tile_dataset(self)
