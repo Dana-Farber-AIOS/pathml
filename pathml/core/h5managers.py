@@ -153,10 +153,10 @@ class _tiles_h5_manager(_h5_manager):
 
         # add tile fields to tilesdict 
         self.tilesdict[str(tile.coords)] = {
-                'name': str(tile.name), 
-                'labels': tile.labels,
+                'name': str(tile.name) if tile.name else None, 
+                'labels': tile.labels if tile.labels else None,
                 'coords': str(tile.coords), 
-                'slidetype': tile.slidetype
+                'slidetype': tile.slidetype if tile.slidetype else None
         }
 
     def update(self, key, val, target):

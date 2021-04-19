@@ -15,13 +15,22 @@ class Tiles:
     Args:
         tiles (Union[dict[tuple[int], `~pathml.core.tiles.Tile`], list[`~pathml.core.tiles.Tile`]]): tile objects  
     """
-    def __init__(self, tiles = None, h5 = None):
-        if h5 is None:
+    def __init__(self, tiles=None, h5=None):
+        # if h5, pass directly to h5manager
+        if h5 is not None:
+            self.h5manager = pathml.core.h5managers._tiles_h5_manager(h5)
+
+        # no h5 supplied
+        else:
+            # initialize h5manager
+            self.h5manager = pathml.core.h5managers._tiles_h5_manager()
+
+            # if tiles are supplied, add them to the h5manager
             if tiles:
                 if not (isinstance(tiles, dict) or (isinstance(tiles, list) and all([isinstance(t, pathml.core.tile.Tile) for t in tiles]))):
                     raise ValueError(f"tiles must be passed as dicts of the form coordinates1:Tile1,... "
                                      f"or lists of Tile objects containing coords")
-                # create Tiles from dict of tile
+                # create _tiles from dict of tile
                 if isinstance(tiles, dict):
                     for val in tiles.values():
                         if not isinstance(val, pathml.core.tile.Tile):
@@ -30,7 +39,8 @@ class Tiles:
                         if not (isinstance(key, tuple) and all(isinstance(v, int) for v in key)):
                             raise ValueError(f"dict keys must be of type tuple[int]")
                     self._tiles = OrderedDict(tiles)
-                # create Tiles from list of tile
+
+                # create _tiles from list of tile
                 else:
                     tiledictionary = {}
                     for tile in tiles:
@@ -41,16 +51,11 @@ class Tiles:
                         coords = tile.coords
                         tiledictionary[coords] = tile 
                     self._tiles = OrderedDict(tiledictionary)
-            else:
-                self._tiles = OrderedDict()
-            # initialize h5manager 
-            self.h5manager = pathml.core.h5managers._tiles_h5_manager()
-            for key in self._tiles:
-                self.h5manager.add(self._tiles[key])
-            del self._tiles
-        # if h5, pass directly to h5manager
-        else:
-            self.h5manager = pathml.core.h5managers._tiles_h5_manager(h5)
+
+                # add tiles in _tiles to h5manager
+                for key in self._tiles:
+                    self.h5manager.add(self._tiles[key])
+                del self._tiles
 
     def __repr__(self):
         rep = f"Tiles(keys={self.h5manager.tilesdict})"

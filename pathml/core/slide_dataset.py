@@ -20,25 +20,17 @@ class SlideDataset:
     def __len__(self):
         return len(self.slides)
 
-    def run(self, pipeline, client=None, tile_size=3000, tile_stride=None, level=0, tile_pad=False):
+    def run(self, pipeline, **kwargs):
         """
         Runs a preprocessing pipeline on all slides in the dataset
 
         Args:
-            Args:
             pipeline (pathml.preprocessing.pipeline.Pipeline): Preprocessing pipeline.
-            tile_size (int, optional): Size of each tile. Defaults to 3000px
-            tile_stride (int, optional): Stride between tiles. If ``None``, uses ``tile_stride = tile_size``
-                for non-overlapping tiles. Defaults to ``None``.
-            level (int, optional): Level to extract tiles from. Defaults to ``None``.
-            tile_pad (bool): How to handle chunks on the edges. If ``True``, these edge chunks will be zero-padded
-                symmetrically and yielded with the other chunks. If ``False``, incomplete edge chunks will be ignored.
-                Defaults to ``False``.
+            kwargs (dict): keyword arguments passed to :meth:`~pathml.core.slide_data.SlideData.run` for each slide
         """
         # run preprocessing
         for slide in self.slides:
-            slide.run(pipeline, client=client, tile_size=tile_size,
-                      tile_stride=tile_stride, level=level, tile_pad=tile_pad)
+            slide.run(pipeline, **kwargs)
 
         assert not any([s.tile_dataset is None for s in self.slides])
         # create a tile dataset for the whole dataset
