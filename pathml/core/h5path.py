@@ -242,8 +242,8 @@ def write_h5path(
         if slidedata.tiles:
             for ds in slidedata.tiles.h5manager.h5.keys():
                 slidedata.tiles.h5manager.h5.copy(ds, f)
-            # add tilesdict to h5
-            core.utils.writetilesdicth5(f['tiles'], 'tilesdict', slidedata.tiles.h5manager.tilesdict)
+            # add tiles to h5
+            core.utils.writetilesdicth5(f, 'tiles', slidedata.tiles.h5manager.tiles)
 
 
 def read(
@@ -298,8 +298,8 @@ def read_h5path(
         path (str): Path to h5path formatted file on disk 
     """
     with h5py.File(path, "r") as f:
-        tiles = pathml.core.tiles.Tiles(h5 = f['tiles']) if 'tiles' in f.keys() else None
-        masks = pathml.core.masks.Masks(h5 = f['masks']) if 'masks' in f.keys() else None
+        tiles = pathml.core.tiles.Tiles(h5 = f) if 'tiles' in f.keys() else None
+        masks = pathml.core.masks.Masks(h5 = f) if ('masks' in f.keys() and 'tiles' not in f.keys()) else None
         backend = f['fields'].attrs['slide_backend'] if 'slide_backend' in f['fields'].attrs.keys() else None
         if backend == "<class 'pathml.core.slide_backend.BioFormatsBackend'>":
             slide_backend = core.slide_backends.BioformatsBackend
@@ -307,7 +307,7 @@ def read_h5path(
             slide_backend = pathml.core.slide_backends.DICOMBackend
         else:
             slide_backend = core.slide_backends.OpenSlideBackend
-        name = f['fields'].attrs['name'] if 'name' in f['fields'].attrs.keys() else None
+        name = f['fields'].attrs['name'].decode('UTF-8') if 'name' in f['fields'].attrs.keys() else None
         labels = f['fields']['labels'] if 'labels' in f['fields'].keys() else None 
         if labels:
             labeldict = {}
@@ -319,8 +319,8 @@ def read_h5path(
                 if isinstance(val, bytes):
                     val = val.decode('UTF-8')
                 labeldict[attr] = val
-        labels = labeldict
-        history = None
+            labels = labeldict
+        history = f['fields'].attrs['history'] if 'history' in f['fields'].attrs.keys() else None
 
     return pathml.core.slide_data.SlideData(name = name, slide_backend = slide_backend, masks = masks, tiles = tiles, labels = labels, history = history) 
 

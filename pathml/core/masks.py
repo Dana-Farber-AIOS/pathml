@@ -83,27 +83,3 @@ class Masks:
             key(str): key indicating mask to be removed
         """
         self.h5manager.remove(key)
-
-    def write(self, out_dir, filename):
-        """
-        Save masks as .h5 
-
-        Args:
-            out_dir(str): directory to write
-            filename(str) file name
-        """
-        savepath = Path(out_dir) / Path(filename)
-        Path(out_dir).mkdir(parents = True, exist_ok = True)
-        # abspath resolves documented h5py bug
-        newfile = os.path.abspath(str(savepath.with_suffix('.h5')))
-        newh5 = h5py.File(newfile, 'w')
-
-        # shutil.move(self.h5manager.h5path, newh5)
-        for dataset in self.h5manager.h5.keys():
-            self.h5manager.h5.copy(self.h5manager.h5[dataset], newh5)
-
-    def read(self, path):
-        """
-        Read masks from .h5
-        """
-        raise NotImplementedError

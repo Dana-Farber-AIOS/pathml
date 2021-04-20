@@ -16,7 +16,5 @@ def test_pipeline_1(tmp_path):
 
     slide.run(pipeline, client = client, tile_size = 250)
 
-    slide.tiles.write(out_dir = tmp_path, filename = "slidetiles.h5")
-
     #shut down the client after running
     client.close()

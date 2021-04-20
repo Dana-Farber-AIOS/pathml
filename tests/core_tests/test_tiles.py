@@ -116,7 +116,7 @@ def test_add_get(emptytiles, tile, incorrect_input, incorrect_input2):
     print(tile.slidetype)
     assert tiles[(1, 3)].slidetype == tile.slidetype
     # get masks
-    for mask in tiles.h5manager.h5['tiles']['masks'].keys():
+    for mask in tiles.h5manager.h5['masks'].keys():
         # masks by coords and by index
         assert (tiles[(1, 3)].masks[mask] == tile.masks[mask]).all()
         assert (tiles[0].masks[mask] == tile.masks[mask]).all()
@@ -202,7 +202,7 @@ def test_slice(emptytiles, tile, incorrect_input):
     tiles.add(tile)
     slices = [slice(2,5)]
     test = tiles.slice(slices)
-    assert test.h5manager.shape == (3, 224, 3)
+    assert test.h5manager.tile_shape == (3, 224, 3)
     assert test[0].image.shape == (3, 224, 3)
     print(next(iter(test[0].masks.items())))
     assert next(iter(test[0].masks.items()))[1].shape == (3, 224, 3) 

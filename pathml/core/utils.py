@@ -27,7 +27,7 @@ def writestringh5(h5, name, st):
     """
     Write string as h5 attribute.
     """
-    stringasarray = np.array(str(st), dtype = object)
+    stringasarray = np.string_(str(st))
     h5.attrs[str(name)] = stringasarray
 
 
@@ -47,7 +47,7 @@ def writetupleh5(h5, name, tup):
     """
     Write tuple as h5 attribute.
     """
-    tupleasarray = np.array(str(tup), dtype = object)
+    tupleasarray = np.string_(str(tup))
     h5.attrs[str(name)] = tupleasarray
 
 
@@ -60,7 +60,7 @@ def readtupleh5(h5, key):
 
 def writetilesdicth5(h5, name, dic):
     """
-    Write tilesdict as h5py.Dataset.
+    Write tiles as h5py.Dataset.
     """
     if name not in h5.keys():
         h5.create_group(str(name), track_order = True)
@@ -71,8 +71,8 @@ def writetilesdicth5(h5, name, dic):
         h5[name].create_group(tile, track_order = True)
         for field in dic[tile]:
             # field is name, coords, slidetype
-            if isinstance(dic[tile][field], (str, type(None))):
-                stringasarray = np.array(str(dic[tile][field]), dtype = object)
+            if isinstance(dic[tile][field], (str, type, type(None))):
+                stringasarray = np.string_(str(dic[tile][field]))
                 h5[name][tile].create_dataset(
                     field,
                     data = stringasarray,
@@ -87,15 +87,16 @@ def writetilesdicth5(h5, name, dic):
                         data = val 
                     )               
             else:
+                print(dic[tile][field])
                 raise Exception(f"could not write tilesdict element {dic[name][tile]}")
 
 
 def readtilesdicth5(h5):
     """
-    Read tilesdict to dict from h5py.Dataset.
+    Read tiles to dict from h5py.Dataset.
 
     Usage:
-        tilesdict = readtilesdicth5(h5['tiles/tilesdict'])
+        tiles = readtilesdicth5(h5['tiles/tilesdict'])
     """
     tilesdict = OrderedDict()
     for tile in h5.keys():
