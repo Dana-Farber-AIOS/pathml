@@ -19,63 +19,23 @@ Using public datasets
 
 PathML has built-in support for several public datasets:
 
-.. table::
-    :widths: 10 60 10 10 10
+.. list-table:: Datasets
+   :widths: 20 50 10 20
+   :header-rows: 1
 
-    +-------------------------------------------------------+--------------------------------------+-------------+-----------+----------------+
-    | Dataset                                               | Description                          | Image type  | Size      | Reference      |
-    +=======================================================+======================================+=============+===========+================+
-    | :class:`~pathml.datasets.pannuke.PanNukeDataModule`   | Pixel-level nucleus classification,  | H&E         | | n=7901  | | [PanNuke1]_  |
-    |                                                       | with 6 nucleus types and 19 tissue   |             | | 37.33 GB| | [PanNuke2]_  |
-    |                                                       | types. Images are 256px RGB.         |             |           |                |
-    +=======================================================+======================================+=============+===========+================+
-    | :class:`~pathml.datasets.deepblur.DeepFocusDataModule`| Patch-level focus classification     | H&E         | | n=204k  | | [DeepFocus]_ |
-    |                                                       | with 3 IHC and 1 H&E histologies.    | IHC         | | 10.0 GB |                |
-    +-------------------------------------------------------+--------------------------------------+-------------+-----------+----------------+
-
-
-Using local datasets
---------------------
-
-Using "in-house" data from the local filesystem is also supported.
-Classes [update here]
-wrappers around ``torch.utils.data.Dataset``, used for creating datasets at the slide or tile level.
-Using a local dataset is as simple as creating a new class and implementing two special class methods: ``__len__(self)`` and ``__getitem__(self, index)``.
-
-- ``__len__(self)`` should return the size of the dataset (i.e. total number of slides or tiles)
-- ``__getitem__(self, i)`` should return a tuple of (*i* th item, *i* th label)
-
-Create a dataset object for in-house data by creating a class with the logic for the above two methods for the local data.
-
-Example
-^^^^^^^
-
-In the following example for a dataset of H&E slides and corresponding annotation masks, we assume that the slides are
-saved in a directory named ``slides/`` and the annotations are saved in a directory named ``masks/``:
-
-.. code-block::
-
-    from pathlib import Path
-    import cv2
-    from pathml.datasets.base import BaseSlideDataset
-    from pathml.preprocessing.wsi import HESlide
-
-    class MyDataset(BaseSlideDataset):
-        def __init__(self, data_path):
-            self.data_path = Path(data_path)
-            # assumes identical order of files in slides/ and masks/
-            self.slide_paths = list(self.data_path.glob("slides/*.svs"))
-            self.mask_paths  = list(self.data_path.glob("masks/*.jpg"))
-
-        def __len__(self):
-            # return total number of slides in dataset
-            return len(self.slide_paths)
-
-        def __getitem__(self, i):
-            # return (slide, label) pair for the ith slide
-            slide = HESlide(self.slide_paths[i])
-            mask = cv2.imread(self.mask_paths[i])
-            return slide, mask
+   * - Dataset
+     - Description
+     - Image type
+     - Size
+   * - :class:`~pathml.datasets.pannuke.PanNukeDataModule`
+     - Pixel-level nucleus classification, with 6 nucleus types and 19 tissue types.
+       Images are 256px RGB. [PanNuke1]_ [PanNuke2]_
+     - H&E
+     - n=7901 (37.33 GB)
+   * - :class:`~pathml.datasets.deepblur.DeepFocusDataModule`
+     - Patch-level focus classification with 3 IHC and 1 H&E histologies. [DeepFocus]_
+     - H&E, IHC
+     - n=204k (10.0 GB)
 
 
 References

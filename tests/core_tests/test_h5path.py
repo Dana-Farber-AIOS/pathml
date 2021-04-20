@@ -2,7 +2,7 @@ import pytest
 import h5py
 import numpy as np
 
-from pathml.core.slide_classes import HESlide
+from pathml.core.slide_data import HESlide
 from pathml.core.h5path import read
 
 

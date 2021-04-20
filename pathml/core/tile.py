@@ -6,18 +6,18 @@ import pathml.core.masks
 
 class Tile:
     """
-    Object for representing a tile region extracted from an image. Holds the image for the tile, as well as the (i,j)
+    Object representing a tile extracted from an image. Holds the array for the tile, as well as the (i,j)
     coordinates of the top-left corner of the tile in the original image. The (i,j) coordinate system is based
     on labelling the top-leftmost pixel as (0, 0)
 
     Args:
-        image (np.ndarray): image
-    name (str): name of tile
-    masks (pathml.core.Masks): corresponding masks for region
-    coords (tuple): Coordinates of tile relative to maximum resolution of whole-slide image.
-        The (i,j) coordinate system is based on labelling the top-leftmost pixel as (0, 0)
-    slidetype: type of image (e.g. pathml.HESlide). Defaults to None.
-    labels: labels for the tile
+        image (np.ndarray): array extracted from slide
+        name (str): name of tile
+        masks (pathml.core.Masks): masks belonging to tile 
+        coords (tuple): Coordinates of tile relative to maximum resolution of whole-slide image.
+            The (i,j) coordinate system is based on labelling the top-leftmost pixel as (0, 0)
+        slidetype: type of slide (e.g. pathml.HESlide). Defaults to None.
+        labels: labels belonging to tile 
     """
     def __init__(self, image, name=None, coords=None, slidetype=None, masks=None, labels=None):
         assert isinstance(image, np.ndarray), f"image of type {type(image)} must be a np.ndarray"

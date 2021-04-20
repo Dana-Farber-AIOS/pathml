@@ -4,9 +4,8 @@ import numpy as np
 import h5py
 import ast
 
-import pathml.core.slide_classes
 import pathml.core.slide_backends
-
+import pathml.core.slide_data
 
 # TODO: Fletcher32 checksum?
 def writedataframeh5(h5, name, df):
@@ -39,8 +38,8 @@ def writedicth5(h5, name, dic):
     for key, val in dic.items():
         h5[name].attrs.create(
             str(key),
-            data = val 
-        )               
+            data = val
+        )
 
 
 def writetupleh5(h5, name, tup):
@@ -84,8 +83,8 @@ def writetilesdicth5(h5, name, dic):
                 for key, val in dic[tile][field].items():
                     h5[name][tile][field].attrs.create(
                         str(key),
-                        data = val 
-                    )               
+                        data = val
+                    )
             else:
                 raise Exception(f"could not write tilesdict element {dic[name][tile]}")
 
@@ -107,8 +106,8 @@ def readtilesdicth5(h5):
             # iterate over key/val pairs stored in labels.attr
             for attr in labels.attrs:
                 val = labels.attrs[attr]
-                # check if val is a single element 
-                # if val is bytes then decode to str, otherwise leave it (it is a float or int) 
+                # check if val is a single element
+                # if val is bytes then decode to str, otherwise leave it (it is a float or int)
                 if isinstance(val, bytes):
                     val = val.decode('UTF-8')
                 labeldict[attr] = val
@@ -126,7 +125,7 @@ def readtilesdicth5(h5):
             elif slidetype == "<class 'pathml.core.slide_backends.DICOMBackend'>":
                 slidetype = pathml.core.slide_backends.DICOMBackend
             elif slidetype == "<class 'pathml.core.slide_classes.HESlide'>":
-                slidetype = pathml.core.slide_classes.HESlide
+                slidetype = pathml.core.slide_data.HESlide
         subdict = {
                 'name': name,
                 'labels': labels,
