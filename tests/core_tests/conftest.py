@@ -4,8 +4,7 @@ import numpy as np
 
 from pathml.core.tiles import Tiles
 from pathml.core.masks import Masks
-from pathml.core.slide_classes import HESlide
-from pathml.core.slide_data import SlideData
+from pathml.core.slide_data import SlideData, HESlide
 from pathml.core.slide_backends import OpenSlideBackend
 from pathml.core.slide_dataset import SlideDataset
 from pathml.core.tile import Tile

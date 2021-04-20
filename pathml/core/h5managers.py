@@ -7,9 +7,8 @@ import itertools
 
 import pathml.core.masks
 import pathml.core.tile
-from pathml.core.utils import writedataframeh5, writestringh5, writetupleh5, readtupleh5, readtilesdicth5
-from pathml.core.slide_backends import OpenSlideBackend, BioFormatsBackend, DICOMBackend
-import pathml.core.slide_classes
+from pathml.core.utils import writetupleh5, readtupleh5, readtilesdicth5
+import pathml.core.slide_data
 
 
 class _h5_manager:
@@ -424,7 +423,7 @@ class _masks_h5_manager(_h5_manager):
         else:
             if item > len(self.h5) - 1:
                 raise KeyError(f"index out of range, valid indices are ints in [0,{len(self.h5['masks'].keys()) - 1}]")
-            if slices is None:
+            if slicer is None:
                 return self.h5[list(self.h5.keys())[item]][:]
             return self.h5[list(self.h5.keys())[item]][:][tuple(slicer)]
 

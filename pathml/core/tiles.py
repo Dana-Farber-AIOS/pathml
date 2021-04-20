@@ -4,7 +4,6 @@ from collections import OrderedDict
 import h5py
 
 import pathml.core.h5managers
-import pathml.core.tiles
 import pathml.core.tile
 import pathml.core.masks
 
