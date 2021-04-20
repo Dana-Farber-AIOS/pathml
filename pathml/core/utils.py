@@ -113,9 +113,9 @@ def readtilesdicth5(h5):
                 if isinstance(val, bytes):
                     val = val.decode('UTF-8')
                 labeldict[attr] = val
-            labels = labeldict
+            labels = labeldict if labeldict else None
         coords = h5[tile]['coords'][...].item().decode('UTF-8') if 'coords' in h5[tile].keys() else None
-        slidetype = ast.literal_eval(h5[tile]['slidetype'][...].item().decode('UTF-8')) if 'slidetype' in h5[tile].keys() else None
+        slidetype = h5[tile]['slidetype'][...].item().decode('UTF-8') if 'slidetype' in h5[tile].keys() else None
         if slidetype:
             # TODO: better system for specifying slide classes.
             #  Since it's saved as string here, should have a clean string identifier for each class
