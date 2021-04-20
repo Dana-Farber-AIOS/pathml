@@ -77,11 +77,21 @@ class _tiles_h5_manager(_h5_manager):
         if 'array' in self.h5.keys():
             # extend array if coords+shape is larger than self.h5['tiles/array'] 
             coords = tile.coords
+            '''
             for i in range(len(coords)):
                 currentshape = self.h5['array'].shape[i]
                 requiredshape = coords[i] + tile.image.shape[i] 
                 if  currentshape < requiredshape:
                     self.h5['array'].resize(self.h5['array'].shape[i] + requiredshape - currentshape, axis=i)
+            '''
+            
+            coordslength = len(coords)
+            currentshape = self.h5['array'].shape[0:coordslength]
+            requiredshape = [coord + tile_shape for coord, tile_shape in zip(coords, tile.image.shape[0:coordslength])]
+            for dim, (current, required) in enumerate(zip(currentshape, requiredshape)):
+                self.h5['array'].resize(required, axis=dim)
+
+
             # add tile to self.h5['tiles/array']
             slicer = [slice(coords[i], coords[i] + tile.image.shape[i]) for i in range(len(coords))] 
             self.h5['array'][tuple(slicer)] = tile.image
