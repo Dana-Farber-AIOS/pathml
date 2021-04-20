@@ -35,7 +35,7 @@ Get started by loading a WSI from disk and running a preprocessing pipeline in 1
 
 .. code-block::
 
-    from pathml.core.slide_classes import HESlide
+    from pathml.core.slide_data import HESlide
     from pathml.preprocessing.pipeline import Pipeline
     from pathml.preprocessing.transforms import BoxBlur, TissueDetectionHE
 
@@ -58,7 +58,7 @@ Here we create a demo :class:`~pathml.core.slide_dataset.SlideDataset`
 
 .. code-block::
 
-    from pathml.core.slide_classes import HESlide
+    from pathml.core.slide_data import HESlide
     from pathml.core.slide_dataset import SlideDataset
     from pathml.preprocessing.pipeline import Pipeline
     from pathml.preprocessing.transforms import BoxBlur, TissueDetectionHE
