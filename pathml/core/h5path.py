@@ -225,6 +225,7 @@ def write_h5path(
     pathdir.mkdir(parents=True, exist_ok=True) 
     with h5py.File(path, 'w') as f:
         fieldsgroup = f.create_group('fields')
+        core.utils.writestringh5(fieldsgroup, 'slidetype', type(slidedata))
         if slidedata.slide:
             core.utils.writestringh5(fieldsgroup, 'slide_backend', slidedata.slide_backend)
         if slidedata.name:
@@ -298,6 +299,7 @@ def read_h5path(
     with h5py.File(path, "r") as f:
         tiles = pathml.core.tiles.Tiles(h5 = f) if 'tiles' in f.keys() else None
         masks = pathml.core.masks.Masks(h5 = f) if ('masks' in f.keys() and 'tiles' not in f.keys()) else None
+        slidetype = f['fields'].attrs['slidetype'].decode('UTF-8') 
         backend = f['fields'].attrs['slide_backend'] if 'slide_backend' in f['fields'].attrs.keys() else None
         if backend == "<class 'pathml.core.slide_backend.BioFormatsBackend'>":
             slide_backend = core.slide_backends.BioformatsBackend
@@ -319,8 +321,15 @@ def read_h5path(
                 labeldict[attr] = val
             labels = labeldict
         history = f['fields'].attrs['history'] if 'history' in f['fields'].attrs.keys() else None
-
-    return pathml.core.slide_data.SlideData(name = name, slide_backend = slide_backend, masks = masks, tiles = tiles, labels = labels, history = history) 
+    slidetypedict = {
+            "<class 'pathml.core.slide_data.SlideData'>" : pathml.core.slide_data.SlideData,
+            "<class 'pathml.core.slide_classes.RGBSlide'>" : pathml.core.slide_classes.RGBSlide,
+            "<class 'pathml.core.slide_classes.HESlide'>" : pathml.core.slide_classes.HESlide,
+            "<class 'pathml.core.slide_classes.RGBSlide'>" : pathml.core.slide_classes.MultiparametricSlide,
+    }
+    slidetype = slidetypedict[slidetype]
+    return slidetype(name = name, slide_backend = slide_backend, masks = masks, tiles = tiles, labels = labels, history = history) 
+    #return pathml.core.slide_data.SlideData(name = name, slide_backend = slide_backend, masks = masks, tiles = tiles, labels = labels, history = history) 
 
 def read_openslide(
     path
