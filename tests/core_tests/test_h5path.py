@@ -38,12 +38,3 @@ def scan_hdf5(f, recursive=True, tab_step=2):
                 elems.append((v.name, scan_node(v, tabs=tabs + tab_step)))
         return elems
     return scan_node(f)
-
-
-def test_write_to_existing_file_fails(tmp_path):
-    # trying to write to an existing file should raise an exception
-    wsi1 = HESlide("tests/testdata/small_HE.svs", name = "test1")
-    wsi2 = HESlide("tests/testdata/small_HE.svs", name = "test2")
-    wsi1.write(tmp_path / "testing.h5path")
-    with pytest.raises(ValueError):
-        wsi2.write(tmp_path / "testing.h5path")
