@@ -87,7 +87,6 @@ def writetilesdicth5(h5, name, dic):
                         data = val 
                     )               
             else:
-                print(dic[tile][field])
                 raise Exception(f"could not write tilesdict element {dic[name][tile]}")
 
 
@@ -118,10 +117,8 @@ def readtilesdicth5(h5):
         slidetype = h5[tile]['slidetype'][...].item().decode('UTF-8') if 'slidetype' in h5[tile].keys() else None
         # handle slidetype == 'None', must except because strings representing classes will error literal_eval
         # TODO: improve our representation of slidetype (currently just repr)
-        try:
+        if slidetype == 'None':
             slidetype = ast.literal_eval(slidetype)
-        except:
-            pass
         if slidetype:
             # TODO: better system for specifying slide classes.
             #  Since it's saved as string here, should have a clean string identifier for each class
