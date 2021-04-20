@@ -77,20 +77,11 @@ class _tiles_h5_manager(_h5_manager):
         if 'array' in self.h5.keys():
             # extend array if coords+shape is larger than self.h5['tiles/array'] 
             coords = tile.coords
-            '''
-            for i in range(len(coords)):
-                currentshape = self.h5['array'].shape[i]
-                requiredshape = coords[i] + tile.image.shape[i] 
-                if  currentshape < requiredshape:
-                    self.h5['array'].resize(self.h5['array'].shape[i] + requiredshape - currentshape, axis=i)
-            '''
-            
             coordslength = len(coords)
             currentshape = self.h5['array'].shape[0:coordslength]
             requiredshape = [coord + tile_shape for coord, tile_shape in zip(coords, tile.image.shape[0:coordslength])]
             for dim, (current, required) in enumerate(zip(currentshape, requiredshape)):
                 self.h5['array'].resize(required, axis=dim)
-
 
             # add tile to self.h5['tiles/array']
             slicer = [slice(coords[i], coords[i] + tile.image.shape[i]) for i in range(len(coords))] 
@@ -100,8 +91,9 @@ class _tiles_h5_manager(_h5_manager):
         # note that the first tile is not necessarily (0,0) so we init with zero padding
         elif 'array' not in self.h5.keys():
             coords = list(tile.coords)
-            coords = coords + [0]*len(tile.image.shape[len(coords):]) 
-            shape = [i + j  for i,j in zip(tile.image.shape, coords)]
+            shape = list(tile.image.shape)
+            for dim, coord in enumerate(coords):
+                shape[dim] += coord
             maxshape = tuple([None]*len(shape))
             self.h5.create_dataset(
                     'array', 
@@ -135,7 +127,7 @@ class _tiles_h5_manager(_h5_manager):
                         currentshape = self.h5['masks'][mask].shape[i]
                         requiredshape = coords[i] + tile.image.shape[i] 
                         if  currentshape < requiredshape:
-                            self.h5['masks'][mask].resize(self.h5['masks'][mask].shape[i] + requiredshape - currentshape, axis=i)
+                            self.h5['masks'][mask].resize(requiredshape, axis=i)
                     # add mask to mask array
                     slicer = [slice(coords[i], coords[i]+self.tile_shape[i]) for i in range(len(coords))] 
                     self.h5['masks'][mask][tuple(slicer)] = masklocation[mask][:]
