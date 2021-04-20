@@ -319,9 +319,9 @@ def read_h5path(
         history = f['fields'].attrs['history'] if 'history' in f['fields'].attrs.keys() else None
     slidetypedict = {
             "<class 'pathml.core.slide_data.SlideData'>" : pathml.core.slide_data.SlideData,
-            "<class 'pathml.core.slide_classes.RGBSlide'>" : pathml.core.slide_classes.RGBSlide,
-            "<class 'pathml.core.slide_classes.HESlide'>" : pathml.core.slide_classes.HESlide,
-            "<class 'pathml.core.slide_classes.RGBSlide'>" : pathml.core.slide_classes.MultiparametricSlide,
+            "<class 'pathml.core.slide_data.RGBSlide'>" : pathml.core.slide_data.RGBSlide,
+            "<class 'pathml.core.slide_data.HESlide'>" : pathml.core.slide_data.HESlide,
+            "<class 'pathml.core.slide_data.RGBSlide'>" : pathml.core.slide_data.MultiparametricSlide,
     }
     slidetype = slidetypedict[slidetype]
     return slidetype(name = name, slide_backend = slide_backend, masks = masks, tiles = tiles, labels = labels, history = history) 
