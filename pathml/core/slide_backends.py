@@ -185,6 +185,7 @@ class BioFormatsBackend(SlideBackend):
         reader.setId(str(self.filename))
         sizex, sizey, sizez, sizec, sizet = reader.getSizeX(), reader.getSizeY(), reader.getSizeZ(), reader.getSizeC(), reader.getSizeT()
         self.shape = (sizex, sizey, sizez, sizec, sizet)
+        self.imagecache = None
 
     def get_image_shape(self):
         """
@@ -237,18 +238,19 @@ class BioFormatsBackend(SlideBackend):
         if np.prod(self.shape) > 2147483647:
             raise Exception(f"Java arrays allocate maximum 32 bits (~2GB). Image size is {np.prod(self.shape)}")
 
-        javabridge.start_vm(class_path = bioformats.JARS)
-        reader = bioformats.ImageReader(str(self.filename), perform_init=True)
-        array = np.empty(self.shape)
-        for z in range(self.shape[2]):
-            for c in range(self.shape[3]):
-                for t in range(self.shape[4]):
-                    data = reader.read(z=z, t=t, series=c, rescale = False)
-                    slice_array = np.asarray(data)
-                    array[:,:,z,c,t] = np.transpose(slice_array)
-        # TODO: read slices directly, rather than read then slice 
+        if self.imagecache is None: 
+            javabridge.start_vm(class_path = bioformats.JARS)
+            reader = bioformats.ImageReader(str(self.filename), perform_init=True)
+            array = np.empty(self.shape)
+            for z in range(self.shape[2]):
+                for c in range(self.shape[3]):
+                    for t in range(self.shape[4]):
+                        data = reader.read(z=z, t=t, series=c, rescale = False)
+                        slice_array = np.asarray(data)
+                        array[:,:,z,c,t] = np.transpose(slice_array)
+            self.imagecache = array
         slices = [slice(location[i],location[i]+size[i]) for i in range(len(size))] 
-        array = array[tuple(slices)]
+        array = self.imagecache[tuple(slices)]
         array = array.astype(np.uint8)
         return array
 
