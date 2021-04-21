@@ -228,7 +228,7 @@ class _tiles_h5_manager(_h5_manager):
             coords = coords + [0]*len(shape[len(coords)-1:]) 
         tiler = [slice(coords[i], coords[i]+self.tile_shape[i]) for i in range(len(self.tile_shape))]
         tile = self.h5['array'][tuple(tiler)][:]
-        masks = {mask : self.h5['masks'][mask][tuple(tiler)][:] for mask in self.h5['masks']} if 'masks' in self.h5.keys() else None 
+        masks = {mask : self.h5['masks'][mask][tuple(tiler[:len(self.h5['masks'][mask].shape)])][:] for mask in self.h5['masks']} if 'masks' in self.h5.keys() else None 
         if slicer:
             tile = tile[slicer]
             if masks is not None:
