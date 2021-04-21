@@ -6,7 +6,7 @@ from skimage import restoration
 import deepcell
 
 import pathml.core
-import pathml.core.slide_classes
+import pathml.core.slide_data
 
 from pathml.utils import RGB_to_GREY, RGB_to_HSV, normalize_matrix_cols, RGB_to_OD
 
@@ -140,7 +140,7 @@ class BinaryThreshold(Transform):
     def apply(self, tile):
         assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
         assert self.mask_name is not None, "mask_name is None. Must supply a valid mask name"
-        if issubclass(tile.slidetype, pathml.core.slide_classes.RGBSlide):
+        if issubclass(tile.slidetype, pathml.core.slide_data.RGBSlide):
             im = RGB_to_GREY(tile.image)
         else:
             im = np.squeeze(tile.image)
@@ -661,7 +661,7 @@ class StainNormalizationHE(Transform):
 
     def apply(self, tile):
         assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
-        assert issubclass(tile.slidetype, pathml.core.slide_classes.HESlide), \
+        assert issubclass(tile.slidetype, pathml.core.slide_data.HESlide), \
             f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
         tile.image = self.F(tile.image)
 
@@ -716,7 +716,7 @@ class NucleusDetectionHE(Transform):
     def apply(self, tile):
         assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
         assert self.mask_name is not None, "mask_name is None. Must supply a valid mask name"
-        assert issubclass(tile.slidetype, pathml.core.slide_classes.HESlide), \
+        assert issubclass(tile.slidetype, pathml.core.slide_data.HESlide), \
             f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
         nucleus_mask = self.F(tile.image)
         tile.masks[self.mask_name] = nucleus_mask
@@ -783,7 +783,7 @@ class TissueDetectionHE(Transform):
     def apply(self, tile):
         assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
         assert self.mask_name is not None, "mask_name is None. Must supply a valid mask name"
-        assert issubclass(tile.slidetype, pathml.core.slide_classes.HESlide), \
+        assert issubclass(tile.slidetype, pathml.core.slide_data.HESlide), \
             f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
         mask = self.F(tile.image)
         tile.masks[self.mask_name] =  mask
@@ -905,7 +905,7 @@ class DeconvolveMIF(Transform):
     
     def F(self, image, slidetype):
         # TODO: get image in skimage format
-        if self.slidetype == pathml.core.slide_classes.VectraSlide:
+        if self.slidetype == pathml.core.slide_data.VectraSlide:
             if self.psf is None and self.psfparameters:
                 # create theoretical PSF from parameters
                 # pip psf
@@ -915,7 +915,7 @@ class DeconvolveMIF(Transform):
             else:
                 # default theoretical PSF 
                 pass
-        elif self.slidetype == pathml.core.slide_classes.CODEXSlide:
+        elif self.slidetype == pathml.core.slide_data.CODEXSlide:
             if self.psf is None and self.psfparameters:
                 # create theoretical PSF from parameters
                 pass

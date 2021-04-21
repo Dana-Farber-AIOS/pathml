@@ -11,6 +11,7 @@ import pathml.core.slide_backends
 import pathml.core.h5path 
 import pathml.preprocessing.pipeline
 
+
 class SlideData:
     """
     Main class representing a slide and its annotations. 
@@ -21,7 +22,7 @@ class SlideData:
         # TODO: somehow slidedata needs to tell us what slideclass it is
         slide_backend (pathml.core.slide_backends.SlideBackend, optional): slide_backend object for interfacing with
             slide on disk. If ``None``, and a ``filepath`` is provided, defaults to
-             :class:`~pathml.core.slide_backends.OpenSlideBackend`
+            :class:`~pathml.core.slide_backends.OpenSlideBackend`
         masks (pathml.core.masks.Masks, optional): object containing {key, mask} pairs
         tiles (pathml.core.tiles.Tiles, optional): object containing {coordinates, tile} pairs
         labels (collections.OrderedDict, optional): dictionary containing {key, label} pairs
@@ -114,7 +115,10 @@ class SlideData:
             for tile in self.generate_tiles(level = level, shape = tile_size, stride = tile_stride, pad = tile_pad):
                 if not tile.slidetype:
                     tile.slidetype = self.slidetype
-                f = client.submit(pipeline.apply, tile)
+                # explicitly scatter data, i.e. send the tile data out to the cluster before applying the pipeline
+                # according to dask, this can reduce scheduler burden and keep data on workers
+                big_future = client.scatter(tile)
+                f = client.submit(pipeline.apply, big_future)
                 processed_tile_futures.append(f)
 
             # as tiles are processed, add them to h5
@@ -127,7 +131,6 @@ class SlideData:
                     tile.slidetype = self.slidetype
                 pipeline.apply(tile)
                 self.tiles.add(tile)
-
 
         # after running preprocessing, create a pytorch dataset for the tiles
         self.tile_dataset = self._create_tile_dataset(self)
@@ -209,3 +212,67 @@ class SlideData:
             path (Union[str, bytes, os.PathLike]): path to file to be written
         """
         pathml.core.h5path.write_h5path(self, path)
+
+
+class RGBSlide(SlideData):
+    """
+    Class for any RGB slide. Uses OpenSlide backend.
+    Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
+    """
+    def __init__(self, *args, **kwargs):
+        kwargs["slide_backend"] = pathml.core.slide_backends.OpenSlideBackend
+        super().__init__(*args, **kwargs)
+
+
+class HESlide(RGBSlide):
+    """
+    Class for any H&E slide. Uses OpenSlide backend.
+    Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class IHCSlide(RGBSlide):
+    """
+    Class for any H&E slide. Uses OpenSlide backend.
+    Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class MultiparametricSlide(SlideData):
+    """
+    Class for any multiparametric slide. Uses BioFormats backend.
+    Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
+    """
+    def __init__(self, *args, **kwargs):
+        kwargs["slide_backend"] = pathml.core.slide_backends.BioFormatsBackend
+        super().__init__(*args, **kwargs)
+
+
+class VectraSlide(MultiparametricSlide):
+    """
+    Class for data in Vectra (Polaris) format.
+
+    This class enables transformations in * * 
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class CODEXSlide(MultiparametricSlide):
+    """
+    Class for data in Akoya bioscience CODEX format. 
+    Expects the following filesystem:
+        
+    This class enables transforms in *link to location in docs*. 
+    This class enables CODEX pipeline.
+
+    # TODO:
+        hierarchical biaxial gating (flow-style analysis) 
+        KNN/FLANN/leiden clustering
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)

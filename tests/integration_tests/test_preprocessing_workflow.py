@@ -1,6 +1,7 @@
 from dask.distributed import Client
 
 from pathml.core.slide_classes import HESlide, VectraSlide
+from pathml.core.slide_data import HESlide, VectraSlide
 from pathml.preprocessing.pipeline import Pipeline
 from pathml.preprocessing.transforms import BoxBlur, TissueDetectionHE, DeconvolveMIF, SegmentMIF, QuantifyMIF
 
@@ -15,8 +16,6 @@ def test_pipeline_1(tmp_path):
     client = Client()
 
     slide.run(pipeline, client = client, tile_size = 250)
-
-    slide.tiles.write(out_dir = tmp_path, filename = "slidetiles.h5")
 
     #shut down the client after running
     client.close()
