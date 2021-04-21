@@ -37,7 +37,7 @@ def test_slice(smallmasks, incorrect_input):
     masks = smallmasks
     slices = [slice(2, 5)]
     test = masks.slice(slices)
-    assert test.h5manager.shape == (3, 224, 3)
+    assert test.h5manager.tile_shape == (3, 224, 3)
     with pytest.raises(Exception):
         test = masks.slice(incorrect_input)
 

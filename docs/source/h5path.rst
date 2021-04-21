@@ -100,6 +100,7 @@ Here we examine the **h5path** file format in detail:
     │   │   ├── label2          (Attribute, [str, int, float, array])
     │   │   └── etc...
     │   ├── history             (Attribute, str)
+    │   ├── slidetype           (Attribute, str)
     │   └── slide_backend       (Attribute, str)
     ├── array                   (Dataset)
     ├── masks/                  (Group)

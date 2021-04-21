@@ -58,11 +58,11 @@ class Tiles:
                 del self._tiles
 
     def __repr__(self):
-        rep = f"Tiles(keys={self.h5manager.tilesdict})"
+        rep = f"Tiles(keys={self.h5manager.tiles})"
         return rep
 
     def __len__(self):
-        return len(self.h5manager.tilesdict.keys())
+        return len(self.h5manager.tiles.keys())
 
     def __getitem__(self, item):
         tile = self.h5manager.get(item) 
@@ -133,20 +133,3 @@ class Tiles:
         assert isinstance(shape, tuple) and all(isinstance(n, int) for n in shape) 
         assert isinstance(centercrop, bool)
         self.h5manager.reshape(shape, centercrop)
-
-    def write(self, out_dir, filename):
-        """
-        Save tiles as .h5 
-
-        Args:
-            out_dir(str): directory where file will be written
-            filename(str): file name 
-        """
-        savepath = Path(out_dir) / Path(filename)
-        Path(out_dir).mkdir(parents=True, exist_ok=True) 
-        newfile = os.path.abspath(str(savepath.with_suffix('.h5')))
-        newh5 = h5py.File(newfile, 'a')
-
-        #shutil.move(self.h5manager.h5path, newh5)
-        for dataset in self.h5manager.h5.keys():
-            self.h5manager.h5.copy(self.h5manager.h5[dataset], newh5)
