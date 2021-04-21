@@ -1,4 +1,5 @@
 import numpy as np
+import anndata
 from collections import OrderedDict
 
 import pathml.core.masks

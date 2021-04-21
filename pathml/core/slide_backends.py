@@ -252,6 +252,7 @@ class BioFormatsBackend(SlideBackend):
         slices = [slice(location[i],location[i]+size[i]) for i in range(len(size))] 
         array = self.imagecache[tuple(slices)]
         array = array.astype(np.uint8)
+
         return array
 
     def get_thumbnail(self, size=None):

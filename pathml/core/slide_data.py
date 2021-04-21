@@ -204,6 +204,13 @@ class SlideData:
     def plot(self):
         raise NotImplementedError
 
+    def count(self):
+        assert all(tile.counts for tile in self.tiles), f"before calling counts all tiles must be quantified"
+        counts = anndata.AnnData()
+        for tile in self.tiles:
+            counts = counts.concatenate(tile.counts) 
+        return counts
+
     def write(self, path):
         """
         Write contents to disk in h5path format.

@@ -159,6 +159,7 @@ class _tiles_h5_manager(_h5_manager):
                 'coords': str(tile.coords), 
                 'slidetype': tile.slidetype if tile.slidetype else None
         }
+        self.counts = tile.counts
 
     def update(self, key, val, target):
         """
@@ -235,7 +236,8 @@ class _tiles_h5_manager(_h5_manager):
                 masks = {key : masks[key][slicer[:len(masks[key].shape)]] for key in masks}
         masks = pathml.core.masks.Masks(masks)
         slidetype = tilemeta['slidetype']
-        return pathml.core.tile.Tile(tile, masks=masks, labels=tilemeta['labels'], name=tilemeta['name'], coords=eval(tilemeta['coords']), slidetype=slidetype)
+        counts = self.counts
+        return pathml.core.tile.Tile(tile, masks=masks, labels=tilemeta['labels'], name=tilemeta['name'], coords=eval(tilemeta['coords']), slidetype=slidetype, counts=counts)
 
     def slice(self, slicer):
         """

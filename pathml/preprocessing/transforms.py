@@ -1,9 +1,12 @@
 import os
 import cv2
 import numpy as np
+import pandas as pd
 import spams
 from skimage import restoration
 import deepcell
+import anndata
+from skimage.measure import regionprops_table
 
 import pathml.core
 import pathml.core.slide_data
@@ -827,6 +830,7 @@ class BackgroundSubtractCODEX(BackgroundSubtractMIF):
     
     def F(self, image):
         # infer from codex filestructure how to subtract
+        pass
     
     def apply(self, tile):
         tile.image =  F(tile.image)
@@ -995,19 +999,60 @@ class SegmentMIF(Transform):
 
 
 class QuantifyMIF(Transform):
-    # requires segmentation
-    # adds anndata object to slidedata.counts
-    def __init__(self):
-        pass
+    """
+    Convert segmented image into anndata.AnnData counts object.
+
+    Args:
+        segmentation_mask (str): key indicating which mask to use as label image
+    """
+    def __init__(self, segmentation_mask):
+        self.segmentation_mask = segmentation_mask
 
     def __repr__(self):
-        pass
+        return f"QuantifyMIF(segmentation_mask={self.segmentation_mask})"
     
     def F(self, image, segmentation):
-        # avg channels in each seg region
-        # match Akoya quantified output
-        pass
+        # TODO: add moments?
+        countsdataframe = regionprops_table(
+                label_image = segmentation,
+                intensity_image = image,
+                properties = [
+                    'coords','max_intensity',
+                    'mean_intensity','min_intensity',
+                    'centroid','filled_area',
+                    'eccentricity','euler_number','slice'
+                ] 
+        )
+        X = pd.DataFrame()
+        for i in range(image.shape[-1]):
+            X[i] = countsdataframe[f'mean_intensity-{i}'] 
+        # populate anndata object
+        counts = anndata.AnnData(
+                X=X, 
+                obs=[(x,y) in zip(countsdataframe['centroid-0'], countsdataframe['centroid-1'])]
+        )
+        counts.obs['coords'] = countsdataframe['coords']
+        counts.obs['filled_area'] = countsdataframe['filled_area']
+        counts.obs['slice'] = countsdataframe['slice']
+        counts.obs['euler_number'] = countsdataframe['euler_number']
+        min_intensities = pd.DataFrame()
+        for i in range(image.shape[-1]):
+            min_intensities[i] = countsdataframe[f'min_intensity-{i}'] 
+        counts.layers['min_intensity'] = min_intensities 
+        max_intensities = pd.DataFrame()
+        for i in range(image.shape[-1]):
+            max_intensities[i] = countsdataframe[f'max_intensity-{i}'] 
+        counts.layers['max_intensity'] = max_intensities 
+        return counts
     
     def apply(self, tile):
-        assert tile.masks['cell_segmentation'], f"cells must be segmented to quantify"
-        tile.counts = F(tile.image, tile.masks['cell_segmentation'])
+        assert tile.masks[self.segmentation_mask].shape, f"passed segmentation mask does not exist for tile {tile}"
+        # pass (x, y, channel) image and (x, y) segmentation
+        counts = self.F(tile.image[:,:,0,:,0], tile.masks['cell_segmentation'][:,:,0])
+        tile.counts = counts
+
+
+class Threshold(Transform):
+    # just an idea
+    # permutate pixels to generate null dist, then compute p(cell)
+    pass
