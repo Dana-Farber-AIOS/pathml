@@ -245,9 +245,15 @@ class BioFormatsBackend(SlideBackend):
             for z in range(self.shape[2]):
                 for c in range(self.shape[3]):
                     for t in range(self.shape[4]):
-                        data = reader.read(z=z, t=t, series=c, rescale = False)
-                        slice_array = np.asarray(data)
-                        array[:,:,z,c,t] = np.transpose(slice_array)
+                        # change to do this based on filetype
+                        try:
+                            data = reader.read(z=z, t=t, series=c, rescale = False)
+                            slice_array = np.asarray(data)
+                            array[:,:,z,c,t] = np.transpose(slice_array)
+                        except:
+                            data = reader.read(z=z, t=t, c=c, rescale = False)
+                            slice_array = np.asarray(data)
+                            array[:,:,z,c,t] = np.transpose(slice_array)
             self.imagecache = array
         slices = [slice(location[i],location[i]+size[i]) for i in range(len(size))] 
         array = self.imagecache[tuple(slices)]

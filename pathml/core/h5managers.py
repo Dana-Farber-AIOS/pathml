@@ -219,8 +219,8 @@ class _tiles_h5_manager(_h5_manager):
                 raise KeyError(f'key {item} does not exist')
             tilemeta = self.tiles[str(item)]
         if isinstance(item, int):
-            if item > len(self.tiles) - 1:
-                raise KeyError(f'index out of range, valid indices are ints in [0,{len(self.tiles) - 1}]')
+            if item > len(self.tiles):
+                raise KeyError(f'index out of range, valid indices are ints in [0,{len(self.tiles)}]')
             tilemeta = list(self.tiles.items())[item][1]
         # impute missing dimensions from self.tile_shape 
         coords = list(eval(tilemeta['coords']))
@@ -422,8 +422,8 @@ class _masks_h5_manager(_h5_manager):
             return self.h5[item][:][tuple(slicer)]
 
         else:
-            if item > len(self.h5) - 1:
-                raise KeyError(f"index out of range, valid indices are ints in [0,{len(self.h5['masks'].keys()) - 1}]")
+            if item > len(self.h5):
+                raise KeyError(f"index out of range, valid indices are ints in [0,{len(self.h5['masks'].keys())}]")
             if slicer is None:
                 return self.h5[list(self.h5.keys())[item]][:]
             return self.h5[list(self.h5.keys())[item]][:][tuple(slicer)]

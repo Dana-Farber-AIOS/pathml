@@ -973,7 +973,6 @@ class SegmentMIF(Transform):
         if self.model == 'mesmer':
             from deepcell.applications import Mesmer
             self.model = Mesmer()
-            print(self.model)
         else:
             raise ValueError(f"currently only support mesmer model")
     
@@ -984,9 +983,8 @@ class SegmentMIF(Transform):
     def F(self, image):
         nuc_cytoplasm = np.concatenate((image[:,:,:,self.nuclear_channel,0], image[:,:,:,self.cytoplasm_channel,0]), axis=2)
         # add batch dimension
-        # TODO: could use this to batch tiles
         nuc_cytoplasm = np.expand_dims(nuc_cytoplasm, axis=0)
-        cell_segmentation_predictions = self.model.predict(nuc_cytoplasm)
+        cell_segmentation_predictions = self.model.predict(nuc_cytoplasm, compartment='whole-cell')
         nuclear_segmentation_predictions = self.model.predict(nuc_cytoplasm, compartment='nuclear')
         cell_segmentation_predictions = np.squeeze(cell_segmentation_predictions, axis=0)
         nuclear_segmentation_predictions = np.squeeze(nuclear_segmentation_predictions, axis=0)
@@ -1029,8 +1027,9 @@ class QuantifyMIF(Transform):
         # populate anndata object
         counts = anndata.AnnData(
                 X=X, 
-                obs=[(x,y) in zip(countsdataframe['centroid-0'], countsdataframe['centroid-1'])]
+                obs=[tuple([x,y]) for x, y in zip(countsdataframe['centroid-0'], countsdataframe['centroid-1'])]
         )
+        counts.obs = counts.obs.rename(columns={0:'x',1:'y'})
         counts.obs['coords'] = countsdataframe['coords']
         counts.obs['filled_area'] = countsdataframe['filled_area']
         counts.obs['slice'] = countsdataframe['slice']
@@ -1043,6 +1042,7 @@ class QuantifyMIF(Transform):
         for i in range(image.shape[-1]):
             max_intensities[i] = countsdataframe[f'max_intensity-{i}'] 
         counts.layers['max_intensity'] = max_intensities 
+        counts.obsm['spatial'] = np.array(counts.obs[['x','y']])
         return counts
     
     def apply(self, tile):

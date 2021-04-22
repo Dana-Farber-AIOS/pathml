@@ -208,7 +208,7 @@ class SlideData:
         assert all(tile.counts for tile in self.tiles), f"before calling counts all tiles must be quantified"
         counts = anndata.AnnData()
         for tile in self.tiles:
-            counts = counts.concatenate(tile.counts) 
+            counts = counts.concatenate(tile.counts, join='outer', batch_key='test') 
         return counts
 
     def write(self, path):
