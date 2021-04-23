@@ -820,38 +820,6 @@ class BackgroundSubtractMIF(Transform):
         # TODO: some flag indicating that a channel is corrected? history?
 
 
-class BackgroundSubtractCODEX(BackgroundSubtractMIF):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        assert self.background_channel is None and self.target_channel is None
-    
-    def __repr__(self):
-        return f"BackgroundSubtractCODEX()"
-    
-    def F(self, image):
-        # infer from codex filestructure how to subtract
-        pass
-    
-    def apply(self, tile):
-        tile.image =  F(tile.image)
-
-
-class DriftCompensateMIF(Transform):
-    def __init__(self):
-        pass
-    
-    def __repr__(self):
-        pass
-    
-    def F(self, image):
-        # segment, foreground detect dapi
-        # align dapi stains
-        pass
-    
-    def apply(self, tile):
-        pass
-    
-
 class DriftCompensateCODEX(DriftCompensateMIF):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1050,9 +1018,3 @@ class QuantifyMIF(Transform):
         # pass (x, y, channel) image and (x, y) segmentation
         counts = self.F(tile.image[:,:,0,:,0], tile.masks['cell_segmentation'][:,:,0])
         tile.counts = counts
-
-
-class Threshold(Transform):
-    # just an idea
-    # permutate pixels to generate null dist, then compute p(cell)
-    pass
