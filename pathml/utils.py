@@ -1,12 +1,7 @@
-"""
-Utilities for manipulating images.
-"""
-
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
-from matplotlib.collections import PatchCollection
+from matplotlib.colors import TABLEAU_COLORS
 
 
 def upsample_array(arr, factor):
@@ -70,31 +65,6 @@ def plot_mask(im, mask_in, ax=None, color='red', downsample_factor=None):
     ax.imshow(im)
     ax.scatter(x, y, color = color, marker = ".", s = 1)
     ax.axis('off')
-    return ax
-
-
-def plot_extracted_tiles(data, downsample_factor=10, ax=None):
-    """
-    After extracting tiles, plot the locations of extracted tiles for visualization.
-    Overlays patch locations over original image.
-    """
-    assert data.tiles is not None, "Input data must have tiles"
-    # get size of tiles. Assumes all tiles are same size, and square
-    tile_size = data.tiles[0].array.shape[0]
-
-    if ax is None:
-        fig, ax = plt.subplots()
-
-    patches = []
-
-    for tile in data.tiles:
-        bbox = Rectangle(xy = (np.floor(tile.j / downsample_factor), np.floor(tile.i / downsample_factor)),
-                         width = np.floor(tile_size / downsample_factor),
-                         height = -np.floor(tile_size / downsample_factor))
-        patches.append(bbox)
-    p = PatchCollection(patches, edgecolor = 'None')
-    ax.imshow(data.image[::downsample_factor, ::downsample_factor])
-    ax.add_collection(p)
     return ax
 
 
@@ -339,3 +309,30 @@ def label_whitespace_HE(imarr, greyscale_threshold=230, proportion_threshold=0.5
     grey = RGB_to_GREY(imarr)
     pixel_thresh = np.mean(grey > greyscale_threshold)
     return pixel_thresh > proportion_threshold
+
+
+def plot_segmentation(ax, masks, palette=None, markersize=5):
+    """
+    Plot segmentation contours. Supports multi-class masks.
+
+    Args:
+        ax: matplotlib axis
+        masks (np.ndarray): Mask array of shape (n_masks, H, W). Zeroes are background pixels.
+        palette: color palette to use. if None, defaults to matplotlib.colors.TABLEAU_COLORS
+        markersize (int): Size of markers used on plot. Defaults to 5
+    """
+    assert masks.ndim == 3
+    n_channels = masks.shape[0]
+
+    if palette is None:
+        palette = list(TABLEAU_COLORS.values())
+
+    nucleus_labels = list(np.unique(masks))
+    if 0 in nucleus_labels:
+        nucleus_labels.remove(0)  # background
+    # plot each individual nucleus
+    for label in nucleus_labels:
+        for i in range(n_channels):
+            nuclei_mask = masks[i, ...] == label
+            x, y = segmentation_lines(nuclei_mask.astype(np.uint8))
+            ax.scatter(x, y, color = palette[i], marker = ".", s = markersize)

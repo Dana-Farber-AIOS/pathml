@@ -3,8 +3,6 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-# do similar for requirements
-
 setuptools.setup(
     name="pathml",
     version="0.0.1",
@@ -19,11 +17,11 @@ setuptools.setup(
         'openslide-python',
         'opencv-contrib-python',
         'matplotlib',
-        'sklearn'
+        'sklearn',
+        'dask'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ]
 )

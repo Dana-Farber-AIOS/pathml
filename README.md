@@ -24,13 +24,44 @@ A toolkit for computational pathology and machine learning.
 
 ## Installation
 
+1. Clone repo
+
 ````
-git clone https://github.com/Dana-Farber/pathml.git     # clone repo
-cd pathml                               # enter repo directory
-conda env create -f environment.yml     # create conda environment
-conda activate pathml                   # activate conda environment
-pip install -e .                        # install pathml in conda environment
+git clone https://github.com/Dana-Farber/pathml.git
+cd pathml
 ````
+
+2. Set Up Conda Environment
+
+````
+conda create --name pathml
+conda activate pathml
+````
+
+3. Install CUDA. This step only applies if you want to use GPU acceleration for model training or other tasks. This guide should work, but for the most up-to-date instructions, refer to the [official PyTorch installation instructions](https://pytorch.org/get-started/locally/).
+
+    - Check the version of CUDA:
+    
+        ````
+        nvidia-smi
+        ````
+    
+    - Install correct version of `cudatoolkit`:
+
+        ````
+        # update this command with your CUDA version number
+        conda install cudatoolkit=11.0
+        ````
+
+
+4. Install PathML
+
+````
+conda env update -f environment.yml     # install dependencies
+pip install -e .                        # install pathml
+````
+
+Optionally verify PyTorch installation with GPU support: `python -c "import torch; print(torch.cuda.is_available())"`
 
 ## Generate Documentation
 
@@ -72,11 +103,6 @@ coverage html           # optionally generate HTML coverage report
 # Getting Started
 
 The [example notebooks](examples) are a good place start with `PathML`.
-
-1. [Building a basic preprocessing pipeline for H&E images](examples/basic_HE.ipynb)
-1. [Building a more efficient custom preprocessing pipeline](examples/advanced_HE_chunks.ipynb)
-1. [Stain normalization for H&E images](examples/stain_normalization.ipynb)
-1. [Nucleus detection for H&E images](examples/nucleus_detection.ipynb)
 
 # Contributing
 

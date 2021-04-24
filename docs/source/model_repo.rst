@@ -24,6 +24,13 @@ How to download a model from the repository, run on local images, and see model 
 
 [code snippet]
 
+Fine tuning a pretrained model on domain specific data
+------------------------------------------------------
+
+How to download a model from the repository and fine tune.
+
+[example segmentation model]
+
 Contributing a pretrained model to the Model Repository
 -------------------------------------------------------
 

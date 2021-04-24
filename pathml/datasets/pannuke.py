@@ -9,12 +9,12 @@ import re
 import cv2
 import shutil
 
-from pathml.datasets.base import BaseTileDataset, BaseDataModule
+from pathml.datasets.base_data_module import BaseDataModule
 from pathml.datasets.utils import download_from_url
 from pathml.ml.hovernet import compute_hv_map
 
 
-class PanNukeDataset(BaseTileDataset):
+class PanNukeDataset(data.Dataset):
     """
     Dataset object for PanNuke dataset
 
@@ -324,7 +324,8 @@ class PanNukeDataModule(BaseDataModule):
         return data.DataLoader(
             dataset = self._get_dataset(fold_ix = self.split),
             batch_size = self.batch_size,
-            shuffle = self.shuffle
+            shuffle = self.shuffle, 
+            pin_memory=True
         )
 
     @property
@@ -340,7 +341,8 @@ class PanNukeDataModule(BaseDataModule):
         return data.DataLoader(
             self._get_dataset(fold_ix = fold_ix),
             batch_size = self.batch_size,
-            shuffle = self.shuffle
+            shuffle = self.shuffle, 
+            pin_memory=True
         )
 
     @property
@@ -356,5 +358,6 @@ class PanNukeDataModule(BaseDataModule):
         return data.DataLoader(
             self._get_dataset(fold_ix = fold_ix),
             batch_size = self.batch_size,
-            shuffle = self.shuffle
+            shuffle = self.shuffle, 
+            pin_memory=True
         )

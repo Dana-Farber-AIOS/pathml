@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath('../../'))
 # -- Project information -----------------------------------------------------
 
 project = 'PathML'
-copyright = '2020, DFCI'
+copyright = '2021, Dana-Farber Cancer Institute'
 author = 'Jacob Rosenthal'
 
 version = '0.0.1'
@@ -39,6 +39,10 @@ extensions = [
     'sphinx.ext.imgmath',
     'IPython.sphinxext.ipython_console_highlighting'
 ]
+
+autodoc_default_options = {
+    'undoc-members': True
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
