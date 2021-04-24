@@ -3,6 +3,10 @@ import numpy as np
 from typing import Tuple
 import bioformats
 import javabridge
+
+from pydicom.encaps import get_frame_offsets
+from pydicom.filebase import DicomFile
+from pydicom.tag import TupleTag
 from scipy.ndimage import zoom
 from bioformats.metadatatools import createOMEXMLMetadata
 
@@ -347,10 +351,100 @@ class BioFormatsBackend(SlideBackend):
                 yield pathml.core.tile.Tile(image = tile_im, coords = coords)
 
 
+from pydicom.filereader import dcmread, read_file_meta_info, data_element_offset_to_value
+from pydicom.uid import UID
+
 class DICOMBackend(SlideBackend):
     """
-    Class for interfacing with DICOM images on disk
+    Class for interfacing with DICOM files on disk representing Image Information Entities.
+    It provides efficient access to individual Frame items contained in the
+    Pixel Data element without loading the entire element into memory.
+
+    Args:
+        filename (str): Path to the DICOM Part10 file on disk
     """
     def __init__(self, filename):
         self.filename = filename
+        # read metadata fields of interest from DICOM, without reading the entire PixelArray
+        tags = ["NumberOfFrames", "TransferSyntaxUID",
+                "TotalPixelMatrixRows", "TotalPixelMatrixColumns",
+                "Rows", "Columns"]
+        metadata = dcmread(filename, specific_tags = tags)
+
+        # can use frame shape, total shape to map between frame index and coords
+        self.frame_shape = (metadata.Rows, metadata.Columns)
+        self.shape = (metadata.TotalPixelMatrixRows, metadata.TotalPixelMatrixColumns)
+        self.n_frames = int(metadata.NumberOfFrames)
+
+        self.fp = DicomFile(self.filename, mode = 'rb')
+        self.transfer_syntax_uid = UID(metadata.TransferSyntaxUID)
+        self.fp.is_little_endian = self.transfer_syntax_uid.is_little_endian
+        self.fp.is_implicit_VR = self.transfer_syntax_uid.is_implicit_VR
+        # get basic offset table, to enable reading individual frames without loading entire image
+        self.bot = self.get_bot(self.fp)
+
+    @staticmethod
+    def get_bot(fp):
+        """
+        Reads the value of the Basic Offset Table
+
+        Args:
+            fp (pydicom.filebase.DicomFile): pydicom DicomFile object
+
+        Returns:
+            list: Offset of each Frame of the Pixel Data element following the Basic Offset Table
+        """
+        # Skip Pixel Data element header
+        pixel_data_offset = data_element_offset_to_value(fp.is_implicit_VR, 'OB')
+        fp.seek(pixel_data_offset - 4, 1)
+        _, basic_offset_table = get_frame_offsets(fp)
+        first_frame_offset = fp.tell()
+        fp.seek(first_frame_offset, 0)
+        return basic_offset_table
+
+    def get_image_shape(self, **kwargs):
+        """
+        Get the shape of the image.
+
+        Returns:
+            Tuple[int, int]: Shape of image (H, W)
+        """
+        return self.shape
+
+    def get_thumbnail(self, size, **kwargs):
         raise NotImplementedError
+
+    def _index_to_coords(self, index):
+        """
+        convert from frame index to frame coordinates using image shape, frame_shape.
+        Frames start at 0, go across the rows sequentially, use zero padding at edges.
+
+        Args:
+            index (int): index of frame
+
+        Returns:
+            tuple: corresponding coordinates
+        """
+        frame_i, frame_j = self.frame_shape
+        im_i, im_j = self.shape
+        # use ceiling division to account for padding (i.e. still count incomplete frames on edge)
+        # ceiling division from: https://stackoverflow.com/a/17511341
+        n_rows = -(-im_i // frame_i)
+        n_cols = -(-im_j // frame_j)
+        # get which row and column we are in
+        row_ix = index // n_rows
+        col_ix = index % n_cols
+        return row_ix * frame_i, col_ix * frame_j
+
+
+    def extract_region(self, location, size, level, **kwargs):
+        """
+        Pull out a single frame from the DICOM image
+
+
+        """
+        pass
+
+    def generate_tiles(self, shape, stride, pad, **kwargs):
+        pass
+
