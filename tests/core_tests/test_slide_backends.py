@@ -23,40 +23,40 @@ def dicom_backend():
 @pytest.mark.parametrize("location", [(0, 0), (1000, 1000)])
 @pytest.mark.parametrize("size", [500, (500, 500)])
 @pytest.mark.parametrize("level", [None, 0])
-def test_openslide_extract_tile(backend, location, size, level):
+def test_extract_region(backend, location, size, level):
     region = backend.extract_region(location = location, size = size, level = level)
     assert isinstance(region, np.ndarray)
     assert region.dtype == np.uint8
 
 
 @pytest.mark.parametrize("backend,shape", [
-    (openslide_backend(), (2220, 2967)),
+    (openslide_backend(), (2967, 2220)),
     (bioformats_backend(), (640, 480)),
-    (dicom_backend(), (None, None))
+    (dicom_backend(), (2638, 3236))
 ])
 @pytest.mark.parametrize("pad", [True, False])
 @pytest.mark.parametrize("tile_shape", [500, (500, 500)])
-def test_openslide_tile_generator(backend, shape, tile_shape, pad):
+def test_tile_generator(backend, shape, tile_shape, pad):
     tiles = list(backend.generate_tiles(shape = tile_shape, stride = 500, pad = pad, level = 0))
     tile_shape = (tile_shape, tile_shape) if isinstance(tile_shape, int) else tile_shape
-    if pad:
+    if not pad:
         assert len(tiles) == np.prod([shape[i] // tile_shape[i] for i in range(len(shape))])
     else:
-        assert len(tiles) == np.prod([1 + shape[i] // tile_shape[i] for i in range(len(shape))])
+        assert len(tiles) == np.prod([1 + (shape[i] // tile_shape[i]) for i in range(len(shape))])
     assert all([isinstance(tile, Tile) for tile in tiles])
 
 
 @pytest.mark.parametrize("backend,shape", [
-    (openslide_backend(), (2220, 2967)),
+    (openslide_backend(), (2967, 2220)),
     (bioformats_backend(), (640, 480)),
-    (dicom_backend(), (None, None))
+    (dicom_backend(), (2638, 3236))
 ])
-def test_openslide_get_image_shape(backend, shape):
+def test_get_image_shape(backend, shape):
     assert backend.get_image_shape() == shape
 
 
 
-@pytest.mark.parametrize("backend", [openslide_backend(), bioformats_backend(), dicom_backend()])
+@pytest.mark.parametrize("backend", [openslide_backend(), bioformats_backend()])
 def test_get_thumbnail(backend):
     print(dir(backend))
     print(type(backend))
@@ -66,5 +66,19 @@ def test_get_thumbnail(backend):
 
 @pytest.mark.parametrize("backend", [openslide_backend(), bioformats_backend(), dicom_backend()])
 def test_repr(backend):
-    # make sure there are no errors during repr
+    # make sure there are no errors during repr or str
+    repr(backend)
     print(backend)
+
+
+def test_dicom_coords_index_conversion():
+    backend = dicom_backend()
+    # shape of the dicom image: (2638, 3236)
+    # frame size: (500, 500)
+    check = {0: (0, 0),
+             1: (0, 500),
+             14: (1000, 0),
+             41: (2500, 3000)}
+    for index, coords in check.items():
+        assert backend._index_to_coords(index) == coords
+        assert backend._coords_to_index(coords) == index
