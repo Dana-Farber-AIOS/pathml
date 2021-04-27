@@ -3,15 +3,19 @@ import numpy as np
 from typing import Tuple
 import bioformats
 import javabridge
-
-
 from scipy.ndimage import zoom
 from bioformats.metadatatools import createOMEXMLMetadata
+from pydicom.filereader import dcmread, data_element_offset_to_value
+from pydicom.uid import UID
+from pydicom.encaps import get_frame_offsets
+from pydicom.filebase import DicomFile
+from pydicom.tag import TupleTag, SequenceDelimiterTag
+from pydicom.dataset import Dataset
+from io import BytesIO
+from PIL import Image
 
 from pathml.utils import pil_to_rgb
-
 import pathml.core
-
 
 
 class SlideBackend:
@@ -351,21 +355,10 @@ class BioFormatsBackend(SlideBackend):
                 yield pathml.core.tile.Tile(image = tile_im, coords = coords)
 
 
-from pydicom.filereader import dcmread, read_file_meta_info, \
-    data_element_offset_to_value
-from pydicom.uid import UID
-from pydicom.encaps import get_frame_offsets
-from pydicom.filebase import DicomFile
-from pydicom.tag import TupleTag, SequenceDelimiterTag
-from pydicom.dataset import Dataset
-from io import BytesIO
-from PIL import Image
-
-
 class DICOMBackend(SlideBackend):
     """
-    Class for interfacing with DICOM files on disk representing Image Information Entities.
-    It provides efficient access to individual Frame items contained in the
+    Interface with DICOM files on disk.
+    Provides efficient access to individual Frame items contained in the
     Pixel Data element without loading the entire element into memory.
     Assumes that frames are non-overlapping.
 
@@ -406,7 +399,8 @@ class DICOMBackend(SlideBackend):
     @staticmethod
     def get_bot(fp):
         """
-        Reads the value of the Basic Offset Table
+        Reads the value of the Basic Offset Table. This table is used to access individual frames
+        without loading the entire file into memory
 
         Args:
             fp (pydicom.filebase.DicomFile): pydicom DicomFile object
@@ -432,12 +426,16 @@ class DICOMBackend(SlideBackend):
         return self.shape
 
     def get_thumbnail(self, size, **kwargs):
-        raise NotImplementedError
+        raise NotImplementedError("DICOMBackend does not support thumbnail")
 
     def _index_to_coords(self, index):
         """
         convert from frame index to frame coordinates using image shape, frame_shape.
-        Frames start at 0, go across the rows sequentially, use zero padding at edges.
+        Frames start at 0, go across the rows sequentially, use padding at edges.
+        Coordinates are for top-left corner of each Frame.
+
+        e.g. if the image is 100x100, and each frame is 10x10, then the top row will contain frames 0 through 9,
+        second row will contain frames 10 through 19, etc.
 
         Args:
             index (int): index of frame
@@ -455,6 +453,10 @@ class DICOMBackend(SlideBackend):
         """
         convert from frame coordinates to frame index using image shape, frame_shape.
         Frames start at 0, go across the rows sequentially, use zero padding at edges.
+        Coordinates are for top-left corner of each Frame.
+
+        e.g. if the image is 100x100, and each frame is 10x10, then coordinate (10, 10) corresponds to frame index 11
+        (second row, second column).
 
         Args:
             tuple (tuple): coordinates
@@ -466,7 +468,8 @@ class DICOMBackend(SlideBackend):
         frame_i, frame_j = self.frame_shape
         # frame size must evenly divide coords, otherwise we aren't on a frame corner
         if i % frame_i or j % frame_j:
-            raise ValueError(f"coords {coords} are not evenly divided by frame size {(frame_i, frame_j)}")
+            raise ValueError(f"coords {coords} are not evenly divided by frame size {(frame_i, frame_j)}. "
+                             f"Must provide coords at upper left corner of Frame.")
 
         row_ix = i / frame_i
         col_ix = j / frame_j
@@ -476,7 +479,7 @@ class DICOMBackend(SlideBackend):
 
     def extract_region(self, location, size=None, level=None, **kwargs):
         """
-        Extract a single frame from the DICOM image
+        Extract a single frame from the DICOM image.
 
         Args:
             location (Union[int, Tuple[int, int]]): coordinate location of top-left corner of frame, or integer index
@@ -586,7 +589,7 @@ class DICOMBackend(SlideBackend):
     def generate_tiles(self, shape, stride, pad, **kwargs):
         """
         Generator over tiles.
-        For DICOMBackend, each frame is yielded as a Tile object.
+        For DICOMBackend, each tile corresponds to a frame.
 
         Args:
             shape (int or tuple(int)): Size of each tile. May be a tuple of (height, width) or a single integer,
@@ -613,4 +616,3 @@ class DICOMBackend(SlideBackend):
             coords = self._index_to_coords(i)
             frame_tile = pathml.core.tile.Tile(image = frame_im, coords = coords)
             yield frame_tile
-
