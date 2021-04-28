@@ -1,3 +1,8 @@
+"""
+Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
+License: GNU GPL 2.0
+"""
+
 import pytest
 
 from pathml.datasets.utils import parse_file_size, download_from_url
