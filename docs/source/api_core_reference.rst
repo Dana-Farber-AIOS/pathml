@@ -6,47 +6,39 @@ SlideData
 
 The central class in ``PathML`` for representing a whole-slide image.
 
-.. autoclass:: pathml.core.slide_data.SlideData
-    :members:
+.. autoclass:: pathml.core.SlideData
 
 RGBSlide
 ^^^^^^^^
 
-.. autoclass:: pathml.core.slide_data.RGBSlide
-    :members:
+.. autoclass:: pathml.core.RGBSlide
 
 HESlide
 ^^^^^^^
 
-.. autoclass:: pathml.core.slide_data.HESlide
-    :members:
+.. autoclass:: pathml.core.HESlide
 
 MultiparametricSlide
 ^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: pathml.core.slide_data.MultiparametricSlide
-    :members:
+.. autoclass:: pathml.core.MultiparametricSlide
 
 Tile
 ----
 
-.. automodule:: pathml.core.tile
-    :members:
+.. autoclass:: pathml.core.Tile
 
 SlideDataset
 ------------
 
-.. autoclass:: pathml.core.slide_dataset.SlideDataset
-    :members:
+.. autoclass:: pathml.core.SlideDataset
 
 Tiles and Masks helper classes
 ------------------------------
 
-.. automodule:: pathml.core.tiles
-    :members:
+.. autoclass:: pathml.core.Tiles
 
-.. automodule:: pathml.core.masks
-    :members:
+.. autoclass:: pathml.core.Masks
 
 
 Slide Backends
@@ -55,26 +47,25 @@ Slide Backends
 OpenslideBackend
 ^^^^^^^^^^^^^^^^
 
-.. autoclass:: pathml.core.slide_backends.OpenSlideBackend
-    :members:
+.. autoclass:: pathml.core.OpenSlideBackend
 
 BioFormatsBackend
 ^^^^^^^^^^^^^^^^^
 
-.. autoclass:: pathml.core.slide_backends.BioFormatsBackend
-    :members:
+.. autoclass:: pathml.core.BioFormatsBackend
 
 DICOMBackend
 ^^^^^^^^^^^^
 
-.. autoclass:: pathml.core.slide_backends.DICOMBackend
-    :members:
+.. autoclass:: pathml.core.DICOMBackend
 
-HDF5 Integration
-----------------
+Reading and Writing
+-------------------
 
-.. automodule:: pathml.core.h5managers
-    :members:
-
-.. automodule:: pathml.core.h5path
-    :members:
+.. autofunction:: pathml.core.h5path.write_h5path
+.. autofunction:: pathml.core.h5path.read
+.. autofunction:: pathml.core.h5path.read_h5path
+.. autofunction:: pathml.core.h5path.read_openslide
+.. autofunction:: pathml.core.h5path.read_bioformats
+.. autofunction:: pathml.core.h5path.read_dicom
+.. autofunction:: pathml.core.h5path.is_valid_path
