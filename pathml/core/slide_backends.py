@@ -16,6 +16,7 @@ from PIL import Image
 
 from pathml.utils import pil_to_rgb
 import pathml.core
+import pathml.core.tile
 
 
 class SlideBackend:
