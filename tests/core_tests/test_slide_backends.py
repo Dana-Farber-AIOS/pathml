@@ -7,8 +7,7 @@ import pytest
 import numpy as np
 import openslide
 
-from pathml.core.slide_backends import OpenSlideBackend, DICOMBackend, BioFormatsBackend
-from pathml.core.tile import Tile
+from pathml.core import OpenSlideBackend, DICOMBackend, BioFormatsBackend, Tile
 
 
 @pytest.fixture

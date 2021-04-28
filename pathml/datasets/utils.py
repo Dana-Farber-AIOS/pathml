@@ -6,7 +6,6 @@ License: GNU GPL 2.0
 import os
 import shutil
 import urllib
-
 import numpy as np
 
 

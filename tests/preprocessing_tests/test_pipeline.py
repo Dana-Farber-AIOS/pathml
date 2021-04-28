@@ -6,9 +6,9 @@ License: GNU GPL 2.0
 import pickle
 import numpy as np
 
-from pathml.preprocessing.pipeline import Pipeline
+from pathml.preprocessing import Pipeline
 
-from pathml.preprocessing.transforms import (
+from pathml.preprocessing import (
     MedianBlur, GaussianBlur, BoxBlur, BinaryThreshold,
     MorphOpen, MorphClose, ForegroundDetection, SuperpixelInterpolation,
     StainNormalizationHE, NucleusDetectionHE, TissueDetectionHE

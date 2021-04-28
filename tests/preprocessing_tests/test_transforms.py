@@ -6,7 +6,7 @@ License: GNU GPL 2.0
 import numpy as np
 import pytest
 
-from pathml.preprocessing.transforms import (
+from pathml.preprocessing import (
     MedianBlur, GaussianBlur, BoxBlur, BinaryThreshold,
     MorphOpen, MorphClose, ForegroundDetection, SuperpixelInterpolation,
     StainNormalizationHE, NucleusDetectionHE, TissueDetectionHE

@@ -353,7 +353,8 @@ def read_bioformats(
     Args:
         path (str): Path to image file of supported BioFormats format on disk
     """
-    return pathml.core.slide_data.MultiparametricSlide(filepath = path, slide_backend = BioFormatsBackend)
+    return pathml.core.slide_data.MultiparametricSlide(filepath = path,
+                                                       slide_backend = pathml.core.slide_backends.BioFormatsBackend)
 
 def read_dicom(
     path

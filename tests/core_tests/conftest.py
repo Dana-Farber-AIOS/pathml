@@ -7,20 +7,14 @@ License: GNU GPL 2.0
 import pytest
 import numpy as np
 
-from pathml.core.tiles import Tiles
-from pathml.core.masks import Masks
-from pathml.core.slide_data import SlideData, HESlide
-from pathml.core.slide_backends import OpenSlideBackend
-from pathml.core.slide_dataset import SlideDataset
-from pathml.core.tile import Tile
-from pathml.preprocessing.pipeline import Pipeline
-from pathml.preprocessing.transforms import BoxBlur
+from pathml.core import Tiles, Masks, SlideData, HESlide, OpenSlideBackend, SlideDataset, Tile
 
 
 @pytest.fixture
 def tile_nomasks():
     testtile = Tile(np.random.randn(224, 224, 3), coords = (1, 3))
     return testtile
+
 
 @pytest.fixture
 def tile_nomasks():

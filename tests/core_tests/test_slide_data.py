@@ -7,11 +7,9 @@ from pathlib import Path
 import pytest
 from dask.distributed import Client
 
-from pathml.core.slide_data import SlideData, HESlide, MultiparametricSlide, RGBSlide
-from pathml.core.slide_backends import OpenSlideBackend, BioFormatsBackend
-from pathml.preprocessing.pipeline import Pipeline
-from pathml.preprocessing.transforms import BoxBlur
-from pathml.core.tile import Tile
+from pathml.core import SlideData, HESlide, MultiparametricSlide, RGBSlide, OpenSlideBackend, BioFormatsBackend, Tile
+
+from pathml.preprocessing import Pipeline, BoxBlur
 
 
 @pytest.mark.parametrize("slide", [SlideData, HESlide, RGBSlide, MultiparametricSlide])

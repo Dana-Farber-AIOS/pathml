@@ -10,7 +10,7 @@ import numpy as np
 import h5py
 import shutil
 
-from pathml.datasets.deepfocus import DeepFocusDataModule
+from pathml.datasets import DeepFocusDataModule
 from pathml.core.utils import writedataframeh5 
 
 
