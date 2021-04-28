@@ -1,4 +1,8 @@
-import pytest
+"""
+Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
+License: GNU GPL 2.0
+"""
+
 import pickle
 import numpy as np
 
@@ -37,7 +41,6 @@ def test_pipeline(tileHE):
 
     assert np.array_equal(tileHE.image, im)
     assert np.array_equal(tileHE.masks["testing"], m)
-
 
 
 def test_pipeline_save(tmp_path):

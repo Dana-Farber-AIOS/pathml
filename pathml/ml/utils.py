@@ -1,3 +1,8 @@
+"""
+Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
+License: GNU GPL 2.0
+"""
+
 # Utilities for ML module
 import torch
 from torch.nn import functional as F

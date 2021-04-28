@@ -1,11 +1,14 @@
+"""
+Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
+License: GNU GPL 2.0
+"""
+
 import os
 import cv2
 import numpy as np
 import spams
 
 import pathml.core
-# from pathml.core.tile import Tile
-# from pathml.core.slide_classes import HESlide
 import pathml.core.slide_data
 
 from pathml.utils import RGB_to_GREY, RGB_to_HSV, normalize_matrix_cols, RGB_to_OD

@@ -5,9 +5,9 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pathml",
-    version="0.0.1",
-    author="Jacob Rosenthal",
-    author_email="Jacob_Rosenthal@dfci.harvard.edu",
+    version="1.0.0",
+    author="Jacob Rosenthal et al.",
+    author_email="PathML@dfci.harvard.edu",
     description="Toolbox for computational pathology",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -18,7 +18,9 @@ setuptools.setup(
         'opencv-contrib-python',
         'matplotlib',
         'sklearn',
-        'dask'
+        'dask',
+        'anndata',
+        'pydicom'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

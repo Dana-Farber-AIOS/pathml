@@ -18,10 +18,10 @@ sys.path.insert(0, os.path.abspath('../../'))
 # -- Project information -----------------------------------------------------
 
 project = 'PathML'
-copyright = '2021, Dana-Farber Cancer Institute'
-author = 'Jacob Rosenthal'
+copyright = '2021, Dana-Farber Cancer Institute and Weill Cornell Medicine'
+author = 'Jacob Rosenthal et al.'
 
-version = '0.0.1'
+version = '1.0.0'
 # The full version, including alpha/beta/rc tags
 release = version
 
