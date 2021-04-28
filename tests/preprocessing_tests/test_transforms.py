@@ -9,7 +9,8 @@ import pytest
 from pathml.preprocessing import (
     MedianBlur, GaussianBlur, BoxBlur, BinaryThreshold,
     MorphOpen, MorphClose, ForegroundDetection, SuperpixelInterpolation,
-    StainNormalizationHE, NucleusDetectionHE, TissueDetectionHE
+    StainNormalizationHE, NucleusDetectionHE, TissueDetectionHE,
+    LabelArtifactTileHE, LabelWhiteSpaceHE
 )
 from pathml.utils import RGB_to_GREY
 
@@ -102,6 +103,13 @@ def test_tissue_detectionHE(tileHE, threshold, use_saturation):
     assert np.array_equal(tileHE.masks["testing"], m)
 
 
+@pytest.mark.parametrize('transform', [LabelArtifactTileHE, LabelWhiteSpaceHE])
+def test_binary_label_transforms(tileHE, transform):
+    t = transform(label_name = "test_label")
+    t.apply(tileHE)
+    assert tileHE.labels["test_label"] in [True, False]
+
+
 @pytest.mark.parametrize("transform", [MedianBlur(),
                                        GaussianBlur(),
                                        BoxBlur(),
@@ -112,6 +120,8 @@ def test_tissue_detectionHE(tileHE, threshold, use_saturation):
                                        SuperpixelInterpolation(),
                                        StainNormalizationHE(),
                                        NucleusDetectionHE(),
-                                       TissueDetectionHE()])
+                                       TissueDetectionHE(),
+                                       LabelArtifactTileHE(),
+                                       LabelWhiteSpaceHE()])
 def test_repr(transform):
     repr(transform)

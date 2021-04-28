@@ -11,7 +11,7 @@ import spams
 import pathml.core
 import pathml.core.slide_data
 
-from pathml.utils import RGB_to_GREY, RGB_to_HSV, normalize_matrix_cols, RGB_to_OD
+from pathml.utils import RGB_to_GREY, RGB_to_HSV, normalize_matrix_cols, RGB_to_OD, RGB_to_HSI
 
 
 # Base class
@@ -28,7 +28,7 @@ class Transform:
         raise NotImplementedError
 
     def apply(self, tile):
-        """modify chunk"""
+        """modify Tile object in-place"""
         raise NotImplementedError
 
 
@@ -790,3 +790,87 @@ class TissueDetectionHE(Transform):
             f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
         mask = self.F(tile.image)
         tile.masks[self.mask_name] =  mask
+
+
+class LabelWhiteSpaceHE(Transform):
+    """
+    Simple threshold method to label an image as majority whitespace.
+    Converts image to greyscale. If the proportion of pixels exceeding the greyscale threshold is greater
+    than the proportion threshold, then the image is labelled as whitespace.
+
+    Args:
+        label_name (str): name for new mask
+    """
+    def __init__(self, label_name=None, greyscale_threshold=230, proportion_threshold=0.5):
+        self.label_name = label_name
+        self.greyscale_threshold = greyscale_threshold
+        self.proportion_threshold = proportion_threshold
+
+    def __repr__(self):
+        return f"LabelWhiteSpaceHE(label_name={self.label_name}, greyscale_threshold={self.greyscale_threshold}, " \
+               f"proportion_threshold={self.proportion_threshold})"
+
+    def F(self, image):
+        grey = RGB_to_GREY(image)
+        pixel_thresh = np.mean(grey > self.greyscale_threshold)
+        return pixel_thresh > self.proportion_threshold
+
+    def apply(self, tile):
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        assert self.label_name is not None, "label_name is None. Must supply a valid label name"
+        assert issubclass(tile.slidetype, pathml.core.slide_data.HESlide), \
+            f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
+        label = self.F(tile.image)
+        if tile.labels:
+            tile.labels[self.label_name] = label
+        else:
+            tile.labels = {self.label_name: label}
+
+
+class LabelArtifactTileHE(Transform):
+    """
+    Applies a rule-based method to identify whether or not an image contains artifacts (e.g. pen marks).
+    Based on criteria from Kothari et al. 2012 ACM-BCB 218-225.
+
+    Args:
+        label_name (str): name for new mask
+
+    References:
+        Kothari, S., Phan, J.H., Osunkoya, A.O. and Wang, M.D., 2012, October. Biological interpretation of
+        morphological patterns in histopathological whole-slide images. In Proceedings of the ACM Conference
+        on Bioinformatics, Computational Biology and Biomedicine (pp. 218-225).
+    """
+    def __init__(self, label_name=None):
+        self.label_name = label_name
+
+    def __repr__(self):
+        return f"LabelArtifactTileHE(label_name={self.label_name})"
+
+    def F(self, image):
+        image_hsi = RGB_to_HSI(image)
+        h = image_hsi[:, :, 0]
+        s = image_hsi[:, :, 1]
+        i = image_hsi[:, :, 2]
+        whitespace = np.logical_and(i >= 0.1, s <= 0.1)
+        p1 = np.logical_and(0.4 < h, 0.7 > h)
+        p2 = np.logical_and(p1, s > 0.1)
+        pen_mark = np.logical_or(p2, i < 0.1)
+        tissue = ~np.logical_or(whitespace, pen_mark)
+        mean_whitespace = np.mean(whitespace)
+        mean_pen = np.mean(pen_mark)
+        mean_tissue = np.mean(tissue)
+        if (mean_whitespace >= 0.8) or (mean_pen >= 0.05) or (mean_tissue < 0.5):
+            return True
+        else:
+            return False
+
+    def apply(self, tile):
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        assert self.label_name is not None, "label_name is None. Must supply a valid label name"
+        assert issubclass(tile.slidetype, pathml.core.slide_data.HESlide), \
+            f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
+        label = self.F(tile.image)
+        if tile.labels:
+            tile.labels[self.label_name] = label
+        else:
+            tile.labels = {self.label_name: label}
