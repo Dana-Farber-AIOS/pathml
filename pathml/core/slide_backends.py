@@ -175,10 +175,9 @@ class BioFormatsBackend(SlideBackend):
     def __init__(self, filename):
         self.filename = filename
         # init java virtual machine
-        javabridge.start_vm(class_path = bioformats.JARS)
+        javabridge.start_vm(class_path = bioformats.JARS, max_heap_size="50G")
         # java maximum array size of 2GB constrains image size
         ImageReader = bioformats.formatreader.make_image_reader_class()
-        # FormatTools = bioformats.formatreader.make_format_tools_class()
         reader = ImageReader()
         omeMeta = createOMEXMLMetadata()
         reader.setMetadataStore(omeMeta)
@@ -186,6 +185,7 @@ class BioFormatsBackend(SlideBackend):
         sizex, sizey, sizez, sizec, sizet = reader.getSizeX(), reader.getSizeY(), reader.getSizeZ(), reader.getSizeC(), reader.getSizeT()
         self.shape = (sizex, sizey, sizez, sizec, sizet)
         self.imagecache = None
+        self.metadata = bioformats.get_omexml_metadata(self.filename)
 
     def get_image_shape(self):
         """
@@ -203,9 +203,9 @@ class BioFormatsBackend(SlideBackend):
         retrieved in full.
 
         Args:
-            location (Tuple[int, int]): Location of corner of extracted region closest to the origin.
-            size (Tuple[int, int, ...]): Size of each region. If an integer is passed, will convert to a tuple of (H, W)
-                and extract a square region. If a tuple with len < 5 is passed, missing
+            location (Tuple[int, int]): (X,Y) location of corner of extracted region closest to the origin.
+            size (Tuple[int, int, ...]): (X,Y) size of each region. If an integer is passed, will convert to a 
+            tuple of (H, W) and extract a square region. If a tuple with len < 5 is passed, missing
                 dimensions will be retrieved in full.
             level (int): level from which to extract chunks. Level 0 is highest resolution. Must be 0 or None, since
                 BioFormatsBackend does not support multiple levels.
@@ -216,30 +216,18 @@ class BioFormatsBackend(SlideBackend):
         Example:
             Extract 2000x2000 x,y region from upper left corner of 7 channel, 2d fluorescent image.
             data.slide.extract_region(location = (0,0), size = (2000,2000))
-            # plot single channel
-            plt.figure()
-            plt.imshow(region[:,:,0,0,0])
-
-            Extract 2000x2000 x,y region of the first channel from upper left corner.
-            region = data.slide.extract_region(location = (0,0,0,0,0), size = (2000,2000,1,1,1))
-            # plot full region
-            plt.figure()
-            plt.imshow(region[:,:,0,:,0])
         """
         if level not in [None, 0]:
             raise ValueError("BioFormatsBackend does not support levels, please pass a level in [None, 0]")
-
         # if a single int is passed for size, convert to a tuple to get a square region
         if type(size) is int:
             size = (size, size)
-        if not (isinstance(location, tuple) and all([isinstance(x, int) for x in location])):
-            raise ValueError(f"input location {location} invalid. Must be a tuple of integer coordinates")
-
-        if np.prod(self.shape) > 2147483647:
-            raise Exception(f"Java arrays allocate maximum 32 bits (~2GB). Image size is {np.prod(self.shape)}")
-
+        if not (isinstance(location, tuple) and len(location)<3 and all([isinstance(x, int) for x in location])):
+            raise ValueError(f"input location {location} invalid. Must be a tuple of integer coordinates of len<2")
+        if not (isinstance(size, tuple) and len(size)<3 and all([isinstance(x, int) for x in size])):
+            raise ValueError(f"input size {size} invalid. Must be a tuple of integer coordinates of len<2")
         if self.imagecache is None: 
-            javabridge.start_vm(class_path = bioformats.JARS)
+            javabridge.start_vm(class_path = bioformats.JARS, max_heap_size="100G")
             reader = bioformats.ImageReader(str(self.filename), perform_init=True)
             array = np.empty(self.shape)
             for z in range(self.shape[2]):
@@ -258,7 +246,18 @@ class BioFormatsBackend(SlideBackend):
         slices = [slice(location[i],location[i]+size[i]) for i in range(len(size))] 
         array = self.imagecache[tuple(slices)]
         array = array.astype(np.uint8)
-
+        """
+        javabridge.start_vm(class_path = bioformats.JARS, max_heap_size="100G")
+        reader = bioformats.ImageReader(str(self.filename), perform_init=True)
+        for z in range(self.shape[2]):
+            for t in range(self.shape[4]):
+                # or reader.openBytes() but need to declare omemetadata as in init
+                # image = reader.openBytesXYWH(location[0], location[1], size[0], size[1])
+                slice = reader.read(z=z, t=t, rescale=False, XYWH=(location[0], location[1], size[0], size[1])
+                slicearray = np.asarray(data)
+                array[:,:,z,:,t] = np.transpose(slicearray)
+        array = array.astype(np.uint8)
+        """
         return array
 
     def get_thumbnail(self, size=None):

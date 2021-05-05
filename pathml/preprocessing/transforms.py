@@ -820,21 +820,6 @@ class BackgroundSubtractMIF(Transform):
         # TODO: some flag indicating that a channel is corrected? history?
 
 
-class DriftCompensateCODEX(DriftCompensateMIF):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        pass
-    
-    def __repr__(self):
-        pass
-    
-    def F(self, image):
-        pass
-    
-    def apply(self, tile):
-        pass
-
-
 class DeconvolveMIF(Transform):
     """
     Apply image deconvolution. Models blurring/noise as caused by
@@ -905,6 +890,8 @@ class SegmentMIF(Transform):
     """
     Transform applying segmentation to MIF images.
 
+    Input image must be formatted (c, x, y) or (batch, c, x, y). z and t dimensions must be selected before calling SegmentMIF
+
     Supported models
     Mesmer
         Mesmer uses human-in-the-loop pipeline to train a  ResNet50 backbone w/ Feature Pyramid Network
@@ -949,9 +936,11 @@ class SegmentMIF(Transform):
                f"gpu={self.gpu})"
     
     def F(self, image):
-        nuc_cytoplasm = np.concatenate((image[:,:,:,self.nuclear_channel,0], image[:,:,:,self.cytoplasm_channel,0]), axis=2)
-        # add batch dimension
-        nuc_cytoplasm = np.expand_dims(nuc_cytoplasm, axis=0)
+        if len(image.shape) not in [3, 4]:
+            raise ValueError(f"supported image shapes are x,y,c or batch,x,y,c")
+        if len(image.shape) == 3:
+            image = np.expand_dims(image, axis=0)
+        nuc_cytoplasm = np.stack((image[:,:,:,self.nuclear_channel], image[:,:,:,self.cytoplasm_channel]), axis=-1)
         cell_segmentation_predictions = self.model.predict(nuc_cytoplasm, compartment='whole-cell')
         nuclear_segmentation_predictions = self.model.predict(nuc_cytoplasm, compartment='nuclear')
         cell_segmentation_predictions = np.squeeze(cell_segmentation_predictions, axis=0)
@@ -1016,5 +1005,55 @@ class QuantifyMIF(Transform):
     def apply(self, tile):
         assert tile.masks[self.segmentation_mask].shape, f"passed segmentation mask does not exist for tile {tile}"
         # pass (x, y, channel) image and (x, y) segmentation
-        counts = self.F(tile.image[:,:,0,:,0], tile.masks['cell_segmentation'][:,:,0])
+        counts = self.F(tile.image, tile.masks['cell_segmentation'][:,:,0])
         tile.counts = counts
+
+
+class CollapseRunsCODEX(Transform):
+    """
+    Coerce CODEX output to standard format.
+    CODEX output is (x, y, z, c, t) where c=4 (4 runs per cycle) and t is the number of cycles.
+    Output is (x, y, c) where all cycles are collapsed into c (c = 4 * # of cycles).
+
+    Args:
+        z(int): in-focus z-plane for cells of interest
+    """
+    def __init__(self, z):
+        self.z = z
+
+    def __repr__(self):
+        return f"ReshapeCODEX()"
+
+    def F(self, image):
+        # collapse channels
+        import functools
+        s = list(image.shape)
+        i=3
+        n=1
+        combined = functools.reduce(lambda x,y: x*y, s[i:i+n+1])
+        image = np.reshape(image, s[:i] + [combined] + s[i+n+1:])
+        # select z plane
+        assert self.z in range(image.shape[3])
+        image = image[:,:,self.z,:]
+        print(image.shape)
+        return image 
+
+    def apply(self, tile):
+        tile.image = self.F(tile.image)
+
+
+class NicheInferenceMIF(Transform):
+    def __init__(self, model):
+        pass
+
+    def __repr__(self):
+        return f"NicheInferenceMIF()"
+
+    def F(self, adata):
+        # detect spatial nearest neighbors
+        # embed nearest neighbor vectors
+        # cluster embedding
+        pass
+
+    def apply(self, tile):
+        tile.counts = self.F(tile.counts)
