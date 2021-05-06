@@ -215,7 +215,7 @@ class BioFormatsBackend(SlideBackend):
 
         Example:
             Extract 2000x2000 x,y region from upper left corner of 7 channel, 2d fluorescent image.
-            data.slide.extract_region(location = (0,0), size = (2000,2000))
+            data.slide.extract_region(location = (0,0), size = 2000)
         """
         if level not in [None, 0]:
             raise ValueError("BioFormatsBackend does not support levels, please pass a level in [None, 0]")
@@ -226,38 +226,26 @@ class BioFormatsBackend(SlideBackend):
             raise ValueError(f"input location {location} invalid. Must be a tuple of integer coordinates of len<2")
         if not (isinstance(size, tuple) and len(size)<3 and all([isinstance(x, int) for x in size])):
             raise ValueError(f"input size {size} invalid. Must be a tuple of integer coordinates of len<2")
-        if self.imagecache is None: 
-            javabridge.start_vm(class_path = bioformats.JARS, max_heap_size="100G")
-            reader = bioformats.ImageReader(str(self.filename), perform_init=True)
-            array = np.empty(self.shape)
-            for z in range(self.shape[2]):
-                for c in range(self.shape[3]):
-                    for t in range(self.shape[4]):
-                        # change to do this based on filetype
-                        try:
-                            data = reader.read(z=z, t=t, series=c, rescale = False)
-                            slice_array = np.asarray(data)
-                            array[:,:,z,c,t] = np.transpose(slice_array)
-                        except:
-                            data = reader.read(z=z, t=t, c=c, rescale = False)
-                            slice_array = np.asarray(data)
-                            array[:,:,z,c,t] = np.transpose(slice_array)
-            self.imagecache = array
-        slices = [slice(location[i],location[i]+size[i]) for i in range(len(size))] 
-        array = self.imagecache[tuple(slices)]
-        array = array.astype(np.uint8)
-        """
         javabridge.start_vm(class_path = bioformats.JARS, max_heap_size="100G")
         reader = bioformats.ImageReader(str(self.filename), perform_init=True)
+        # expand size 
+        size = list(size)
+        arrayshape = list(size)
+        for i in range(len(self.shape)):
+            if i>len(size)-1:
+                arrayshape.append(self.shape[i])
+        arrayshape = tuple(arrayshape)
+        array = np.empty(arrayshape)
         for z in range(self.shape[2]):
             for t in range(self.shape[4]):
                 # or reader.openBytes() but need to declare omemetadata as in init
                 # image = reader.openBytesXYWH(location[0], location[1], size[0], size[1])
-                slice = reader.read(z=z, t=t, rescale=False, XYWH=(location[0], location[1], size[0], size[1])
-                slicearray = np.asarray(data)
-                array[:,:,z,:,t] = np.transpose(slicearray)
+                slicearray = reader.read(z=z, t=t, rescale=False, XYWH=(location[0], location[1], size[0], size[1]))
+                slicearray = np.asarray(slicearray)
+                slicearray = np.transpose(slicearray)
+                slicearray = np.moveaxis(slicearray, 0, -1)
+                array[:,:,z,:,t] = slicearray 
         array = array.astype(np.uint8)
-        """
         return array
 
     def get_thumbnail(self, size=None):
@@ -350,9 +338,18 @@ class BioFormatsBackend(SlideBackend):
         for ix_i in range(n_chunk_i):
             for ix_j in range(n_chunk_j):
                 coords = (int(ix_j * stride_j), int(ix_i * stride_i))
-                # get image for tile
-                tile_im = self.extract_region(location = coords, size = shape)
-                yield pathml.core.tile.Tile(image = tile_im, coords = coords)
+                if coords[0] + shape[0] < i and coords[1] + shape[1] < j:
+                    # get image for tile
+                    tile_im = self.extract_region(location = coords, size = shape)
+                    yield pathml.core.tile.Tile(image = tile_im, coords = coords)
+                else:
+                    unpaddedshape = (i-coords[0] if coords[0] + shape[0] > i else shape[0], j-coords[1] if coords[1] + shape[1] > j else shape[1])
+                    tile_im = self.extract_region(location = coords, size = unpaddedshape)
+                    zeroarrayshape = list(tile_im.shape)
+                    zeroarrayshape[0], zeroarrayshape[1] = list(shape)[0], list(shape)[1]
+                    padded_im = np.zeros(zeroarrayshape)
+                    padded_im[:tile_im.shape[0], :tile_im.shape[1], ...] = tile_im
+                    yield pathml.core.tile.Tile(image = padded_im, coords = coords) 
 
 
 class DICOMBackend(SlideBackend):
