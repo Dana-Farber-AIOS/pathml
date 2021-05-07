@@ -10,7 +10,9 @@ import urllib
 import numpy as np
 import cv2
 
-from pathml.datasets.pannuke import PanNukeDataModule, PanNukeDataset, pannuke_multiclass_mask_to_nucleus_mask
+from pathml.datasets import PanNukeDataModule
+from pathml.datasets.pannuke import PanNukeDataset
+from pathml.datasets.utils import pannuke_multiclass_mask_to_nucleus_mask
 
 
 def create_fake_pannuke_data(target_dir, n_fold=16):

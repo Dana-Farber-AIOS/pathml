@@ -9,9 +9,7 @@ import cv2
 import openslide
 import javabridge
 
-from pathml.core.slide_data import HESlide
-from pathml.core.tile import Tile
-from pathml.core.masks import Masks
+from pathml.core import HESlide, Tile, Masks
 
 
 def pytest_sessionfinish(session, exitstatus):

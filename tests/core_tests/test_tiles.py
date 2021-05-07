@@ -5,14 +5,8 @@ License: GNU GPL 2.0
 
 import pytest
 import numpy as np
-import string
-import random
-import copy
-from collections import OrderedDict 
-from pathml.core.tiles import Tiles
-from pathml.core.tile import Tile
-from pathml.core.masks import Masks
-from pathml.core.slide_backends import OpenSlideBackend
+
+from pathml.core import Tiles, Tile, Masks, OpenSlideBackend
 
 
 @pytest.fixture

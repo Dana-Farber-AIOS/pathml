@@ -6,7 +6,7 @@ License: GNU GPL 2.0
 import pytest
 import numpy as np
 
-from pathml.core.tile import Tile
+from pathml.core import Tile
 
 
 @pytest.mark.parametrize("incorrect_input", ["string", True, 5, [5, 4, 3], {"dict": "testing"}])

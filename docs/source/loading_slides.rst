@@ -22,8 +22,7 @@ individual :class:`~pathml.core.slide_dataset.SlideData` objects:
 .. code-block::
 
     from pathlib import Path
-    from pathml.core.slide_dataset import SlideDataset
-    from pathml.core.slide_data import HESlide
+    from pathml.core import HESlide, SlideDataset
 
     # assuming that all WSIs are in a single directory, all with .svs file extension
     data_dir = Path("/path/to/data/")

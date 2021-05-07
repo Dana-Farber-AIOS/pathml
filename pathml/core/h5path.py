@@ -211,6 +211,7 @@ dicomext = {
 
 validexts = pathmlext | openslideext | bioformatsext | dicomext
 
+
 def write_h5path(
     slidedata,
     path
@@ -222,8 +223,8 @@ def write_h5path(
         path (str): Path to save directory
     """
     path = Path(path)
-    pathdir = Path(os.path.dirname(path)) 
-    pathdir.mkdir(parents=True, exist_ok=True) 
+    pathdir = Path(os.path.dirname(path))
+    pathdir.mkdir(parents=True, exist_ok=True)
     with h5py.File(path, 'w') as f:
         fieldsgroup = f.create_group('fields')
         core.utils.writestringh5(fieldsgroup, 'slidetype', type(slidedata))
@@ -236,7 +237,7 @@ def write_h5path(
         if slidedata.history:
             pass
         if slidedata.masks:
-            masksgroup = f.create_group('masks') 
+            masksgroup = f.create_group('masks')
             for ds in slidedata.masks.h5manager.h5.keys():
                 slidedata.masks.h5manager.h5.copy(ds, masksgroup)
         if slidedata.tiles:
@@ -253,7 +254,8 @@ def read(
     stain = 'HE'
     ):
     """
-    Read file and return :class:`~pathml.slide_data.SlideData` object.
+    Read an image file and return :class:`~pathml.slide_data.SlideData` object.
+    Uses file extension to infer the correct backend to use if ``backend=None``.
 
     Args:
         path (str): Path to slide file on disk 
@@ -267,12 +269,12 @@ def read(
         raise ValueError(f"Path does not exist.")
     if is_valid_path(path):
         ext = is_valid_path(path, return_ext = True)
-        if backend is None: 
+        if backend is None:
             if ext not in validexts:
                 raise ValueError(
                     f"Can only read files with extensions {validexts}. Convert to supported filetype or specify backend."
                 )
-            if ext in pathmlext: 
+            if ext in pathmlext:
                 return read_h5path(path)
             elif ext in openslideext:
                 return read_openslide(path)
@@ -288,6 +290,7 @@ def read(
             return read_dicom(path)
         raise Exception("Must specify valid backend.")
 
+
 def read_h5path(
     path
     ):
@@ -300,7 +303,7 @@ def read_h5path(
     with h5py.File(path, "r") as f:
         tiles = pathml.core.tiles.Tiles(h5 = f) if 'tiles' in f.keys() else None
         masks = pathml.core.masks.Masks(h5 = f) if ('masks' in f.keys() and 'tiles' not in f.keys()) else None
-        slidetype = f['fields'].attrs['slidetype'].decode('UTF-8') 
+        slidetype = f['fields'].attrs['slidetype'].decode('UTF-8')
         backend = f['fields'].attrs['slide_backend'] if 'slide_backend' in f['fields'].attrs.keys() else None
         if backend == "<class 'pathml.core.slide_backend.BioFormatsBackend'>":
             slide_backend = core.slide_backends.BioformatsBackend
@@ -309,7 +312,7 @@ def read_h5path(
         else:
             slide_backend = core.slide_backends.OpenSlideBackend
         name = f['fields'].attrs['name'].decode('UTF-8') if 'name' in f['fields'].attrs.keys() else None
-        labels = f['fields']['labels'] if 'labels' in f['fields'].keys() else None 
+        labels = f['fields']['labels'] if 'labels' in f['fields'].keys() else None
         if labels:
             labeldict = {}
             # iterate over key/val pairs stored in labels.attr
@@ -329,8 +332,9 @@ def read_h5path(
             "<class 'pathml.core.slide_data.RGBSlide'>" : pathml.core.slide_data.MultiparametricSlide,
     }
     slidetype = slidetypedict[slidetype]
-    return slidetype(name = name, slide_backend = slide_backend, masks = masks, tiles = tiles, labels = labels, history = history) 
-    #return pathml.core.slide_data.SlideData(name = name, slide_backend = slide_backend, masks = masks, tiles = tiles, labels = labels, history = history) 
+    return slidetype(name = name, slide_backend = slide_backend, masks = masks, tiles = tiles, labels = labels, history = history)
+    #return pathml.core.slide_data.SlideData(name = name, slide_backend = slide_backend, masks = masks, tiles = tiles, labels = labels, history = history)
+
 
 def read_openslide(
     path
@@ -353,7 +357,9 @@ def read_bioformats(
     Args:
         path (str): Path to image file of supported BioFormats format on disk
     """
-    return pathml.core.slide_data.MultiparametricSlide(filepath = path, slide_backend = BioFormatsBackend)
+    return pathml.core.slide_data.MultiparametricSlide(filepath = path,
+                                                       slide_backend = pathml.core.slide_backends.BioFormatsBackend)
+
 
 def read_dicom(
     path
@@ -365,6 +371,7 @@ def read_dicom(
         path (str): Path to image file of supported dicom format on disk
     """
     raise NotImplementedError
+
 
 def is_valid_path(
     path: Path,
@@ -396,9 +403,9 @@ def is_valid_path(
         return False
     raise ValueError(
         f'''\
-        {filename!r} does not end on a valid extension.
-        Please, provide one of the available extensions.
-        {valid}
+        {path} does not end on a valid extension.
+        Please, provide one of the available extensions:
+        {validexts}
         Text files with .gz and .bz2 extensions are also supported.\
         '''
     )

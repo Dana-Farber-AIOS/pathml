@@ -6,7 +6,7 @@ License: GNU GPL 2.0
 import pytest
 import numpy as np
 
-from pathml.core.masks import Masks
+from pathml.core import Masks
 
 
 @pytest.fixture

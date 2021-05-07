@@ -4,7 +4,7 @@ ML API
 HoVer-Net
 ---------
 
-.. autoclass:: pathml.ml.hovernet.HoVerNet
+.. autoclass:: pathml.ml.HoVerNet
     :members:
 
 Helper functions

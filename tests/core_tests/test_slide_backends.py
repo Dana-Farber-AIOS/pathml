@@ -6,8 +6,7 @@ License: GNU GPL 2.0
 import pytest
 import numpy as np
 
-from pathml.core.slide_backends import OpenSlideBackend, DICOMBackend, BioFormatsBackend
-from pathml.core.tile import Tile
+from pathml.core import OpenSlideBackend, DICOMBackend, BioFormatsBackend, Tile
 
 
 def openslide_backend():

@@ -5,9 +5,8 @@ License: GNU GPL 2.0
 
 from dask.distributed import Client
 
-from pathml.core.slide_data import HESlide
-from pathml.preprocessing.pipeline import Pipeline
-from pathml.preprocessing.transforms import BoxBlur, TissueDetectionHE
+from pathml.core import HESlide
+from pathml.preprocessing import Pipeline, BoxBlur, TissueDetectionHE
 
 
 def test_pipeline_1(tmp_path):

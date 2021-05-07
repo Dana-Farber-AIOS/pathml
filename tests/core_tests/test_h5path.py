@@ -6,7 +6,7 @@ License: GNU GPL 2.0
 import h5py
 import numpy as np
 
-from pathml.core.h5path import read
+from pathml.core import read
 
 
 def test_read_write_heslide(tmp_path, example_slide_data_with_tiles):
