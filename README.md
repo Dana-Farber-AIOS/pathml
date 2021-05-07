@@ -1,4 +1,4 @@
-<img src=docs/source/_static/images/logo.png width="500"> 
+<img src=docs/source/_static/images/overview.png width="500"> 
 
 A toolkit for computational pathology and machine learning.
 
@@ -125,7 +125,6 @@ See [contributing](CONTRIBUTING.rst) for more details.
 
 Questions? Comments? Suggestions? Get in touch!
 
-[Jacob Rosenthal](mailto:Jacob_Rosenthal@dfci.harvard.edu)  
-Data Science Team  
-Department of Informatics and Analytics  
-Dana-Farber Cancer Institute
+[PathML@dfci.harvard.edu](mailto:PathML@dfci.harvard.edu)
+
+<img src=docs/source/_static/images/logo.png width="500"> 
