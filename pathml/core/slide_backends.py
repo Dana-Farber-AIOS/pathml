@@ -140,6 +140,8 @@ class OpenSlideBackend(SlideBackend):
             shape = (shape, shape)
         assert stride is None or isinstance(stride, int) or (isinstance(stride, tuple) and len(stride) == 2), \
             f"input stride {stride} invalid. Must be a tuple of (stride_H, stride_W), or a single int"
+        if level is None:
+            level = 0
         assert isinstance(level, int), f"level {level} invalid. Must be an int."
         assert level < self.slide.level_count, \
             f"input level {level} invalid for slide with {self.slide.level_count} levels total"
@@ -173,6 +175,7 @@ class BioFormatsBackend(SlideBackend):
     """
     Use BioFormats to interface with image files.
 
+    Does not support multi-level images.
     Depends on `python-bioformats <https://github.com/CellProfiler/python-bioformats>`_ which wraps ome bioformats
     java library, parses pixel and metadata of proprietary formats, and
     converts all formats to OME-TIFF. Please cite: https://pubmed.ncbi.nlm.nih.gov/20513764/
@@ -201,9 +204,9 @@ class BioFormatsBackend(SlideBackend):
         Returns:
             Tuple[int, int]: Shape of image (H, W)
         """
-        return self.shape[:2] 
+        return self.shape[:2]
 
-    def extract_region(self, location, size, level=None):
+    def extract_region(self, location, size):
         """
         Extract a region of the image. All bioformats images have 5 dimensions representing
         (x, y, z, channel, time). If a tuple with len < 5 is passed, missing dimensions will be 
@@ -214,8 +217,6 @@ class BioFormatsBackend(SlideBackend):
             size (Tuple[int, int, ...]): Size of each region. If an integer is passed, will convert to a tuple of (H, W)
                 and extract a square region. If a tuple with len < 5 is passed, missing
                 dimensions will be retrieved in full.
-            level (int): level from which to extract chunks. Level 0 is highest resolution. Must be 0 or None, since
-                BioFormatsBackend does not support multiple levels.
 
         Returns:
             np.ndarray: image at the specified region
@@ -233,9 +234,6 @@ class BioFormatsBackend(SlideBackend):
             plt.figure()
             plt.imshow(region[:,:,0,:,0])
         """
-        if level not in [None, 0]:
-            raise ValueError("BioFormatsBackend does not support levels, please pass a level in [None, 0]")
-
         # if a single int is passed for size, convert to a tuple to get a square region
         if type(size) is int:
             size = (size, size)
@@ -255,7 +253,7 @@ class BioFormatsBackend(SlideBackend):
                     slice_array = np.asarray(data)
                     array[:,:,z,c,t] = np.transpose(slice_array)
         # TODO: read slices directly, rather than read then slice 
-        slices = [slice(location[i],location[i]+size[i]) for i in range(len(size))] 
+        slices = [slice(location[i],location[i]+size[i]) for i in range(len(size))]
         array = array[tuple(slices)]
         array = array.astype(np.uint8)
         return array
@@ -292,12 +290,12 @@ class BioFormatsBackend(SlideBackend):
                     slice_array = np.asarray(data)
                     array[:,:,z,c,t] = np.transpose(slice_array)
         if size is not None:
-            ratio = tuple([x/y for x,y in zip(size, self.shape)]) 
+            ratio = tuple([x/y for x,y in zip(size, self.shape)])
             assert ratio[3] == 1, f"cannot interpolate between fluor channels, resampling doesn't apply, fix size[3]"
-            image_array = zoom(array, ratio) 
+            image_array = zoom(array, ratio)
         return image_array
 
-    def generate_tiles(self, shape=3000, stride=None, pad=False, level=None):
+    def generate_tiles(self, shape=3000, stride=None, pad=False):
         """
         Generator over tiles.
 
@@ -318,8 +316,6 @@ class BioFormatsBackend(SlideBackend):
             pad (bool): How to handle tiles on the edges. If ``True``, these edge tiles will be zero-padded
                 and yielded with the other chunks. If ``False``, incomplete edge chunks will be ignored.
                 Defaults to ``False``.
-            level (int): level from which to extract chunks. Level 0 is highest resolution.
-                Must be 0 or None, since BioFormatsBackend does not support multiple levels.
 
         Yields:
             pathml.core.tile.Tile: Extracted Tile object
@@ -352,7 +348,7 @@ class BioFormatsBackend(SlideBackend):
             for ix_j in range(n_chunk_j):
                 coords = (int(ix_j * stride_j), int(ix_i * stride_i))
                 # get image for tile
-                tile_im = self.extract_region(location = coords, size = shape, level = level)
+                tile_im = self.extract_region(location = coords, size = shape)
                 yield pathml.core.tile.Tile(image = tile_im, coords = coords)
 
 
@@ -361,7 +357,7 @@ class DICOMBackend(SlideBackend):
     Interface with DICOM files on disk.
     Provides efficient access to individual Frame items contained in the
     Pixel Data element without loading the entire element into memory.
-    Assumes that frames are non-overlapping.
+    Assumes that frames are non-overlapping. DICOM does not support multi-level images.
 
     Args:
         filename (str): Path to the DICOM Part10 file on disk
@@ -417,7 +413,7 @@ class DICOMBackend(SlideBackend):
         fp.seek(first_frame_offset, 0)
         return basic_offset_table
 
-    def get_image_shape(self, **kwargs):
+    def get_image_shape(self):
         """
         Get the shape of the image.
 
@@ -478,7 +474,7 @@ class DICOMBackend(SlideBackend):
         index = (row_ix * self.n_cols) + col_ix
         return int(index)
 
-    def extract_region(self, location, size=None, level=None, **kwargs):
+    def extract_region(self, location, size=None):
         """
         Extract a single frame from the DICOM image.
 
@@ -488,8 +484,6 @@ class DICOMBackend(SlideBackend):
             size (Union[int, Tuple[int, int]]): Size of each tile. May be a tuple of (height, width) or a
                 single integer, in which case square tiles of that size are generated.
                 Must be the same as the frame size.
-            level (int): level from which to extract chunks. Level 0 is highest resolution.
-                Must be 0 or None, since DICOMBackend does not support multiple levels.
 
         Returns:
             np.ndarray: image at the specified region
@@ -504,9 +498,6 @@ class DICOMBackend(SlideBackend):
             raise ValueError(f"Invalid location: {location}. Must be an int frame index or tuple of (i, j) coordinates")
         if frame_ix > self.n_frames:
             raise ValueError(f"location {location} invalid. Exceeds total number of frames ({self.n_frames})")
-        # check level
-        if level not in [None, 0]:
-            raise ValueError("DICOMBackend does not support levels, please pass a level in [None, 0]")
         # check size
         if size:
             if type(size) is int:
