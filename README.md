@@ -1,4 +1,6 @@
-<img src=docs/source/_static/images/overview.png width="1000"> 
+<img src=docs/source/_static/images/logo.png width="300"> 
+
+<img src=docs/source/_static/images/overview.png width="750"> 
 
 A toolkit for computational pathology and machine learning.
 
