@@ -1,4 +1,4 @@
-<img src=docs/source/_static/images/overview.png width="500"> 
+<img src=docs/source/_static/images/overview.png width="1000"> 
 
 A toolkit for computational pathology and machine learning.
 
@@ -127,4 +127,4 @@ Questions? Comments? Suggestions? Get in touch!
 
 [PathML@dfci.harvard.edu](mailto:PathML@dfci.harvard.edu)
 
-<img src=docs/source/_static/images/logo.png width="500"> 
+<img src=docs/source/_static/images/dfci_cornell_joint_logos.png width="750"> 
