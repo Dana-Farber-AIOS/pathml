@@ -8,7 +8,6 @@ from pathml.preprocessing.transforms import (
     MedianBlur, GaussianBlur, BoxBlur, BinaryThreshold,
     MorphOpen, MorphClose, ForegroundDetection, SuperpixelInterpolation,
     StainNormalizationHE, NucleusDetectionHE, TissueDetectionHE,
-    BackgroundSubtractCODEX, DriftCompensateMIF, DeconvolveMIF,
     SegmentMIF, QuantifyMIF
 )
 from pathml.utils import RGB_to_GREY
@@ -41,39 +40,24 @@ def test_pipeline_HE(tileHE):
     assert np.array_equal(tileHE.masks["testing"], m)
 
 
-def test_pipeline_Vectra(tileIHC):
+def test_pipeline_mif(tileIHC):
     """
-    Vectra images are background subtracted during spectral deconvolution step.
+    Run MIF pipeline
     """
     pipe = Pipeline([
-        DeconvolveMIF(),
-        SegmentMIF(),
-        QuantifyMIF()
-    )]
+        SegmentMIF(model='mesmer', nuclear_channel=0, cytoplasm_channel=31, image_resolution=0.5),
+        QuantifyMIF(segmentation_mask = 'cell_segmentation')
+    ])
     
     assert len(pipe) == 2
     pipe.apply(tileIHC)
 
-    orig_im = tileIHC.image
-    segmented_mask = SegmentMIF().F(orig_im)
+    orig_im = tileIHC
+    segmented_mask = SegmentMIF(model='mesmer', nuclear_channel=0, cytoplasm_channel=31, image_resolution=0.5).F(orig_im)
     adata = QuantifyMIF().F(orig_im, segmented_mask)
 
     assert np.array_equal(tileIHC.masks['cell_segmentation'], segmented_mask)
     assert adata == tileIHC.counts 
-
-
-def test_pipeline_CODEX(tileCODEX):
-    pipe = Pipeline([
-        BackgroundSubtractCODEX(),
-        DriftCompensateMIF(),
-        DeconvolveMIF(),
-        SegmentMIF(),
-        QuantifyMIF()
-    ])
-
-    assert len(pipe) == 5
-    pipe.apply(tileCODEX)
-
 
 
 def test_pipeline_save(tmp_path):

@@ -238,6 +238,7 @@ def write_h5path(
                 slidedata.tiles.h5manager.h5.copy(ds, f)
             # add tiles to h5
             core.utils.writetilesdicth5(f, 'tiles', slidedata.tiles.h5manager.tiles)
+            core.utils.writecounts(f, 'counts', slidedata.tiles.h5manager.counts)
 
 # TODO: replace backend with slideclass
 def read(

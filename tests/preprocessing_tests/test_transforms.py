@@ -5,7 +5,6 @@ from pathml.preprocessing.transforms import (
     MedianBlur, GaussianBlur, BoxBlur, BinaryThreshold,
     MorphOpen, MorphClose, ForegroundDetection, SuperpixelInterpolation,
     StainNormalizationHE, NucleusDetectionHE, TissueDetectionHE,
-    BackgroundSubtractMIF, DriftCompensateCODEX, DeconvolveMIF,
     QuantifyMIF, SegmentMIF
 )
 from pathml.utils import RGB_to_GREY
@@ -98,17 +97,7 @@ def test_tissue_detectionHE(tileHE, threshold, use_saturation):
     t.apply(tileHE)
     assert np.array_equal(tileHE.masks["testing"], m)
 
-def test_deconvolveMIF():
-    pass
-
-def test_segmentMIF():
-    pass
-
-def test_quantifyMIF():
-    pass
-
-# TODO: backgroundsubstractmif, driftcompensatecodex
-
+# TODO: transforms tests
 
 @pytest.mark.parametrize("transform", [MedianBlur(),
                                        GaussianBlur(),
@@ -121,10 +110,7 @@ def test_quantifyMIF():
                                        StainNormalizationHE(),
                                        NucleusDetectionHE(),
                                        TissueDetectionHE(),
-                                       BackgroundSubtractMIF(),
-                                       DriftCompensateCODEX(),
-                                       DeconvolveMIF(),
-                                       QuantifyMIF(),
-                                       SegmentMIF()])
+                                       QuantifyMIF(segmentation_mask='test'),
+                                       SegmentMIF(nuclear_channel = 0, cytoplasm_channel = 1)])
 def test_repr(transform):
     repr(transform)

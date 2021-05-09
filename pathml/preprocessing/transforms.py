@@ -819,7 +819,7 @@ class BackgroundSubtractMIF(Transform):
         tile.image =  F(tile.image)
         # TODO: some flag indicating that a channel is corrected? history?
 
-
+'''
 class DeconvolveMIF(Transform):
     """
     Apply image deconvolution. Models blurring/noise as caused by
@@ -884,6 +884,7 @@ class DeconvolveMIF(Transform):
     
     def apply(self, tile):
         tile.image = self.F(tile.image, tile.slidetype)
+'''
 
 
 class SegmentMIF(Transform):
@@ -966,8 +967,10 @@ class QuantifyMIF(Transform):
     def __repr__(self):
         return f"QuantifyMIF(segmentation_mask={self.segmentation_mask})"
     
-    def F(self, image, segmentation):
-        # TODO: add moments?
+    def F(self, tile):
+        # pass (x, y, channel) image and (x, y) segmentation
+        image = tile.image
+        segmentation = tile.masks[self.segmentation_mask][:,:,0]
         countsdataframe = regionprops_table(
                 label_image = segmentation,
                 intensity_image = image,
@@ -1000,12 +1003,12 @@ class QuantifyMIF(Transform):
             max_intensities[i] = countsdataframe[f'max_intensity-{i}'] 
         counts.layers['max_intensity'] = max_intensities 
         counts.obsm['spatial'] = np.array(counts.obs[['x','y']])
+        counts.obs['tile'] = tile.coords
         return counts
     
     def apply(self, tile):
         assert tile.masks[self.segmentation_mask].shape, f"passed segmentation mask does not exist for tile {tile}"
-        # pass (x, y, channel) image and (x, y) segmentation
-        counts = self.F(tile.image, tile.masks['cell_segmentation'][:,:,0])
+        counts = self.F(tile)
         tile.counts = counts
 
 

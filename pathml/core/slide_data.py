@@ -54,7 +54,6 @@ class SlideData:
             name = Path(filepath).stem
 
         self.slide = slide
-        self.counts = counts
         self.slide_backend = slide_backend
         self.name = name
         self.masks = masks
@@ -204,12 +203,17 @@ class SlideData:
     def plot(self):
         raise NotImplementedError
 
-    def count(self):
-        assert all(tile.counts for tile in self.tiles), f"before calling counts all tiles must be quantified"
-        counts = anndata.AnnData()
-        for tile in self.tiles:
-            counts = counts.concatenate(tile.counts, join='outer', batch_key='test') 
-        return counts
+    @property
+    def counts(self):
+        return self.tiles.h5manager.counts if self.tiles.h5manager else None
+
+    @counts.setter
+    def counts(self, value):
+        if self.tiles.h5manager:
+            self.tiles.h5manager.counts = value  
+        # TODO: improve handling of this case
+        else:
+            raise AttributeError("cannot assign counts slidedata contains no tiles, first generate tiles")
 
     def write(self, path):
         """

@@ -138,3 +138,26 @@ def readtilesdicth5(h5):
         }
         tilesdict[tile] = subdict
     return tilesdict
+
+
+def writecounts(h5, name, counts):
+    """
+    Write counts using anndata h5py.
+    """
+    print(counts.filename)
+    countsh5 = h5py.File(counts.filename, "r") 
+    for ds in countsh5.keys():
+        countsh5.copy(ds, h5[str(name)])
+     
+
+def readcounts(h5):
+    """
+    Read counts using anndata h5py.
+    """
+    # create and save temp h5py file
+    # use reference to read
+    path = tempfile.TemporaryFile()
+    f = h5py.file(path, 'w')
+    for ds in h5.keys():
+        h5.copy(ds, f)
+    return anndata.read_h5ad(path)

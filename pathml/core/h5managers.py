@@ -4,6 +4,8 @@ import ast
 from collections import OrderedDict
 import numpy as np
 import itertools
+import anndata
+import os
 
 import pathml.core.masks
 import pathml.core.tile
@@ -49,6 +51,9 @@ class _tiles_h5_manager(_h5_manager):
         super().__init__(h5 = h5)
         tilesgroup = self.h5.create_group('tiles')
         self.tiles = OrderedDict()
+        path = tempfile.TemporaryDirectory()
+        self.countspath = path 
+        self.counts = anndata.AnnData(filename=os.path.join(path.name + '/tmpfile.h5ad'))
         if h5:
             for ds in h5.keys():
                 if ds in ['array','masks']:
@@ -57,6 +62,10 @@ class _tiles_h5_manager(_h5_manager):
             if 'tiles' in h5.keys(): 
                 self.tiles = readtilesdicth5(h5['tiles']) 
                 self.tile_shape = readtupleh5(h5['tiles'], 'tile_shape')
+            if 'counts' in h5.keys():
+                self.counts = readcounts(h5['counts'])
+                with tempfile.TemporaryDirectory() as tmpdirname:
+                    self.counts.filename = tmpdirname + '/tmpfile.h5ad'
 
     def add(self, tile):
         """
@@ -67,6 +76,10 @@ class _tiles_h5_manager(_h5_manager):
         """
         if str(tile.coords) in self.tiles.keys():
            print(f"Tile is already in tiles. Overwriting {tile.coords} inplace.") 
+           # remove old cells from self.counts so they do not duplicate 
+           if tile.counts:
+               if "tile" in self.counts.obs.keys():
+                   self.counts = self.counts[self.counts.obs['tile'] != tile.coords]
         if self.tile_shape is None:
             self.tile_shape = tile.image.shape
         if tile.image.shape != self.tile_shape:
@@ -159,7 +172,8 @@ class _tiles_h5_manager(_h5_manager):
                 'coords': str(tile.coords), 
                 'slidetype': tile.slidetype if tile.slidetype else None
         }
-        self.counts = tile.counts
+        if tile.counts:
+            self.counts = self.counts.concatenate(tile.counts, join="outer")
 
     def update(self, key, val, target):
         """
