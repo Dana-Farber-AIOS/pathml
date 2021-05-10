@@ -1003,7 +1003,7 @@ class QuantifyMIF(Transform):
             max_intensities[i] = countsdataframe[f'max_intensity-{i}'] 
         counts.layers['max_intensity'] = max_intensities 
         counts.obsm['spatial'] = np.array(counts.obs[['x','y']])
-        counts.obs['tile'] = tile.coords
+        # counts.obs['tile'] = tile.coords
         return counts
     
     def apply(self, tile):

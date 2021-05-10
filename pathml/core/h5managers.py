@@ -53,7 +53,7 @@ class _tiles_h5_manager(_h5_manager):
         self.tiles = OrderedDict()
         path = tempfile.TemporaryDirectory()
         self.countspath = path 
-        self.counts = anndata.AnnData(filename=os.path.join(path.name + '/tmpfile.h5ad'))
+        self.counts = None 
         if h5:
             for ds in h5.keys():
                 if ds in ['array','masks']:
@@ -173,7 +173,15 @@ class _tiles_h5_manager(_h5_manager):
                 'slidetype': tile.slidetype if tile.slidetype else None
         }
         if tile.counts:
-            self.counts = self.counts.concatenate(tile.counts, join="outer")
+            # cannot concatenate on disk, read into RAM, concatenate, write back to disk
+            if self.counts:
+                self.counts = self.counts.to_memory()
+                self.counts = self.counts.concatenate(tile.counts, join="outer")
+                self.counts.filename = os.path.join(self.countspath.name + '/tmpfile.h5ad')
+            # cannot concatenate empty AnnData object so set to tile.counts then back in temp file on disk 
+            else:
+                self.counts = tile.counts 
+                self.counts.filename = os.path.join(self.countspath.name + '/tmpfile.h5ad')
 
     def update(self, key, val, target):
         """

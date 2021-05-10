@@ -231,8 +231,6 @@ class BioFormatsBackend(SlideBackend):
         # expand size 
         size = list(size)
         arrayshape = list(size)
-        print(arrayshape)
-        print(self.shape)
         for i in range(len(self.shape)):
             if i>len(size)-1:
                 arrayshape.append(self.shape[i])
@@ -240,15 +238,25 @@ class BioFormatsBackend(SlideBackend):
         array = np.empty(arrayshape)
         for z in range(self.shape[2]):
             for t in range(self.shape[4]):
-                # or reader.openBytes() but need to declare omemetadata as in init
-                # image = reader.openBytesXYWH(location[0], location[1], size[0], size[1])
-                slicearray = reader.read(z=z, t=t, rescale=False, XYWH=(location[0], location[1], size[0], size[1]))
-                slicearray = np.asarray(slicearray)
-                slicearray = np.moveaxis(slicearray, 0, -1)
-                # if the image has no color channel, fill manually
-                if len(slicearray.shape) == 2:
-                    slicearray = np.expand_dims(slicearray, axis=-1)
-                array[:,:,z,:,t] = slicearray 
+                try:
+                    # or reader.openBytes() but need to declare omemetadata as in init
+                    slicearray = reader.read(z=z, t=t, rescale=False, XYWH=(location[0], location[1], size[0], size[1]))
+                    slicearray = np.asarray(slicearray)
+                    slicearray = np.moveaxis(slicearray, 0, -1)
+                    # if the image has no color channel, fill manually
+                    if len(slicearray.shape) == 2:
+                        slicearray = np.expand_dims(slicearray, axis=-1)
+                    array[:,:,z,:,t] = slicearray 
+                except:
+                    # or reader.openBytes() but need to declare omemetadata as in init
+                    slicearray = reader.read(z=z, t=t, rescale=False, XYWH=(location[0], location[1], size[0], size[1]))
+                    slicearray = np.asarray(slicearray)
+                    slicearray = np.transpose(slicearray)
+                    slicearray = np.moveaxis(slicearray, 0, -1)
+                    # if the image has no color channel, fill manually
+                    if len(slicearray.shape) == 2:
+                        slicearray = np.expand_dims(slicearray, axis=-1)
+                    array[:,:,z,:,t] = slicearray 
         array = array.astype(np.uint8)
         return array
 

@@ -210,8 +210,8 @@ class SlideData:
     @counts.setter
     def counts(self, value):
         if self.tiles.h5manager:
+            assert isinstance(value, anndata.AnnData)
             self.tiles.h5manager.counts = value  
-        # TODO: improve handling of this case
         else:
             raise AttributeError("cannot assign counts slidedata contains no tiles, first generate tiles")
 
