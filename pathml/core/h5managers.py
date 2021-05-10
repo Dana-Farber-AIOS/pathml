@@ -226,7 +226,8 @@ class _tiles_h5_manager(_h5_manager):
             Tile(pathml.core.tile.Tile)
             
         """
-        if not isinstance(item, (int, str, tuple)):
+        # must check bool separately since bool subclasses int
+        if not isinstance(item, (int, str, tuple)) or isinstance(item, bool):
             raise KeyError(f'must getitem by coordinate(type tuple[int]), index(type int), or name(type str)')
         if isinstance(item, (str, tuple)):
             if str(item) not in self.tiles:
