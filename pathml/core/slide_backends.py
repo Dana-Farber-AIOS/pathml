@@ -155,7 +155,7 @@ class OpenSlideBackend(SlideBackend):
 
         for ix_i in range(n_chunk_i):
             for ix_j in range(n_chunk_j):
-                coords = (int(ix_j * stride_j), int(ix_i * stride_i))
+                coords = (int(ix_i * stride_i),int(ix_j * stride_j))
                 # get image for tile
                 tile_im = self.extract_region(location = coords, size = shape, level = level)
                 yield pathml.core.tile.Tile(image = tile_im, coords = coords)
@@ -231,6 +231,8 @@ class BioFormatsBackend(SlideBackend):
         # expand size 
         size = list(size)
         arrayshape = list(size)
+        print(arrayshape)
+        print(self.shape)
         for i in range(len(self.shape)):
             if i>len(size)-1:
                 arrayshape.append(self.shape[i])
@@ -242,8 +244,10 @@ class BioFormatsBackend(SlideBackend):
                 # image = reader.openBytesXYWH(location[0], location[1], size[0], size[1])
                 slicearray = reader.read(z=z, t=t, rescale=False, XYWH=(location[0], location[1], size[0], size[1]))
                 slicearray = np.asarray(slicearray)
-                slicearray = np.transpose(slicearray)
                 slicearray = np.moveaxis(slicearray, 0, -1)
+                # if the image has no color channel, fill manually
+                if len(slicearray.shape) == 2:
+                    slicearray = np.expand_dims(slicearray, axis=-1)
                 array[:,:,z,:,t] = slicearray 
         array = array.astype(np.uint8)
         return array
@@ -337,7 +341,7 @@ class BioFormatsBackend(SlideBackend):
 
         for ix_i in range(n_chunk_i):
             for ix_j in range(n_chunk_j):
-                coords = (int(ix_j * stride_j), int(ix_i * stride_i))
+                coords = (int(ix_i * stride_i), int(ix_j * stride_j)) 
                 if coords[0] + shape[0] < i and coords[1] + shape[1] < j:
                     # get image for tile
                     tile_im = self.extract_region(location = coords, size = shape)

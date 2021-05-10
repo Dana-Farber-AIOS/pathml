@@ -73,8 +73,8 @@ def test_generate_tiles_he(he_slide, shape, stride, pad, level):
         assert isinstance(tile, Tile)
 
 
-@pytest.mark.parametrize("shape", [500, (500, 400)])
-@pytest.mark.parametrize("stride", [None, 1000])
+@pytest.mark.parametrize("shape", [100, (50, 100)])
+@pytest.mark.parametrize("stride", [None, 100])
 @pytest.mark.parametrize("pad", [True, False])
 def test_generate_tiles_multiparametric(multiparametric_slide, shape, stride, pad):
     for tile in multiparametric_slide.generate_tiles(shape = shape, stride = stride, pad = pad):

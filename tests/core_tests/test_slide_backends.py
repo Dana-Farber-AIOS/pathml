@@ -27,9 +27,10 @@ def test_openslide_extract_tile(wsi_HE, location, size, level):
     assert region.dtype == np.uint8
 
     
-@pytest.mark.parametrize("location", [(0, 0), (1000, 1000)])
-@pytest.mark.parametrize("size", [100, (500, 200)])
+@pytest.mark.parametrize("location", [(0, 0), (100, 50)])
+@pytest.mark.parametrize("size", [50, (20, 50)])
 def test_bioformats_extract_tile(multiparametric_image, location, size):
+    print(multiparametric_image.get_image_shape())
     region = multiparametric_image.extract_region(location = location, size = size)
     assert isinstance(region, np.ndarray)
     assert region.dtype == np.uint8
