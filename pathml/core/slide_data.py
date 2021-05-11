@@ -8,6 +8,8 @@ import dask.distributed
 from torch.utils.data import Dataset
 from pathlib import Path
 import matplotlib.pyplot as plt
+from dataclasses import asdict
+import os
 
 import pathml.core.masks
 import pathml.core.types
@@ -352,7 +354,30 @@ class SlideData:
         Args:
             path (Union[str, bytes, os.PathLike]): path to file to be written
         """
-        pathml.core.h5path.write_h5path(self, path)
+        path = Path(path)
+        pathdir = Path(os.path.dirname(path))
+        pathdir.mkdir(parents = True, exist_ok = True)
+        with h5py.File(path, 'w') as f:
+            fieldsgroup = f.create_group('fields')
+            if self.name:
+                pathml.core.utils.writestringh5(fieldsgroup, 'name', str(self.name))
+            if self.labels:
+                pathml.core.utils.writedicth5(fieldsgroup, 'labels', self.labels)
+            if self.backend:
+                pathml.core.utils.writestringh5(fieldsgroup, 'slide_backend', self.backend)
+            if self.slide_type:
+                pathml.core.utils.writestringh5(fieldsgroup, 'slide_type', asdict(self.slide_type))
+            if self.history:
+                pathml.core.utils.writestringh5(fieldsgroup, 'history', self.history)
+            if self.masks:
+                masksgroup = f.create_group('masks')
+                for ds in self.masks.h5manager.h5.keys():
+                    self.masks.h5manager.h5.copy(ds, masksgroup)
+            if self.tiles:
+                for ds in self.tiles.h5manager.h5.keys():
+                    self.tiles.h5manager.h5.copy(ds, f)
+                # add tiles to h5
+                pathml.core.utils.writetilesdicth5(f, 'tiles', self.tiles.h5manager.tiles)
 
 
 class HESlide(SlideData):
