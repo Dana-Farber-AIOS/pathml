@@ -52,7 +52,7 @@ def he_slide():
 
 @pytest.fixture
 def multiparametric_slide():
-    wsi = MultiparametricSlide("tests/testdata/smalltif.tif")
+    wsi = MultiparametricSlide("tests/testdata/smalltif.tif", slide_backend = BioFormatsBackend)
     return wsi
 
 
