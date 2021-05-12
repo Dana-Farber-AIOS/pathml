@@ -190,22 +190,28 @@ class SlideData:
 
             yield tile
 
-    def plot(self):
+    def plot(self, ax=None):
         """
         View a thumbnail of the image, using matplotlib.
         Not supported by all backends.
+
+        Args:
+            ax: matplotlib axis object on which to plot the thumbnail. Optional.
         """
-        if isinstance(self.slide, pathml.core.OpenSlideBackend):
+        if not self.slide:
+            raise NotImplementedError("Plotting only supported via backend, but SlideData has no backend.")
+        try:
             thumbnail = self.slide.get_thumbnail(size = (500, 500))
-            plt.imshow(thumbnail)
-            if self.name:
-                plt.title(self.name)
-            plt.axis("off")
-            plt.show()
-        else:
+        except NotImplementedError:
             raise NotImplementedError(
                 f"plotting not supported for slide_backend={self.slide.__class__.__name__}"
             )
+        if ax is None:
+            ax = plt.gca()
+        ax.imshow(thumbnail)
+        if self.name:
+            ax.set_title(self.name)
+        ax.axis("off")
 
     def write(self, path):
         """

@@ -61,16 +61,21 @@ class Tile:
               f"labels={list(self.labels.keys()) if self.labels is not None else None})"
         return out
 
-    def plot(self):
+    def plot(self, ax=None):
         """
         View the tile image, using matplotlib.
         Only supports RGB images currently
+
+        Args:
+            ax: matplotlib axis object on which to plot the thumbnail. Optional.
         """
         if self.image.shape[2] != 3 or self.image.ndim != 3:
             raise NotImplementedError(f"Plotting not supported for tile with image of shape {self.image.shape}")
-        else:
-            plt.imshow(self.image)
-            if self.name:
-                plt.title(self.name)
-            plt.axis("off")
-            plt.show()
+
+        if ax is None:
+            ax = plt.gca()
+
+        ax.imshow(self.image)
+        if self.name:
+            ax.set_title(self.name)
+        ax.axis("off")
