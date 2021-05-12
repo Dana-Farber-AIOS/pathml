@@ -18,9 +18,22 @@ HESlide
 Slide Types
 -----------
 
-.. autoclass:: pathml.core.types.SlideType
+.. autoclass:: pathml.core.SlideType
     :exclude-members: tma, rgb, stain, volumetric, time_series
 
+
+We also provide instantiations of common slide types for convenience:
+
+    =============================  =======  ======= =======  ==========  ===========
+    Type                           stain    rgb     tma      volumetric  time_series
+    =============================  =======  ======= =======  ==========  ===========
+    ``pathml.core.types.HE``       'HE'     True    False    False       False
+    ``pathml.core.types.IHC``      'IHC'    True    False    False       False
+    ``pathml.core.types.IF``       'Fluor'  False   False    False       False
+    ``pathml.core.types.HE_TMA``   'HE'     True    True     False       False
+    ``pathml.core.types.IHC_TMA``  'IHC'    True    True     False       False
+    ``pathml.core.types.IF_TMA``   'Fluor'  False   True     False       False
+    =============================  =======  ======= =======  ==========  ===========
 
 Tile
 ----
@@ -57,14 +70,3 @@ DICOMBackend
 ^^^^^^^^^^^^
 
 .. autoclass:: pathml.core.DICOMBackend
-
-Reading and Writing
--------------------
-
-.. autofunction:: pathml.core.h5path.write_h5path
-.. autofunction:: pathml.core.h5path.read
-.. autofunction:: pathml.core.h5path.read_h5path
-.. autofunction:: pathml.core.h5path.read_openslide
-.. autofunction:: pathml.core.h5path.read_bioformats
-.. autofunction:: pathml.core.h5path.read_dicom
-.. autofunction:: pathml.core.h5path.is_valid_path

@@ -11,22 +11,18 @@ class SlideType:
     """
     SlideType objects define types based on a set of image parameters.
 
-    We also provide instantiations of common slide types for convenience:
-
-    ==============  =======  ======= =======  ==========  ===========
-    Type            stain    rgb     tma      volumetric  time_series
-    ==============  =======  ======= =======  ==========  ===========
-    ``types.HE``    'HE'     True    False    False       False
-    ``types.IHC``   'IHC'    True    False    False       False
-    ``types.IF``    'Fluor'  False   False    False       False
-    ==============  =======  ======= =======  ==========  ===========
-
-    Attributes:
+    Args:
         stain (str, optional): One of ['HE', 'IHC', 'Fluor']. Flag indicating type of slide stain. Defaults to None.
         tma (bool, optional): Flag indicating whether the slide is a tissue microarray (TMA). Defaults to False.
         rgb (bool, optional): Flag indicating whether image is in RGB color. Defaults to False.
         volumetric (bool, optional): Flag indicating whether image is volumetric. Defaults to False.
         time_series (bool, optional): Flag indicating whether image is time-series. Defaults to False.
+
+    Examples:
+        >>> from pathml import SlideType, types
+        >>> he_type = SlideType(stain = "HE", rgb = True)    # define slide type manually
+        >>> types.HE == he_type    # can also use pre-made types for convenience
+        True
     """
     stain: str = None
     tma: bool = False
@@ -41,9 +37,22 @@ class SlideType:
             raise ValueError(f"Input stain {self.stain} not valid. Must be one of {valid_stains}")
 
 
-# instantiations of common slide_types for convenience
-HE = SlideType(tma = False, rgb = True, stain = 'HE', volumetric = False, time_series = False)
-HE_TMA = SlideType(tma = True, rgb = True, stain = 'HE', volumetric = False, time_series = False)
-IHC = SlideType(tma = False, rgb = True, stain = 'IHC', volumetric = False, time_series = False)
-IHC_TMA = SlideType(tma = True, rgb = True, stain = 'IHC', volumetric = False, time_series = False)
-IF = SlideType(tma = False, rgb = False, stain = 'Fluor', volumetric = False, time_series = False)
+class _PremadeTypes:
+    # instantiations of common SlideTypes for convenience
+    def __init__(self):
+        self.HE = SlideType(tma = False, rgb = True, stain = 'HE', volumetric = False, time_series = False)
+        self.HE_TMA = SlideType(tma = True, rgb = True, stain = 'HE', volumetric = False, time_series = False)
+        self.IHC = SlideType(tma = False, rgb = True, stain = 'IHC', volumetric = False, time_series = False)
+        self.IHC_TMA = SlideType(tma = True, rgb = True, stain = 'IHC', volumetric = False, time_series = False)
+        self.IF = SlideType(tma = False, rgb = False, stain = 'Fluor', volumetric = False, time_series = False)
+        self.IF_TMA = SlideType(tma = True, rgb = False, stain = 'Fluor', volumetric = False, time_series = False)
+
+    def __repr__(self):
+        out = "pathml.types provides pre-made slide types for convenience. Available types:\n"
+        out += "'types.HE', 'types.HE_TMA', 'types.IHC', 'types.IHC_TMA', 'types.IF', 'types.IF_TMA'\n"
+        out += "Please refer to documentation for pathml.core.types.SlideType"
+        return out
+
+
+# instantiate the class so that types are accessible in namespace, e.g. types.HE
+types = _PremadeTypes()
