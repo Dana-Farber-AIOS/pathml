@@ -8,20 +8,19 @@ The central class in ``PathML`` for representing a whole-slide image.
 
 .. autoclass:: pathml.core.SlideData
 
-RGBSlide
-^^^^^^^^
-
-.. autoclass:: pathml.core.RGBSlide
 
 HESlide
 ^^^^^^^
 
 .. autoclass:: pathml.core.HESlide
 
-MultiparametricSlide
-^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: pathml.core.MultiparametricSlide
+Slide Types
+-----------
+
+.. autoclass:: pathml.core.types.SlideType
+    :exclude-members: tma, rgb, stain, volumetric, time_series
+
 
 Tile
 ----
