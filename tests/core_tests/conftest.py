@@ -38,7 +38,7 @@ def tile_withmasks(tile_nomasks):
 def example_slide_data():
     labs = {"test_string_label": "testlabel", "test_array_label": np.array([2,3,4]), "test_int_label": 3, "test_float_label": 3.0}
     wsi = SlideData("tests/testdata/small_HE.svs", name = f"test_array_in_labels",
-                    labels = labs, slide_backend = OpenSlideBackend)
+                    labels = labs, backend = "openslide")
     return wsi
 
 
@@ -50,7 +50,7 @@ def example_slide_data_with_tiles(tile_withmasks):
     # do not test np.ndarrays, these should be masks
     labs = {"test_string_label": "testlabel", "test_array_label": np.array([2,3,4]), "test_int_label": 3, "test_float_label": 3.0}
     wsi = SlideData("tests/testdata/small_HE.svs", name = f"test_array_in_labels",
-                    labels = labs, slide_backend = OpenSlideBackend, tiles = tiles)
+                    labels = labs, backend = "openslide", tiles = tiles)
     return wsi
 
 
@@ -58,10 +58,8 @@ def example_slide_data_with_tiles(tile_withmasks):
 def slide_dataset(example_slide_data_with_tiles):
     n = 4
     labs = {"test_string_label": "testlabel", "test_array_label": np.array([2,3,4]), "test_int_label": 3, "test_float_label": 3.0}
-    slide_list = [SlideData("tests/testdata/small_HE.svs",
-                            name = f"slide{i}",
-                            labels = labs,
-                            slide_backend = OpenSlideBackend) for i in range(n)]
+    slide_list = [SlideData("tests/testdata/small_HE.svs", name = f"slide{i}",
+                            labels = labs, backend = "openslide") for i in range(n)]
     slide_dataset = SlideDataset(slide_list)
     return slide_dataset
 
@@ -72,10 +70,7 @@ def slide_dataset_with_tiles(tile_withmasks, example_slide_data_with_tiles):
     tiles_dict = {(42, 42): tile_withmasks}
     tiles = Tiles(tiles_dict)
     labs = {"test_string_label": "testlabel", "test_array_label": np.array([2,3,4]), "test_int_label": 3, "test_float_label": 3.0}
-    slide_list = [SlideData("tests/testdata/small_HE.svs",
-                            name = f"slide{i}",
-                            labels = labs,
-                            slide_backend = OpenSlideBackend,
-                            tiles = tiles) for i in range(n)]
+    slide_list = [SlideData("tests/testdata/small_HE.svs", name = f"slide{i}",
+                            labels = labs, backend = "openslide", tiles = tiles) for i in range(n)]
     slide_dataset = SlideDataset(slide_list)
     return slide_dataset

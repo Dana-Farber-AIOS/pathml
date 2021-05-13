@@ -6,16 +6,31 @@ License: GNU GPL 2.0
 from pathlib import Path
 import pytest
 from dask.distributed import Client
+import numpy as np
+import h5py
 
-from pathml.core import SlideData, HESlide, MultiparametricSlide, RGBSlide, OpenSlideBackend, BioFormatsBackend, Tile
-
+import pathml
+from pathml.core import SlideData, HESlide, MultiparametricSlide, OpenSlideBackend, BioFormatsBackend, Tile
+from pathml.core.slide_data import get_file_ext
 from pathml.preprocessing import Pipeline, BoxBlur
 
 
-@pytest.mark.parametrize("slide", [SlideData, HESlide, RGBSlide, MultiparametricSlide])
+@pytest.mark.parametrize("slide", [SlideData, HESlide, MultiparametricSlide])
 def test_repr(slide):
     s = slide("tests/testdata/small_HE.svs")
     repr(s)
+
+
+@pytest.mark.parametrize("path,ext", [
+    ("/test/testing/test.txt", ".txt"),
+    ("/test/testing/test.txt.gz", ".txt"),
+    ("/test/testing/test.txt.bz2", ".txt"),
+    ("/test/testing/test.qptiff", ".qptiff"),
+    ("/test/testing/test.ext1.ext2", ".ext1.ext2")
+])
+def test_get_file_ext(path, ext):
+    result = get_file_ext(path)
+    assert result == ext
 
 
 def test_write_with_array_labels(tmp_path, example_slide_data):
@@ -56,15 +71,9 @@ def multiparametric_slide():
     return wsi
 
 
-def test_he(he_slide):
-    assert isinstance(he_slide, SlideData)
-    assert isinstance(he_slide, RGBSlide)
-    assert isinstance(he_slide.slide, OpenSlideBackend)
-
-
 def test_multiparametric(multiparametric_slide):
     assert isinstance(multiparametric_slide, SlideData)
-    assert isinstance(multiparametric_slide.slide, BioFormatsBackend)
+    assert multiparametric_slide.slide_type == pathml.types.IF
 
 
 @pytest.mark.parametrize("shape", [500, (500, 400)])
@@ -96,3 +105,36 @@ def test_generate_tiles_padding(he_slide, pad):
         assert len(tiles) == 63
     else:
         assert len(tiles) == 80
+
+
+def test_read_write_heslide(tmp_path, example_slide_data_with_tiles):
+    slidedata = example_slide_data_with_tiles
+    path = tmp_path / 'testhe.h5'
+    slidedata.write(path)
+    readslidedata = SlideData(path)
+    assert readslidedata.name == slidedata.name
+    np.testing.assert_equal(readslidedata.labels, slidedata.labels)
+    assert readslidedata.history == slidedata.history
+    if slidedata.masks is None:
+        assert readslidedata.masks is None
+    if slidedata.masks is not None:
+        assert scan_hdf5(readslidedata.masks.h5manager.h5) == scan_hdf5(slidedata.masks.h5manager.h5)
+    if slidedata.tiles is None:
+        assert readslidedata.tiles is None
+    if slidedata.tiles is not None:
+        assert scan_hdf5(readslidedata.tiles.h5manager.h5) == scan_hdf5(slidedata.tiles.h5manager.h5)
+        print(readslidedata.tiles.h5manager.tiles)
+        print(slidedata.tiles.h5manager.tiles)
+        np.testing.assert_equal(readslidedata.tiles.h5manager.tiles, slidedata.tiles.h5manager.tiles)
+
+
+def scan_hdf5(f, recursive=True, tab_step=2):
+    def scan_node(g, tabs=0):
+        elems = []
+        for k, v in g.items():
+            if isinstance(v, h5py.Dataset):
+                elems.append(v.name)
+            elif isinstance(v, h5py.Group) and recursive:
+                elems.append((v.name, scan_node(v, tabs=tabs + tab_step)))
+        return elems
+    return scan_node(f)

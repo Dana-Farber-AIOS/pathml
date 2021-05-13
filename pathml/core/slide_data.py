@@ -11,49 +11,8 @@ import matplotlib.pyplot as plt
 from dataclasses import asdict
 import os
 
-import pathml.core.masks
-import pathml.core.types
-import pathml.core.tile
-import pathml.core.tiles
-import pathml.core.slide_backends
+import pathml.core
 import pathml.preprocessing.pipeline
-
-
-pathmlext = {
-    'h5',
-    'h5path'
-}
-
-openslideext = {
-    'svs',
-    'tif',
-    'ndpi',
-    'vms',
-    'vmu',
-    'scn',
-    'mrxs',
-    'svslide',
-    'bif'
-}
-
-bioformatsext = {
-    'tiff', 'tif',  'sld', 'aim', 'al3d',  'gel',  'am',  'amiramesh',  'grey',  'hx',  'labels',  'cif',  'img',  'hdr',
-    'sif',  'png',  'afi',  'htd',  'pnl',  'avi',  'arf',  'exp',  'spc',  'sdt',  'xml',  '1sc',  'pic',  'raw',  'scn',
-    'ims',  'img',  'cr2',  'crw',  'ch5',  'c01',  'dib',  'vsi',  'wpi',  'dv',  'r3d',  'rcpnl',  'eps',  'epsi',  'ps',
-    'fits',  'dm3',  'dm4',  'dm2',  'vff',  'naf',  'his',  'i2i',  'ics',  'ids',  'fff',  'seq',  'ipw',  'hed',  'mod',
-    'liff',  'obf',  'msr',  'xdce',  'frm',  'inr',  'hdr',  'ipl',  'ipm',  'dat',  'par',  'jp2',  'j2k',  'jpf',  'jpk',
-    'jpx',  'klb',  'xv',  'bip',  'fli',  'msr',  'lei',  'lif',  'scn',  'sxm',  'l2d',  'lim',  'stk',  'nd',  'htd',  'mnc',
-    'mrw',  'mng',  'stp',  'mrc',  'st',  'ali',  'map',  'rec',  'mrcs',  'nef',  'hdr',  'nii',  'nii.gz',  'nrrd',  'nhdr',
-    'apl',  'mtb',  'tnb',  'obsep',  'oib',  'oif',  'oir',  'ome.tiff',  'ome.tif',  'ome.tf2',  'ome.tf8',  'ome.btf',
-    'ome.xml',  'ome',  'top',  'pcoraw',  'rec',  'pcx',  'pds',  'im3', 'qptiff',  'pbm',  'pgm',  'ppm',  'psd',  'bin',
-    'pict',  'cfg',  'spe',  'afm',  'mov',  'sm2',  'sm3',  'xqd',  'xqf',  'cxd',  'spi',  'stk',  'tga',  'db',  'vws',
-    'tfr',  'ffr',  'zfr',  'zfp',  '2fl',  'sld',  'pr3',  'dat',  'hdr',  'fdf',  'bif',  'dti',  'xys',  'mvd2',  'acff',
-    'wat',  'bmp',  'wlz',  'lms',  'zvi',  'czi',  'lsm',  'mdb'
-}
-
-dicomext = {
-    'dicom'
-}
 
 
 def get_file_ext(path):
@@ -66,6 +25,7 @@ def get_file_ext(path):
         path: path to file
 
     Returns:
+        str: file extension
     """
     p = Path(path)
     ext = p.suffixes
@@ -73,12 +33,11 @@ def get_file_ext(path):
         raise Exception(f"invalid path has no file extension: {path}")
     elif len(ext) == 1:
         ext = ext[0]
-    elif len(ext) > 2:
-        if ext[-1][1:] in {"gz", "bz2"}:
-            ext = ext[-2][1:]
+    elif len(ext) >= 2:
+        if ext[-1] in {".gz", ".bz2"}:
+            ext = ext[-2]
         else:
-            ext = ''.join(ext[-2])
-            ext = ext[1:]
+            ext = ''.join(ext[-2:])
     return ext
 
 
@@ -89,14 +48,25 @@ class SlideData:
     Args:
         filepath (str): Path to file on disk.
         name (str, optional): name of slide. If ``None``, and a ``filepath`` is provided, name defaults to filepath.
-        masks (pathml.core.masks.Masks, optional): object containing {key, mask} pairs
-        tiles (pathml.core.tiles.Tiles, optional): object containing {coordinates, tile} pairs
+        masks (pathml.core.Masks, optional): object containing {key, mask} pairs
+        tiles (pathml.core.Tiles, optional): object containing {coordinates, tile} pairs
         labels (collections.OrderedDict, optional): dictionary containing {key, label} pairs
         backend (str, optional): backend to use for interfacing with slide on disk.
             Must be one of {"OpenSlide", "BioFormats", "DICOM"} (case-insensitive).
             If ``None``, and a ``filepath`` is provided, tries to infer the correct backend from the file extension.
-        slide_type (pathml.core.types.SlideType, optional): slide type specification. Must be a
-            :class:`~pathml.core.types.SlideType` object.
+        slide_type (pathml.core.SlideType, optional): slide type specification. Must be a
+            :class:`~pathml.core.SlideType` object. Alternatively, slide type can be specified by using the
+            parameters ``stain``, ``tma``, ``rgb``, ``volumetric``, and ``time_series``.
+        stain (str, optional): Flag indicating type of slide stain. Must be one of [‘HE’, ‘IHC’, ‘Fluor’].
+            Defaults to ``None``. Ignored if ``slide_type`` is specified.
+        tma (bool, optional): Flag indicating whether the image is a tissue microarray (TMA).
+            Defaults to ``False``. Ignored if ``slide_type`` is specified.
+        rgb (bool, optional): Flag indicating whether the image is in RGB color.
+            Defaults to ``None``. Ignored if ``slide_type`` is specified.
+        volumetric (bool, optional): Flag indicating whether the image is volumetric.
+            Defaults to ``None``. Ignored if ``slide_type`` is specified.
+        time_series (bool, optional): Flag indicating whether the image is a time series.
+            Defaults to ``None``. Ignored if ``slide_type`` is specified.
     """
     def __init__(self,
                  filepath,
@@ -105,42 +75,53 @@ class SlideData:
                  tiles=None,
                  labels=None,
                  backend=None,
-                 slide_type=None
+                 slide_type=None,
+                 stain=None,
+                 tma=None,
+                 rgb=None,
+                 volumetric=None,
+                 time_series=None
                  ):
         # check inputs
-        assert masks is None or isinstance(masks, (pathml.core.masks.Masks, h5py._hl.group.Group)), \
+        assert masks is None or isinstance(masks, (pathml.core.Masks, h5py._hl.group.Group)), \
             f"mask are of type {type(masks)} but must be type Masks or h5 group"
         assert labels is None or isinstance(labels, dict), \
             f"labels are of type {type(labels)} but must be of type dict. array-like labels should be stored in masks."
-        assert tiles is None or isinstance(tiles, (pathml.core.tiles.Tiles, h5py._hl.group.Group)), \
+        assert tiles is None or isinstance(tiles, (pathml.core.Tiles, h5py._hl.group.Group)), \
             f"tiles are of type {type(tiles)} but must be of type pathml.core.tiles.Tiles"
-        assert slide_type is None or isinstance(slide_type, (pathml.core.types.SlideType, h5py._hl.group.Group)), \
+        assert slide_type is None or isinstance(slide_type, (pathml.core.SlideType, h5py._hl.group.Group)), \
             f"slide_type is of type {type(slide_type)} but must be of type pathml.core.types.SlideType"
         assert backend is None or (isinstance(backend, str) and backend.lower() in {"openslide", "bioformats", "dicom"}), \
             f"backend {backend} must be one of ['OpenSlide', 'BioFormats', 'DICOM'] (case-insensitive)."
+
+        # instantiate SlideType object if needed
+        if not slide_type and any([stain, tma, rgb, volumetric, time_series]):
+            stain_type_dict = {"stain": stain, "tma": tma, "rgb": rgb, "volumetric": volumetric, "time_series": time_series}
+            # remove any Nones
+            stain_type_dict = {key: val for key,val in stain_type_dict.items() if val}
+            if stain_type_dict:
+                slide_type = pathml.core.types.SlideType(**stain_type_dict)
 
         # get name from filepath if no name is provided
         if name is None and filepath is not None:
             name = Path(filepath).stem
 
-        backend = backend.lower()
         _load_from_h5path = False
 
-        # instantiate the backend object
-        if not backend:
+        if backend:
+            # convert everything to lower so it's case insensitive
+            backend = backend.lower()
+        else:
             # try to infer the correct backend
             ext = get_file_ext(filepath)
             if ext in openslideext:
                 backend = "openslide"
-                backend_obj = pathml.core.slide_backends.OpenSlideBackend(filepath)
             elif ext in bioformatsext:
                 backend = "bioformats"
-                backend_obj = pathml.core.slide_backends.BioFormatsBackend(filepath)
             elif ext in dicomext:
                 backend = "dicom"
-                backend_obj = pathml.core.slide_backends.DICOMBackend(filepath)
             elif ext in pathmlext:
-                backend = None
+                backend = "h5path"
                 # load SlideData from h5 or h5path
                 _load_from_h5path = True
             else:
@@ -149,12 +130,13 @@ class SlideData:
 
         if _load_from_h5path:
             # populate the SlideData object from existing h5path file
+            backend_obj = None  # no backend in this case since we're loading from h5
             with h5py.File(filepath, "r") as f:
-                tiles = pathml.core.tiles.Tiles(h5 = f) if 'tiles' in f.keys() else None
-                masks = pathml.core.masks.Masks(h5 = f) if ('masks' in f.keys() and 'tiles' not in f.keys()) else None
-                slidetype_dict = f['fields']['slidetype']
-                slide_type = pathml.core.types.SlideType(**slidetype_dict)
-                backend = f['fields'].attrs['slide_backend'].decode('UTF-8') if 'slide_backend' in f['fields'].attrs.keys() else None
+                tiles = pathml.core.Tiles(h5 = f) if 'tiles' in f.keys() else None
+                masks = pathml.core.Masks(h5 = f) if ('masks' in f.keys() and 'tiles' not in f.keys()) else None
+                slidetype_dict = f['fields']['slide_type'] if 'slide_type' in f['fields'].keys() else None
+                if slidetype_dict:
+                    slide_type = pathml.core.SlideType(**slidetype_dict)
                 name = f['fields'].attrs['name'].decode('UTF-8') if 'name' in f['fields'].attrs.keys() else None
                 history = f['fields'].attrs['history'] if 'history' in f['fields'].attrs.keys() else None
                 labels = f['fields']['labels'] if 'labels' in f['fields'].keys() else None
@@ -169,16 +151,19 @@ class SlideData:
                             val = val.decode('UTF-8')
                         labeldict[attr] = val
                     labels = labeldict
+        else:
+            history = None
 
         if backend.lower() == "openslide":
-            backend_obj = pathml.core.slide_backends.OpenSlideBackend(filepath)
+            backend_obj = pathml.core.OpenSlideBackend(filepath)
         elif backend.lower() == "bioformats":
-            backend_obj = pathml.core.slide_backends.BioFormatsBackend(filepath)
+            backend_obj = pathml.core.BioFormatsBackend(filepath)
         elif backend.lower() == "dicom":
-            backend_obj = pathml.core.slide_backends.DICOMBackend(filepath)
+            backend_obj = pathml.core.DICOMBackend(filepath)
+        elif backend.lower() == "h5path":
+            pass
         else:
-            raise ValueError(f"invalid backend input {repr(backend)}. Must be one of "
-                             f"['OpenSlide', 'BioFormats', 'DICOM'] (case-insensitive)")
+            raise ValueError(f"invalid backend: {repr(backend)}.")
 
         self._filepath = filepath if filepath else None
         self.backend = backend
@@ -191,10 +176,18 @@ class SlideData:
         self.history = history if history else None
 
     def __repr__(self): 
-        out = f"SlideData(name={self.name}, "
+        out = f"SlideData(name={repr(self.name)},\n"
+        out += f"slide_type = {repr(self.slide_type)},\n"
+        out += f"labels={self.labels.keys() if self.labels else repr(None)},"
+        if self.tiles is None:
+            out += f"tiles=None,\n"
+        else:
+            out += f"total number of tiles: {len(self.tiles)}, tile_shape: {self.tiles.tile_shape}\n"
         if self._filepath:
-            out += f"filepath = {self._filepath}, "
-        out += f"backend = {repr(self.backend)}, "
+            out += f"filepath = {self._filepath},\n"
+        if self.backend:
+            out += f"backend = {repr(self.backend)}\n"
+
         out += f"masks={repr(self.masks)}, "
         out += f"tiles={repr(self.tiles)}, "
         out += f"labels={repr(self.labels)}, "
@@ -389,3 +382,55 @@ class HESlide(SlideData):
     def __init__(self, *args, **kwargs):
         kwargs["slide_type"] = pathml.core.types.HE
         super().__init__(*args, **kwargs)
+
+
+class MultiparametricSlide(SlideData):
+    """
+    Convenience class to load a SlideData object for multiparametric slides.
+    Passes through all arguments to ``SlideData()``, along with ``slide_type = types.IF`` flag.
+    Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
+    """
+    def __init__(self, *args, **kwargs):
+        kwargs["slide_type"] = pathml.core.types.IF
+        super().__init__(*args, **kwargs)
+
+
+# dicts used to infer correct backend from file extension
+
+pathmlext = {
+    '.h5',
+    '.h5path'
+}
+
+openslideext = {
+    '.svs',
+    '.tif',
+    '.ndpi',
+    '.vms',
+    '.vmu',
+    '.scn',
+    '.mrxs',
+    '.svslide',
+    '.bif'
+}
+
+bioformatsext = {
+    '.tiff', '.tif', '.sld', '.aim', '.al3d', '.gel', '.am', '.amiramesh', '.grey', '.hx', '.labels', '.cif', '.img',
+    '.hdr', '.sif', '.png', '.afi', '.htd',  '.pnl', '.avi', '.arf', '.exp', '.spc', '.sdt', '.xml', '.1sc', '.pic',
+    '.raw', '.scn', '.ims', '.img', '.cr2', '.crw',  '.ch5', '.c01', '.dib', '.vsi', '.wpi', '.dv', '.r3d', '.rcpnl',
+    '.eps', '.epsi', '.ps', '.fits', '.dm3', '.dm4', '.dm2',  '.vff', '.naf', '.his', '.i2i', '.ics', '.ids', '.fff',
+    '.seq', '.ipw', '.hed', '.mod', '.liff', '.obf', '.msr', '.xdce', '.frm', '.inr', '.hdr', '.ipl', '.ipm', '.dat',
+    '.par', '.jp2', '.j2k', '.jpf', '.jpk', '.jpx', '.klb', '.xv', '.bip', '.fli', '.msr', '.lei', '.lif', '.scn',
+    '.sxm', '.l2d', '.lim', '.stk', '.nd', '.htd', '.mnc', '.mrw', '.mng', '.stp', '.mrc', '.st', '.ali', '.map',
+    '.rec', '.mrcs', '.nef', '.hdr', '.nii', '.nii.gz', '.nrrd', '.nhdr', '.apl', '.mtb', '.tnb', '.obsep', '.oib',
+    '.oif', '.oir', '.ome.tiff', '.ome.tif', '.ome.tf2', '.ome.tf8', '.ome.btf', '.ome.xml', '.ome', '.top', '.pcoraw',
+    '.rec', '.pcx', '.pds', '.im3', '.qptiff', '.pbm', '.pgm', '.ppm', '.psd', '.bin', '.pict', '.cfg', '.spe', '.afm',
+    '.mov', '.sm2', '.sm3', '.xqd', '.xqf', '.cxd', '.spi', '.stk', '.tga', '.db', '.vws', '.tfr', '.ffr', '.zfr',
+    '.zfp',  '.2fl', '.sld', '.pr3', '.dat', '.hdr', '.fdf', '.bif', '.dti', '.xys', '.mvd2', '.acff', '.wat', '.bmp',
+    '.wlz', '.lms',  '.zvi', '.czi', '.lsm', '.mdb'
+}
+
+dicomext = {
+    '.dicom',
+    '.dcm'
+}
