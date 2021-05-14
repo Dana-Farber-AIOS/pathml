@@ -216,23 +216,24 @@ class _tiles_h5_manager(_h5_manager):
             Tile(pathml.core.tile.Tile)
             
         """
-        if not isinstance(item, (int, str, tuple)):
-            raise KeyError(f'must getitem by coordinate(type tuple[int]), index(type int), or name(type str)')
         if isinstance(item, (str, tuple)):
             if str(item) not in self.tiles:
                 raise KeyError(f'key {item} does not exist')
             tilemeta = self.tiles[str(item)]
-        if isinstance(item, int):
+        elif isinstance(item, int):
             if item > len(self.tiles) - 1:
                 raise KeyError(f'index out of range, valid indices are ints in [0,{len(self.tiles) - 1}]')
             tilemeta = list(self.tiles.items())[item][1]
+        else:
+            raise KeyError(f'invalid item type: {type(item)}. must getitem by coord (type tuple[int]),'
+                           f' index (type int), or name(type str)')
         # impute missing dimensions from self.tile_shape 
         coords = list(eval(tilemeta['coords']))
         if len(self.tile_shape) > len(coords):
             shape = list(self.tile_shape)
             coords = coords + [0]*len(shape[len(coords)-1:]) 
         tiler = [slice(coords[i], coords[i]+self.tile_shape[i]) for i in range(len(self.tile_shape))]
-        print(tiler)
+        # print(tiler)
         tile = self.h5['array'][tuple(tiler)][:]
         masks = {mask : self.h5['masks'][mask][tuple(tiler)][:] for mask in self.h5['masks']} if 'masks' in self.h5.keys() else None 
         if slicer:
@@ -240,8 +241,14 @@ class _tiles_h5_manager(_h5_manager):
             if masks is not None:
                 masks = {key : masks[key][slicer] for key in masks}
         masks = pathml.core.masks.Masks(masks)
-        slidetype = tilemeta['slidetype']
-        return pathml.core.tile.Tile(tile, masks=masks, labels=tilemeta['labels'], name=tilemeta['name'], coords=eval(tilemeta['coords']), slidetype=slidetype)
+
+        if 'slide_type' in self.h5['fields'].keys():
+            slidetype_dict = self.h5['fields']['slide_type']
+            slide_type = pathml.core.SlideType(**slidetype_dict)
+        else:
+            slide_type = None
+        return pathml.core.tile.Tile(tile, masks=masks, labels=tilemeta['labels'], name=tilemeta['name'],
+                                     coords=eval(tilemeta['coords']), slide_type=slide_type)
 
     def slice(self, slicer):
         """
