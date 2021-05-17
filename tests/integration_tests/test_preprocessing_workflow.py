@@ -25,7 +25,7 @@ def test_pipeline_1(tmp_path):
     client.close()
 
 def test_vectra_pipeline(tmp_path):
-    slide = VectraSlide("tests/testdata/vectra.tif")
+    slide = VectraSlide("tests/testdata/small_vectra.qptiff")
     pipeline = Pipeline([
         SegmentMIF(model='mesmer', nuclear_channel=0, cytoplasm_channel=6, image_resolution=0.5),
         QuantifyMIF()
