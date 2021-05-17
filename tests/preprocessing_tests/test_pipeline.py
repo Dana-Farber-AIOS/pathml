@@ -1,10 +1,14 @@
-import pytest
+"""
+Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
+License: GNU GPL 2.0
+"""
+
 import pickle
 import numpy as np
 
-from pathml.preprocessing.pipeline import Pipeline
+from pathml.preprocessing import Pipeline
 
-from pathml.preprocessing.transforms import (
+from pathml.preprocessing import (
     MedianBlur, GaussianBlur, BoxBlur, BinaryThreshold,
     MorphOpen, MorphClose, ForegroundDetection, SuperpixelInterpolation,
     StainNormalizationHE, NucleusDetectionHE, TissueDetectionHE,
@@ -39,7 +43,7 @@ def test_pipeline_HE(tileHE):
     assert np.array_equal(tileHE.image, im)
     assert np.array_equal(tileHE.masks["testing"], m)
 
-
+    
 def test_pipeline_mif(tileIHC):
     """
     Run MIF pipeline
@@ -59,7 +63,7 @@ def test_pipeline_mif(tileIHC):
     assert np.array_equal(tileIHC.masks['cell_segmentation'], segmented_mask)
     assert adata == tileIHC.counts 
 
-
+    
 def test_pipeline_save(tmp_path):
     # tmp_path is a temporary path used for testing
     fp = tmp_path / "test"

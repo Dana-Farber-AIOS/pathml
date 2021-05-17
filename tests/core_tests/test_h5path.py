@@ -1,10 +1,13 @@
-import pytest
+"""
+Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
+License: GNU GPL 2.0
+"""
+
 import h5py
 import numpy as np
 from pandas.testing import assert_frame_equal
 
-from pathml.core.slide_data import HESlide
-from pathml.core.h5path import read
+from pathml.core import read
 
 
 def test_read_write_heslide(tmp_path, example_slide_data_with_tiles):

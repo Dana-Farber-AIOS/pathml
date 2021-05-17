@@ -1,13 +1,16 @@
+"""
+Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
+License: GNU GPL 2.0
+"""
+
 import pytest
 import numpy as np
 import cv2
 import openslide
 import javabridge
 
-from pathml.core.slide_data import HESlide
-from pathml.core.tile import Tile
-from pathml.core.masks import Masks
-from pathml.core.h5path import read
+from pathml.core import HESlide, Tile, Masks
+
 
 def pytest_sessionfinish(session, exitstatus):
     """
@@ -17,6 +20,7 @@ def pytest_sessionfinish(session, exitstatus):
     This Pytest sessionfinish hook runs automatically at the end of testing.
     """
     javabridge.kill_vm()
+
 
 @pytest.fixture
 def tileHE():

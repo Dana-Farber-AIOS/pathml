@@ -50,8 +50,7 @@ In practice, this requires only a few lines of code:
 
 .. code-block::
 
-    from pathml.preprocessing.pipeline import Pipeline
-    from pathml.preprocessing.transforms import BoxBlur, TissueDetectionHE
+    from pathml.preprocessing import Pipeline, BoxBlur, TissueDetectionHE
 
     pipeline = Pipeline([
         BoxBlur(kernel_size=15),
@@ -62,19 +61,6 @@ In practice, this requires only a few lines of code:
 In this example, the preprocessing pipeline will first apply a box blur kernel, and then apply tissue detection.
 It is that easy to compose pipelines by mixing and matching :class:`~pathml.preprocessing.transforms.Transform` objects!
 
-
-Premade pipelines
---------------------
-
-Pre-made Pipelines make it even easier to get up-and-running quickly.
-
-+--------------------------------------------+------------------------------------------------------------------------+
-| Pipeline name                              | Description                                                            |
-+============================================+========================================================================+
-| DefaultHEPipeline                          | Divides input wsi into tiles. Does not apply any tile-level processing.|
-+--------------------------------------------+------------------------------------------------------------------------+
-
-[implement a few default pipelines, and add here with links in the left column]
 
 
 Creating custom Transforms

@@ -22,8 +22,7 @@ individual :class:`~pathml.core.slide_dataset.SlideData` objects:
 .. code-block::
 
     from pathlib import Path
-    from pathml.core.slide_dataset import SlideDataset
-    from pathml.core.slide_data import HESlide
+    from pathml.core import HESlide, SlideDataset
 
     # assuming that all WSIs are in a single directory, all with .svs file extension
     data_dir = Path("/path/to/data/")
@@ -70,6 +69,8 @@ Supported file formats
 
 Whole-slide images can come in a variety of file formats, depending on the type of image and the scanner used.
 ``PathML`` has several backends for loading images, enabling support for a wide variety of data formats.
+All backends use the same API for interfacing with other parts of ``PathML``. Choose the appropriate backend
+for the file format:
 
 
 .. list-table:: PathML Backends
@@ -83,7 +84,7 @@ Whole-slide images can come in a variety of file formats, depending on the type 
        | `Complete list of file types supported by OpenSlide <https://openslide.org/formats/>`_
    * - :class:`~pathml.core.slide_backends.DICOMBackend`
      - | ``.dcm``
-       | [work in progress]
+       | Digital Imaging and Communications in Medicine (DICOM)
    * - :class:`~pathml.core.slide_backends.BioFormatsBackend`
      - | Supports almost all commonly used file formats, including multiparametric and volumetric TIFF files.
        | `Complete list of file types supported by Bio-Formats <https://docs.openmicroscopy.org/bio-formats/latest/supported-formats.html>`_

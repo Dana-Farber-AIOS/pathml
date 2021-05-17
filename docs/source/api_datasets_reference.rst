@@ -4,17 +4,10 @@ Datasets API
 PanNuke
 -------
 
-.. autoclass:: pathml.datasets.pannuke.PanNukeDataModule
-    :members:
-
-Helper functions
-^^^^^^^^^^^^^^^^
-
-.. autofunction:: pathml.datasets.pannuke.pannuke_multiclass_mask_to_nucleus_mask
+.. autoclass:: pathml.datasets.PanNukeDataModule
 
 
 DeepFocus
 ---------
 
-.. autoclass:: pathml.datasets.deepfocus.DeepFocusDataModule
-    :members:
+.. autoclass:: pathml.datasets.DeepFocusDataModule

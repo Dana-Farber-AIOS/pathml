@@ -1,8 +1,13 @@
+"""
+Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
+License: GNU GPL 2.0
+"""
+
 from dask.distributed import Client
 
-from pathml.core.slide_data import HESlide, VectraSlide
-from pathml.preprocessing.pipeline import Pipeline
-from pathml.preprocessing.transforms import BoxBlur, TissueDetectionHE, SegmentMIF, QuantifyMIF
+
+from pathml.core import HESlide, VectraSlide
+from pathml.preprocessing import Pipeline, BoxBlur, TissueDetectionHE, SegmentMIF, QuantifyMIF
 
 
 def test_pipeline_1(tmp_path):

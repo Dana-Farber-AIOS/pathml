@@ -1,10 +1,13 @@
+"""
+Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
+License: GNU GPL 2.0
+"""
+
 from dask.distributed import Client
 from pathlib import Path
 
-from pathml.core.slide_data import SlideData
-from pathml.core.tile import Tile
-from pathml.preprocessing.pipeline import Pipeline
-from pathml.preprocessing.transforms import BoxBlur
+from pathml.core import SlideData, Tile
+from pathml.preprocessing import Pipeline, BoxBlur
 
 
 def test_dataset_len_getitem(slide_dataset):
