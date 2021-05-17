@@ -5,7 +5,7 @@ from pathml.preprocessing.transforms import (
     MedianBlur, GaussianBlur, BoxBlur, BinaryThreshold,
     MorphOpen, MorphClose, ForegroundDetection, SuperpixelInterpolation,
     StainNormalizationHE, NucleusDetectionHE, TissueDetectionHE,
-    QuantifyMIF, SegmentMIF
+    QuantifyMIF, SegmentMIF, CollapseRunsVectra, CollapseRunsCODEX
 )
 from pathml.utils import RGB_to_GREY
 
@@ -97,6 +97,35 @@ def test_tissue_detectionHE(tileHE, threshold, use_saturation):
     t.apply(tileHE)
     assert np.array_equal(tileHE.masks["testing"], m)
 
+
+def test_segment_mif(tileVectra):
+    t = SegmentMIF(nuclear_channel = 0, cytoplasm_channel = 1)
+    orig_im = tileVectra.image
+    cell, nuclear = t.F(orig_im)
+    t.apply(tileVectra)
+    assert np.array_equal(tileVectra.masks["cell_segmentation"], cell)
+    assert np.array_equal(tileVectra.masks["nuclear_segmentation"], nuclear)
+
+
+def test_quantify_mif(tileVectra):
+    t = QuantifyMIF("cell_segmentation")
+    with pytest.raises(AssertionError):
+        t.apply(tileVectra)
+    t2 = SegmentMIF(nuclear_channel = 0, cytoplasm_channel = 1)
+    t2.apply(tileVectra)
+    t.apply(tileVectra)
+    assert tileVectra.counts
+
+
+def test_collapse_runs_vectra(tileVectra):
+    t = CollapseRunsVectra()
+    orig_im = tileVectra.image
+    m = t.F(orig_im)
+    t.apply(tileVectra)
+    assert np.array_equal(m, tileVectra.image)
+    assert len(m.shape) == 3
+
+# TODO: codex tests
 # TODO: transforms tests
 
 @pytest.mark.parametrize("transform", [MedianBlur(),
@@ -111,6 +140,8 @@ def test_tissue_detectionHE(tileHE, threshold, use_saturation):
                                        NucleusDetectionHE(),
                                        TissueDetectionHE(),
                                        QuantifyMIF(segmentation_mask='test'),
-                                       SegmentMIF(nuclear_channel = 0, cytoplasm_channel = 1)])
+                                       SegmentMIF(nuclear_channel = 0, cytoplasm_channel = 1),
+                                       CollapseRunsVectra(),
+                                       CollapseRunsCODEX(z=0)])
 def test_repr(transform):
     repr(transform)

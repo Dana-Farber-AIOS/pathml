@@ -95,11 +95,11 @@ class _tiles_h5_manager(_h5_manager):
             for dim, (current, required) in enumerate(zip(currentshape, requiredshape)):
                 self.h5['array'].resize(required, axis=dim)
 
-            # add tile to self.h5['tiles/array']
+            # add tile to self.h5['array']
             slicer = [slice(coords[i], coords[i] + tile.image.shape[i]) for i in range(len(coords))] 
             self.h5['array'][tuple(slicer)] = tile.image
 
-        # initialize self.h5['tiles/array'] if it does not exist 
+        # initialize self.h5['array'] if it does not exist 
         # note that the first tile is not necessarily (0,0) so we init with zero padding
         elif 'array' not in self.h5.keys():
             coords = list(tile.coords)
@@ -125,7 +125,7 @@ class _tiles_h5_manager(_h5_manager):
             writetupleh5(self.h5['tiles'], 'tile_shape', tile.image.shape)
 
         if tile.masks:
-            # create self.h5['tiles/masks']
+            # create self.h5['masks']
             if 'masks' not in self.h5.keys():
                 masksgroup = self.h5.create_group('masks')
                 
@@ -251,6 +251,8 @@ class _tiles_h5_manager(_h5_manager):
             shape = list(self.tile_shape)
             coords = coords + [0]*len(shape[len(coords)-1:]) 
         tiler = [slice(coords[i], coords[i]+self.tile_shape[i]) for i in range(len(self.tile_shape))]
+        print(self.h5['array'].shape)
+        print(tiler)
         tile = self.h5['array'][tuple(tiler)][:]
         masks = {mask : self.h5['masks'][mask][tuple(tiler[:len(self.h5['masks'][mask].shape)])][:] for mask in self.h5['masks']} if 'masks' in self.h5.keys() else None 
         if slicer:

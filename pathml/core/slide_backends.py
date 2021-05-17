@@ -236,27 +236,35 @@ class BioFormatsBackend(SlideBackend):
                 arrayshape.append(self.shape[i])
         arrayshape = tuple(arrayshape)
         array = np.empty(arrayshape)
-        for z in range(self.shape[2]):
-            for t in range(self.shape[4]):
-                try:
+        sample = reader.read(z=0, t=0, rescale=False, XYWH=(location[0], location[1], size[0], size[1]))
+        # if series is set to read only one channel, explicitly read c
+        if len(sample.shape) == 2:
+            for z in range(self.shape[2]):
+                for c in range(self.shape[3]):
+                    for t in range(self.shape[4]):
+                        # or reader.openBytes() but need to declare omemetadata as in init
+                        slicearray = reader.read(z=z, t=t, series=c, rescale=False, XYWH=(location[0], location[1], size[0], size[1]))
+                        slicearray = np.asarray(slicearray)
+                        # some file formats read x, y out of order, transpose
+                        print(slicearray.shape)
+                        print(array.shape)
+                        if slicearray.shape[:2] != array.shape[:2]: 
+                            slicearray = np.transpose(slicearray)
+                        # slicearray = np.moveaxis(slicearray, 0, -1)
+                        array[:,:,z,c,t] = slicearray 
+        # if series is set to read all channels, read all c simultaneously
+        elif len(sample.shape) == 3:
+            for z in range(self.shape[2]):
+                for t in range(self.shape[4]):
                     # or reader.openBytes() but need to declare omemetadata as in init
                     slicearray = reader.read(z=z, t=t, rescale=False, XYWH=(location[0], location[1], size[0], size[1]))
                     slicearray = np.asarray(slicearray)
-                    slicearray = np.moveaxis(slicearray, 0, -1)
-                    # if the image has no color channel, fill manually
-                    if len(slicearray.shape) == 2:
-                        slicearray = np.expand_dims(slicearray, axis=-1)
+                    # some file formats read x, y out of order, transpose
+                    if slicearray.shape[:2] != array.shape[:2]: 
+                        slicearray = np.transpose(slicearray)
                     array[:,:,z,:,t] = slicearray 
-                except:
-                    # or reader.openBytes() but need to declare omemetadata as in init
-                    slicearray = reader.read(z=z, t=t, rescale=False, XYWH=(location[0], location[1], size[0], size[1]))
-                    slicearray = np.asarray(slicearray)
-                    slicearray = np.transpose(slicearray)
-                    slicearray = np.moveaxis(slicearray, 0, -1)
-                    # if the image has no color channel, fill manually
-                    if len(slicearray.shape) == 2:
-                        slicearray = np.expand_dims(slicearray, axis=-1)
-                    array[:,:,z,:,t] = slicearray 
+        else:
+            raise Exception(f"image format not supported")
         array = array.astype(np.uint8)
         return array
 
@@ -282,15 +290,7 @@ class BioFormatsBackend(SlideBackend):
                 size = size + self.shape[len(size):]
         if self.shape[0]*self.shape[1]*self.shape[2]*self.shape[3] > 2147483647:
             raise Exception(f"Java arrays allocate maximum 32 bits (~2GB). Image size is {self.imsize}")
-        javabridge.start_vm(class_path = bioformats.JARS)
-        reader = bioformats.ImageReader(str(self.filename), perform_init=True)
-        array = np.empty(self.shape)
-        for z in range(self.shape[2]):
-            for c in range(self.shape[3]):
-                for t in range(self.shape[4]):
-                    data = reader.read(z=z, t=t, series=c, rescale = False)
-                    slice_array = np.asarray(data)
-                    array[:,:,z,c,t] = np.transpose(slice_array)
+        array = self.extract_region(location=(0,0), size=self.shape[:2])
         if size is not None:
             ratio = tuple([x/y for x,y in zip(size, self.shape)]) 
             assert ratio[3] == 1, f"cannot interpolate between fluor channels, resampling doesn't apply, fix size[3]"

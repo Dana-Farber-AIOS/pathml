@@ -25,8 +25,7 @@ def test_read_write_heslide(tmp_path, example_slide_data_with_tiles):
     if slidedata.tiles is not None:
         assert scan_hdf5(readslidedata.tiles.h5manager.h5) == scan_hdf5(slidedata.tiles.h5manager.h5)
         np.testing.assert_equal(readslidedata.tiles.h5manager.tiles, slidedata.tiles.h5manager.tiles)
-        print(type(readslidedata.counts.obs.keys()))
-        print(type(slidedata.counts.obs.keys()))
+    if slidedata.counts is not None:
         assert_frame_equal(readslidedata.counts.obs, slidedata.counts.obs)
 
 

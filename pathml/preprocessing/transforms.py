@@ -792,36 +792,10 @@ class TissueDetectionHE(Transform):
         tile.masks[self.mask_name] =  mask
 
 
-class BackgroundSubtractMIF(Transform):
-    """
-    Apply background subtraction.
-
-    Args:
-        background_reference (str): key indicating channel with background measurement
-        target_channel (str): key indicating channel to be corrected by background subtraction
-    """
-    def __init__(self, target_channel = None, background_channel = None):
-        self.target_channel = target_channel
-        self.background_channel = background_channel
-
-    def __repr__(self):
-        return f"BackgroundSubtractMIF(background_reference={self.background_reference}, target={self.target_channel})"
-    
-    def F(self, image):
-        if self.background_channel is None:
-            # infer background from darkest spot 
-            pass
-        else:
-            # subtract background_channel from target_channel
-            pass
-    
-    def apply(self, tile):
-        tile.image =  F(tile.image)
-        # TODO: some flag indicating that a channel is corrected? history?
-
-'''
 class DeconvolveMIF(Transform):
     """
+    NOTE: This function is WIP and untested.
+
     Apply image deconvolution. Models blurring/noise as caused by
     diffraction-limited optics through convolution by a point spread 
     function (psf). 
@@ -847,7 +821,7 @@ class DeconvolveMIF(Transform):
         psf(): point spread function for microscope
     """
     def __init__(self, psf=None, psfparameters=None, iterations=30):
-        ij = imagej.init()
+        # ij = imagej.init()
         if psf:
             assert isinstance(psf, np.ndarray), f"psf must be a np.ndarray" 
             self.psf = psf
@@ -884,7 +858,6 @@ class DeconvolveMIF(Transform):
     
     def apply(self, tile):
         tile.image = self.F(tile.image, tile.slidetype)
-'''
 
 
 class SegmentMIF(Transform):
@@ -937,11 +910,12 @@ class SegmentMIF(Transform):
                f"gpu={self.gpu})"
     
     def F(self, image):
-        if len(image.shape) not in [3, 4]:
+        img = image.copy()
+        if len(img.shape) not in [3, 4]:
             raise ValueError(f"supported image shapes are x,y,c or batch,x,y,c")
-        if len(image.shape) == 3:
-            image = np.expand_dims(image, axis=0)
-        nuc_cytoplasm = np.stack((image[:,:,:,self.nuclear_channel], image[:,:,:,self.cytoplasm_channel]), axis=-1)
+        if len(img.shape) == 3:
+            img = np.expand_dims(img, axis=0)
+        nuc_cytoplasm = np.stack((img[:,:,:,self.nuclear_channel], img[:,:,:,self.cytoplasm_channel]), axis=-1)
         cell_segmentation_predictions = self.model.predict(nuc_cytoplasm, compartment='whole-cell')
         nuclear_segmentation_predictions = self.model.predict(nuc_cytoplasm, compartment='nuclear')
         cell_segmentation_predictions = np.squeeze(cell_segmentation_predictions, axis=0)
@@ -969,11 +943,11 @@ class QuantifyMIF(Transform):
     
     def F(self, tile):
         # pass (x, y, channel) image and (x, y) segmentation
-        image = tile.image
+        img = tile.image.copy()
         segmentation = tile.masks[self.segmentation_mask][:,:,0]
         countsdataframe = regionprops_table(
                 label_image = segmentation,
-                intensity_image = image,
+                intensity_image = img,
                 properties = [
                     'coords','max_intensity',
                     'mean_intensity','min_intensity',
@@ -982,12 +956,12 @@ class QuantifyMIF(Transform):
                 ] 
         )
         X = pd.DataFrame()
-        for i in range(image.shape[-1]):
+        for i in range(img.shape[-1]):
             X[i] = countsdataframe[f'mean_intensity-{i}'] 
         # populate anndata object
         counts = anndata.AnnData(
                 X=X, 
-                obs=[tuple([x,y]) for x, y in zip(countsdataframe['centroid-0'], countsdataframe['centroid-1'])]
+                obs=[tuple([x+tile.coords[0],y+tile.coords[1]]) for x, y in zip(countsdataframe['centroid-0'], countsdataframe['centroid-1'])]
         )
         counts.obs = counts.obs.rename(columns={0:'x',1:'y'})
         counts.obs['coords'] = countsdataframe['coords']
@@ -995,28 +969,53 @@ class QuantifyMIF(Transform):
         counts.obs['slice'] = countsdataframe['slice']
         counts.obs['euler_number'] = countsdataframe['euler_number']
         min_intensities = pd.DataFrame()
-        for i in range(image.shape[-1]):
+        for i in range(img.shape[-1]):
             min_intensities[i] = countsdataframe[f'min_intensity-{i}'] 
         counts.layers['min_intensity'] = min_intensities 
         max_intensities = pd.DataFrame()
-        for i in range(image.shape[-1]):
+        for i in range(img.shape[-1]):
             max_intensities[i] = countsdataframe[f'max_intensity-{i}'] 
         counts.layers['max_intensity'] = max_intensities 
-        counts.obsm['spatial'] = np.array(counts.obs[['x','y']])
-        # counts.obs['tile'] = tile.coords
+        try:
+            counts.obsm['spatial'] = np.array(counts.obs[['x','y']])
+        except:
+            pass
+        counts.obs['tile'] = str(tile.coords)
         return counts
     
     def apply(self, tile):
         assert tile.masks[self.segmentation_mask].shape, f"passed segmentation mask does not exist for tile {tile}"
-        counts = self.F(tile)
-        tile.counts = counts
+        tile.counts = self.F(tile)
+
+
+class CollapseRunsVectra(Transform):
+    """
+    Coerce Vectra output to standard format.
+    Vectra format is (x, y, 1, c, 1).
+    Output format is (x, y, c).
+
+    Args:
+        z(int): in-focus z-plane for cells of interest
+    """
+    def __init__(self):
+        pass
+
+    def __repr__(self):
+        return f"CollapseRunsVectra()"
+
+    def F(self, image):
+        image = image[:,:,0,:,0]
+        return image 
+
+    def apply(self, tile):
+        tile.image = self.F(tile.image)
 
 
 class CollapseRunsCODEX(Transform):
     """
     Coerce CODEX output to standard format.
-    CODEX output is (x, y, z, c, t) where c=4 (4 runs per cycle) and t is the number of cycles.
-    Output is (x, y, c) where all cycles are collapsed into c (c = 4 * # of cycles).
+    CODEX format is (x, y, z, c, t) where c=4 (4 runs per cycle) and t is the number of cycles.
+    Output format is (x, y, c) where all cycles are collapsed into c (c = 4 * # of cycles).
 
     Args:
         z(int): in-focus z-plane for cells of interest
@@ -1025,7 +1024,7 @@ class CollapseRunsCODEX(Transform):
         self.z = z
 
     def __repr__(self):
-        return f"ReshapeCODEX()"
+        return f"CollapseRunsCODEX(z={self.z})"
 
     def F(self, image):
         # collapse channels
@@ -1038,25 +1037,7 @@ class CollapseRunsCODEX(Transform):
         # select z plane
         assert self.z in range(image.shape[3])
         image = image[:,:,self.z,:]
-        print(image.shape)
         return image 
 
     def apply(self, tile):
         tile.image = self.F(tile.image)
-
-
-class NicheInferenceMIF(Transform):
-    def __init__(self, model):
-        pass
-
-    def __repr__(self):
-        return f"NicheInferenceMIF()"
-
-    def F(self, adata):
-        # detect spatial nearest neighbors
-        # embed nearest neighbor vectors
-        # cluster embedding
-        pass
-
-    def apply(self, tile):
-        tile.counts = self.F(tile.counts)
