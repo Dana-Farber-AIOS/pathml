@@ -211,7 +211,7 @@ class BioFormatsBackend(SlideBackend):
         """
         return self.shape[:2]
 
-    def extract_region(self, location, size):
+    def extract_region(self, location, size, level=None):
         """
         Extract a region of the image. All bioformats images have 5 dimensions representing
         (x, y, z, channel, time). If a tuple with len < 5 is passed, missing dimensions will be 
@@ -499,7 +499,7 @@ class DICOMBackend(SlideBackend):
         index = (row_ix * self.n_cols) + col_ix
         return int(index)
 
-    def extract_region(self, location, size=None):
+    def extract_region(self, location, size=None, level=None):
         """
         Extract a single frame from the DICOM image.
 
@@ -513,6 +513,7 @@ class DICOMBackend(SlideBackend):
         Returns:
             np.ndarray: image at the specified region
         """
+        assert level == 0 or level is None, f"dicom does not support levels"
         # check inputs first
         # check location
         if isinstance(location, tuple):
@@ -603,7 +604,7 @@ class DICOMBackend(SlideBackend):
         image = Image.open(BytesIO(value))
         return np.asarray(image)
 
-    def generate_tiles(self, shape, stride, pad, **kwargs):
+    def generate_tiles(self, shape, stride, pad, level=0, **kwargs):
         """
         Generator over tiles.
         For DICOMBackend, each tile corresponds to a frame.
@@ -619,6 +620,7 @@ class DICOMBackend(SlideBackend):
         Yields:
             pathml.core.tile.Tile: Extracted Tile object
         """
+        assert level == 0 or level is None, f"dicom does not support levels"
         for i in range(self.n_frames):
 
             if not pad:

@@ -23,11 +23,21 @@ def dicom_backend():
 
 ## test each method for each backend
 
-@pytest.mark.parametrize("backend", [openslide_backend(), bioformats_backend(), dicom_backend()])
-@pytest.mark.parametrize("location", [(0, 0), (100, 50)])
-@pytest.mark.parametrize("size", [50, (20, 50)])
+@pytest.mark.parametrize("backend", [openslide_backend(), bioformats_backend()])
+@pytest.mark.parametrize("location", [(0, 0), (50, 100)])
+@pytest.mark.parametrize("size", [50, (50, 100)])
 @pytest.mark.parametrize("level", [None, 0])
-def test_extract_region(backend, location, size):
+def test_extract_region(backend, location, size, level):
+    region = backend.extract_region(location = location, size = size, level = level)
+    assert isinstance(region, np.ndarray)
+    assert region.dtype == np.uint8
+
+# separate dicom tests because dicom frame requires 500x500 tiles while bioformats has dim <500 
+@pytest.mark.parametrize("backend", [dicom_backend()])
+@pytest.mark.parametrize("location", [(0, 0), (500, 500)])
+@pytest.mark.parametrize("size", [500, (500, 500)])
+@pytest.mark.parametrize("level", [None, 0])
+def test_extract_region_dicom(backend, location, size, level):
     region = backend.extract_region(location = location, size = size, level = level)
     assert isinstance(region, np.ndarray)
     assert region.dtype == np.uint8

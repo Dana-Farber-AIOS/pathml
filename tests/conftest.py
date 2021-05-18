@@ -9,7 +9,7 @@ import cv2
 import openslide
 import javabridge
 
-from pathml.core import HESlide, Tile, Masks
+from pathml.core import HESlide, VectraSlide, Tile, Masks
 
 
 def pytest_sessionfinish(session, exitstatus):
@@ -47,11 +47,11 @@ def tileVectra():
     """
     Example of pathml.core.Tile representation of Vectra image
     """
-    slidedata = read(path="tests/testdata/vectra.tif", backend = "bioformats")
-    region = data.slide.extract_region(location=(0,0,0,0,0), size=(500,500,1,7,1))
+    slidedata = VectraSlide("tests/testdata/small_vectra.qptiff", slide_backend = "bioformats")
+    region = slidedata.slide.extract_region(location=(0,0), size=(500,500))
 
     # make mask object
-    masks = np.random.randint(low = 1, high = 255, size = (im_np_rgb.shape[0], im_np_rgb.shape[1]), dtype = np.uint8)
+    masks = np.random.randint(low = 1, high = 255, size = (slidedata.slide.shape[0], slidedata.slide.shape[1]), dtype = np.uint8)
     masks = Masks(masks = {"testmask" : masks})
 
     # labels dict
