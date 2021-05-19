@@ -924,15 +924,18 @@ class SegmentMIF(Transform):
         if len(img.shape) == 3:
             img = np.expand_dims(img, axis=0)
         nuc_cytoplasm = np.stack((img[:,:,:,self.nuclear_channel], img[:,:,:,self.cytoplasm_channel]), axis=-1)
+        cell_segmentation_predictions = self.model.predict(nuc_cytoplasm, compartment='whole-cell')
+        nuclear_segmentation_predictions = self.model.predict(nuc_cytoplasm, compartment='nuclear')
+        cell_segmentation_predictions = np.squeeze(cell_segmentation_predictions, axis=0)
+        nuclear_segmentation_predictions = np.squeeze(nuclear_segmentation_predictions, axis=0)
+        return cell_segmentation_predictions, nuclear_segmentation_predictions
+
+        """
         if self.model == 'mesmer':
-            cell_segmentation_predictions = self.model.predict(nuc_cytoplasm, compartment='whole-cell')
-            nuclear_segmentation_predictions = self.model.predict(nuc_cytoplasm, compartment='nuclear')
-            cell_segmentation_predictions = np.squeeze(cell_segmentation_predictions, axis=0)
-            nuclear_segmentation_predictions = np.squeeze(nuclear_segmentation_predictions, axis=0)
-            return cell_segmentation_predictions, nuclear_segmentation_predictions
         if self.model == 'cellpose':
             masks, flows, styles, diams = self.model.eval(nuc_cytoplasm)
-            return masks[0], None
+            return masks[0], _
+        """
     
     def apply(self, tile):
         cell_segmentation, nuclear_segmentation = self.F(tile.image) 
