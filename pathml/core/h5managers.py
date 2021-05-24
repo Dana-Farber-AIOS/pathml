@@ -5,7 +5,6 @@ License: GNU GPL 2.0
 
 import h5py
 import tempfile
-import ast
 from collections import OrderedDict
 import numpy as np
 import itertools
@@ -14,7 +13,7 @@ import os
 
 import pathml.core.masks
 import pathml.core.tile
-from pathml.core.utils import writetupleh5, readtupleh5, readtilesdicth5
+from pathml.core.utils import writetupleh5, readtupleh5, readtilesdicth5, readcounts
 from pathml.core import SlideType, SlideData
 
 class h5pathManager():
@@ -34,14 +33,14 @@ class h5pathManager():
         if h5path:
             assert not slidedata, f"if creating h5pathmanager from h5path, slidedata should not be required"
             # TODO: implement isvalidh5path
-            assert isvalidh5path(h5path), f"h5path must conform to .h5path standard, see documentation"
+            assert check_valid_h5path_format(h5path), f"h5path must conform to .h5path standard, see documentation"
             # copy h5path into self.h5 
-            for ds in h5.keys():
+            for ds in h5path.keys():
                 if ds in ['fields', 'array', 'masks', 'tiles']:
-                    h5.copy(ds, self.h5)
+                    h5path.copy(ds, self.h5)
                 if ds in ['counts']:
                     # TODO: clean readcounts
-                    self.counts = readcounts(h5['counts'])
+                    self.counts = readcounts(h5path['counts'])
                     with self.countspath as tmpdirname:
                         self.counts.filename = tmpdirname + '/tmpfile.h5ad'
             
@@ -391,18 +390,9 @@ class h5pathManager():
             raise ValueError(f"can not add {type(mask)}, mask must be of type np.ndarray")
         if not isinstance(key, str):
             raise ValueError(f"invalid type {type(key)}, key must be of type str")
-        if key in self.h5.keys():
-            raise ValueError(f"key {key} already exists. Cannot add. Must update to modify existing mask.")
-        if self.tile_shape is None:
-            self.tile_shape = mask.shape
-        if mask.shape != self.tile_shape:
-            raise ValueError(
-                f"Masks contains masks of shape {self.tile_shape}, provided mask is of shape {mask.shape}. "
-                f"We enforce that all Mask in Masks must have matching shapes.")
-        newkey = self.h5.create_dataset(
-            bytes(str(key), encoding = 'utf-8'),
-            data = mask
-        )
+        if key in self.h5["masks"].keys():
+            raise ValueError(f"key {key} already exists in 'masks'. Cannot add. Must update to modify existing mask.")
+        newmask = self.h5["masks"].create_dataset(key, data = mask)
 
     def update_mask(self, key, mask):
         """
@@ -412,15 +402,11 @@ class h5pathManager():
             key(str): key indicating mask to be updated
             mask(np.ndarray): mask
         """
-        if key not in self.h5.keys():
+        if key not in self.h5["masks"].keys():
             raise ValueError(f"key {key} does not exist. Must use add.")
-
-        original_mask = self.get(key)
-
-        assert original_mask.shape == mask.shape, f"Cannot update a mask of shape {original_mask.shape} with a mask" \
-                                                  f"of shape {mask.shape}. Shapes must match."
-
-        self.h5[key][...] = mask
+        assert self.h5["masks"][key].shape == mask.shape, f"Cannot update a mask of shape {self.h5['masks'][key].shape}" \
+                                                          f" with a mask of shape {mask.shape}. Shapes must match."
+        self.h5["masks"][key][...] = mask
 
     def slice_masks(self, slicer):
         """
@@ -434,8 +420,8 @@ class h5pathManager():
             key(str): mask key
             val(np.ndarray): mask
         """
-        for key in self.h5.keys():
-            yield key, self.get(key, slicer=slicer) 
+        for key in self.h5["masks"].keys():
+            yield key, self.get_mask(key, slicer=slicer)
 
     def get_mask(self, item, slicer=None):
         # must check bool separately, since isinstance(True, int) --> True
@@ -443,18 +429,20 @@ class h5pathManager():
             raise KeyError(f"key of type {type(item)} must be of type str or int")
 
         if isinstance(item, str):
-            if item not in self.h5.keys():
+            if item not in self.h5["masks"].keys():
                 raise KeyError(f'key {item} does not exist')
             if slicer is None:
-                return self.h5[item][:]
-            return self.h5[item][:][tuple(slicer)]
+                return self.h5["masks"][item][:]
+            return self.h5["masks"][item][:][tuple(slicer)]
 
         else:
-            if item > len(self.h5):
-                raise KeyError(f"index out of range, valid indices are ints in [0,{len(self.h5['masks'].keys())}]")
+            try:
+                mask_key = list(self.h5.keys())[item]
+            except IndexError:
+                raise ValueError(f"index out of range, valid indices are ints in [0,{len(self.h5['masks'].keys())}]")
             if slicer is None:
-                return self.h5[list(self.h5.keys())[item]][:]
-            return self.h5[list(self.h5.keys())[item]][:][tuple(slicer)]
+                return self.h5["masks"][mask_key][:]
+            return self.h5["masks"][mask_key][:][tuple(slicer)]
 
     def remove_mask(self, key):
         """
@@ -465,14 +453,26 @@ class h5pathManager():
         """
         if not isinstance(key, str):
             raise KeyError(f"masks keys must be of type(str) but key was passed of type {type(key)}")
-        if key not in self.h5.keys():
+        if key not in self.h5["masks"].keys():
             raise KeyError('key is not in Masks')
-        del self.h5[key]
+        del self.h5["masks"][key]
 
     # TODO: implement get_slidetype
     def get_slidetype(self):
-        pass
+        return SlideType(**self.h5["fields/slide_type"])
 
-def isvalidh5path(h5path):
-    pass
 
+def check_valid_h5path_format(h5path):
+    """
+    Assert that the input h5path matches the expected h5path file format:
+
+    Args:
+        h5path: h5py file object
+
+    Returns:
+        bool: whether the input matches expected format or not
+    """
+    assert set(h5path.keys()) == {"fields", "array", "masks", "counts", "tiles"}
+    assert set(h5path["fields"].keys()) == {"name", "labels", "slide_type"}
+    assert set(h5path["fields/slide_type"].keys()) == {"stain", "tma", "rgb", "volumetric", "time_series"}
+    return True
