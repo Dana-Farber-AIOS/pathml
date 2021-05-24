@@ -50,18 +50,22 @@ class _h5_manager:
 
 class _tiles_h5_manager(_h5_manager):
     """
-    Interface between tiles object and data management on disk by h5py. 
+    Interface between tiles object and data management on disk by h5py.
+
+    Args:
+        slide_type (pathml.core.slide_types.SlideType): slide_type. must pass this if not loading from h5 (in which case
+            slide_type can be also loaded from h5).
     """
     def __init__(self, h5 = None):
         super().__init__(h5 = h5)
         tilesgroup = self.h5.create_group('tiles')
         self.tiles = OrderedDict()
         path = tempfile.TemporaryDirectory()
-        self.countspath = path 
-        self.counts = None 
+        self.countspath = path
+        self.counts = None
         if h5:
             for ds in h5.keys():
-                if ds in ['array','masks']:
+                if ds in ['array', 'masks', 'fields']:
                     h5.copy(ds, self.h5)
             # read tiles into RAM
             if 'tiles' in h5.keys(): 
@@ -72,6 +76,15 @@ class _tiles_h5_manager(_h5_manager):
                 with tempfile.TemporaryDirectory() as tmpdirname:
                     self.counts.filename = tmpdirname + '/tmpfile.h5ad'
 
+            if 'slide_type' in self.h5['fields'].keys():
+                slidetype_dict = self.h5['fields']['slide_type']
+                self.slide_type = pathml.core.SlideType(**slidetype_dict)
+            else:
+                self.slide_type = None
+        else:
+            fieldsgroup = self.h5.create_group('fields')
+            self.slide_type = slide_type
+
     def add(self, tile):
         """
         Add tile to h5.
@@ -81,7 +94,7 @@ class _tiles_h5_manager(_h5_manager):
         """
         if str(tile.coords) in self.tiles.keys():
            print(f"Tile is already in tiles. Overwriting {tile.coords} inplace.") 
-           # remove old cells from self.counts so they do not duplicate 
+           # remove old cells from self.counts so they do not duplicate
            if tile.counts:
                if "tile" in self.counts.obs.keys():
                    self.counts = self.counts[self.counts.obs['tile'] != tile.coords]
@@ -90,6 +103,13 @@ class _tiles_h5_manager(_h5_manager):
         if tile.image.shape != self.tile_shape:
             raise ValueError(f"Tiles contains tiles of shape {self.tile_shape}, provided tile is of shape {tile.image.shape}"
                              f". We enforce that all Tile in Tiles must have matching shapes.")
+
+        # check slide_type
+        if not self.slide_type:
+            self.slide_type = tile.slide_type
+        else:
+            if tile.slide_type != self.slide_type:
+                raise ValueError(f"tile slide_type {tile.slide_type} does not match existing slide_type {self.slide_type}")
 
         if 'array' in self.h5.keys():
             # extend array if coords+shape is larger than self.h5['tiles/array'] 
@@ -104,7 +124,7 @@ class _tiles_h5_manager(_h5_manager):
             slicer = [slice(coords[i], coords[i] + tile.image.shape[i]) for i in range(len(coords))] 
             self.h5['array'][tuple(slicer)] = tile.image
 
-        # initialize self.h5['array'] if it does not exist 
+        # initialize self.h5['array'] if it does not exist
         # note that the first tile is not necessarily (0,0) so we init with zero padding
         elif 'array' not in self.h5.keys():
             coords = list(tile.coords)
@@ -183,9 +203,9 @@ class _tiles_h5_manager(_h5_manager):
                 self.counts = self.counts.to_memory()
                 self.counts = self.counts.concatenate(tile.counts, join="outer")
                 self.counts.filename = os.path.join(self.countspath.name + '/tmpfile.h5ad')
-            # cannot concatenate empty AnnData object so set to tile.counts then back in temp file on disk 
+            # cannot concatenate empty AnnData object so set to tile.counts then back in temp file on disk
             else:
-                self.counts = tile.counts 
+                self.counts = tile.counts
                 self.counts.filename = os.path.join(self.countspath.name + '/tmpfile.h5ad')
 
     def update(self, key, val, target):
@@ -237,37 +257,44 @@ class _tiles_h5_manager(_h5_manager):
 
         Returns:
             Tile(pathml.core.tile.Tile)
-            
         """
-        # must check bool separately since bool subclasses int
-        if not isinstance(item, (int, str, tuple)) or isinstance(item, bool):
-            raise KeyError(f'must getitem by coordinate(type tuple[int]), index(type int), or name(type str)')
         if isinstance(item, (str, tuple)):
             if str(item) not in self.tiles:
                 raise KeyError(f'key {item} does not exist')
             tilemeta = self.tiles[str(item)]
-        if isinstance(item, int):
-            if item > len(self.tiles):
-                raise KeyError(f'index out of range, valid indices are ints in [0,{len(self.tiles)}]')
+        elif isinstance(item, int):
+            if item > len(self.tiles) - 1:
+                raise KeyError(f'index out of range, valid indices are ints in [0,{len(self.tiles) - 1}]')
             tilemeta = list(self.tiles.items())[item][1]
-        # impute missing dimensions from self.tile_shape 
+        else:
+            raise KeyError(f'invalid item type: {type(item)}. must getitem by coord (type tuple[int]),'
+                           f' index (type int), or name(type str)')
+        # impute missing dimensions from self.tile_shape
         coords = list(eval(tilemeta['coords']))
         if len(self.tile_shape) > len(coords):
             shape = list(self.tile_shape)
             coords = coords + [0]*len(shape[len(coords)-1:]) 
         tiler = [slice(coords[i], coords[i]+self.tile_shape[i]) for i in range(len(self.tile_shape))]
-        print(self.h5['array'].shape)
-        print(tiler)
         tile = self.h5['array'][tuple(tiler)][:]
-        masks = {mask : self.h5['masks'][mask][tuple(tiler[:len(self.h5['masks'][mask].shape)])][:] for mask in self.h5['masks']} if 'masks' in self.h5.keys() else None 
+
+        # add masks to tile if there are masks
+        if 'masks' in self.h5.keys():
+            try:
+                masks = {mask : self.h5['masks'][mask][tuple(tiler)][:] for mask in self.h5['masks']}
+            except ValueError:
+                # if mask is 2-d, need to only use first two dims of tiler
+                masks = {mask: self.h5['masks'][mask][tuple(tiler)[0:2]][:] for mask in self.h5['masks']}
+        else:
+            masks = None
+
         if slicer:
             tile = tile[slicer]
             if masks is not None:
-                masks = {key : masks[key][slicer[:len(masks[key].shape)]] for key in masks}
+                masks = {key : masks[key][slicer] for key in masks}
         masks = pathml.core.masks.Masks(masks)
-        slidetype = tilemeta['slidetype']
-        counts = self.counts
-        return pathml.core.tile.Tile(tile, masks=masks, labels=tilemeta['labels'], name=tilemeta['name'], coords=eval(tilemeta['coords']), slidetype=slidetype, counts=counts)
+
+        return pathml.core.tile.Tile(tile, masks=masks, labels=tilemeta['labels'], name=tilemeta['name'],
+                                     coords=eval(tilemeta['coords']), slide_type = self.slide_type)
 
     def slice(self, slicer):
         """

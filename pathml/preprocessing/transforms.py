@@ -148,7 +148,7 @@ class BinaryThreshold(Transform):
     def apply(self, tile):
         assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
         assert self.mask_name is not None, "mask_name is None. Must supply a valid mask name"
-        if issubclass(tile.slidetype, pathml.core.slide_data.RGBSlide):
+        if tile.slide_type.rgb:
             im = RGB_to_GREY(tile.image)
         else:
             im = np.squeeze(tile.image)
@@ -669,8 +669,7 @@ class StainNormalizationHE(Transform):
 
     def apply(self, tile):
         assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
-        assert issubclass(tile.slidetype, pathml.core.slide_data.HESlide), \
-            f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
+        assert tile.slide_type.stain == "HE", f"Tile has slide_type.stain={tile.slide_type.stain}, but must be 'HE'"
         tile.image = self.F(tile.image)
 
 
@@ -724,8 +723,7 @@ class NucleusDetectionHE(Transform):
     def apply(self, tile):
         assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
         assert self.mask_name is not None, "mask_name is None. Must supply a valid mask name"
-        assert issubclass(tile.slidetype, pathml.core.slide_data.HESlide), \
-            f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
+        assert tile.slide_type.stain == "HE", f"Tile has slide_type.stain={tile.slide_type.stain}, but must be 'HE'"
         nucleus_mask = self.F(tile.image)
         tile.masks[self.mask_name] = nucleus_mask
 
@@ -791,8 +789,7 @@ class TissueDetectionHE(Transform):
     def apply(self, tile):
         assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
         assert self.mask_name is not None, "mask_name is None. Must supply a valid mask name"
-        assert issubclass(tile.slidetype, pathml.core.slide_data.HESlide), \
-            f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
+        assert tile.slide_type.stain == "HE", f"Tile has slide_type.stain={tile.slide_type.stain}, but must be 'HE'"
         mask = self.F(tile.image)
         tile.masks[self.mask_name] =  mask
 

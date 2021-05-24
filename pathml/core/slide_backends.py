@@ -49,7 +49,7 @@ class OpenSlideBackend(SlideBackend):
     """
     def __init__(self, filename):
         self.filename = filename
-        self.slide = openslide.OpenSlide(filename = filename)
+        self.slide = openslide.open_slide(filename = filename)
 
     def extract_region(self, location, size, level=None):
         """
