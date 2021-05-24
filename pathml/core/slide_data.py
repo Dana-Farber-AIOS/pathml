@@ -86,10 +86,10 @@ class SlideData:
                  time_series=None,
                  counts=None
                  ):
-    def __init__(self, filepath=None, name=None, counts=None, slide_backend=None, masks=None, tiles=None, labels=None, history=None):
+    def __init__(self, filepath=None, name=None, counts=None, slide_backend=None, masks=None, tiles=None, labels=None):
         # check inputs
-        assert masks is None or isinstance(masks, (pathml.core.Masks, h5py._hl.group.Group)), \
-            f"mask are of type {type(masks)} but must be type Masks or h5 group"
+        assert masks is None or isinstance(masks, dict), \
+            f"mask are of type {type(masks)} but must be type dict"
         if labels:
             assert all([isinstance(key, str) for key in labels.keys()]), \
                 f"Input label keys are of types {[type(k) for k in labels.keys()]}. All label keys must be of type str."
@@ -98,15 +98,15 @@ class SlideData:
             ), \
                 f"Input label vals are of types {[type(v) for v in labels.values()]}. " \
                 f"All label values must be of type str or np.ndarray or a number (i.e. a subdtype of np.number) "
-        assert tiles is None or isinstance(tiles, (pathml.core.Tiles, h5py._hl.group.Group)), \
-            f"tiles are of type {type(tiles)} but must be of type pathml.core.tiles.Tiles"
+        assert tiles is None or all([isinstance(tile, pathml.core.Tile) for tile in tiles]), \
+            f"tiles are of type {type(tiles)} but must be a list of objects of type pathml.core.tiles.Tile"
         assert slide_type is None or isinstance(slide_type, (pathml.core.SlideType, h5py._hl.group.Group)), \
             f"slide_type is of type {type(slide_type)} but must be of type pathml.core.types.SlideType"
         assert backend is None or (isinstance(backend, str) and backend.lower() in {"openslide", "bioformats", "dicom"}), \
             f"backend {backend} must be one of ['OpenSlide', 'BioFormats', 'DICOM'] (case-insensitive)."
         assert counts is None or isinstance(counts, anndata.AnnData), \
             f"counts is if type {type(counts)} but must be of type anndata.AnnData"
-
+        
         # instantiate SlideType object if needed
         if not slide_type and any([stain, tma, rgb, volumetric, time_series]):
             stain_type_dict = {"stain": stain, "tma": tma, "rgb": rgb, "volumetric": volumetric, "time_series": time_series}
@@ -141,32 +141,6 @@ class SlideData:
                 raise ValueError(
                     f"Backend not specified, but cannot infer correct backend from input path {filepath}")
 
-        if _load_from_h5path:
-            # populate the SlideData object from existing h5path file
-            backend_obj = None  # no backend in this case since we're loading from h5
-            with h5py.File(filepath, "r") as f:
-                tiles = pathml.core.Tiles(h5 = f) if 'tiles' in f.keys() else None
-                masks = pathml.core.Masks(h5 = f) if ('masks' in f.keys() and 'tiles' not in f.keys()) else None
-                slidetype_dict = f['fields']['slide_type'] if 'slide_type' in f['fields'].keys() else None
-                if slidetype_dict:
-                    slide_type = pathml.core.SlideType(**slidetype_dict)
-                name = f['fields'].attrs['name'].decode('UTF-8') if 'name' in f['fields'].attrs.keys() else None
-                history = f['fields'].attrs['history'] if 'history' in f['fields'].attrs.keys() else None
-                labels = f['fields']['labels'] if 'labels' in f['fields'].keys() else None
-                if labels:
-                    labeldict = {}
-                    # iterate over key/val pairs stored in labels.attr
-                    for attr in labels.attrs.keys():
-                        val = labels.attrs[attr]
-                        # check if val is a single element
-                        # if val is bytes then decode to str, otherwise leave it (it is a float or int)
-                        if isinstance(val, bytes):
-                            val = val.decode('UTF-8')
-                        labeldict[attr] = val
-                    labels = labeldict
-        else:
-            history = None
-
         if backend.lower() == "openslide":
             backend_obj = pathml.core.OpenSlideBackend(filepath)
         elif backend.lower() == "bioformats":
@@ -182,11 +156,28 @@ class SlideData:
         self.backend = backend
         self.slide = backend_obj if backend_obj else None
         self.name = name
-        self.masks = masks
         self.tiles = tiles
+        self.masks = masks
         self.labels = labels
         self.slide_type = slide_type
-        self.history = history if history else None
+
+        if _load_from_h5path:
+            # populate the SlideData object from existing h5path file
+            backend_obj = None  # no backend in this case since we're loading from h5
+            with h5py.File(filepath, "r") as f:
+                self.h5manager = h5pathManager(h5path=f)
+
+        else:
+            self.h5manager = h5pathManager(slidedata=self)
+            if self.tiles:
+                self.tiles = Tiles(self.h5manager) 
+                for tile in tiles:
+                    self.tiles.add_tile(tile)
+                
+            if self.masks:
+                self.masks = Masks(self.h5manager) 
+                for mask in masks:
+                    self.masks.add_mask(tile)
 
     def __repr__(self): 
         out = f"SlideData(name={repr(self.name)},\n"
@@ -203,8 +194,7 @@ class SlideData:
 
         out += f"masks={repr(self.masks)}, "
         out += f"tiles={repr(self.tiles)}, "
-        out += f"labels={repr(self.labels)}, "
-        out += f"history={repr(self.history)})"
+        out += f"labels={repr(self.labels)})"
         return out 
 
     def run(self, pipeline, distributed=True, client=None, tile_size=3000, tile_stride=None, level=0, tile_pad=False,
@@ -402,8 +392,6 @@ class SlideData:
                 pathml.core.utils.writestringh5(fieldsgroup, 'slide_backend', self.backend)
             if self.slide_type:
                 pathml.core.utils.writestringh5(fieldsgroup, 'slide_type', asdict(self.slide_type))
-            if self.history:
-                pathml.core.utils.writestringh5(fieldsgroup, 'history', self.history)
             if self.masks:
                 masksgroup = f.create_group('masks')
                 for ds in self.masks.h5manager.h5.keys():
