@@ -23,7 +23,6 @@ from pathml.utils import pil_to_rgb
 import pathml.core
 import pathml.core.tile
 
-
 class SlideBackend:
     """base class for backends that interface with slides on disk"""
     def extract_region(self, location, size, level, **kwargs):
@@ -41,7 +40,7 @@ class SlideBackend:
 
 class OpenSlideBackend(SlideBackend):
     """
-    Use OpenSlide to interface with image files
+    Use OpenSlide to interface with image files.
 
     Depends on `openslide-python <https://openslide.org/api/python/>`_ which wraps the `openslide <https://openslide.org/>`_ C library.
 
@@ -170,7 +169,7 @@ class OpenSlideBackend(SlideBackend):
 
         for ix_i in range(n_chunk_i):
             for ix_j in range(n_chunk_j):
-                coords = (int(ix_j * stride_j), int(ix_i * stride_i))
+                coords = (int(ix_i * stride_i),int(ix_j * stride_j))
                 # get image for tile
                 tile_im = self.extract_region(location = coords, size = shape, level = level)
                 yield pathml.core.tile.Tile(image = tile_im, coords = coords)
@@ -191,16 +190,17 @@ class BioFormatsBackend(SlideBackend):
     def __init__(self, filename):
         self.filename = filename
         # init java virtual machine
-        javabridge.start_vm(class_path = bioformats.JARS)
+        javabridge.start_vm(class_path = bioformats.JARS, max_heap_size="50G")
         # java maximum array size of 2GB constrains image size
         ImageReader = bioformats.formatreader.make_image_reader_class()
-        # FormatTools = bioformats.formatreader.make_format_tools_class()
         reader = ImageReader()
         omeMeta = createOMEXMLMetadata()
         reader.setMetadataStore(omeMeta)
         reader.setId(str(self.filename))
         sizex, sizey, sizez, sizec, sizet = reader.getSizeX(), reader.getSizeY(), reader.getSizeZ(), reader.getSizeC(), reader.getSizeT()
         self.shape = (sizex, sizey, sizez, sizec, sizet)
+        self.imagecache = None
+        self.metadata = bioformats.get_omexml_metadata(self.filename)
 
     def get_image_shape(self):
         """
@@ -211,16 +211,16 @@ class BioFormatsBackend(SlideBackend):
         """
         return self.shape[:2]
 
-    def extract_region(self, location, size):
+    def extract_region(self, location, size, level=None):
         """
         Extract a region of the image. All bioformats images have 5 dimensions representing
         (x, y, z, channel, time). If a tuple with len < 5 is passed, missing dimensions will be 
         retrieved in full.
 
         Args:
-            location (Tuple[int, int]): Location of corner of extracted region closest to the origin.
-            size (Tuple[int, int, ...]): Size of each region. If an integer is passed, will convert to a tuple of (H, W)
-                and extract a square region. If a tuple with len < 5 is passed, missing
+            location (Tuple[int, int]): (X,Y) location of corner of extracted region closest to the origin.
+            size (Tuple[int, int, ...]): (X,Y) size of each region. If an integer is passed, will convert to a 
+            tuple of (H, W) and extract a square region. If a tuple with len < 5 is passed, missing
                 dimensions will be retrieved in full.
 
         Returns:
@@ -228,38 +228,56 @@ class BioFormatsBackend(SlideBackend):
 
         Example:
             Extract 2000x2000 x,y region from upper left corner of 7 channel, 2d fluorescent image.
-            data.slide.extract_region(location = (0,0), size = (2000,2000))
-            # plot single channel
-            plt.figure()
-            plt.imshow(region[:,:,0,0,0])
-
-            Extract 2000x2000 x,y region of the first channel from upper left corner.
-            region = data.slide.extract_region(location = (0,0,0,0,0), size = (2000,2000,1,1,1))
-            # plot full region
-            plt.figure()
-            plt.imshow(region[:,:,0,:,0])
+            data.slide.extract_region(location = (0,0), size = 2000)
         """
+        if level not in [None, 0]:
+            raise ValueError("BioFormatsBackend does not support levels, please pass a level in [None, 0]")
         # if a single int is passed for size, convert to a tuple to get a square region
         if type(size) is int:
             size = (size, size)
-        if not (isinstance(location, tuple) and len(location) == 2 and all([isinstance(x, int) for x in location])):
-            raise ValueError(f"input location {location} invalid. Must be a tuple of (i, j) integer coordinates")
-
-        if np.prod(self.shape) > 2147483647:
-            raise Exception(f"Java arrays allocate maximum 32 bits (~2GB). Image size is {np.prod(self.shape)}")
-
-        javabridge.start_vm(class_path = bioformats.JARS)
+        if not (isinstance(location, tuple) and len(location)<3 and all([isinstance(x, int) for x in location])):
+            raise ValueError(f"input location {location} invalid. Must be a tuple of integer coordinates of len<2")
+        if not (isinstance(size, tuple) and len(size)<3 and all([isinstance(x, int) for x in size])):
+            raise ValueError(f"input size {size} invalid. Must be a tuple of integer coordinates of len<2")
+        javabridge.start_vm(class_path = bioformats.JARS, max_heap_size="100G")
         reader = bioformats.ImageReader(str(self.filename), perform_init=True)
-        array = np.empty(self.shape)
-        for z in range(self.shape[2]):
-            for c in range(self.shape[3]):
+        # expand size 
+        size = list(size)
+        arrayshape = list(size)
+        for i in range(len(self.shape)):
+            if i>len(size)-1:
+                arrayshape.append(self.shape[i])
+        arrayshape = tuple(arrayshape)
+        array = np.empty(arrayshape)
+        sample = reader.read(z=0, t=0, rescale=False, XYWH=(location[0], location[1], size[0], size[1]))
+        # if series is set to read only one channel, explicitly read c
+        if len(sample.shape) == 2:
+            print('first')
+            for z in range(self.shape[2]):
+                for c in range(self.shape[3]):
+                    for t in range(self.shape[4]):
+                        # or reader.openBytes() but need to declare omemetadata as in init
+                        slicearray = reader.read(z=z, t=t, series=c, rescale=False, XYWH=(location[0], location[1], size[0], size[1]))
+                        slicearray = np.asarray(slicearray)
+                        # some file formats read x, y out of order, transpose
+                        if slicearray.shape[:2] != array.shape[:2]: 
+                            slicearray = np.transpose(slicearray)
+                        #slicearray = np.moveaxis(slicearray, 0, -1)
+                        array[:,:,z,c,t] = slicearray 
+        # if series is set to read all channels, read all c simultaneously
+        elif len(sample.shape) == 3:
+            print('second')
+            for z in range(self.shape[2]):
                 for t in range(self.shape[4]):
-                    data = reader.read(z=z, t=t, series=c, rescale = False)
-                    slice_array = np.asarray(data)
-                    array[:,:,z,c,t] = np.transpose(slice_array)
-        # TODO: read slices directly, rather than read then slice 
-        slices = [slice(location[i],location[i]+size[i]) for i in range(len(size))]
-        array = array[tuple(slices)]
+                    # or reader.openBytes() but need to declare omemetadata as in init
+                    slicearray = reader.read(z=z, t=t, rescale=False, XYWH=(location[0], location[1], size[0], size[1]))
+                    slicearray = np.asarray(slicearray)
+                    # some file formats read x, y out of order, transpose
+                    if slicearray.shape[:2] != array.shape[:2]: 
+                        slicearray = np.transpose(slicearray)
+                    array[:,:,z,:,t] = slicearray 
+        else:
+            raise Exception(f"image format not supported")
         array = array.astype(np.uint8)
         return array
 
@@ -285,22 +303,14 @@ class BioFormatsBackend(SlideBackend):
                 size = size + self.shape[len(size):]
         if self.shape[0]*self.shape[1]*self.shape[2]*self.shape[3] > 2147483647:
             raise Exception(f"Java arrays allocate maximum 32 bits (~2GB). Image size is {self.imsize}")
-        javabridge.start_vm(class_path = bioformats.JARS)
-        reader = bioformats.ImageReader(str(self.filename), perform_init=True)
-        array = np.empty(self.shape)
-        for z in range(self.shape[2]):
-            for c in range(self.shape[3]):
-                for t in range(self.shape[4]):
-                    data = reader.read(z=z, t=t, series=c, rescale = False)
-                    slice_array = np.asarray(data)
-                    array[:,:,z,c,t] = np.transpose(slice_array)
+        array = self.extract_region(location=(0,0), size=self.shape[:2])
         if size is not None:
             ratio = tuple([x/y for x,y in zip(size, self.shape)])
             assert ratio[3] == 1, f"cannot interpolate between fluor channels, resampling doesn't apply, fix size[3]"
             image_array = zoom(array, ratio)
         return image_array
 
-    def generate_tiles(self, shape=3000, stride=None, pad=False):
+    def generate_tiles(self, shape=3000, stride=None, pad=False, level=0):
         """
         Generator over tiles.
 
@@ -325,6 +335,7 @@ class BioFormatsBackend(SlideBackend):
         Yields:
             pathml.core.tile.Tile: Extracted Tile object
         """
+        assert level == 0 or level is None, f"bioformats does not support levels"
         assert isinstance(shape, int) or (isinstance(shape, tuple) and len(shape) == 2), \
             f"input shape {shape} invalid. Must be a tuple of (H, W), or a single integer for square tiles"
         if isinstance(shape, int):
@@ -351,10 +362,19 @@ class BioFormatsBackend(SlideBackend):
 
         for ix_i in range(n_chunk_i):
             for ix_j in range(n_chunk_j):
-                coords = (int(ix_j * stride_j), int(ix_i * stride_i))
-                # get image for tile
-                tile_im = self.extract_region(location = coords, size = shape)
-                yield pathml.core.tile.Tile(image = tile_im, coords = coords)
+                coords = (int(ix_i * stride_i), int(ix_j * stride_j)) 
+                if coords[0] + shape[0] < i and coords[1] + shape[1] < j:
+                    # get image for tile
+                    tile_im = self.extract_region(location = coords, size = shape)
+                    yield pathml.core.tile.Tile(image = tile_im, coords = coords)
+                else:
+                    unpaddedshape = (i-coords[0] if coords[0] + shape[0] > i else shape[0], j-coords[1] if coords[1] + shape[1] > j else shape[1])
+                    tile_im = self.extract_region(location = coords, size = unpaddedshape)
+                    zeroarrayshape = list(tile_im.shape)
+                    zeroarrayshape[0], zeroarrayshape[1] = list(shape)[0], list(shape)[1]
+                    padded_im = np.zeros(zeroarrayshape)
+                    padded_im[:tile_im.shape[0], :tile_im.shape[1], ...] = tile_im
+                    yield pathml.core.tile.Tile(image = padded_im, coords = coords) 
 
 
 class DICOMBackend(SlideBackend):
@@ -479,7 +499,7 @@ class DICOMBackend(SlideBackend):
         index = (row_ix * self.n_cols) + col_ix
         return int(index)
 
-    def extract_region(self, location, size=None):
+    def extract_region(self, location, size=None, level=None):
         """
         Extract a single frame from the DICOM image.
 
@@ -493,6 +513,7 @@ class DICOMBackend(SlideBackend):
         Returns:
             np.ndarray: image at the specified region
         """
+        assert level == 0 or level is None, f"dicom does not support levels"
         # check inputs first
         # check location
         if isinstance(location, tuple):
@@ -583,7 +604,7 @@ class DICOMBackend(SlideBackend):
         image = Image.open(BytesIO(value))
         return np.asarray(image)
 
-    def generate_tiles(self, shape, stride, pad, **kwargs):
+    def generate_tiles(self, shape, stride, pad, level=0, **kwargs):
         """
         Generator over tiles.
         For DICOMBackend, each tile corresponds to a frame.
@@ -599,6 +620,7 @@ class DICOMBackend(SlideBackend):
         Yields:
             pathml.core.tile.Tile: Extracted Tile object
         """
+        assert level == 0 or level is None, f"dicom does not support levels"
         for i in range(self.n_frames):
 
             if not pad:

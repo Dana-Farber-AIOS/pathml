@@ -22,3 +22,6 @@ dependencies:
       - openslide-python>=1.1.1
       - javabridge
       - python-bioformats
+      - anndata>=0.7.6
+      - deepcell>=0.9.0
+      - cellpose>=0.6.1
