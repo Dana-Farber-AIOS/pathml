@@ -18,17 +18,18 @@ class Tiles:
     Object wrapping a dict of tiles.
 
     Args:
-        tiles (Union[dict[tuple[int], `~pathml.core.tiles.Tile`], list[`~pathml.core.tiles.Tile`]]): tile objects  
+        tiles (Union[dict[tuple[int], `~pathml.core.tiles.Tile`], list[`~pathml.core.tiles.Tile`]]): tile objects
+
     """
-    def __init__(self, tiles=None, h5=None):
+    def __init__(self, tiles=None, h5=None, slide_type=None):
         # if h5, pass directly to h5manager
         if h5 is not None:
-            self.h5manager = pathml.core.h5managers._tiles_h5_manager(h5)
+            self.h5manager = pathml.core.h5managers._tiles_h5_manager(h5, slide_type = slide_type)
 
         # no h5 supplied
         else:
             # initialize h5manager
-            self.h5manager = pathml.core.h5managers._tiles_h5_manager()
+            self.h5manager = pathml.core.h5managers._tiles_h5_manager(slide_type = slide_type)
 
             # if tiles are supplied, add them to the h5manager
             if tiles:
@@ -38,8 +39,8 @@ class Tiles:
                 # create _tiles from dict of tile
                 if isinstance(tiles, dict):
                     for val in tiles.values():
-                        if not isinstance(val, pathml.core.tile.Tile):
-                            raise ValueError(f"dict vals must be Tile")
+                        if not isinstance(val, pathml.core.Tile):
+                            raise ValueError(f"tiles dict supplied, but got a value of type {type(val)}. Must be Tile")
                     for key in tiles.keys():
                         if not (isinstance(key, tuple) and all(isinstance(v, int) for v in key)):
                             raise ValueError(f"dict keys must be of type tuple[int]")
@@ -58,9 +59,13 @@ class Tiles:
                     self._tiles = OrderedDict(tiledictionary)
 
                 # add tiles in _tiles to h5manager
-                for key in self._tiles:
-                    self.h5manager.add(self._tiles[key])
+                for key, val in self._tiles.items():
+                    self.h5manager.add(val)
                 del self._tiles
+
+    @property
+    def tile_shape(self):
+        return self.h5manager.tile_shape
 
     def __repr__(self):
         rep = f"Tiles(keys={self.h5manager.tiles})"
