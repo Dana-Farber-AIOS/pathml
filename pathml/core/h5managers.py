@@ -48,20 +48,33 @@ class _h5_manager:
 
 class _tiles_h5_manager(_h5_manager):
     """
-    Interface between tiles object and data management on disk by h5py. 
+    Interface between tiles object and data management on disk by h5py.
+
+    Args:
+        slide_type (pathml.core.slide_types.SlideType): slide_type. must pass this if not loading from h5 (in which case
+            slide_type can be also loaded from h5).
     """
-    def __init__(self, h5 = None):
+    def __init__(self, h5=None, slide_type=None):
         super().__init__(h5 = h5)
         tilesgroup = self.h5.create_group('tiles')
         self.tiles = OrderedDict()
         if h5:
             for ds in h5.keys():
-                if ds in ['array','masks']:
+                if ds in ['array', 'masks', 'fields']:
                     h5.copy(ds, self.h5)
             # read tiles into RAM
             if 'tiles' in h5.keys(): 
                 self.tiles = readtilesdicth5(h5['tiles']) 
                 self.tile_shape = readtupleh5(h5['tiles'], 'tile_shape')
+
+            if 'slide_type' in self.h5['fields'].keys():
+                slidetype_dict = self.h5['fields']['slide_type']
+                self.slide_type = pathml.core.SlideType(**slidetype_dict)
+            else:
+                self.slide_type = None
+        else:
+            fieldsgroup = self.h5.create_group('fields')
+            self.slide_type = slide_type
 
     def add(self, tile):
         """
@@ -77,6 +90,13 @@ class _tiles_h5_manager(_h5_manager):
         if tile.image.shape != self.tile_shape:
             raise ValueError(f"Tiles contains tiles of shape {self.tile_shape}, provided tile is of shape {tile.image.shape}"
                              f". We enforce that all Tile in Tiles must have matching shapes.")
+
+        # check slide_type
+        if not self.slide_type:
+            self.slide_type = tile.slide_type
+        else:
+            if tile.slide_type != self.slide_type:
+                raise ValueError(f"tile slide_type {tile.slide_type} does not match existing slide_type {self.slide_type}")
 
         if 'array' in self.h5.keys():
             # extend array if coords+shape is larger than self.h5['tiles/array'] 
@@ -157,12 +177,12 @@ class _tiles_h5_manager(_h5_manager):
                     slicer = [slice(coords[i], coords[i] + tile.image.shape[i]) for i in range(len(coords))] 
                     self.h5['masks'][mask][tuple(slicer)] = maskarray 
 
-        # add tile fields to tiles 
+        # add tile fields to tiles
+        # note we don't put slide_type here: it should be the same for all tiles so we only store once at slide-level
         self.tiles[str(tile.coords)] = {
                 'name': str(tile.name) if tile.name else None, 
                 'labels': tile.labels if tile.labels else None,
-                'coords': str(tile.coords), 
-                'slidetype': tile.slidetype if tile.slidetype else None
+                'coords': str(tile.coords)
         }
 
     def update(self, key, val, target):
@@ -214,7 +234,6 @@ class _tiles_h5_manager(_h5_manager):
 
         Returns:
             Tile(pathml.core.tile.Tile)
-            
         """
         if isinstance(item, (str, tuple)):
             if str(item) not in self.tiles:
@@ -233,22 +252,26 @@ class _tiles_h5_manager(_h5_manager):
             shape = list(self.tile_shape)
             coords = coords + [0]*len(shape[len(coords)-1:]) 
         tiler = [slice(coords[i], coords[i]+self.tile_shape[i]) for i in range(len(self.tile_shape))]
-        # print(tiler)
         tile = self.h5['array'][tuple(tiler)][:]
-        masks = {mask : self.h5['masks'][mask][tuple(tiler)][:] for mask in self.h5['masks']} if 'masks' in self.h5.keys() else None 
+
+        # add masks to tile if there are masks
+        if 'masks' in self.h5.keys():
+            try:
+                masks = {mask : self.h5['masks'][mask][tuple(tiler)][:] for mask in self.h5['masks']}
+            except ValueError:
+                # if mask is 2-d, need to only use first two dims of tiler
+                masks = {mask: self.h5['masks'][mask][tuple(tiler)[0:2]][:] for mask in self.h5['masks']}
+        else:
+            masks = None
+
         if slicer:
             tile = tile[slicer]
             if masks is not None:
                 masks = {key : masks[key][slicer] for key in masks}
         masks = pathml.core.masks.Masks(masks)
 
-        if 'slide_type' in self.h5['fields'].keys():
-            slidetype_dict = self.h5['fields']['slide_type']
-            slide_type = pathml.core.SlideType(**slidetype_dict)
-        else:
-            slide_type = None
         return pathml.core.tile.Tile(tile, masks=masks, labels=tilemeta['labels'], name=tilemeta['name'],
-                                     coords=eval(tilemeta['coords']), slide_type=slide_type)
+                                     coords=eval(tilemeta['coords']), slide_type = self.slide_type)
 
     def slice(self, slicer):
         """
