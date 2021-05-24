@@ -21,59 +21,54 @@ class Tiles:
         tiles (Union[dict[tuple[int], `~pathml.core.tiles.Tile`], list[`~pathml.core.tiles.Tile`]]): tile objects
 
     """
-    def __init__(self, h5manager, tiles=None, h5=None, slide_type=None):
-        self.h5manager = pathml.core.h5managers._tiles_h5_manager(h5, slide_type = slide_type)
+    def __init__(self, h5manager, tiles=None, slide_type=None):
+        self.h5manager = h5manager 
 
-        # no h5 supplied
-        else:
-            # initialize h5manager
-            self.h5manager = pathml.core.h5managers._tiles_h5_manager(slide_type = slide_type)
+        # if tiles are supplied, add them to the h5manager
+        if tiles:
+            if not (isinstance(tiles, dict) or (isinstance(tiles, list) and all([isinstance(t, pathml.core.tile.Tile) for t in tiles]))):
+                raise ValueError(f"tiles must be passed as dicts of the form coordinates1:Tile1,... "
+                                 f"or lists of Tile objects containing coords")
+            # create _tiles from dict of tile
+            if isinstance(tiles, dict):
+                for val in tiles.values():
+                    if not isinstance(val, pathml.core.Tile):
+                        raise ValueError(f"tiles dict supplied, but got a value of type {type(val)}. Must be Tile")
+                for key in tiles.keys():
+                    if not (isinstance(key, tuple) and all(isinstance(v, int) for v in key)):
+                        raise ValueError(f"dict keys must be of type tuple[int]")
+                self._tiles = OrderedDict(tiles)
 
-            # if tiles are supplied, add them to the h5manager
-            if tiles:
-                if not (isinstance(tiles, dict) or (isinstance(tiles, list) and all([isinstance(t, pathml.core.tile.Tile) for t in tiles]))):
-                    raise ValueError(f"tiles must be passed as dicts of the form coordinates1:Tile1,... "
-                                     f"or lists of Tile objects containing coords")
-                # create _tiles from dict of tile
-                if isinstance(tiles, dict):
-                    for val in tiles.values():
-                        if not isinstance(val, pathml.core.Tile):
-                            raise ValueError(f"tiles dict supplied, but got a value of type {type(val)}. Must be Tile")
-                    for key in tiles.keys():
-                        if not (isinstance(key, tuple) and all(isinstance(v, int) for v in key)):
-                            raise ValueError(f"dict keys must be of type tuple[int]")
-                    self._tiles = OrderedDict(tiles)
+            # create _tiles from list of tile
+            else:
+                tiledictionary = {}
+                for tile in tiles:
+                    if not isinstance(tile, pathml.core.tile.Tile):
+                        raise ValueError(f"Tiles expects a list of type Tile but was given {type(tile)}")
+                    if tile.coords is None:
+                        raise ValueError(f"tiles must contain valid coords")
+                    coords = tile.coords
+                    tiledictionary[coords] = tile 
+                self._tiles = OrderedDict(tiledictionary)
 
-                # create _tiles from list of tile
-                else:
-                    tiledictionary = {}
-                    for tile in tiles:
-                        if not isinstance(tile, pathml.core.tile.Tile):
-                            raise ValueError(f"Tiles expects a list of type Tile but was given {type(tile)}")
-                        if tile.coords is None:
-                            raise ValueError(f"tiles must contain valid coords")
-                        coords = tile.coords
-                        tiledictionary[coords] = tile 
-                    self._tiles = OrderedDict(tiledictionary)
-
-                # add tiles in _tiles to h5manager
-                for key, val in self._tiles.items():
-                    self.h5manager.add(val)
-                del self._tiles
+            # add tiles in _tiles to h5manager
+            for key, val in self._tiles.items():
+                self.h5manager.add_tile(val)
+            del self._tiles
 
     @property
     def tile_shape(self):
-        return self.h5manager.tile_shape
+        return eval(self.h5manager.h5["tiles/tile_shape"])
 
     def __repr__(self):
-        rep = f"Tiles(keys={self.h5manager.tiles})"
+        rep = f"Tiles(keys={self.h5manager.h5["tiles"].keys().tolist()})"
         return rep
 
     def __len__(self):
-        return len(self.h5manager.tiles.keys())
+        return len(self.h5manager.h5["tiles"].keys())
 
     def __getitem__(self, item):
-        tile = self.h5manager.get(item) 
+        tile = self.h5manager.get_tile(item) 
         return tile 
 
     def add(self, tile):
@@ -85,7 +80,7 @@ class Tiles:
         """
         if not isinstance(tile, pathml.core.tile.Tile):
             raise ValueError(f"can not add {type(tile)}, tile must be of type pathml.core.tiles.Tile")
-        self.h5manager.add(tile)
+        self.h5manager.add_tile(tile)
         del tile
 
     def update(self, key, val, target='all'):
@@ -97,7 +92,7 @@ class Tiles:
             val(str): element that will replace target at key
             target(str): element of {all, image, labels} indicating field to be updated 
         """
-        self.h5manager.update(key, val, target)
+        self.h5manager.update_tile(key, val, target)
 
     def slice(self, slicer):
         """
@@ -114,9 +109,7 @@ class Tiles:
         """
         if not (isinstance(slicer,list) and (isinstance(a,slice) for a in slicer)):
             raise KeyError(f"slices must of of type list[slice]")
-        sliced = pathml.core.tiles.Tiles()
-        for tile in self.h5manager.slice(slicer):
-            sliced.add(tile)
+        sliced = [tile for tile in self.h5manager.slice_tiles(slicer)] 
         return sliced
 
     def remove(self, key):
@@ -126,7 +119,7 @@ class Tiles:
         Args:
             key(str): key (coords) indicating tile to be removed
         """
-        self.h5manager.remove(key)
+        self.h5manager.remove_tile(key)
 
     def reshape(self, shape, centercrop = False):
         """
@@ -138,6 +131,6 @@ class Tiles:
             shape(tuple): new shape of tile.
             centercrop(bool): if shape does not evenly divide slide shape, take center crop
         """
-        assert isinstance(shape, tuple) and all(isinstance(n, int) for n in shape) 
+        assert isinstance(shape, tuple) and all(isinstance(n, int) for n in shape)
         assert isinstance(centercrop, bool)
-        self.h5manager.reshape(shape, centercrop)
+        self.h5manager.reshape_tiles(shape, centercrop)
