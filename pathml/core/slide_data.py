@@ -10,6 +10,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from dataclasses import asdict
 import os
+import numpy as np
 
 import pathml.core
 import pathml.preprocessing.pipeline
@@ -85,8 +86,14 @@ class SlideData:
         # check inputs
         assert masks is None or isinstance(masks, (pathml.core.Masks, h5py._hl.group.Group)), \
             f"mask are of type {type(masks)} but must be type Masks or h5 group"
-        assert labels is None or isinstance(labels, dict), \
-            f"labels are of type {type(labels)} but must be of type dict. array-like labels should be stored in masks."
+        if labels:
+            assert all([isinstance(key, str) for key in labels.keys()]), \
+                f"Input label keys are of types {[type(k) for k in labels.keys()]}. All label keys must be of type str."
+            assert all(
+                [isinstance(val, (str, np.ndarray)) or np.issubdtype(type(val), np.number) for val in labels.values()]
+            ), \
+                f"Input label vals are of types {[type(v) for v in labels.values()]}. " \
+                f"All label values must be of type str or np.ndarray or a number (i.e. a subdtype of np.number) "
         assert tiles is None or isinstance(tiles, (pathml.core.Tiles, h5py._hl.group.Group)), \
             f"tiles are of type {type(tiles)} but must be of type pathml.core.tiles.Tiles"
         assert slide_type is None or isinstance(slide_type, (pathml.core.SlideType, h5py._hl.group.Group)), \

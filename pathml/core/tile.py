@@ -49,8 +49,12 @@ class Tile:
         assert labels is None or isinstance(labels, dict), \
             f"labels is of type {type(labels)} but must be of type dict or None"
         if labels:
-            assert all((isinstance(key, str) and isinstance(val, (str, int, float, np.ndarray)) for key, val in labels.items())), \
-                f"labels must have keys of type str and values of type str, int, float or np.ndarray"
+            assert all([isinstance(key, str) for key in labels.keys()]),\
+                f"Input label keys are of types {[type(k) for k in labels.keys()]}. All label keys must be of type str."
+            assert all([isinstance(val, (str, np.ndarray)) or np.issubdtype(type(val), np.number) for val in labels.values()]), \
+                f"Input label vals are of types {[type(v) for v in labels.values()]}. " \
+                f"All label values must be of type str or np.ndarray or a number (i.e. a subdtype of np.number) "
+
         assert name is None or isinstance(name, str), f"name is of type {type(name)} but must be of type str or None"
 
         assert slide_type is None or isinstance(slide_type, (pathml.core.SlideType, h5py._hl.group.Group)), \
@@ -106,3 +110,11 @@ class Tile:
                 plt.title(self.name)
             plt.axis("off")
             plt.show()
+
+    @property
+    def shape(self):
+        """
+        convenience method.
+        Calling ``tile.shape`` is equivalent to calling ``tile.image.shape``
+        """
+        return self.image.shape
