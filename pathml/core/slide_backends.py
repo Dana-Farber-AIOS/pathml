@@ -252,6 +252,7 @@ class BioFormatsBackend(SlideBackend):
         sample = reader.read(z=0, t=0, rescale=False, XYWH=(location[0], location[1], size[0], size[1]))
         # if series is set to read only one channel, explicitly read c
         if len(sample.shape) == 2:
+            print('first')
             for z in range(self.shape[2]):
                 for c in range(self.shape[3]):
                     for t in range(self.shape[4]):
@@ -259,14 +260,13 @@ class BioFormatsBackend(SlideBackend):
                         slicearray = reader.read(z=z, t=t, series=c, rescale=False, XYWH=(location[0], location[1], size[0], size[1]))
                         slicearray = np.asarray(slicearray)
                         # some file formats read x, y out of order, transpose
-                        print(slicearray.shape)
-                        print(array.shape)
                         if slicearray.shape[:2] != array.shape[:2]: 
                             slicearray = np.transpose(slicearray)
-                        # slicearray = np.moveaxis(slicearray, 0, -1)
+                        #slicearray = np.moveaxis(slicearray, 0, -1)
                         array[:,:,z,c,t] = slicearray 
         # if series is set to read all channels, read all c simultaneously
         elif len(sample.shape) == 3:
+            print('second')
             for z in range(self.shape[2]):
                 for t in range(self.shape[4]):
                     # or reader.openBytes() but need to declare omemetadata as in init

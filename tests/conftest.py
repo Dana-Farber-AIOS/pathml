@@ -8,6 +8,7 @@ import numpy as np
 import cv2
 import openslide
 import javabridge
+import scanpy as sc
 
 from pathml.core import HESlide, VectraSlide, Tile, Masks
 
@@ -61,8 +62,9 @@ def tileVectra():
     return tile
 
 @pytest.fixture
-def tileCODEX():
+def anndata():
     """
-    Example of pathml.core.Tile representation of CODEX image
+    Example anndata.AnnData object
     """
-    pass
+    adata = sc.read_csv("tests/testdata/adata.csv")
+    return adata

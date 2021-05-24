@@ -135,7 +135,6 @@ class SlideData:
                     tile.slidetype = self.slidetype
                 pipeline.apply(tile)
                 import numpy as np
-                print(np.max(tile.image[:,:,0]))
                 self.tiles.add(tile)
 
         # after running preprocessing, create a pytorch dataset for the tiles
