@@ -6,6 +6,7 @@ License: GNU GPL 2.0
 import numpy as np
 import anndata
 from collections import OrderedDict
+import matplotlib.pyplot as plt
 
 import pathml.core.masks
 
@@ -63,3 +64,22 @@ class Tile:
               f"labels={list(self.labels.keys()) if self.labels is not None else None}, " \
               f"counts={self.counts if self.counts is not None else None})"
         return out
+
+    def plot(self, ax=None):
+        """
+        View the tile image, using matplotlib.
+        Only supports RGB images currently
+
+        Args:
+            ax: matplotlib axis object on which to plot the thumbnail. Optional.
+        """
+        if self.image.shape[2] != 3 or self.image.ndim != 3:
+            raise NotImplementedError(f"Plotting not supported for tile with image of shape {self.image.shape}")
+
+        if ax is None:
+            ax = plt.gca()
+
+        ax.imshow(self.image)
+        if self.name:
+            ax.set_title(self.name)
+        ax.axis("off")

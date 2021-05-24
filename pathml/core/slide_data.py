@@ -7,6 +7,7 @@ import h5py
 import dask.distributed
 from torch.utils.data import Dataset
 from pathlib import Path
+import matplotlib.pyplot as plt
 import anndata
 
 import pathml.core.masks
@@ -206,8 +207,28 @@ class SlideData:
 
             yield tile
 
-    def plot(self):
-        raise NotImplementedError
+    def plot(self, ax=None):
+        """
+        View a thumbnail of the image, using matplotlib.
+        Not supported by all backends.
+
+        Args:
+            ax: matplotlib axis object on which to plot the thumbnail. Optional.
+        """
+        if not self.slide:
+            raise NotImplementedError("Plotting only supported via backend, but SlideData has no backend.")
+        try:
+            thumbnail = self.slide.get_thumbnail(size = (500, 500))
+        except NotImplementedError:
+            raise NotImplementedError(
+                f"plotting not supported for slide_backend={self.slide.__class__.__name__}"
+            )
+        if ax is None:
+            ax = plt.gca()
+        ax.imshow(thumbnail)
+        if self.name:
+            ax.set_title(self.name)
+        ax.axis("off")
 
     @property
     def counts(self):
@@ -237,7 +258,6 @@ class RGBSlide(SlideData):
     Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
     """
     def __init__(self, *args, **kwargs):
-        kwargs["slide_backend"] = pathml.core.slide_backends.OpenSlideBackend
         super().__init__(*args, **kwargs)
 
 
@@ -265,7 +285,6 @@ class MultiparametricSlide(SlideData):
     Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
     """
     def __init__(self, *args, **kwargs):
-        kwargs["slide_backend"] = pathml.core.slide_backends.BioFormatsBackend
         super().__init__(*args, **kwargs)
 
 

@@ -1,6 +1,9 @@
 Welcome to PathML's documentation!
 ==================================
 
+.. image:: _static/images/overview.png
+
+
 ``PathML`` is a Python package for computational pathology.
 
 ``PathML`` is a toolbox to facilitate machine learning workflows for high-resolution whole-slide pathology 
@@ -13,7 +16,6 @@ and Analytics at Dana-Farber Cancer Institute and the Department of Pathology an
 Cornell Medicine.
 
 .. image:: _static/images/dfci_cornell_joint_logos.png
-
 
 .. toctree::
    :maxdepth: 2
