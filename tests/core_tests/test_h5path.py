@@ -5,6 +5,7 @@ License: GNU GPL 2.0
 
 import h5py
 import numpy as np
+from pandas.testing import assert_frame_equal
 
 from pathml.core import read
 
@@ -26,9 +27,12 @@ def test_read_write_heslide(tmp_path, example_slide_data_with_tiles):
         assert readslidedata.tiles is None
     if slidedata.tiles is not None:
         assert scan_hdf5(readslidedata.tiles.h5manager.h5) == scan_hdf5(slidedata.tiles.h5manager.h5)
-        print(readslidedata.tiles.h5manager.tiles)
-        print(slidedata.tiles.h5manager.tiles)
         np.testing.assert_equal(readslidedata.tiles.h5manager.tiles, slidedata.tiles.h5manager.tiles)
+        print(scan_hdf5(readslidedata.tiles.h5manager.h5))
+        print(scan_hdf5(slidedata.tiles.h5manager.h5))
+
+    if slidedata.counts is not None:
+        assert_frame_equal(readslidedata.counts.obs, slidedata.counts.obs)
 
 
 def scan_hdf5(f, recursive=True, tab_step=2):

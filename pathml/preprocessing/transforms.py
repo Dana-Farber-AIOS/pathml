@@ -6,7 +6,12 @@ License: GNU GPL 2.0
 import os
 import cv2
 import numpy as np
+import pandas as pd
 import spams
+from skimage import restoration
+import deepcell
+import anndata
+from skimage.measure import regionprops_table
 
 import pathml.core
 import pathml.core.slide_data
@@ -744,7 +749,7 @@ class TissueDetectionHE(Transform):
         outer_contours_only (bool): If true, ignore holes in detected foreground regions. Defaults to False.
         mask_name (str): name for new mask
     """
-
+    
     def __init__(self, mask_name=None, use_saturation=True, blur_ksize=17, threshold=None, morph_n_iter=3, morph_k_size=7,
                  min_region_size=5000, max_hole_size=1500, outer_contours_only=False):
         self.use_sat = use_saturation
@@ -790,3 +795,257 @@ class TissueDetectionHE(Transform):
             f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
         mask = self.F(tile.image)
         tile.masks[self.mask_name] =  mask
+
+
+class DeconvolveMIF(Transform):
+    """
+    NOTE: This function is WIP and untested.
+
+    Apply image deconvolution. Models blurring/noise as caused by
+    diffraction-limited optics through convolution by a point spread 
+    function (psf). 
+    
+    By default utilizes a Theoretical PSF based on microscope parameters.
+    
+    Supports the use of an Experimental PSF measured by imaging beads.
+    
+    Use Richardson-Lucy deconvolution algorithm.
+    Generation of theoretical PSF requires:
+        index of refraction of media
+        numerical aperture
+        wavelength
+        longitudinal spherical aberration at max aperture
+        image pixel spacing (ccd spacing / mag)
+        slice spacing
+        width
+        height
+        depth
+        normalization
+    
+    Args:
+        psf(): point spread function for microscope
+    """
+    def __init__(self, psf=None, psfparameters=None, iterations=30):
+        # ij = imagej.init()
+        if psf:
+            assert isinstance(psf, np.ndarray), f"psf must be a np.ndarray" 
+            self.psf = psf
+        if psfparameters:
+            assert psf is None, f"you passed an empirical psf, cannot simultaneously use theoretical psf"
+        self.psfparameters = psfparameters
+        self.iterations = iterations
+    
+    def __repr__(self):
+        return f"DeconvolveMIF(psf={'empirical' if psf else self.psfparameters}, iterations={self.self.iterations}, " \
+               f"gpu={self.gpu})"
+    
+    def F(self, image, slidetype):
+        # TODO: get image in skimage format
+        if self.slidetype == pathml.core.slide_data.VectraSlide:
+            if self.psf is None and self.psfparameters:
+                # create theoretical PSF from parameters
+                # pip psf
+                # astropsf
+                # wetzstein lab version
+                pass
+            else:
+                # default theoretical PSF 
+                pass
+        elif self.slidetype == pathml.core.slide_data.CODEXSlide:
+            if self.psf is None and self.psfparameters:
+                # create theoretical PSF from parameters
+                pass
+            else:
+                # default theoretical PSF 
+                pass
+        deconvolved = restoration.richardson_lucy(image, self.psf, iterations = self.iterations)
+        return deconvolved
+    
+    def apply(self, tile):
+        tile.image = self.F(tile.image, tile.slidetype)
+
+
+class SegmentMIF(Transform):
+    """
+    Transform applying segmentation to MIF images.
+
+    Input image must be formatted (c, x, y) or (batch, c, x, y). z and t dimensions must be selected before calling SegmentMIF
+
+    Supported models
+    Mesmer
+        Mesmer uses human-in-the-loop pipeline to train a  ResNet50 backbone w/ Feature Pyramid Network
+        segmentation model on 1.3 million cell annotations and 1.2 million nuclear annotations (TissueNet dataset)
+
+        Model outputs predictinos for centroid and boundary of every nucleus and cell, then centroid and boundary 
+        predictions are used as inputs to a watershed algorithm that creates segmentation masks.
+
+        https://www.biorxiv.org/content/10.1101/2021.03.01.431313v2.full.pdf 
+
+    Args:
+        model(str): segmentation model 
+        nuclear_channel(int): channel that defines cell nucleus
+        cytoplasm_channel(int): channel that defines cell membrane or cytoplasm
+        image_resolution(float): resolution of image in microns
+        gpu(bool): flag indicating whether gpu will be used for inference
+    """
+    def __init__(self, 
+            model='mesmer', 
+            nuclear_channel=None,
+            cytoplasm_channel=None,
+            image_resolution=0.5, 
+            gpu=True,
+            postprocess_kwargs_whole_cell = None,
+            postprocess_kwrags_nuclear = None
+        ):
+        assert isinstance(nuclear_channel, int), f"nuclear_channel must be an int indicating index"
+        assert isinstance(cytoplasm_channel, int), f"cytoplasm_channel must be an int indicating index"
+        self.nuclear_channel = nuclear_channel
+        self.cytoplasm_channel = cytoplasm_channel
+        self.image_resolution = image_resolution
+        self.gpu = gpu
+        self.model = model
+        if self.model == 'mesmer':
+            from deepcell.applications import Mesmer
+            self.model = Mesmer()
+        else:
+            raise ValueError(f"currently only support mesmer model")
+        if self.model == 'cellpose':
+            from cellpose import models
+            self.model = models.Cellpose(gpu=self.gpu, model_type='cyto')
+    
+    def __repr__(self):
+        return f"SegmentMIF(model={self.model}, image_resolution={self.image_resolution}, " \
+               f"gpu={self.gpu})"
+    
+    def F(self, image):
+        img = image.copy()
+        if len(img.shape) not in [3, 4]:
+            raise ValueError(f"supported image shapes are x,y,c or batch,x,y,c")
+        if len(img.shape) == 3:
+            img = np.expand_dims(img, axis=0)
+        nuc_cytoplasm = np.stack((img[:,:,:,self.nuclear_channel], img[:,:,:,self.cytoplasm_channel]), axis=-1)
+        cell_segmentation_predictions = self.model.predict(nuc_cytoplasm, compartment='whole-cell')
+        nuclear_segmentation_predictions = self.model.predict(nuc_cytoplasm, compartment='nuclear')
+        cell_segmentation_predictions = np.squeeze(cell_segmentation_predictions, axis=0)
+        nuclear_segmentation_predictions = np.squeeze(nuclear_segmentation_predictions, axis=0)
+        return cell_segmentation_predictions, nuclear_segmentation_predictions
+    
+    def apply(self, tile):
+        cell_segmentation, nuclear_segmentation = self.F(tile.image) 
+        tile.masks['cell_segmentation'] = cell_segmentation
+        tile.masks['nuclear_segmentation'] = nuclear_segmentation
+
+
+class QuantifyMIF(Transform):
+    """
+    Convert segmented image into anndata.AnnData counts object.
+
+    Args:
+        segmentation_mask (str): key indicating which mask to use as label image
+    """
+    def __init__(self, segmentation_mask):
+        self.segmentation_mask = segmentation_mask
+
+    def __repr__(self):
+        return f"QuantifyMIF(segmentation_mask={self.segmentation_mask})"
+    
+    def F(self, tile):
+        # pass (x, y, channel) image and (x, y) segmentation
+        img = tile.image.copy()
+        segmentation = tile.masks[self.segmentation_mask][:,:,0]
+        countsdataframe = regionprops_table(
+                label_image = segmentation,
+                intensity_image = img,
+                properties = [
+                    'coords','max_intensity',
+                    'mean_intensity','min_intensity',
+                    'centroid','filled_area',
+                    'eccentricity','euler_number','slice'
+                ] 
+        )
+        X = pd.DataFrame()
+        for i in range(img.shape[-1]):
+            X[i] = countsdataframe[f'mean_intensity-{i}'] 
+        # populate anndata object
+        counts = anndata.AnnData(
+                X=X, 
+                obs=[tuple([x+tile.coords[0],y+tile.coords[1]]) for x, y in zip(countsdataframe['centroid-0'], countsdataframe['centroid-1'])]
+        )
+        counts.obs = counts.obs.rename(columns={0:'x',1:'y'})
+        counts.obs['coords'] = countsdataframe['coords']
+        counts.obs['filled_area'] = countsdataframe['filled_area']
+        counts.obs['slice'] = countsdataframe['slice']
+        counts.obs['euler_number'] = countsdataframe['euler_number']
+        min_intensities = pd.DataFrame()
+        for i in range(img.shape[-1]):
+            min_intensities[i] = countsdataframe[f'min_intensity-{i}'] 
+        counts.layers['min_intensity'] = min_intensities 
+        max_intensities = pd.DataFrame()
+        for i in range(img.shape[-1]):
+            max_intensities[i] = countsdataframe[f'max_intensity-{i}'] 
+        counts.layers['max_intensity'] = max_intensities 
+        try:
+            counts.obsm['spatial'] = np.array(counts.obs[['x','y']])
+        except:
+            pass
+        counts.obs['tile'] = str(tile.coords)
+        return counts
+    
+    def apply(self, tile):
+        assert tile.masks[self.segmentation_mask].shape, f"passed segmentation mask does not exist for tile {tile}"
+        tile.counts = self.F(tile)
+
+
+class CollapseRunsVectra(Transform):
+    """
+    Coerce Vectra output to standard format.
+    Vectra format is (x, y, 1, c, 1).
+    Output format is (x, y, c).
+
+    Args:
+        z(int): in-focus z-plane for cells of interest
+    """
+    def __init__(self):
+        pass
+
+    def __repr__(self):
+        return f"CollapseRunsVectra()"
+
+    def F(self, image):
+        image = image[:,:,0,:,0]
+        return image 
+
+    def apply(self, tile):
+        tile.image = self.F(tile.image)
+
+
+class CollapseRunsCODEX(Transform):
+    """
+    Coerce CODEX output to standard format.
+    CODEX format is (x, y, z, c, t) where c=4 (4 runs per cycle) and t is the number of cycles.
+    Output format is (x, y, c) where all cycles are collapsed into c (c = 4 * # of cycles).
+
+    Args:
+        z(int): in-focus z-plane for cells of interest
+    """
+    def __init__(self, z):
+        self.z = z
+
+    def __repr__(self):
+        return f"CollapseRunsCODEX(z={self.z})"
+
+    def F(self, image):
+        # collapse channels
+        import functools
+        s = list(image.shape)
+        i=3
+        n=1
+        combined = functools.reduce(lambda x,y: x*y, s[i:i+n+1])
+        image = np.reshape(image, s[:i] + [combined] + s[i+n+1:])
+        # select z plane
+        assert self.z in range(image.shape[3])
+        image = image[:,:,self.z,:]
+        return image 
+
+    def apply(self, tile):
+        tile.image = self.F(tile.image)
