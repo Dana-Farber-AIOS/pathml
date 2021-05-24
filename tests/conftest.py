@@ -8,8 +8,9 @@ import numpy as np
 import cv2
 import openslide
 import javabridge
+import scanpy as sc
 
-from pathml.core import HESlide, Tile, Masks, types
+from pathml.core import HESlide, VectraSlide, Tile, Masks, types
 
 
 def pytest_sessionfinish(session, exitstatus):
@@ -47,3 +48,29 @@ def tileHE():
     tile = create_HE_tile()
     tile.slide_type = types.HE
     return tile
+
+@pytest.fixture
+def tileVectra():
+    """
+    Example of pathml.core.Tile representation of Vectra image
+    """
+    slidedata = VectraSlide("tests/testdata/small_vectra.qptiff", slide_backend = "bioformats")
+    region = slidedata.slide.extract_region(location=(0,0), size=(500,500))
+
+    # make mask object
+    masks = np.random.randint(low = 1, high = 255, size = (slidedata.slide.shape[0], slidedata.slide.shape[1]), dtype = np.uint8)
+    masks = Masks(masks = {"testmask" : masks})
+
+    # labels dict
+    labels = {"test_str_label": "stringlabel", "test_np_array_label": np.ones(shape = (2, 3, 3))}
+
+    tile = Tile(image = region, coords = (0,0), masks = None, slidetype = VectraSlide, labels = labels)
+    return tile
+
+@pytest.fixture
+def anndata():
+    """
+    Example anndata.AnnData object
+    """
+    adata = sc.read_csv("tests/testdata/adata.csv")
+    return adata

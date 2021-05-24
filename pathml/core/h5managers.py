@@ -9,6 +9,8 @@ import ast
 from collections import OrderedDict
 import numpy as np
 import itertools
+import anndata
+import os
 
 import pathml.core.masks
 import pathml.core.tile
@@ -54,10 +56,13 @@ class _tiles_h5_manager(_h5_manager):
         slide_type (pathml.core.slide_types.SlideType): slide_type. must pass this if not loading from h5 (in which case
             slide_type can be also loaded from h5).
     """
-    def __init__(self, h5=None, slide_type=None):
+    def __init__(self, h5 = None):
         super().__init__(h5 = h5)
         tilesgroup = self.h5.create_group('tiles')
         self.tiles = OrderedDict()
+        path = tempfile.TemporaryDirectory()
+        self.countspath = path
+        self.counts = None
         if h5:
             for ds in h5.keys():
                 if ds in ['array', 'masks', 'fields']:
@@ -66,6 +71,10 @@ class _tiles_h5_manager(_h5_manager):
             if 'tiles' in h5.keys(): 
                 self.tiles = readtilesdicth5(h5['tiles']) 
                 self.tile_shape = readtupleh5(h5['tiles'], 'tile_shape')
+            if 'counts' in h5.keys():
+                self.counts = readcounts(h5['counts'])
+                with tempfile.TemporaryDirectory() as tmpdirname:
+                    self.counts.filename = tmpdirname + '/tmpfile.h5ad'
 
             if 'slide_type' in self.h5['fields'].keys():
                 slidetype_dict = self.h5['fields']['slide_type']
@@ -85,6 +94,10 @@ class _tiles_h5_manager(_h5_manager):
         """
         if str(tile.coords) in self.tiles.keys():
            print(f"Tile is already in tiles. Overwriting {tile.coords} inplace.") 
+           # remove old cells from self.counts so they do not duplicate
+           if tile.counts:
+               if "tile" in self.counts.obs.keys():
+                   self.counts = self.counts[self.counts.obs['tile'] != tile.coords]
         if self.tile_shape is None:
             self.tile_shape = tile.image.shape
         if tile.image.shape != self.tile_shape:
@@ -107,11 +120,11 @@ class _tiles_h5_manager(_h5_manager):
             for dim, (current, required) in enumerate(zip(currentshape, requiredshape)):
                 self.h5['array'].resize(required, axis=dim)
 
-            # add tile to self.h5['tiles/array']
+            # add tile to self.h5['array']
             slicer = [slice(coords[i], coords[i] + tile.image.shape[i]) for i in range(len(coords))] 
             self.h5['array'][tuple(slicer)] = tile.image
 
-        # initialize self.h5['tiles/array'] if it does not exist 
+        # initialize self.h5['array'] if it does not exist
         # note that the first tile is not necessarily (0,0) so we init with zero padding
         elif 'array' not in self.h5.keys():
             coords = list(tile.coords)
@@ -137,7 +150,7 @@ class _tiles_h5_manager(_h5_manager):
             writetupleh5(self.h5['tiles'], 'tile_shape', tile.image.shape)
 
         if tile.masks:
-            # create self.h5['tiles/masks']
+            # create self.h5['masks']
             if 'masks' not in self.h5.keys():
                 masksgroup = self.h5.create_group('masks')
                 
@@ -177,13 +190,23 @@ class _tiles_h5_manager(_h5_manager):
                     slicer = [slice(coords[i], coords[i] + tile.image.shape[i]) for i in range(len(coords))] 
                     self.h5['masks'][mask][tuple(slicer)] = maskarray 
 
-        # add tile fields to tiles
-        # note we don't put slide_type here: it should be the same for all tiles so we only store once at slide-level
+        # add tile fields to tiles 
         self.tiles[str(tile.coords)] = {
                 'name': str(tile.name) if tile.name else None, 
                 'labels': tile.labels if tile.labels else None,
-                'coords': str(tile.coords)
+                'coords': str(tile.coords), 
+                'slidetype': tile.slidetype if tile.slidetype else None
         }
+        if tile.counts:
+            # cannot concatenate on disk, read into RAM, concatenate, write back to disk
+            if self.counts:
+                self.counts = self.counts.to_memory()
+                self.counts = self.counts.concatenate(tile.counts, join="outer")
+                self.counts.filename = os.path.join(self.countspath.name + '/tmpfile.h5ad')
+            # cannot concatenate empty AnnData object so set to tile.counts then back in temp file on disk
+            else:
+                self.counts = tile.counts
+                self.counts.filename = os.path.join(self.countspath.name + '/tmpfile.h5ad')
 
     def update(self, key, val, target):
         """
@@ -246,7 +269,7 @@ class _tiles_h5_manager(_h5_manager):
         else:
             raise KeyError(f'invalid item type: {type(item)}. must getitem by coord (type tuple[int]),'
                            f' index (type int), or name(type str)')
-        # impute missing dimensions from self.tile_shape 
+        # impute missing dimensions from self.tile_shape
         coords = list(eval(tilemeta['coords']))
         if len(self.tile_shape) > len(coords):
             shape = list(self.tile_shape)
@@ -456,8 +479,8 @@ class _masks_h5_manager(_h5_manager):
             return self.h5[item][:][tuple(slicer)]
 
         else:
-            if item > len(self.h5) - 1:
-                raise KeyError(f"index out of range, valid indices are ints in [0,{len(self.h5['masks'].keys()) - 1}]")
+            if item > len(self.h5):
+                raise KeyError(f"index out of range, valid indices are ints in [0,{len(self.h5['masks'].keys())}]")
             if slicer is None:
                 return self.h5[list(self.h5.keys())[item]][:]
             return self.h5[list(self.h5.keys())[item]][:][tuple(slicer)]

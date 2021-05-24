@@ -4,6 +4,7 @@ License: GNU GPL 2.0
 """
 
 import numpy as np
+import anndata
 from collections import OrderedDict
 import matplotlib.pyplot as plt
 import h5py
@@ -25,6 +26,7 @@ class Tile:
         masks (dict or pathml.core.Masks): masks belonging to tile. If masks are supplied, all masks must be the
             same shape as the tile.
         labels: labels belonging to tile
+        counts (AnnData): counts matrix for the tile.
         slide_type (pathml.core.SlideType, optional): slide type specification. Must be a
             :class:`~pathml.core.SlideType` object. Alternatively, slide type can be specified by using the
             parameters ``stain``, ``tma``, ``rgb``, ``volumetric``, and ``time_series``.
@@ -39,7 +41,7 @@ class Tile:
         time_series (bool, optional): Flag indicating whether the image is a time series.
             Defaults to ``None``. Ignored if ``slide_type`` is specified.
     """
-    def __init__(self, image, coords, name=None, masks=None, labels=None, slide_type=None, stain=None,
+    def __init__(self, image, coords, name=None, masks=None, labels=None, counts=None, slide_type=None, stain=None,
                  tma=None, rgb=None, volumetric=None, time_series=None):
         # check inputs
         assert isinstance(image, np.ndarray), f"image of type {type(image)} must be a np.ndarray"
@@ -69,6 +71,7 @@ class Tile:
             if stain_type_dict:
                 slide_type = pathml.core.types.SlideType(**stain_type_dict)
 
+        assert counts is None or isinstance(counts, anndata.AnnData), f"counts is of type {type(counts)} but must be of type anndata.AnnData or None"
         if isinstance(masks, pathml.core.masks.Masks):
             # move masks to dict so that Tile is in memory (must pass to dask client) 
             maskdict = OrderedDict()
@@ -89,27 +92,34 @@ class Tile:
         self.coords = coords
         self.slide_type = slide_type
         self.labels = labels
+        self.counts = counts
 
     def __repr__(self):
         out = f"Tile(image shape {self.image.shape}, slidetype={self.slide_type}, " \
               f"masks={repr(self.masks) if self.masks else None}, " \
               f"coords={self.coords}, " \
-              f"labels={list(self.labels.keys()) if self.labels else None})"
+              f"labels={list(self.labels.keys()) if self.labels else None}, " \
+              f"counts={self.counts if self.counts is not None else None})"
         return out
 
-    def plot(self):
+    def plot(self, ax=None):
         """
         View the tile image, using matplotlib.
         Only supports RGB images currently
+
+        Args:
+            ax: matplotlib axis object on which to plot the thumbnail. Optional.
         """
         if self.image.shape[2] != 3 or self.image.ndim != 3:
             raise NotImplementedError(f"Plotting not supported for tile with image of shape {self.image.shape}")
-        else:
-            plt.imshow(self.image)
-            if self.name:
-                plt.title(self.name)
-            plt.axis("off")
-            plt.show()
+
+        if ax is None:
+            ax = plt.gca()
+
+        ax.imshow(self.image)
+        if self.name:
+            ax.set_title(self.name)
+        ax.axis("off")
 
     @property
     def shape(self):
