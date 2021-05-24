@@ -21,10 +21,8 @@ class Tiles:
         tiles (Union[dict[tuple[int], `~pathml.core.tiles.Tile`], list[`~pathml.core.tiles.Tile`]]): tile objects
 
     """
-    def __init__(self, tiles=None, h5=None, slide_type=None):
-        # if h5, pass directly to h5manager
-        if h5 is not None:
-            self.h5manager = pathml.core.h5managers._tiles_h5_manager(h5, slide_type = slide_type)
+    def __init__(self, h5manager, tiles=None, h5=None, slide_type=None):
+        self.h5manager = pathml.core.h5managers._tiles_h5_manager(h5, slide_type = slide_type)
 
         # no h5 supplied
         else:
