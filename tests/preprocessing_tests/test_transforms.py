@@ -10,7 +10,8 @@ from pathml.preprocessing import (
     MedianBlur, GaussianBlur, BoxBlur, BinaryThreshold,
     MorphOpen, MorphClose, ForegroundDetection, SuperpixelInterpolation,
     StainNormalizationHE, NucleusDetectionHE, TissueDetectionHE,
-    LabelArtifactTileHE, LabelWhiteSpaceHE
+    LabelArtifactTileHE, LabelWhiteSpaceHE, QuantifyMIF, SegmentMIF, 
+    CollapseRunsVectra, CollapseRunsCODEX
 )
 from pathml.utils import RGB_to_GREY
 
@@ -110,6 +111,34 @@ def test_binary_label_transforms(tileHE, transform):
     assert tileHE.labels["test_label"] in [True, False]
 
 
+def test_segment_mif(tileVectra):
+    t = SegmentMIF(nuclear_channel = 0, cytoplasm_channel = 1)
+    orig_im = tileVectra.image
+    cell, nuclear = t.F(orig_im)
+    t.apply(tileVectra)
+    assert np.array_equal(tileVectra.masks["cell_segmentation"], cell)
+    assert np.array_equal(tileVectra.masks["nuclear_segmentation"], nuclear)
+
+
+def test_quantify_mif(tileVectra):
+    t = QuantifyMIF("cell_segmentation")
+    with pytest.raises(AssertionError):
+        t.apply(tileVectra)
+    t2 = SegmentMIF(nuclear_channel = 0, cytoplasm_channel = 1)
+    t2.apply(tileVectra)
+    t.apply(tileVectra)
+    assert tileVectra.counts
+
+
+def test_collapse_runs_vectra(tileVectra):
+    t = CollapseRunsVectra()
+    orig_im = tileVectra.image
+    m = t.F(orig_im)
+    t.apply(tileVectra)
+    assert np.array_equal(m, tileVectra.image)
+    assert len(m.shape) == 3
+
+
 @pytest.mark.parametrize("transform", [MedianBlur(),
                                        GaussianBlur(),
                                        BoxBlur(),
@@ -122,6 +151,12 @@ def test_binary_label_transforms(tileHE, transform):
                                        NucleusDetectionHE(),
                                        TissueDetectionHE(),
                                        LabelArtifactTileHE(),
-                                       LabelWhiteSpaceHE()])
+                                       LabelWhiteSpaceHE(),
+                                       QuantifyMIF(segmentation_mask='test'),
+                                       SegmentMIF(nuclear_channel = 0, cytoplasm_channel = 1),
+                                       CollapseRunsVectra(),
+                                       CollapseRunsCODEX(z=0)])
+
+
 def test_repr(transform):
     repr(transform)

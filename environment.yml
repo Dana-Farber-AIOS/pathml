@@ -16,8 +16,12 @@ dependencies:
   - openjdk==8.0.152
   - h5py>=3.1.0
   - dask>=2021.04.0
+  - pydicom>=2.1.2
   - pip:
       - opencv-contrib-python>=4.1.1
       - openslide-python>=1.1.1
       - javabridge
       - python-bioformats
+      - anndata>=0.7.6
+      - deepcell>=0.9.0
+      - cellpose>=0.6.1

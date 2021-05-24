@@ -7,6 +7,8 @@ import h5py
 import dask.distributed
 from torch.utils.data import Dataset
 from pathlib import Path
+import matplotlib.pyplot as plt
+import anndata
 
 import pathml.core.masks
 import pathml.core.tile
@@ -23,14 +25,16 @@ class SlideData:
     Args:
         filepath (str, optional): Path to slide file on disk.
         name (str, optional): name of slide. If ``None``, and a ``filepath`` is provided, name defaults to filepath.
+        # TODO: somehow slidedata needs to tell us what slideclass it is
         slide_backend (pathml.core.slide_backends.SlideBackend, optional): slide_backend object for interfacing with
             slide on disk. If ``None``, and a ``filepath`` is provided, defaults to
             :class:`~pathml.core.slide_backends.OpenSlideBackend`
         masks (pathml.core.masks.Masks, optional): object containing {key, mask} pairs
         tiles (pathml.core.tiles.Tiles, optional): object containing {coordinates, tile} pairs
         labels (collections.OrderedDict, optional): dictionary containing {key, label} pairs
+        counts (anndata.AnnData): object containing counts matrix associated with image quantification 
     """
-    def __init__(self, filepath=None, name=None, slide_backend=None, masks=None, tiles=None, labels=None, history=None):
+    def __init__(self, filepath=None, name=None, counts=None, slide_backend=None, masks=None, tiles=None, labels=None, history=None):
         # check inputs
         assert masks is None or isinstance(masks, (pathml.core.masks.Masks, h5py._hl.group.Group)), \
             f"mask are of type {type(masks)} but must be type Masks or h5 group"
@@ -40,6 +44,8 @@ class SlideData:
             f"tiles are of type {type(tiles)} but must be of type pathml.core.tiles.Tiles"
         assert slide_backend is None or issubclass(slide_backend, pathml.core.slide_backends.SlideBackend), \
             f"slide_backend is of type {type(slide_backend)} but must be a subclass of pathml.core.slide_backends.SlideBackend"
+        assert counts is None or isinstance(counts, anndata.AnnData), \
+            f"counts is if type {type(counts)} but must be of type anndata.AnnData" 
 
         # load slide using OpenSlideBackend if path is provided and backend is not specified
         if filepath is not None:
@@ -71,7 +77,7 @@ class SlideData:
         out += f"history={self.history})"
         return out 
 
-    def run(self, pipeline, client=None, tile_size=3000, tile_stride=None, level=0, tile_pad=False,
+    def run(self, pipeline, distributed=True, client=None, tile_size=3000, tile_stride=None, level=0, tile_pad=False,
             overwrite_existing_tiles=False):
         """
         Run a preprocessing pipeline on SlideData.
@@ -79,6 +85,7 @@ class SlideData:
 
         Args:
             pipeline (pathml.preprocessing.pipeline.Pipeline): Preprocessing pipeline.
+            distributed (bool): Whether to distribute model using client. Defaults to True.
             client: dask.distributed client
             tile_size (int, optional): Size of each tile. Defaults to 3000px
             tile_stride (int, optional): Stride between tiles. If ``None``, uses ``tile_stride = tile_size``
@@ -103,22 +110,33 @@ class SlideData:
                 raise Exception("Slide already has tiles. Running the pipeline will overwrite the existing tiles."
                                 "use overwrite_existing_tiles=True to force overwriting existing tiles.")
 
-        if client is None:
-            client = dask.distributed.Client()
+        if distributed:
+            if client is None:
+                client = dask.distributed.Client()
 
-        # map pipeline application onto each tile
-        processed_tile_futures = []
+            # map pipeline application onto each tile
+            processed_tile_futures = []
 
-        for tile in self.generate_tiles(level = level, shape = tile_size, stride = tile_stride, pad = tile_pad):
-            # explicitly scatter data, i.e. send the tile data out to the cluster before applying the pipeline
-            # according to dask, this can reduce scheduler burden and keep data on workers
-            big_future = client.scatter(tile)
-            f = client.submit(pipeline.apply, big_future)
-            processed_tile_futures.append(f)
+            for tile in self.generate_tiles(level = level, shape = tile_size, stride = tile_stride, pad = tile_pad):
+                if not tile.slidetype:
+                    tile.slidetype = self.slidetype
+                # explicitly scatter data, i.e. send the tile data out to the cluster before applying the pipeline
+                # according to dask, this can reduce scheduler burden and keep data on workers
+                big_future = client.scatter(tile)
+                f = client.submit(pipeline.apply, big_future)
+                processed_tile_futures.append(f)
 
-        # as tiles are processed, add them to h5
-        for future, tile in dask.distributed.as_completed(processed_tile_futures, with_results = True):
-            self.tiles.add(tile)
+            # as tiles are processed, add them to h5
+            for future, tile in dask.distributed.as_completed(processed_tile_futures, with_results = True):
+                self.tiles.add(tile)
+
+        else:
+            for tile in self.generate_tiles(level = level, shape = tile_size, stride = tile_stride, pad = tile_pad):
+                if not tile.slidetype:
+                    tile.slidetype = self.slidetype
+                pipeline.apply(tile)
+                import numpy as np
+                self.tiles.add(tile)
 
         # after running preprocessing, create a pytorch dataset for the tiles
         self.tile_dataset = self._create_tile_dataset(self)
@@ -189,8 +207,40 @@ class SlideData:
 
             yield tile
 
-    def plot(self):
-        raise NotImplementedError
+    def plot(self, ax=None):
+        """
+        View a thumbnail of the image, using matplotlib.
+        Not supported by all backends.
+
+        Args:
+            ax: matplotlib axis object on which to plot the thumbnail. Optional.
+        """
+        if not self.slide:
+            raise NotImplementedError("Plotting only supported via backend, but SlideData has no backend.")
+        try:
+            thumbnail = self.slide.get_thumbnail(size = (500, 500))
+        except NotImplementedError:
+            raise NotImplementedError(
+                f"plotting not supported for slide_backend={self.slide.__class__.__name__}"
+            )
+        if ax is None:
+            ax = plt.gca()
+        ax.imshow(thumbnail)
+        if self.name:
+            ax.set_title(self.name)
+        ax.axis("off")
+
+    @property
+    def counts(self):
+        return self.tiles.h5manager.counts if self.tiles.h5manager else None
+
+    @counts.setter
+    def counts(self, value):
+        if self.tiles.h5manager:
+            assert isinstance(value, anndata.AnnData)
+            self.tiles.h5manager.counts = value  
+        else:
+            raise AttributeError("cannot assign counts slidedata contains no tiles, first generate tiles")
 
     def write(self, path):
         """
@@ -208,11 +258,19 @@ class RGBSlide(SlideData):
     Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
     """
     def __init__(self, *args, **kwargs):
-        kwargs["slide_backend"] = pathml.core.slide_backends.OpenSlideBackend
         super().__init__(*args, **kwargs)
 
 
 class HESlide(RGBSlide):
+    """
+    Class for any H&E slide. Uses OpenSlide backend.
+    Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class IHCSlide(RGBSlide):
     """
     Class for any H&E slide. Uses OpenSlide backend.
     Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
@@ -227,5 +285,30 @@ class MultiparametricSlide(SlideData):
     Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
     """
     def __init__(self, *args, **kwargs):
-        kwargs["slide_backend"] = pathml.core.slide_backends.BioFormatsBackend
+        super().__init__(*args, **kwargs)
+
+
+class VectraSlide(MultiparametricSlide):
+    """
+    Class for data in Vectra (Polaris) format.
+
+    This class enables transformations in * * 
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class CODEXSlide(MultiparametricSlide):
+    """
+    Class for data in Akoya bioscience CODEX format. 
+    Expects the following filesystem:
+        
+    This class enables transforms in *link to location in docs*. 
+    This class enables CODEX pipeline.
+
+    # TODO:
+        hierarchical biaxial gating (flow-style analysis) 
+        KNN/FLANN/leiden clustering
+    """
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
