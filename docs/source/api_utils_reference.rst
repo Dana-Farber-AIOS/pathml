@@ -47,6 +47,4 @@ Miscellaneous Utils
 .. autofunction:: pathml.utils.RGB_to_GREY
 .. autofunction:: pathml.utils.normalize_matrix_rows
 .. autofunction:: pathml.utils.normalize_matrix_cols
-.. autofunction:: pathml.utils.label_artifact_tile_HE
-.. autofunction:: pathml.utils.label_whitespace_HE
 .. autofunction:: pathml.utils.plot_segmentation

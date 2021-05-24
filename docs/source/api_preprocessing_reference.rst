@@ -20,3 +20,5 @@ Transforms
 .. autoclass:: pathml.preprocessing.StainNormalizationHE
 .. autoclass:: pathml.preprocessing.NucleusDetectionHE
 .. autoclass:: pathml.preprocessing.TissueDetectionHE
+.. autoclass:: pathml.preprocessing.LabelArtifactTileHE
+.. autoclass:: pathml.preprocessing.LabelWhiteSpaceHE

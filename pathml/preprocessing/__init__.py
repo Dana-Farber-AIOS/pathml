@@ -6,5 +6,5 @@ License: GNU GPL 2.0
 from .pipeline import Pipeline
 from .transforms import BinaryThreshold, BoxBlur, ForegroundDetection, GaussianBlur, \
     MedianBlur, MorphOpen, MorphClose, NucleusDetectionHE, StainNormalizationHE, \
-    SuperpixelInterpolation, TissueDetectionHE, SegmentMIF, QuantifyMIF, CollapseRunsVectra, \
-    CollapseRunsCODEX
+    SuperpixelInterpolation, TissueDetectionHE, LabelArtifactTileHE, LabelWhiteSpaceHE, \
+    SegmentMIF, QuantifyMIF, CollapseRunsVectra, CollapseRunsCODEX

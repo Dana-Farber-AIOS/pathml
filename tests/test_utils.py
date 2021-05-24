@@ -12,7 +12,7 @@ from pathml.utils import (
     segmentation_lines, contour_centroid, sort_points_clockwise,
     pad_or_crop, _pad_or_crop_1d, upsample_array, plot_mask,
     RGB_to_HSV, RGB_to_OD, RGB_to_HSI, RGB_to_GREY, RGB_to_LAB,
-    normalize_matrix_cols, normalize_matrix_rows, label_artifact_tile_HE, label_whitespace_HE
+    normalize_matrix_cols, normalize_matrix_rows
 )
 
 
@@ -160,13 +160,3 @@ def test_normalize_matrix_rows(random_50_50):
 def test_normalize_matrix_cols(random_50_50):
     a = normalize_matrix_cols(random_50_50)
     assert np.all(np.isclose(np.linalg.norm(a, axis = 0), 1.))
-
-
-def test_label_artifact_tile(random_rgb):
-    a = label_artifact_tile_HE(random_rgb)
-    assert a in [True, False]
-
-
-def test_label_whitespace_tile(random_rgb):
-    a = label_whitespace_HE(random_rgb)
-    assert a in [True, False]

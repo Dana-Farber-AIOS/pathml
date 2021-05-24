@@ -10,7 +10,8 @@ from pathml.preprocessing import (
     MedianBlur, GaussianBlur, BoxBlur, BinaryThreshold,
     MorphOpen, MorphClose, ForegroundDetection, SuperpixelInterpolation,
     StainNormalizationHE, NucleusDetectionHE, TissueDetectionHE,
-    QuantifyMIF, SegmentMIF, CollapseRunsVectra, CollapseRunsCODEX
+    LabelArtifactTileHE, LabelWhiteSpaceHE, QuantifyMIF, SegmentMIF, 
+    CollapseRunsVectra, CollapseRunsCODEX
 )
 from pathml.utils import RGB_to_GREY
 
@@ -103,6 +104,13 @@ def test_tissue_detectionHE(tileHE, threshold, use_saturation):
     assert np.array_equal(tileHE.masks["testing"], m)
 
 
+@pytest.mark.parametrize('transform', [LabelArtifactTileHE, LabelWhiteSpaceHE])
+def test_binary_label_transforms(tileHE, transform):
+    t = transform(label_name = "test_label")
+    t.apply(tileHE)
+    assert tileHE.labels["test_label"] in [True, False]
+
+
 def test_segment_mif(tileVectra):
     t = SegmentMIF(nuclear_channel = 0, cytoplasm_channel = 1)
     orig_im = tileVectra.image
@@ -130,8 +138,6 @@ def test_collapse_runs_vectra(tileVectra):
     assert np.array_equal(m, tileVectra.image)
     assert len(m.shape) == 3
 
-# TODO: codex tests
-# TODO: transforms tests
 
 @pytest.mark.parametrize("transform", [MedianBlur(),
                                        GaussianBlur(),
@@ -144,9 +150,13 @@ def test_collapse_runs_vectra(tileVectra):
                                        StainNormalizationHE(),
                                        NucleusDetectionHE(),
                                        TissueDetectionHE(),
+                                       LabelArtifactTileHE(),
+                                       LabelWhiteSpaceHE(),
                                        QuantifyMIF(segmentation_mask='test'),
                                        SegmentMIF(nuclear_channel = 0, cytoplasm_channel = 1),
                                        CollapseRunsVectra(),
                                        CollapseRunsCODEX(z=0)])
+
+
 def test_repr(transform):
     repr(transform)
