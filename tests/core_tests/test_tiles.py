@@ -6,24 +6,12 @@ License: GNU GPL 2.0
 import pytest
 import numpy as np
 
-from pathml.core import Tiles, Tile, Masks, OpenSlideBackend
+from pathml.core import Tiles, Tile, Masks, OpenSlideBackend, types
 
 
 @pytest.fixture
 def emptytiles():
     return Tiles()
-
-
-@pytest.fixture
-def tile():
-    shape = (224, 224, 3)
-    coords = (1, 3)
-    slidetype = OpenSlideBackend 
-    maskdict = {str(i) : np.random.randint(2, size = shape) for i in range(20)}
-    masks = Masks(maskdict)
-    labels = {'label1' : 'positive', 'label2' : 'negative'}
-    image = np.random.random_sample(shape)
-    return Tile(image = image, name = 'test', coords = coords, slidetype = slidetype, masks = masks, labels = labels)
 
 
 @pytest.fixture
@@ -37,13 +25,13 @@ def tiles():
             # create tile
             shape = (224, 224, 3)
             coords = (224*i, 224*j)
-            slidetype = OpenSlideBackend 
-            name = f"{i}_{j}" 
-            maskdict = {str(k) : np.random.randint(2, size = shape) for k in range(20)}
+            name = f"{i}_{j}"
+            maskdict = {str(k) : np.random.randint(2, size = shape) for k in range(2)}
             masks = Masks(maskdict)
-            labels = {'label1' : 'tumor', 'label2' : 'stroma', 'label3' : 'cribriform'}
+            labs = {"test_string_label": "testlabel", "test_array_label": np.array([2, 3, 4]),
+                    "test_int_label": 3, "test_float_label": 3.0}
             image = np.random.random_sample(shape)
-            tile = Tile(image = image, name = name, coords = coords, slidetype = slidetype, masks = masks, labels = labels)
+            tile = Tile(image = image, name = name, coords = coords, slide_type = types.HE, masks = masks, labels = labs)
             # add to dict
             tiles[coords] = tile
     return tiles 
@@ -60,13 +48,13 @@ def tilesnonconsecutive():
             # create tile
             shape = (224, 224, 3)
             coords = (224*2*(i+1), 224*2*(j+2))
-            slidetype = OpenSlideBackend 
-            name = f"{i}_{j}" 
-            maskdict = {str(k) : np.random.randint(2, size = shape) for k in range(20)}
+            name = f"{i}_{j}"
+            maskdict = {str(k) : np.random.randint(2, size = shape) for k in range(2)}
             masks = Masks(maskdict)
-            labels = {'label1' : 'tumor', 'label2' : 'stroma', 'label3' : 'cribriform'}
+            labs = {"test_string_label": "testlabel", "test_array_label": np.array([2, 3, 4]),
+                    "test_int_label": 3, "test_float_label": 3.0}
             image = np.random.random_sample(shape)
-            tile = Tile(image = image, name = name, coords = coords, slidetype = slidetype, masks = masks, labels = labels)
+            tile = Tile(image = image, name = name, coords = coords, slide_type = types.HE, masks = masks, labels = labs)
             # add to dict
             tiles[coords] = tile
     return tiles 
@@ -95,15 +83,15 @@ def test_init(tiles, tilesnonconsecutive, incorrect_input):
 
 
 def test_repr(tiles):
-    assert Tiles(tiles)
+    assert repr(Tiles(tiles))
 
 
 @pytest.mark.parametrize("incorrect_input", ["string", None, True, 5, [5, 4, 3], {"dict": "testing"}])
 @pytest.mark.parametrize("incorrect_input2", [None, True, [5, 4, 3], {"dict": "testing"}])
-def test_add_get(emptytiles, tile, incorrect_input, incorrect_input2):
+def test_add_get(emptytiles, tileHE, incorrect_input, incorrect_input2):
     # add single tile
     tiles = emptytiles
-    tile = tile
+    tile = tileHE
     tiles.add(tile)
     # get by coords and by index
     assert (tiles[(1, 3)].image == tile.image).all()
@@ -111,9 +99,7 @@ def test_add_get(emptytiles, tile, incorrect_input, incorrect_input2):
     assert tiles[(1, 3)].name == tile.name
     assert tiles[(1, 3)].coords == tile.coords
     assert tiles[(1, 3)].labels == tile.labels
-    print(tiles[(1, 3)].slidetype)
-    print(tile.slidetype)
-    assert tiles[(1, 3)].slidetype == tile.slidetype
+    assert tiles[(1, 3)].slide_type == tile.slide_type
     # get masks
     for mask in tiles.h5manager.h5['masks'].keys():
         # masks by coords and by index
@@ -133,41 +119,38 @@ def test_add_get(emptytiles, tile, incorrect_input, incorrect_input2):
 
 @pytest.mark.parametrize("incorrect_target", ["string", None, True, 5, [5, 4, 3], {"dict": "testing"}])
 @pytest.mark.parametrize("incorrect_labels", ["string", None, True, 5, [5, 4, 3]])
-def test_update(emptytiles, tile, incorrect_target, incorrect_labels):
+def test_update(emptytiles, tileHE, incorrect_target, incorrect_labels):
     tiles = emptytiles
-    tile = tile
-    tiles.add(tile)
+    tiles.add(tileHE)
     # update all
-    shape = (224, 224, 3)
+    shape = tileHE.image.shape
     coords = (1, 3)
-    slidetype = OpenSlideBackend 
-    maskdict = {str(i) : np.ones(shape) for i in range(20)}
+    slide_type = types.HE
+    maskdict = {str(i) : np.ones(shape[0:2]) for i in range(2)}
     masks = Masks(maskdict)
-    labels = {'label1' : 'new1', 'label2' : 'new2'}
+    labs = {"test_string_label": "testlabel", "test_array_label": np.array([2, 3, 4]),
+            "test_int_label": 3, "test_float_label": 3.0}
     img = np.ones(shape)
-    newtile = Tile(image = img, name = 'new', coords = coords, slidetype = slidetype, masks = masks, labels = labels)
+    newtile = Tile(image = img, name = 'new', coords = coords, slide_type = types.HE, masks = masks, labels = labs)
     tiles.update((1, 3), newtile, 'all') 
     assert (tiles[(1, 3)].image == np.ones(shape)).all()
     assert tiles[(1, 3)].name == 'new'
-    assert tiles[(1, 3)].labels == labels 
-    assert tiles[(1, 3)].slidetype == slidetype 
+    assert tiles[(1, 3)].labels == labs
+    assert tiles[(1, 3)].slide_type == slide_type
     # update image
     tiles = emptytiles
-    tile = tile
-    tiles.add(tile)
+    tiles.add(tileHE)
     tiles.update((1, 3), img, 'image')
     assert (tiles[(1, 3)].image == np.ones(shape)).all()
     # incorrect image 
     tiles = emptytiles
-    tile = tile
-    tiles.add(tile)
+    tiles.add(tileHE)
     im2 = np.ones((224,225,3))
     with pytest.raises(Exception):
         tiles.update((1, 3), im2, 'image')
     # update labels
     tiles = emptytiles
-    tile = tile
-    tiles.add(tile)
+    tiles.add(tileHE)
     newlabels = {'newkey1' : 'newvalue1', 'newkey2' : 'newalue2'}
     tiles.update((1, 3), newlabels, 'labels')
     assert tiles[(1, 3)].labels == newlabels 
@@ -176,14 +159,13 @@ def test_update(emptytiles, tile, incorrect_target, incorrect_labels):
         tiles.update((1, 3), incorrect_labels, 'labels') 
     # incorrect target
     with pytest.raises(KeyError):
-        tiles.update(tile.coords, tile, incorrect_target)
+        tiles.update(tileHE.coords, tileHE, incorrect_target)
 
 
 @pytest.mark.parametrize("incorrect_input", ["string", None, True, 5, [5, 4, 3], {"dict": "testing"}])
-def test_remove(emptytiles, tile, incorrect_input):
+def test_remove(emptytiles, tileHE, incorrect_input):
     tiles = emptytiles
-    tile = tile
-    tiles.add(tile)
+    tiles.add(tileHE)
     tiles.remove((1, 3))
     with pytest.raises(Exception):
         triggerexception = tiles[(1, 3)]
@@ -195,16 +177,16 @@ def test_remove(emptytiles, tile, incorrect_input):
 
 
 @pytest.mark.parametrize("incorrect_input", ["string", None, True, 5, {"dict": "testing"}])
-def test_slice(emptytiles, tile, incorrect_input):
+def test_slice(emptytiles, tileHE, incorrect_input):
     tiles = emptytiles
-    tile = tile 
-    tiles.add(tile)
+    tiles.add(tileHE)
+    print(tiles[0].shape)
     slices = [slice(2,5)]
     test = tiles.slice(slices)
-    assert test.h5manager.tile_shape == (3, 224, 3)
-    assert test[0].image.shape == (3, 224, 3)
-    print(next(iter(test[0].masks.items())))
-    assert next(iter(test[0].masks.items()))[1].shape == (3, 224, 3) 
+    print(test[0].shape)
+    assert test.h5manager.tile_shape == tileHE.image[slices[0], ...].shape
+    assert test[0].image.shape == tileHE.image[slices[0], ...].shape
+    assert next(iter(test[0].masks.items()))[1].shape == tileHE.image[slices[0], ...].shape[0:2]
     with pytest.raises(KeyError):
         test = tiles.slice(incorrect_input)
 

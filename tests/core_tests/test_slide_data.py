@@ -122,9 +122,11 @@ def test_read_write_heslide(tmp_path, example_slide_data_with_tiles):
     if slidedata.tiles is None:
         assert readslidedata.tiles is None
     if slidedata.tiles is not None:
-        assert scan_hdf5(readslidedata.tiles.h5manager.h5) == scan_hdf5(slidedata.tiles.h5manager.h5)
         print(readslidedata.tiles.h5manager.tiles)
         print(slidedata.tiles.h5manager.tiles)
+        print(scan_hdf5(readslidedata.tiles.h5manager.h5))
+        print(scan_hdf5(slidedata.tiles.h5manager.h5))
+        assert scan_hdf5(readslidedata.tiles.h5manager.h5) == scan_hdf5(slidedata.tiles.h5manager.h5)
         np.testing.assert_equal(readslidedata.tiles.h5manager.tiles, slidedata.tiles.h5manager.tiles)
 
 
@@ -138,3 +140,17 @@ def scan_hdf5(f, recursive=True, tab_step=2):
                 elems.append((v.name, scan_node(v, tabs=tabs + tab_step)))
         return elems
     return scan_node(f)
+
+
+def compare_dict_ignore_order(d1, d2):
+    """
+    Compare two dictionaries, ignoring order of values
+    """
+    vals_a = list(d1.values()).sort()
+    vals_b = list(d2.values()).sort()
+    if vals_a != vals_b:
+        return False
+    for k1, k2 in zip(vals_a, vals_b):
+        if d1[k1] != d2[k2]:
+            return False
+    return True
