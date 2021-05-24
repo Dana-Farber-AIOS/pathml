@@ -13,6 +13,7 @@ dependencies:
   - python-spams>=2.6.1
   - pip>=20.0.2
   - pytorch>=1.7.0
+  - torchvision>=0.8.0
   - openjdk==8.0.152
   - h5py>=3.1.0
   - dask>=2021.04.0
