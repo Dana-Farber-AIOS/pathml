@@ -6,12 +6,14 @@ License: GNU GPL 2.0
 import pytest
 import numpy as np
 
-from pathml.core import Tiles, Tile, Masks, OpenSlideBackend, types
+import pathml.core.h5managers
+from pathml.core import Tiles, Tile, Masks, OpenSlideBackend, types, HESlide
 
 
 @pytest.fixture
 def emptytiles():
-    return Tiles()
+    slidedata = HESlide("tests/testdata/small_HE.svs")
+    return Tiles(h5manager=pathml.core.h5managers.h5pathManager(slidedata=slidedata))
 
 
 @pytest.fixture
@@ -63,12 +65,13 @@ def tilesnonconsecutive():
 @pytest.mark.parametrize("incorrect_input", ["string", True, 5, [5, 4, 3], {"dict": "testing"}])
 def test_init(tiles, tilesnonconsecutive, incorrect_input):
     # init from dict
+    slidedata = HESlide("tests/testdata/small_HE.svs")
     tilesdict = tiles
-    tiles1 = Tiles(tilesdict)
+    tiles1 = Tiles(h5manager=pathml.core.h5managers.h5pathManager(slidedata=slidedata), tiles=tilesdict)
     assert (tiles1[0].image == tilesdict[(0,0)].image).all()
     # init from list
     tileslist = list(tilesdict.values())
-    tiles2 = Tiles(tileslist)
+    tiles2 = Tiles(h5manager=pathml.core.h5managers.h5pathManager(slidedata=slidedata), tiles=tileslist)
     assert (tiles2[0].image == tileslist[0].image).all()
     # init len
     assert len(tiles1) == 4
@@ -78,7 +81,7 @@ def test_init(tiles, tilesnonconsecutive, incorrect_input):
         tiles = Tiles(incorrect_input)
     # nonconsecutive tiles
     tilesdict2 = tilesnonconsecutive
-    tiles3 = Tiles(tilesdict2)
+    tiles3 = Tiles(h5manager=pathml.core.h5managers.h5pathManager(slidedata=slidedata), tiles=tilesdict2)
     assert (tiles3[0].image == tilesdict2[(224*2*1, 224*2*2)].image).all()
 
 
@@ -193,7 +196,7 @@ def test_slice(emptytiles, tileHE, incorrect_input):
 
 def test_reshape(tiles, monkeypatch):
     tilesdict = tiles
-    tiles1 = Tiles(tilesdict)
+    tiles1 = Tiles(h5manager=pathml.core.h5managers.h5pathManager(slidedata=slidedata), tiles=tilesdict)
     tiles1.reshape(shape=(112, 112))
     assert tiles1[0].image.shape == (112, 112, 3)
     # monkeypatch input to overwrite labels

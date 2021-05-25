@@ -30,7 +30,7 @@ def create_HE_tile():
     im_np_rgb = cv2.cvtColor(im_np, cv2.COLOR_RGBA2RGB)
     # make mask object
     masks = np.random.randint(low = 1, high = 255, size = (im_np_rgb.shape[0], im_np_rgb.shape[1]), dtype = np.uint8)
-    masks = Masks(masks = {"testmask": masks})
+    masks = {"testmask": masks}
     # labels dict
     labs = {"test_string_label": "testlabel", "test_array_label": np.array([2, 3, 4]),
             "test_int_label": 3,  "test_float_label": 3.0}
@@ -59,7 +59,7 @@ def tileVectra():
 
     # make mask object
     masks = np.random.randint(low = 1, high = 255, size = (slidedata.slide.shape[0], slidedata.slide.shape[1]), dtype = np.uint8)
-    masks = Masks(masks = {"testmask" : masks})
+    masks = {"testmask" : masks}
 
     # labels dict
     labels = {"test_str_label": "stringlabel", "test_np_array_label": np.ones(shape = (2, 3, 3))}

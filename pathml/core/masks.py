@@ -21,6 +21,7 @@ class Masks:
     """
 
     def __init__(self, h5manager, masks = None):
+        assert isinstance(h5manager, pathml.core.h5managers.h5pathManager)
         self.h5manager = h5manager
         if masks:
             if not isinstance(masks, dict):
