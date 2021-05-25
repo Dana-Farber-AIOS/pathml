@@ -86,7 +86,6 @@ class SlideData:
                  time_series=None,
                  counts=None
                  ):
-    def __init__(self, filepath=None, name=None, counts=None, slide_backend=None, masks=None, tiles=None, labels=None):
         # check inputs
         assert masks is None or isinstance(masks, dict), \
             f"mask are of type {type(masks)} but must be type dict"
@@ -337,8 +336,6 @@ class SlideData:
         Args:
             ax: matplotlib axis object on which to plot the thumbnail. Optional.
         """
-        try:
-        if not self.slide:
         try:
             thumbnail = self.slide.get_thumbnail(size = (500, 500))
         except:

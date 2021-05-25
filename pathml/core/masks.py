@@ -71,7 +71,7 @@ class Masks:
         """
         if not (isinstance(slices, list) and all([isinstance(a, slice) for a in slices])):
             raise KeyError(f"slices must of of type list[slice] but is {type(slices)} with elements {type(slices[0])}")
-        sliced = {key:mask for key, mask in self.h5manager.slice_masks(slicer)] 
+        sliced = {key:mask for key, mask in self.h5manager.slice_masks(slicer)} 
         return sliced
 
     def remove(self, key):

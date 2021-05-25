@@ -13,8 +13,8 @@ import os
 
 import pathml.core.masks
 import pathml.core.tile
+import pathml.core
 from pathml.core.utils import writetupleh5, readtupleh5, readtilesdicth5, readcounts
-from pathml.core import SlideType, SlideData
 
 class h5pathManager():
     """
@@ -68,7 +68,7 @@ class h5pathManager():
             countsgroup = self.h5.create_group("counts")
         
         slide_type_dict = {key:val for key, val in self.h5["fields/slide_type"].items()}
-        self.slide_type = SlideType(**slide_type_dict)
+        self.slide_type = pathml.core.slide_types.SlideType(**slide_type_dict)
 
     def add_tile(self, tile):
         """
@@ -478,7 +478,7 @@ class h5pathManager():
 
     def get_slidetype(self):
         slide_type_dict = {key:val for key, val in self.h5["fields/slide_type"].items()}
-        return SlideType(**slide_type_dict)
+        return pathml.core.slide_types.SlideType(**slide_type_dict)
 
 
 def check_valid_h5path_format(h5path):
