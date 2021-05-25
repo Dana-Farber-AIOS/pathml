@@ -36,6 +36,9 @@ class SlideType:
         if self.stain and self.stain not in valid_stains:
             raise ValueError(f"Input stain {self.stain} not valid. Must be one of {valid_stains}")
 
+    def asdict(self):
+        return {'stain':self.stain, 'tma':self.tma, 'rgb':self.rgb, 'volumetric':self.volumetric, 'time_series':self.time_series}
+
 
 class _PremadeTypes:
     # instantiations of common SlideTypes for convenience
