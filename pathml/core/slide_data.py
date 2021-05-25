@@ -164,10 +164,10 @@ class SlideData:
             # populate the SlideData object from existing h5path file
             backend_obj = None  # no backend in this case since we're loading from h5
             with h5py.File(filepath, "r") as f:
-                self.h5manager = h5pathManager(h5path=f)
+                self.h5manager = pathml.core.h5managers.h5pathManager(h5path=f)
 
         else:
-            self.h5manager = h5pathManager(slidedata=self)
+            self.h5manager = pathml.core.h5managers.h5pathManager(slidedata=self)
             if self.tiles:
                 self.tiles = Tiles(self.h5manager, tiles=self.tiles) 
             if self.masks:

@@ -51,12 +51,14 @@ class h5pathManager():
             fieldsgroup = self.h5.create_group("fields")
             fieldsgroup.attrs['name'] = slidedata.name 
             labelsgroup = self.h5["fields"].create_group("labels")
-            for key, label in slidedata.labels.items():
-                self.h5["fields/labels"].attrs[key] = label
+            if slidedata.labels:
+                for key, label in slidedata.labels.items():
+                    self.h5["fields/labels"].attrs[key] = label
             slidetypegroup = self.h5["fields"].create_group("slide_type")
             # TODO: implement slide_type asdict method
-            for key, val in slidedata.slide_type.asdict():
-                self.h5["fields/slide_type"].attrs[key] = val
+            if slidedata.slide_type:
+                for key, val in slidedata.slide_type.asdict().items():
+                    self.h5["fields/slide_type"].attrs[key] = val
             # tiles
             tilesgroup = self.h5.create_group("tiles")
             tilesgroup.attrs['tile_shape'] = 0
