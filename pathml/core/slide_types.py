@@ -61,8 +61,15 @@ class SlideType:
         out += f"volumetric={self.volumetric}, time_series={self.time_series})"
         return out
 
-    def asdict(self):
-        return {'stain':self.stain, 'tma':self.tma, 'rgb':self.rgb, 'volumetric':self.volumetric, 'time_series':self.time_series}
+    def __eq__(self, other):
+        return all([
+            self.stain == other.stain,
+            self.platform == other.platform,
+            self.tma == other.tma,
+            self.rgb == other.rgb,
+            self.volumetric == other.volumetric,
+            self.time_series == other.time_series
+        ])
 
 
 class _PremadeTypes:
