@@ -100,7 +100,7 @@ class SlideData:
                 f"All label values must be of type str or np.ndarray or a number (i.e. a subdtype of np.number) "
         assert tiles is None or all([isinstance(tile, pathml.core.Tile) for tile in tiles]), \
             f"tiles are of type {type(tiles)} but must be a list of objects of type pathml.core.tiles.Tile"
-        assert slide_type is None or isinstance(slide_type, (pathml.core.SlideType, h5py._hl.group.Group)), \
+        assert slide_type is None or isinstance(slide_type, pathml.core.SlideType), \
             f"slide_type is of type {type(slide_type)} but must be of type pathml.core.types.SlideType"
         assert backend is None or (isinstance(backend, str) and backend.lower() in {"openslide", "bioformats", "dicom"}), \
             f"backend {backend} must be one of ['OpenSlide', 'BioFormats', 'DICOM'] (case-insensitive)."
@@ -170,14 +170,9 @@ class SlideData:
         else:
             self.h5manager = h5pathManager(slidedata=self)
             if self.tiles:
-                self.tiles = Tiles(self.h5manager) 
-                for tile in tiles:
-                    self.tiles.add_tile(tile)
-                
+                self.tiles = Tiles(self.h5manager, tiles=self.tiles) 
             if self.masks:
-                self.masks = Masks(self.h5manager) 
-                for mask in masks:
-                    self.masks.add_mask(tile)
+                self.masks = Masks(self.h5manager, masks=self.masks) 
 
     def __repr__(self): 
         out = f"SlideData(name={repr(self.name)},\n"
