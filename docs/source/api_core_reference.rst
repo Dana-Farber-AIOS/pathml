@@ -30,9 +30,8 @@ We also provide instantiations of common slide types for convenience:
     ``pathml.core.types.HE``       'HE'     None       True    False    False       False
     ``pathml.core.types.IHC``      'IHC'    None       True    False    False       False
     ``pathml.core.types.IF``       'Fluor'  None       False   False    False       False
-    ``pathml.core.types.HE_TMA``   'HE'     None       True    True     False       False
-    ``pathml.core.types.IHC_TMA``  'IHC'    None       True    True     False       False
-    ``pathml.core.types.IF_TMA``   'Fluor'  None       False   True     False       False
+    ``pathml.core.types.CODX``     'Fluor'  'CODEX'    False   False    False       False
+    ``pathml.core.types.Vectra``   'Fluor'  'Vectra'   False   False    False       False
     =============================  =======  ========   ======= =======  ==========  ===========
 
 Tile

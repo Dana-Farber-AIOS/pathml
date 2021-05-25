@@ -55,7 +55,6 @@ class h5pathManager():
                 for key, label in slidedata.labels.items():
                     self.h5["fields/labels"].attrs[key] = label
             slidetypegroup = self.h5["fields"].create_group("slide_type")
-            # TODO: implement slide_type asdict method
             if slidedata.slide_type:
                 for key, val in slidedata.slide_type.asdict().items():
                     self.h5["fields/slide_type"].attrs[key] = val
@@ -69,7 +68,7 @@ class h5pathManager():
             # counts
             countsgroup = self.h5.create_group("counts")
         
-        slide_type_dict = {key:val for key, val in self.h5["fields/slide_type"].items()}
+        slide_type_dict = {key: val for key, val in self.h5["fields/slide_type"].items()}
         self.slide_type = pathml.core.slide_types.SlideType(**slide_type_dict)
 
     def add_tile(self, tile):
@@ -80,11 +79,11 @@ class h5pathManager():
             tile(pathml.core.tile.Tile): Tile object
         """
         if str(tile.coords) in self.tiles.keys():
-           print(f"Tile is already in tiles. Overwriting {tile.coords} inplace.") 
-           # remove old cells from self.counts so they do not duplicate
-           if tile.counts:
-               if "tile" in self.counts.obs.keys():
-                   self.counts = self.counts[self.counts.obs['tile'] != tile.coords]
+            print(f"Tile is already in tiles. Overwriting {tile.coords} inplace.")
+            # remove old cells from self.counts so they do not duplicate
+            if tile.counts:
+                if "tile" in self.counts.obs.keys():
+                    self.counts = self.counts[self.counts.obs['tile'] != tile.coords]
         if self.tile_shape is None:
             self.tile_shape = tile.image.shape
         if tile.image.shape != self.tile_shape:
@@ -495,5 +494,5 @@ def check_valid_h5path_format(h5path):
     """
     assert set(h5path.keys()) == {"fields", "array", "masks", "counts", "tiles"}
     assert set(h5path["fields"].keys()) == {"name", "labels", "slide_type"}
-    assert set(h5path["fields/slide_type"].keys()) == {"stain", "tma", "rgb", "volumetric", "time_series"}
+    assert set(h5path["fields/slide_type"].keys()) == {"stain", "platform", "tma", "rgb", "volumetric", "time_series"}
     return True

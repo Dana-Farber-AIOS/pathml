@@ -9,7 +9,6 @@ from torch.utils.data import Dataset
 from pathlib import Path
 import matplotlib.pyplot as plt
 import anndata
-from dataclasses import asdict
 import os
 import numpy as np
 
@@ -61,6 +60,8 @@ class SlideData:
             parameters ``stain``, ``tma``, ``rgb``, ``volumetric``, and ``time_series``.
         stain (str, optional): Flag indicating type of slide stain. Must be one of [‘HE’, ‘IHC’, ‘Fluor’].
             Defaults to ``None``. Ignored if ``slide_type`` is specified.
+        platform (str, optional): Flag indicating the imaging platform (e.g. CODEX, Vectra, etc.).
+            Defaults to ``None``. Ignored if ``slide_type`` is specified.
         tma (bool, optional): Flag indicating whether the image is a tissue microarray (TMA).
             Defaults to ``False``. Ignored if ``slide_type`` is specified.
         rgb (bool, optional): Flag indicating whether the image is in RGB color.
@@ -80,6 +81,7 @@ class SlideData:
                  backend=None,
                  slide_type=None,
                  stain=None,
+                 platform=None,
                  tma=None,
                  rgb=None,
                  volumetric=None,
@@ -107,10 +109,11 @@ class SlideData:
             f"counts is if type {type(counts)} but must be of type anndata.AnnData"
         
         # instantiate SlideType object if needed
-        if not slide_type and any([stain, tma, rgb, volumetric, time_series]):
-            stain_type_dict = {"stain": stain, "tma": tma, "rgb": rgb, "volumetric": volumetric, "time_series": time_series}
+        if not slide_type and any([stain, platform, tma, rgb, volumetric, time_series]):
+            stain_type_dict = {"stain": stain, "platform": platform, "tma": tma,
+                               "rgb": rgb, "volumetric": volumetric, "time_series": time_series}
             # remove any Nones
-            stain_type_dict = {key: val for key,val in stain_type_dict.items() if val}
+            stain_type_dict = {key: val for key, val in stain_type_dict.items() if val is not None}
             if stain_type_dict:
                 slide_type = pathml.core.types.SlideType(**stain_type_dict)
 
@@ -169,9 +172,9 @@ class SlideData:
         else:
             self.h5manager = pathml.core.h5managers.h5pathManager(slidedata=self)
             if self.tiles:
-                self.tiles = Tiles(self.h5manager, tiles=self.tiles) 
+                self.tiles = pathml.core.Tiles(self.h5manager, tiles=self.tiles)
             if self.masks:
-                self.masks = Masks(self.h5manager, masks=self.masks) 
+                self.masks = pathml.core.Masks(self.h5manager, masks=self.masks)
 
     def __repr__(self): 
         out = f"SlideData(name={repr(self.name)},\n"
@@ -383,7 +386,7 @@ class SlideData:
             if self.backend:
                 pathml.core.utils.writestringh5(fieldsgroup, 'slide_backend', self.backend)
             if self.slide_type:
-                pathml.core.utils.writestringh5(fieldsgroup, 'slide_type', asdict(self.slide_type))
+                pathml.core.utils.writestringh5(fieldsgroup, 'slide_type', self.slide_type.asdict())
             if self.masks:
                 masksgroup = f.create_group('masks')
                 for ds in self.masks.h5manager.h5.keys():
@@ -428,17 +431,18 @@ class MultiparametricSlide(SlideData):
         super().__init__(*args, **kwargs)
 
 
-class VectraSlide(MultiparametricSlide):
+class VectraSlide(SlideData):
     """
     Convenience class to load a SlideData object for Vectra (Polaris) slides.
     Passes through all arguments to ``SlideData()``, along with ``slide_type = types.IF`` flag.
     Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
     """
     def __init__(self, *args, **kwargs):
+        kwargs["slide_type"] = pathml.core.types.Vectra
         super().__init__(*args, **kwargs)
 
 
-class CODEXSlide(MultiparametricSlide):
+class CODEXSlide(SlideData):
     """
     Class for data in Akoya bioscience CODEX format.
     Expects the following filesystem:
@@ -451,6 +455,7 @@ class CODEXSlide(MultiparametricSlide):
         KNN/FLANN/leiden clustering
     """
     def __init__(self, *args, **kwargs):
+        kwargs["slide_type"] = pathml.core.types.CODEX
         super().__init__(*args, **kwargs)
 
 
