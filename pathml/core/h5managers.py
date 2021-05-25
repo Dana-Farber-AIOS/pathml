@@ -66,8 +66,9 @@ class h5pathManager():
             masksgroup = self.h5.create_group("masks")
             # counts
             countsgroup = self.h5.create_group("counts")
-
-        self.slide_type = SlideType(**self.h5["fields/slide_type"])
+        
+        slide_type_dict = {key:val for key, val in self.h5["fields/slide_type"].items()}
+        self.slide_type = SlideType(**slide_type_dict)
 
     def add_tile(self, tile):
         """
@@ -475,9 +476,9 @@ class h5pathManager():
             raise KeyError('key is not in Masks')
         del self.h5["masks"][key]
 
-    # TODO: implement get_slidetype
     def get_slidetype(self):
-        return SlideType(**self.h5["fields/slide_type"])
+        slide_type_dict = {key:val for key, val in self.h5["fields/slide_type"].items()}
+        return SlideType(**slide_type_dict)
 
 
 def check_valid_h5path_format(h5path):
