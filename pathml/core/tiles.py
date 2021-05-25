@@ -61,7 +61,7 @@ class Tiles:
         return eval(self.h5manager.h5["tiles/tile_shape"])
 
     def __repr__(self):
-        rep = f"Tiles(keys={self.h5manager.h5["tiles"].keys().tolist()})"
+        rep = f"Tiles(keys={self.h5manager.h5['tiles'].keys().tolist()})"
         return rep
 
     def __len__(self):
