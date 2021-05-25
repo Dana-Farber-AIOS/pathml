@@ -69,9 +69,9 @@ class Masks:
             slices: list where each element is an object of type slice indicating
                     how the dimension should be sliced
         """
-        if not (isinstance(slices, list) and all([isinstance(a, slice) for a in slices])):
-            raise KeyError(f"slices must of of type list[slice] but is {type(slices)} with elements {type(slices[0])}")
-        sliced = {key:mask for key, mask in self.h5manager.slice_masks(slicer)] 
+        if not (isinstance(slicer, list) and all([isinstance(a, slice) for a in slicer])):
+            raise KeyError(f"slices must of of type list[slice] but is {type(slicer)} with elements {type(slicer[0])}")
+        sliced = {key:mask for key, mask in self.h5manager.slice_masks(slicer)} 
         return sliced
 
     def remove(self, key):

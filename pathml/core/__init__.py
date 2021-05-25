@@ -5,7 +5,7 @@ License: GNU GPL 2.0
 
 from .masks import Masks
 from .slide_backends import OpenSlideBackend, BioFormatsBackend, DICOMBackend
-from .slide_data import SlideData, HESlide, MultiparametricSlide
+from .slide_data import SlideData, HESlide, MultiparametricSlide, VectraSlide, CODEXSlide
 from .slide_dataset import SlideDataset
 from .tile import Tile
 from .tiles import Tiles

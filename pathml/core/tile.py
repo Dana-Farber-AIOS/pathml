@@ -23,7 +23,7 @@ class Tile:
         coords (tuple): Coordinates of tile relative to the whole-slide image.
             The (i,j) coordinate system is based on labelling the top-leftmost pixel of the WSI as (0, 0).
         name (str, optional): Name of tile
-        masks (dict or pathml.core.Masks): masks belonging to tile. If masks are supplied, all masks must be the
+        masks (dict): masks belonging to tile. If masks are supplied, all masks must be the
             same shape as the tile.
         labels: labels belonging to tile
         counts (AnnData): counts matrix for the tile.
@@ -45,8 +45,8 @@ class Tile:
                  tma=None, rgb=None, volumetric=None, time_series=None):
         # check inputs
         assert isinstance(image, np.ndarray), f"image of type {type(image)} must be a np.ndarray"
-        assert masks is None or isinstance(masks, (pathml.core.masks.Masks, dict)), \
-            f"masks is of type {type(masks)} but must be of type pathml.core.masks.Masks or dict"
+        assert masks is None or isinstance(masks, dict), \
+            f"masks is of type {type(masks)} but must be of type dict"
         assert isinstance(coords, tuple), "coords must be a tuple e.g. (i, j)"
         assert labels is None or isinstance(labels, dict), \
             f"labels is of type {type(labels)} but must be of type dict or None"
@@ -72,12 +72,6 @@ class Tile:
                 slide_type = pathml.core.types.SlideType(**stain_type_dict)
 
         assert counts is None or isinstance(counts, anndata.AnnData), f"counts is of type {type(counts)} but must be of type anndata.AnnData or None"
-        if isinstance(masks, pathml.core.masks.Masks):
-            # move masks to dict so that Tile is in memory (must pass to dask client) 
-            maskdict = OrderedDict()
-            for mask in masks.h5manager.h5.keys():
-                maskdict[mask] = masks[mask] 
-            masks = maskdict
 
         if masks:
             for val in masks.values():

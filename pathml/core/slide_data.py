@@ -86,7 +86,6 @@ class SlideData:
                  time_series=None,
                  counts=None
                  ):
-    def __init__(self, filepath=None, name=None, counts=None, slide_backend=None, masks=None, tiles=None, labels=None):
         # check inputs
         assert masks is None or isinstance(masks, dict), \
             f"mask are of type {type(masks)} but must be type dict"
@@ -165,10 +164,10 @@ class SlideData:
             # populate the SlideData object from existing h5path file
             backend_obj = None  # no backend in this case since we're loading from h5
             with h5py.File(filepath, "r") as f:
-                self.h5manager = h5pathManager(h5path=f)
+                self.h5manager = pathml.core.h5managers.h5pathManager(h5path=f)
 
         else:
-            self.h5manager = h5pathManager(slidedata=self)
+            self.h5manager = pathml.core.h5managers.h5pathManager(slidedata=self)
             if self.tiles:
                 self.tiles = Tiles(self.h5manager, tiles=self.tiles) 
             if self.masks:
@@ -337,8 +336,6 @@ class SlideData:
         Args:
             ax: matplotlib axis object on which to plot the thumbnail. Optional.
         """
-        try:
-        if not self.slide:
         try:
             thumbnail = self.slide.get_thumbnail(size = (500, 500))
         except:
