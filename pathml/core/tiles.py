@@ -21,35 +21,23 @@ class Tiles:
     Args:
         tiles (Union[dict[tuple[int], `~pathml.core.tiles.Tile`], list[`~pathml.core.tiles.Tile`]]): tile objects
     """
-    def __init__(self, h5manager, tiles=None, slide_type=None):
+    def __init__(self, h5manager, tiles=None):
         self.h5manager = h5manager 
 
         # if tiles are supplied, add them to the h5manager
         if tiles:
-            if not (isinstance(tiles, dict) or (isinstance(tiles, list) and all([isinstance(t, pathml.core.tile.Tile) for t in tiles]))):
-                raise ValueError(f"tiles must be passed as dicts of the form coordinates1:Tile1,... "
-                                 f"or lists of Tile objects containing coords")
-            # create _tiles from dict of tile
-            if isinstance(tiles, dict):
-                for val in tiles.values():
-                    if not isinstance(val, pathml.core.Tile):
-                        raise ValueError(f"tiles dict supplied, but got a value of type {type(val)}. Must be Tile")
-                for key in tiles.keys():
-                    if not (isinstance(key, tuple) and all(isinstance(v, int) for v in key)):
-                        raise ValueError(f"dict keys must be of type tuple[int]")
-                self._tiles = OrderedDict(tiles)
+            assert isinstance(tiles, list) and all([isinstance(tile, pathml.core.Tile) for tile in tiles]),\
+                f"tiles are of type {reprlib.repr([type(t) for t in tiles])} but must all be pathml.core.Tile"
 
-            # create _tiles from list of tile
-            else:
-                tiledictionary = {}
-                for tile in tiles:
-                    if not isinstance(tile, pathml.core.tile.Tile):
-                        raise ValueError(f"Tiles expects a list of type Tile but was given {type(tile)}")
-                    if tile.coords is None:
-                        raise ValueError(f"tiles must contain valid coords")
-                    coords = tile.coords
-                    tiledictionary[coords] = tile 
-                self._tiles = OrderedDict(tiledictionary)
+            tiledictionary = {}
+            for tile in tiles:
+                if not isinstance(tile, pathml.core.Tile):
+                    raise ValueError(f"Tiles expects a list of type Tile but was given {type(tile)}")
+                if tile.coords is None:
+                    raise ValueError(f"tiles must contain valid coords")
+                coords = tile.coords
+                tiledictionary[coords] = tile
+            self._tiles = OrderedDict(tiledictionary)
 
             # add tiles in _tiles to h5manager
             for key, val in self._tiles.items():
@@ -58,7 +46,7 @@ class Tiles:
 
     @property
     def tile_shape(self):
-        return eval(self.h5manager.h5["tiles"].attrs["tile_shape"])
+        return self.h5manager.h5["tiles"].attrs["tile_shape"]
 
     @property
     def keys(self):

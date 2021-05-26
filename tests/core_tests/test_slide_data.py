@@ -61,13 +61,13 @@ def test_run_existing_tiles(slide_dataset_with_tiles, overwrite_tiles):
 
 @pytest.fixture
 def he_slide():
-    wsi = HESlide("tests/testdata/small_HE.svs")
+    wsi = HESlide("tests/testdata/small_HE.svs", backend = "openslide")
     return wsi
 
 
 @pytest.fixture
 def multiparametric_slide():
-    wsi = MultiparametricSlide("tests/testdata/smalltif.tif", slide_backend = BioFormatsBackend)
+    wsi = MultiparametricSlide("tests/testdata/smalltif.tif", backend = "bioformats")
     return wsi
 
 

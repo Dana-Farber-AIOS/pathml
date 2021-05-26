@@ -99,7 +99,7 @@ class SlideData:
             ), \
                 f"Input label vals are of types {[type(v) for v in labels.values()]}. " \
                 f"All label values must be of type str or np.ndarray or a number (i.e. a subdtype of np.number) "
-        assert tiles is None or all([isinstance(tile, pathml.core.Tile) for tile in tiles]), \
+        assert tiles is None or (isinstance(tiles, list) and all([isinstance(tile, pathml.core.Tile) for tile in tiles])), \
             f"tiles are of type {type(tiles)} but must be a list of objects of type pathml.core.tiles.Tile"
         assert slide_type is None or isinstance(slide_type, pathml.core.SlideType), \
             f"slide_type is of type {type(slide_type)} but must be of type pathml.core.types.SlideType"
@@ -213,14 +213,15 @@ class SlideData:
             f"pipeline is of type {type(pipeline)} but must be of type pathml.preprocessing.pipeline.Pipeline"
         assert self.slide is not None, "cannot run pipeline because self.slide is None"
 
-        if self.tiles is None:
-            self.tiles = pathml.core.tiles.Tiles()
-        else:
-            if overwrite_existing_tiles:
-                self.tiles = pathml.core.tiles.Tiles()
-            else:
+        if len(self.tiles) != 0:
+            # in this case, tiles already exist
+            if not overwrite_existing_tiles:
                 raise Exception("Slide already has tiles. Running the pipeline will overwrite the existing tiles."
                                 "use overwrite_existing_tiles=True to force overwriting existing tiles.")
+            else:
+                # delete all existing tiles
+                for tile_key in self.tiles.keys:
+                    self.tiles.remove(tile_key)
 
         if distributed:
             if client is None:
@@ -230,8 +231,8 @@ class SlideData:
             processed_tile_futures = []
 
             for tile in self.generate_tiles(level = level, shape = tile_size, stride = tile_stride, pad = tile_pad):
-                if not tile.slidetype:
-                    tile.slidetype = self.slidetype
+                if not tile.slide_type:
+                    tile.slide_type = self.slide_type
                 # explicitly scatter data, i.e. send the tile data out to the cluster before applying the pipeline
                 # according to dask, this can reduce scheduler burden and keep data on workers
                 big_future = client.scatter(tile)
@@ -244,10 +245,9 @@ class SlideData:
 
         else:
             for tile in self.generate_tiles(level = level, shape = tile_size, stride = tile_stride, pad = tile_pad):
-                if not tile.slidetype:
-                    tile.slidetype = self.slidetype
+                if not tile.slide_type:
+                    tile.slide_type = self.slide_type
                 pipeline.apply(tile)
-                import numpy as np
                 self.tiles.add(tile)
 
     @property

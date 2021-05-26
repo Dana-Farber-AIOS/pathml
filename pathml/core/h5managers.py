@@ -32,7 +32,6 @@ class h5pathManager():
         self.counts = anndata.AnnData()
         if h5path:
             assert not slidedata, f"if creating h5pathmanager from h5path, slidedata should not be required"
-            # TODO: implement isvalidh5path
             assert check_valid_h5path_format(h5path), f"h5path must conform to .h5path standard, see documentation"
             # copy h5path into self.h5 
             for ds in h5path.keys():
@@ -60,7 +59,8 @@ class h5pathManager():
                     self.h5["fields/slide_type"].attrs[key] = val
             # tiles
             tilesgroup = self.h5.create_group("tiles")
-            tilesgroup.attrs["tile_shape"] = (0,0)
+            # intitialize tile_shape with zeros
+            tilesgroup.attrs["tile_shape"] = b'(0, 0)'
             # array
             self.h5.create_dataset("array", data=h5py.Empty("f"))
             # masks
@@ -83,16 +83,21 @@ class h5pathManager():
             tile(pathml.core.tile.Tile): Tile object
         """
         if str(tile.coords) in self.h5["tiles"].keys():
-           print(f"Tile is already in tiles. Overwriting {tile.coords} inplace.") 
-           # remove old cells from self.counts so they do not duplicate
-           if tile.counts:
-               if "tile" in self.counts.obs.keys():
-                   self.counts = self.counts[self.counts.obs['tile'] != tile.coords]
-        if self.h5["tiles"].attrs["tile_shape"] is None:
-            self.h5["tiles"].attrs["tile_shape"] = tile.image.shape
-        if tile.image.shape != self.h5["tiles"].attrs["tile_shape"] and (self.h5["tiles"].attrs["tile_shape"] != (0, 0)).any():
-            raise ValueError(f"Tiles contains tiles of shape {self.h5['tiles'].attrs['tile_shape']}, provided tile is of shape {tile.image.shape}"
-                             f". We enforce that all Tile in Tiles must have matching shapes.")
+            print(f"Tile is already in tiles. Overwriting {tile.coords} inplace.")
+            # remove old cells from self.counts so they do not duplicate
+            if tile.counts:
+                if "tile" in self.counts.obs.keys():
+                    self.counts = self.counts[self.counts.obs['tile'] != tile.coords]
+        # check that the tile matches tile_shape
+        existing_shape = eval(self.h5["tiles"].attrs["tile_shape"])
+        if all([s == 0 for s in existing_shape]):
+            # in this case, tile_shape isn't specified (zeros placeholder)
+            # so we set it from the tile image shape
+            self.h5["tiles"].attrs["tile_shape"] = str(tile.image.shape).encode("utf-8")
+            existing_shape = tile.image.shape
+
+        if any([s1 != s2 for s1, s2 in zip(tile.image.shape[0:2], existing_shape[0:2])]):
+            raise ValueError(f"cannot add tile of shape {tile.image.shape}. Must match shape of existing tiles: {existing_shape}")
 
         if self.slide_type and tile.slide_type:
             # check that slide types match
@@ -253,14 +258,16 @@ class h5pathManager():
             Tile(pathml.core.tile.Tile)
         """
         if isinstance(item, (str, tuple)):
-            if str(item) not in self.h5["tiles"].keys():
+            item = str(item)
+            if item not in self.h5["tiles"].keys():
                 raise KeyError(f'key {item} does not exist')
         elif isinstance(item, int):
             if item > len(self.h5["tiles"].keys()) - 1:
-                raise KeyError(f'index out of range, valid indices are ints in [0,{len(self.h5["tiles"].keys()) - 1}]')
+                raise IndexError(f'index {item} out of range for total number of tiles: {len(self.h5["tiles"].keys())}')
+            item = list(self.h5["tiles"].keys())[item]
         else:
             raise KeyError(f'invalid item type: {type(item)}. must getitem by coord (type tuple[int]),'
-                           f' index (type int), or name(type str)')
+                           f'index (type int), or name (type str)')
         # impute missing dimensions from self.h5["tiles"].attrs["tile_shape"]
         coords = list(eval(self.h5["tiles"][item].attrs["coords"]))
         tile_shape = eval(self.h5["tiles"].attrs["tile_shape"])
@@ -273,10 +280,14 @@ class h5pathManager():
         # add masks to tile if there are masks
         if "masks" in self.h5.keys():
             try:
-                masks = {mask : self.h5["masks"][mask][tuple(tiler)][:] for mask in self.h5["masks"]}
-            except ValueError:
-                # if mask is 2-d, need to only use first two dims of tiler
-                masks = {mask: self.h5["masks"][mask][tuple(tiler)[0:2]][:] for mask in self.h5["masks"]}
+                masks = {mask: self.h5["masks"][mask][tuple(tiler)][:] for mask in self.h5["masks"]}
+            except (ValueError, TypeError):
+                # mask may have fewer dimensions, e.g. a 2-d mask for a 3-d image.
+                masks = {}
+                for mask in self.h5["masks"]:
+                    n_dim_mask = self.h5["masks"][mask].ndim
+                    mask_tiler = tuple(tiler)[0:n_dim_mask]
+                    masks[mask] = self.h5["masks"][mask][mask_tiler][:]
         else:
             masks = None
 
@@ -284,10 +295,10 @@ class h5pathManager():
             tile = tile[slicer]
             if masks is not None:
                 masks = {key : masks[key][slicer] for key in masks}
-        masks = pathml.core.masks.Masks(masks)
+
         labels = {key: val for key, val in self.h5["tiles"][item]["labels"].attrs.items()}
         name = self.h5["tiles"][item].attrs["name"]
-        coords = self.h5["tiles"][item].attrs["coords"]
+        coords = eval(self.h5["tiles"][item].attrs["coords"])
         return pathml.core.tile.Tile(tile, masks=masks, labels=labels, name=name,
                                      coords=coords, slide_type=self.slide_type)
 

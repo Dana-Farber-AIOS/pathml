@@ -38,16 +38,24 @@ def create_HE_tile():
     return tile
 
 
+@pytest.fixture
+def tile():
+    """
+    Example of pathml.core.Tile object, with no slide_type
+    """
+    tile = create_HE_tile()
+    return tile
 
 
 @pytest.fixture
 def tileHE():
     """
-    Example of pathml.core.Tile object
+    Example of pathml.core.Tile object, of type HE
     """
     tile = create_HE_tile()
     tile.slide_type = types.HE
     return tile
+
 
 @pytest.fixture
 def tileVectra():
@@ -55,17 +63,19 @@ def tileVectra():
     Example of pathml.core.Tile representation of Vectra image
     """
     slidedata = VectraSlide("tests/testdata/small_vectra.qptiff", slide_backend = "bioformats")
-    region = slidedata.slide.extract_region(location=(0,0), size=(500,500))
+    region = slidedata.slide.extract_region(location=(0, 0), size=(500, 500))
 
     # make mask object
     masks = np.random.randint(low = 1, high = 255, size = (slidedata.slide.shape[0], slidedata.slide.shape[1]), dtype = np.uint8)
-    masks = {"testmask" : masks}
+    masks = {"testmask": masks}
 
     # labels dict
-    labels = {"test_str_label": "stringlabel", "test_np_array_label": np.ones(shape = (2, 3, 3))}
+    labs = {"test_string_label": "testlabel", "test_array_label": np.array([2, 3, 4]),
+            "test_int_label": 3, "test_float_label": 3.0}
 
-    tile = Tile(image = region, coords = (0,0), masks = None, slidetype = VectraSlide, labels = labels)
+    tile = Tile(image = region, coords = (0, 0), masks = masks, slide_type = types.Vectra, labels = labs)
     return tile
+
 
 @pytest.fixture
 def anndata():
