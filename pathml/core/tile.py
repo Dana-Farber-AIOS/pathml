@@ -8,6 +8,7 @@ import anndata
 from collections import OrderedDict
 import matplotlib.pyplot as plt
 import h5py
+import reprlib
 
 import pathml.core.masks
 
@@ -89,11 +90,25 @@ class Tile:
         self.counts = counts
 
     def __repr__(self):
-        out = f"Tile(image shape {self.image.shape}, slidetype={self.slide_type}, " \
-              f"masks={repr(self.masks) if self.masks else None}, " \
-              f"coords={self.coords}, " \
-              f"labels={list(self.labels.keys()) if self.labels else None}, " \
-              f"counts={self.counts if self.counts is not None else None})"
+        out = []
+        out.append(f"Tile(coords={self.coords}")
+        out.append(f"name={self.name}")
+        out.append(f"image shape: {self.image.shape}")
+        out.append(f"slide_type={repr(self.slide_type)}")
+        if self.labels:
+            out.append(f"{len(self.labels)} labels: {reprlib.repr(list(self.labels.keys()))}")
+        else:
+            out.append("labels=None")
+        if self.masks:
+            out.append(f"{len(self.masks)} masks: {reprlib.repr(list(self.masks.keys()))}")
+        else:
+            out.append("masks=None")
+        if self.counts:
+            out.append(f"counts matrix of shape {self.counts.shape}")
+        else:
+            out.append(f"counts=None")
+        out = ",\n\t".join(out)
+        out += ")"
         return out
 
     def plot(self, ax=None):

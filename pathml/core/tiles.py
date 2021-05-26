@@ -53,7 +53,7 @@ class Tiles:
         return list(self.h5manager.h5["tiles"].keys())
 
     def __repr__(self):
-        rep = f"Tiles object with {len(self.h5manager.h5['tiles'])} tiles: {reprlib.repr(list(self.h5manager.h5['tiles'].keys()))}"
+        rep = f"{len(self.h5manager.h5['tiles'])} tiles: {reprlib.repr(list(self.h5manager.h5['tiles'].keys()))}"
         return rep
 
     def __len__(self):

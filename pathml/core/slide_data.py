@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import anndata
 import os
 import numpy as np
+import reprlib
 
 import pathml.core
 import pathml.preprocessing.pipeline
@@ -170,20 +171,28 @@ class SlideData:
 
         self.tiles = pathml.core.Tiles(self.h5manager, tiles=tiles)
         self.masks = pathml.core.Masks(self.h5manager, masks=masks)
+        self.counts = counts
 
     def __repr__(self):
         out = []
         out.append(f"SlideData(name={repr(self.name)}")
         out.append(f"slide_type={repr(self.slide_type)}")
-        out.append(f"labels={list(self.labels.keys()) if self.labels else repr(None)}")
         if self._filepath:
             out.append(f"filepath='{self._filepath}'")
         if self.backend:
             out.append(f"backend={repr(self.backend)}")
-        out.append(f"masks={repr(self.masks)}")
-        out.append(f"tiles={repr(self.tiles)}")
+        out.append(repr(self.tiles))
+        out.append(repr(self.masks))
         if self.tiles:
-            out.append(f"tile_shape={self.tiles.tile_shape}")
+            out.append(f"tile_shape={eval(self.tiles.tile_shape)}")
+        if self.labels:
+            out.append(f"{len(self.labels)} labels: {reprlib.repr(list(self.labels.keys()))}")
+        else:
+            out.append("labels=None")
+        if self.counts:
+            out.append(f"counts matrix of shape {self.counts.shape}")
+        else:
+            out.append(f"counts=None")
 
         out = ",\n\t".join(out)
         out += ")"
@@ -357,7 +366,8 @@ class SlideData:
     @counts.setter
     def counts(self, value):
         if self.tiles.h5manager:
-            assert isinstance(value, anndata.AnnData)
+            assert value is None or isinstance(value, anndata.AnnData),\
+                f"cannot set counts with obj of type {type(value)}. Must be Anndata"
             self.tiles.h5manager.counts = value
         else:
             raise AttributeError("cannot assign counts slidedata contains no tiles, first generate tiles")
