@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 from collections import OrderedDict
 import h5py
+import reprlib
 
 import pathml.core.h5managers
 
@@ -40,7 +41,7 @@ class Masks:
         del self._masks
 
     def __repr__(self):
-        rep = f"Masks(keys={self.h5manager.h5['masks'].keys()})"
+        rep = f"Masks object with {len(self.h5manager.h5['masks'])} masks: {reprlib.repr(list(self.h5manager.h5['masks'].keys()))}"
         return rep
 
     def __len__(self):

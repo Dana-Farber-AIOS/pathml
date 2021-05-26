@@ -71,6 +71,10 @@ class h5pathManager():
         slide_type_dict = {key: val for key, val in self.h5["fields/slide_type"].attrs.items()}
         self.slide_type = pathml.core.slide_types.SlideType(**slide_type_dict)
 
+    def __repr__(self):
+        rep = f"h5pathManager object, backing a SlideData object named '{self.h5['fields'].attrs['name']}'"
+        return rep
+
     def add_tile(self, tile):
         """
         Add tile to h5.
@@ -90,9 +94,13 @@ class h5pathManager():
             raise ValueError(f"Tiles contains tiles of shape {self.h5['tiles'].attrs['tile_shape']}, provided tile is of shape {tile.image.shape}"
                              f". We enforce that all Tile in Tiles must have matching shapes.")
 
-        # check slide_type
-        if tile.slide_type != self.slide_type:
-            raise ValueError(f"tile slide_type {tile.slide_type} does not match existing slide_type {self.slide_type}")
+        if self.slide_type and tile.slide_type:
+            # check that slide types match
+            if tile.slide_type != self.slide_type:
+                raise ValueError(f"tile slide_type {tile.slide_type} does not match existing slide_type {self.slide_type}")
+        elif not self.slide_type:
+            if tile.slide_type:
+                self.slide_type = tile.slide_type
 
         if self.h5["array"].shape:
             # extend array if coords+shape is larger than self.h5['tiles/array'] 

@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 from collections import OrderedDict
 import h5py
+import reprlib
 
 import pathml.core.h5managers
 import pathml.core.tile
@@ -19,7 +20,6 @@ class Tiles:
 
     Args:
         tiles (Union[dict[tuple[int], `~pathml.core.tiles.Tile`], list[`~pathml.core.tiles.Tile`]]): tile objects
-
     """
     def __init__(self, h5manager, tiles=None, slide_type=None):
         self.h5manager = h5manager 
@@ -58,10 +58,10 @@ class Tiles:
 
     @property
     def tile_shape(self):
-        return eval(self.h5manager.h5["tiles/tile_shape"])
+        return eval(self.h5manager.h5["tiles"].attrs["tile_shape"])
 
     def __repr__(self):
-        rep = f"Tiles(keys={self.h5manager.h5['tiles'].keys().tolist()})"
+        rep = f"Tiles object with {len(self.h5manager.h5['tiles'])} tiles: {reprlib.repr(list(self.h5manager.h5['tiles'].keys()))}"
         return rep
 
     def __len__(self):

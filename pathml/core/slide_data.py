@@ -150,7 +150,7 @@ class SlideData:
         elif backend.lower() == "dicom":
             backend_obj = pathml.core.DICOMBackend(filepath)
         elif backend.lower() == "h5path":
-            pass
+            backend_obj = None
         else:
             raise ValueError(f"invalid backend: {repr(backend)}.")
 
@@ -158,40 +158,35 @@ class SlideData:
         self.backend = backend
         self.slide = backend_obj if backend_obj else None
         self.name = name
-        self.tiles = tiles
-        self.masks = masks
         self.labels = labels
         self.slide_type = slide_type
 
         if _load_from_h5path:
             # populate the SlideData object from existing h5path file
-            backend_obj = None  # no backend in this case since we're loading from h5
             with h5py.File(filepath, "r") as f:
                 self.h5manager = pathml.core.h5managers.h5pathManager(h5path=f)
-
         else:
             self.h5manager = pathml.core.h5managers.h5pathManager(slidedata=self)
-            if self.tiles:
-                self.tiles = pathml.core.Tiles(self.h5manager, tiles=self.tiles)
-            if self.masks:
-                self.masks = pathml.core.Masks(self.h5manager, masks=self.masks)
 
-    def __repr__(self): 
-        out = f"SlideData(name={repr(self.name)},\n"
-        out += f"slide_type = {repr(self.slide_type)},\n"
-        out += f"labels={self.labels.keys() if self.labels else repr(None)},"
-        if self.tiles is None:
-            out += f"tiles=None,\n"
-        else:
-            out += f"total number of tiles: {len(self.tiles)}, tile_shape: {self.tiles.tile_shape}\n"
+        self.tiles = pathml.core.Tiles(self.h5manager, tiles=tiles)
+        self.masks = pathml.core.Masks(self.h5manager, masks=masks)
+
+    def __repr__(self):
+        out = []
+        out.append(f"SlideData(name={repr(self.name)}")
+        out.append(f"slide_type={repr(self.slide_type)}")
+        out.append(f"labels={list(self.labels.keys()) if self.labels else repr(None)}")
         if self._filepath:
-            out += f"filepath = {self._filepath},\n"
+            out.append(f"filepath='{self._filepath}'")
         if self.backend:
-            out += f"backend = {repr(self.backend)}\n"
+            out.append(f"backend={repr(self.backend)}")
+        out.append(f"masks={repr(self.masks)}")
+        out.append(f"tiles={repr(self.tiles)}")
+        if self.tiles:
+            out.append(f"tile_shape={self.tiles.tile_shape}")
 
-        out += f"masks={repr(self.masks)}, "
-        out += f"tiles={repr(self.tiles)}, "
-        out += f"labels={repr(self.labels)})"
+        out = ",\n\t".join(out)
+        out += ")"
         return out 
 
     def run(self, pipeline, distributed=True, client=None, tile_size=3000, tile_stride=None, level=0, tile_pad=False,
@@ -326,8 +321,8 @@ class SlideData:
                 tile.labels = self.labels
 
             # add slidetype to tile
-            if tile.slidetype is None:
-                tile.slidetype = type(self)
+            if tile.slide_type is None:
+                tile.slide_type = self.slide_type
 
             yield tile
 
