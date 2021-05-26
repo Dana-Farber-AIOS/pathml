@@ -53,6 +53,10 @@ class Masks:
     def __setitem__(self, key, mask):
         self.h5manager.update_mask(key, mask)
 
+    @property
+    def keys(self):
+        return list(self.h5manager.h5["masks"].keys())
+
     def add(self, key, mask):
         """
         Add mask indexed by key to self.h5manager.

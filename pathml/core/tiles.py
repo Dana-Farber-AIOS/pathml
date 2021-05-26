@@ -60,6 +60,10 @@ class Tiles:
     def tile_shape(self):
         return eval(self.h5manager.h5["tiles"].attrs["tile_shape"])
 
+    @property
+    def keys(self):
+        return list(self.h5manager.h5["tiles"].keys())
+
     def __repr__(self):
         rep = f"Tiles object with {len(self.h5manager.h5['tiles'])} tiles: {reprlib.repr(list(self.h5manager.h5['tiles'].keys()))}"
         return rep
