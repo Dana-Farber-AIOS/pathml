@@ -68,7 +68,7 @@ class h5pathManager():
             # counts
             countsgroup = self.h5.create_group("counts")
         
-        slide_type_dict = {key: val for key, val in self.h5["fields/slide_type"].items()}
+        slide_type_dict = {key: val for key, val in self.h5["fields/slide_type"].attrs.items()}
         self.slide_type = pathml.core.slide_types.SlideType(**slide_type_dict)
 
     def add_tile(self, tile):
@@ -115,6 +115,7 @@ class h5pathManager():
             for dim, coord in enumerate(coords):
                 shape[dim] += coord
             maxshape = tuple([None]*len(shape))
+            del self.h5["array"]
             self.h5.create_dataset(
                     "array", 
                     shape = shape,
@@ -172,11 +173,13 @@ class h5pathManager():
                     # now overwrite by mask 
                     slicer = [slice(coords[i], coords[i] + tile.image.shape[i]) for i in range(len(coords))] 
                     self.h5["masks"][mask][tuple(slicer)] = maskarray 
-
+        
+        # create group for tile
+        self.h5["tiles"].create_group(str(tile.coords))
         # add tile fields to tiles 
         self.h5["tiles"][str(tile.coords)].attrs["coords"] = str(tile.coords) if tile.coords else 0
         self.h5["tiles"][str(tile.coords)].attrs["name"] = str(tile.name) if tile.coords else 0
-        tilelabelsgroup = self.h5["tiles"][tile.coords].create_group("labels")
+        tilelabelsgroup = self.h5["tiles"][str(tile.coords)].create_group("labels")
         for key, val in tile.labels.items():
             self.h5["tiles"][str(tile.coords)]["labels"].attrs[key] = val 
         if tile.counts:
@@ -251,7 +254,7 @@ class h5pathManager():
             raise KeyError(f'invalid item type: {type(item)}. must getitem by coord (type tuple[int]),'
                            f' index (type int), or name(type str)')
         # impute missing dimensions from self.h5["tiles"].attrs["tile_shape"]
-        coords = list(eval(self.h5["tiles"][item]["coords"]))
+        coords = list(eval(self.h5["tiles"][item].attrs["coords"]))
         tile_shape = eval(self.h5["tiles"].attrs["tile_shape"])
         if len(tile_shape) > len(coords):
             shape = list(tile_shape)
@@ -275,8 +278,8 @@ class h5pathManager():
                 masks = {key : masks[key][slicer] for key in masks}
         masks = pathml.core.masks.Masks(masks)
         labels = {key: val for key, val in self.h5["tiles"][item]["labels"].attrs.items()}
-        name = self.h5["tiles"][item]["name"]
-        coords = self.h5["tiles"][item]["coords"]
+        name = self.h5["tiles"][item].attrs["name"]
+        coords = self.h5["tiles"][item].attrs["coords"]
         return pathml.core.tile.Tile(tile, masks=masks, labels=labels, name=name,
                                      coords=coords, slide_type=self.slide_type)
 
