@@ -820,8 +820,7 @@ class LabelWhiteSpaceHE(Transform):
     def apply(self, tile):
         assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
         assert self.label_name is not None, "label_name is None. Must supply a valid label name"
-        assert issubclass(tile.slidetype, pathml.core.slide_data.HESlide), \
-            f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
+        assert tile.slide_type.stain == "HE", f"Tile has slide_type.stain={tile.slide_type.stain}, but must be 'HE'"
         label = self.F(tile.image)
         if tile.labels:
             tile.labels[self.label_name] = label
@@ -869,8 +868,7 @@ class LabelArtifactTileHE(Transform):
     def apply(self, tile):
         assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
         assert self.label_name is not None, "label_name is None. Must supply a valid label name"
-        assert issubclass(tile.slidetype, pathml.core.slide_data.HESlide), \
-            f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
+        assert tile.slide_type.stain == "HE", f"Tile has slide_type.stain={tile.slide_type.stain}, but must be 'HE'"
         label = self.F(tile.image)
         if tile.labels:
             tile.labels[self.label_name] = label
@@ -908,16 +906,15 @@ class DeconvolveMIF(Transform):
     """
     def __init__(self, psf=None, psfparameters=None, iterations=30):
         # ij = imagej.init()
-        if psf:
-            assert isinstance(psf, np.ndarray), f"psf must be a np.ndarray" 
-            self.psf = psf
+        assert psf is None or isinstance(psf, np.ndarray), f"psf must be None or an np.ndarray. input psf is type {type(psf)}"
+        self.psf = psf
         if psfparameters:
             assert psf is None, f"you passed an empirical psf, cannot simultaneously use theoretical psf"
         self.psfparameters = psfparameters
         self.iterations = iterations
     
     def __repr__(self):
-        return f"DeconvolveMIF(psf={'empirical' if psf else self.psfparameters}, iterations={self.self.iterations}, " \
+        return f"DeconvolveMIF(psf={'empirical' if self.psf else self.psfparameters}, iterations={self.self.iterations}, " \
                f"gpu={self.gpu})"
     
     def F(self, image, slidetype):
@@ -957,7 +954,7 @@ class SegmentMIF(Transform):
         Mesmer uses human-in-the-loop pipeline to train a  ResNet50 backbone w/ Feature Pyramid Network
         segmentation model on 1.3 million cell annotations and 1.2 million nuclear annotations (TissueNet dataset)
 
-        Model outputs predictinos for centroid and boundary of every nucleus and cell, then centroid and boundary 
+        Model outputs predictions for centroid and boundary of every nucleus and cell, then centroid and boundary
         predictions are used as inputs to a watershed algorithm that creates segmentation masks.
 
         https://www.biorxiv.org/content/10.1101/2021.03.01.431313v2.full.pdf 
@@ -1001,7 +998,8 @@ class SegmentMIF(Transform):
     def F(self, image):
         img = image.copy()
         if len(img.shape) not in [3, 4]:
-            raise ValueError(f"supported image shapes are x,y,c or batch,x,y,c")
+            raise ValueError(f"input image has shape {img.shape}. supported image shapes are x,y,c or batch,x,y,c."
+                             "did you forget to apply 'CollapseRuns*()' transform?")
         if len(img.shape) == 3:
             img = np.expand_dims(img, axis=0)
         nuc_cytoplasm = np.stack((img[:,:,:,self.nuclear_channel], img[:,:,:,self.cytoplasm_channel]), axis=-1)
@@ -1073,7 +1071,7 @@ class QuantifyMIF(Transform):
         return counts
     
     def apply(self, tile):
-        assert tile.masks[self.segmentation_mask].shape, f"passed segmentation mask does not exist for tile {tile}"
+        assert self.segmentation_mask in tile.masks, f"passed segmentation mask '{self.segmentation_mask}' does not exist for tile {tile}"
         tile.counts = self.F(tile)
 
 

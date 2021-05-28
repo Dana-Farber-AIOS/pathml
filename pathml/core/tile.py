@@ -77,7 +77,7 @@ class Tile:
         if masks:
             for val in masks.values():
                 if val.shape[:2] != image.shape[:2]:
-                    raise ValueError(f"mask is of shape {val.shape} but must match tile shape {self.image.shape}")
+                    raise ValueError(f"mask is of shape {val.shape} but must match tile shape {image.shape}")
             self.masks = masks 
         elif masks is None:
             self.masks = OrderedDict()

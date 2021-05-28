@@ -112,6 +112,8 @@ def test_binary_label_transforms(tileHE, transform):
 
 
 def test_segment_mif(tileVectra):
+    vectra_collapse = CollapseRunsVectra()
+    vectra_collapse.apply(tileVectra)
     t = SegmentMIF(nuclear_channel = 0, cytoplasm_channel = 1)
     orig_im = tileVectra.image
     cell, nuclear = t.F(orig_im)
@@ -125,6 +127,8 @@ def test_quantify_mif(tileVectra):
     with pytest.raises(AssertionError):
         t.apply(tileVectra)
     t2 = SegmentMIF(nuclear_channel = 0, cytoplasm_channel = 1)
+    vectra_collapse = CollapseRunsVectra()
+    vectra_collapse.apply(tileVectra)
     t2.apply(tileVectra)
     t.apply(tileVectra)
     assert tileVectra.counts

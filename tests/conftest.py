@@ -62,11 +62,11 @@ def tileVectra():
     """
     Example of pathml.core.Tile representation of Vectra image
     """
-    slidedata = VectraSlide("tests/testdata/small_vectra.qptiff", slide_backend = "bioformats")
+    slidedata = VectraSlide("tests/testdata/small_vectra.qptiff", backend = "bioformats")
     region = slidedata.slide.extract_region(location=(0, 0), size=(500, 500))
 
     # make mask object
-    masks = np.random.randint(low = 1, high = 255, size = (slidedata.slide.shape[0], slidedata.slide.shape[1]), dtype = np.uint8)
+    masks = np.random.randint(low = 1, high = 255, size = (region.shape[0], region.shape[1]), dtype = np.uint8)
     masks = {"testmask": masks}
 
     # labels dict
