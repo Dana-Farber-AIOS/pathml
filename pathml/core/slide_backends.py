@@ -175,6 +175,30 @@ class OpenSlideBackend(SlideBackend):
                 yield pathml.core.tile.Tile(image = tile_im, coords = coords)
 
 
+def _init_logger():
+    """
+    This is so that Javabridge doesn't spill out a lot of DEBUG messages
+    during runtime.
+    From CellProfiler/python-bioformats.
+
+    Credits to: https://github.com/pskeshu/microscoper/blob/master/microscoper/io.py#L141-L162
+    """
+    rootLoggerName = javabridge.get_static_field("org/slf4j/Logger",
+                                                 "ROOT_LOGGER_NAME",
+                                                 "Ljava/lang/String;")
+    rootLogger = javabridge.static_call("org/slf4j/LoggerFactory",
+                                        "getLogger",
+                                        "(Ljava/lang/String;)Lorg/slf4j/Logger;",
+                                        rootLoggerName)
+    logLevel = javabridge.get_static_field("ch/qos/logback/classic/Level",
+                                           "WARN",
+                                           "Lch/qos/logback/classic/Level;")
+    javabridge.call(rootLogger,
+                    "setLevel",
+                    "(Lch/qos/logback/classic/Level;)V",
+                    logLevel)
+
+
 class BioFormatsBackend(SlideBackend):
     """
     Use BioFormats to interface with image files.
@@ -191,6 +215,7 @@ class BioFormatsBackend(SlideBackend):
         self.filename = filename
         # init java virtual machine
         javabridge.start_vm(class_path = bioformats.JARS, max_heap_size="50G")
+        _init_logger()
         # java maximum array size of 2GB constrains image size
         ImageReader = bioformats.formatreader.make_image_reader_class()
         reader = ImageReader()
