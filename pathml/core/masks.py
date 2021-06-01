@@ -15,15 +15,16 @@ import pathml.core.h5managers
 
 class Masks:
     """
-    Object holding masks.
+    Object wrapping a dict of masks.
 
     Args:
+        h5manager(pathml.core.h5pathManager)
         masks(dict): dictionary of np.ndarray objects representing ex. labels, segmentations.
     """
-
-    def __init__(self, h5manager, masks = None):
-        assert isinstance(h5manager, pathml.core.h5managers.h5pathManager)
+    def __init__(self, h5manager, masks=None):
+        assert isinstance(h5manager, pathml.core.h5managers.h5pathManager), f"expecting type pathml.core.h5pathManager but passed type {type(h5manager)}"
         self.h5manager = h5manager
+        # if masks are supplied, add them to the h5manager
         if masks:
             if not isinstance(masks, dict):
                 raise ValueError(f"masks must be passed as dicts of the form key1:mask1,key2:mask2,...")

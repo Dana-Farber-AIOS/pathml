@@ -143,32 +143,33 @@ class h5pathManager():
             slicer = [slice(coords[i], coords[i] + tile.image.shape[i]) for i in range(len(coords))] 
             self.h5["array"][tuple(slicer)] = tile.image
             # save tile shape as attribute to enforce consistency 
-            self.h5["tiles"].attrs["tile_shape"] = tile.image.shape
-            writetupleh5(self.h5["tiles"], "tile_shape", tile.image.shape)
+            self.h5["tiles"].attrs["tile_shape"] = str(tile.image.shape).encode("utf-8")
 
         if tile.masks:
             # create self.h5["masks"]
             if "masks" not in self.h5.keys():
                 masksgroup = self.h5.create_group("masks")
                 
-            masklocation = tile.masks.h5manager.h5 if hasattr(tile.masks, 'h5manager') else tile.masks
-            for mask in masklocation:
+            for mask in tile.masks:
                 # add masks to large mask array
                 if mask in self.h5["masks"].keys():
                     # extend array 
                     coords = tile.coords
-                    for i in range(len(coords)):
-                        currentshape = self.h5["masks"][mask].shape[i]
-                        requiredshape = coords[i] + tile.image.shape[i] 
-                        if  currentshape < requiredshape:
-                            self.h5["masks"][mask].resize(requiredshape, axis=i)
+
+                    coords = tile.coords
+                    coordslength = len(coords)
+                    currentshape = self.h5["masks"][mask].shape[0:coordslength]
+                    requiredshape = [coord + tile_shape for coord, tile_shape in zip(coords, tile.masks[mask].shape[0:coordslength])]
+                    for dim, (current, required) in enumerate(zip(currentshape, requiredshape)):
+                        self.h5["masks"][mask].resize(required, axis=dim)
+
                     # add mask to mask array
-                    slicer = [slice(coords[i], coords[i]+self.h5["tiles/tile_shape"][i]) for i in range(len(coords))] 
-                    self.h5["masks"][mask][tuple(slicer)] = masklocation[mask][:]
+                    slicer = [slice(coords[i], coords[i] + tile.masks[mask].shape[i]) for i in range(len(coords))] 
+                    self.h5["masks"][mask][tuple(slicer)] = tile.masks[mask]
 
                 else:
                     # create mask array
-                    maskarray = masklocation[mask][:]
+                    maskarray = tile.masks[mask][:]
                     coords = list(tile.coords)
                     coords = coords + [0]*len(maskarray.shape[len(coords):]) 
                     shape = [i + j for i,j in zip(maskarray.shape, coords)]
@@ -186,9 +187,11 @@ class h5pathManager():
                     # now overwrite by mask 
                     slicer = [slice(coords[i], coords[i] + tile.image.shape[i]) for i in range(len(coords))] 
                     self.h5["masks"][mask][tuple(slicer)] = maskarray 
-        
         # create group for tile
-        self.h5["tiles"].create_group(str(tile.coords))
+        if str(tile.coords) in self.h5["tiles"]:
+            print(f"overwriting tile at {str(tile.coords)}")
+            del self.h5["tiles"][str(tile.coords)]
+        self.h5["tiles"].create_group(str(tile.coords[:2]))
         # add tile fields to tiles 
         self.h5["tiles"][str(tile.coords)].attrs["coords"] = str(tile.coords) if tile.coords else 0
         self.h5["tiles"][str(tile.coords)].attrs["name"] = str(tile.name) if tile.coords else 0
@@ -220,18 +223,19 @@ class h5pathManager():
             raise ValueError(f"key {key} does not exist. Use add.")
         
         if target == 'all':
-            assert self.h5["tiles/tile_shape"] == val.image.shape, f"Cannot update a tile of shape {self.h5['tiles/tile_shape']} with a tile" \
+            assert eval(self.h5["tiles"].attrs["tile_shape"]) == val.image.shape, f"Cannot update a tile of shape {self.h5['tiles'].attrs['tile_shape']} with a tile" \
                                                            f"of shape {val.image.shape}. Shapes must match."
             # overwrite
-            self.add(val)
+            self.remove_tile(key)
+            self.add_tile(val)
             print(f'tile at {key} overwritten')
 
         elif target == 'image':
             assert isinstance(val, np.ndarray), f"when replacing tile image must pass np.ndarray"
-            assert self.h5["tiles"].attrs["tile_shape"] == val.shape, f"Cannot update a tile of shape {self.h5['tiles'].attrs['tile_shape']} with a tile" \
+            assert eval(self.h5["tiles"].attrs["tile_shape"]) == val.shape, f"Cannot update a tile of shape {self.h5['tiles'].attrs['tile_shape']} with a tile" \
                                                      f"of shape {val.shape}. Shapes must match."
-            coords = list(eval(self.h5['tiles'][key]['coords']))
-            slicer = [slice(coords[i], coords[i]+self.h5["tiles"].attrs["tile_shape"][i]) for i in range(len(coords))] 
+            coords = list(eval(self.h5['tiles'][key].attrs['coords']))
+            slicer = [slice(coords[i], coords[i]+eval(self.h5["tiles"].attrs["tile_shape"])[i]) for i in range(len(coords))] 
             self.h5['array'][tuple(slicer)] = val 
             print(f'array at {key} overwritten')
 
@@ -239,9 +243,9 @@ class h5pathManager():
             raise NotImplementedError
 
         elif target == 'labels':
-            assert isinstance(val, (OrderedDict, dict)), f"when replacing labels must pass collections.OrderedDict of labels"
-            for key, value in val.items():
-                self.h5['tiles'][key]['labels'].attrs['key'] = value 
+            assert isinstance(val, dict), f"when replacing labels must pass collections.OrderedDict of labels"
+            for k, v in val.items():
+                self.h5['tiles'][key]['labels'].attrs[k] = v 
             print(f'label at {key} overwritten')
 
         else:
@@ -257,6 +261,8 @@ class h5pathManager():
         Returns:
             Tile(pathml.core.tile.Tile)
         """
+        if isinstance(item, bool):
+            raise KeyError(f'invalid key, pass str or tuple')
         if isinstance(item, (str, tuple)):
             item = str(item)
             if item not in self.h5["tiles"].keys():
@@ -298,6 +304,8 @@ class h5pathManager():
 
         labels = {key: val for key, val in self.h5["tiles"][item]["labels"].attrs.items()}
         name = self.h5["tiles"][item].attrs["name"]
+        if name == 'None':
+            name = None
         coords = eval(self.h5["tiles"][item].attrs["coords"])
         return pathml.core.tile.Tile(tile, masks=masks, labels=labels, name=name,
                                      coords=coords, slide_type=self.slide_type)
@@ -316,7 +324,7 @@ class h5pathManager():
             val(pathml.core.tile.Tile): tile
         """
         for key in self.h5["tiles"].keys():
-            yield self.get(key, slicer=slicer)
+            yield self.get_tile(key, slicer=slicer)
             
     def reshape_tiles(self, shape, centercrop = False):
         """
@@ -346,7 +354,7 @@ class h5pathManager():
         newtilesdict = OrderedDict()
         # if shape evenly divides arrayshape transfer labels
         remainders = [int(n % d) for n,d in zip(arrayshape, shape)]
-        offsetstooriginal = [[int(n % d) for n,d in zip(coord, self.h5["tiles"].attrs["tile_shape"])] for coord in coordlist] 
+        offsetstooriginal = [[int(n % d) for n,d in zip(coord, eval(self.h5["tiles"].attrs["tile_shape"]))] for coord in coordlist] 
         if all(x<=y for x, y in zip(shape, arrayshape)) and all(rem == 0 for rem in remainders):
             # transfer labels
             for coord, off in zip(coordlist, offsetstooriginal):
@@ -355,8 +363,8 @@ class h5pathManager():
                 oldtilecoord = [int(x-y) for x,y in zip(coord, off)]
                 oldtilecoord = oldtilecoord[:oldtilecoordlen]
                 labels = {key:val for key, val in self.h5["tiles"][str(tuple(oldtilecoord))]["labels"].attrs.items()}
-                name = self.h5["tiles"][str(tuple(oldtilecoord))]["name"]
-                newtilesdict[str(tuple(coord))] = {
+                name = self.h5["tiles"][str(tuple(oldtilecoord))].attrs["name"]
+                newtilesdict[str(tuple(coord[:2]))] = {
                         'name': None, 
                         'labels': labels,
                         'coords': str(tuple(coord)), 
@@ -365,11 +373,12 @@ class h5pathManager():
             del self.h5["tiles"] 
             self.h5.create_group("tiles")
             for tile in newtilesdict:
+                self.h5["tiles"].create_group(str(tile))
                 self.h5["tiles"][str(tile)].attrs["coords"] = newtilesdict[str(tile)]["coords"] 
-                self.h5["tiles"][str(tile)].attrs["name"] = newtilesdict[str(tile)]["name"] 
+                self.h5["tiles"][str(tile)].attrs["name"] = str(newtilesdict[str(tile)]["name"])
                 tilelabelsgroup = self.h5["tiles"][str(tile)].create_group("labels")
                 for key, val in newtilesdict[str(tile)]["labels"].items():
-                    self.h5["tiles"][str(tile.coords)]["labels"].attrs[key] = val 
+                    self.h5["tiles"][str(tile)]["labels"].attrs[key] = val 
 
         else: 
             # TODO: fix tests (monkeypatch) to implement the check above (the y/n hangs)
@@ -393,7 +402,7 @@ class h5pathManager():
                     sys.stdout.write("Please respond with 'y' or 'n'")
             '''
             for coord in coordlist:
-                newtilesdict[str(tuple(coord))] = {
+                newtilesdict[str(tuple(coord)[:2])] = {
                         'name': None, 
                         'labels': None,
                         'coords': str(tuple(coord)), 
@@ -402,13 +411,15 @@ class h5pathManager():
             del self.h5["tiles"] 
             self.h5.create_group("tiles")
             for tile in newtilesdict:
+                self.h5["tiles"].create_group(str(tile))
                 self.h5["tiles"][str(tile)].attrs["coords"] = newtilesdict[str(tile)]["coords"] 
-                self.h5["tiles"][str(tile)].attrs["name"] = newtilesdict[str(tile)]["name"] 
+                self.h5["tiles"][str(tile)].attrs["name"] = str(newtilesdict[str(tile)]["name"])
                 tilelabelsgroup = self.h5["tiles"][str(tile)].create_group("labels")
-                for key, val in newtilesdict[str(tile)]["labels"].items():
-                    self.h5["tiles"][str(tile.coords)]["labels"].attrs[key] = val 
+                if newtilesdict[str(tile)]["labels"]:
+                    for key, val in newtilesdict[str(tile)]["labels"].items():
+                        self.h5["tiles"][str(tile.coords)]["labels"].attrs[key] = val 
         self.tiles = newtilesdict
-        self.h5["tiles"].attrs["tile_shape"] = shape
+        self.h5["tiles"].attrs["tile_shape"] = str(shape).encode("utf-8") 
 
     def remove_tile(self, key):
         """

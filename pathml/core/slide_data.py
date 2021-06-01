@@ -169,8 +169,10 @@ class SlideData:
         else:
             self.h5manager = pathml.core.h5managers.h5pathManager(slidedata=self)
 
-        self.tiles = pathml.core.Tiles(self.h5manager, tiles=tiles)
-        self.masks = pathml.core.Masks(self.h5manager, masks=masks)
+        assert isinstance(self.h5manager, pathml.core.h5managers.h5pathManager), f"expecting type pathml.core.h5pathManager but passed type {type(self.h5manager)}"
+        print(self.h5manager)
+        self.masks = pathml.core.Masks(h5manager=self.h5manager, masks=masks)
+        self.tiles = pathml.core.Tiles(h5manager=self.h5manager, tiles=tiles)
         self.counts = counts
 
     def __repr__(self):

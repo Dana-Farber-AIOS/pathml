@@ -22,8 +22,8 @@ class Tiles:
         tiles (Union[dict[tuple[int], `~pathml.core.tiles.Tile`], list[`~pathml.core.tiles.Tile`]]): tile objects
     """
     def __init__(self, h5manager, tiles=None):
+        assert isinstance(h5manager, pathml.core.h5managers.h5pathManager)
         self.h5manager = h5manager 
-
         # if tiles are supplied, add them to the h5manager
         if tiles:
             assert isinstance(tiles, list) and all([isinstance(tile, pathml.core.Tile) for tile in tiles]),\
