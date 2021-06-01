@@ -114,20 +114,21 @@ def test_read_write_heslide(tmp_path, example_slide_data_with_tiles):
     readslidedata = SlideData(path)
     assert readslidedata.name == slidedata.name
     np.testing.assert_equal(readslidedata.labels, slidedata.labels)
-    assert readslidedata.history == slidedata.history
     if slidedata.masks is None:
         assert readslidedata.masks is None
-    if slidedata.masks is not None:
-        assert scan_hdf5(readslidedata.masks.h5manager.h5) == scan_hdf5(slidedata.masks.h5manager.h5)
     if slidedata.tiles is None:
         assert readslidedata.tiles is None
-    if slidedata.tiles is not None:
-        print(readslidedata.tiles.h5manager.tiles)
-        print(slidedata.tiles.h5manager.tiles)
-        print(scan_hdf5(readslidedata.tiles.h5manager.h5))
-        print(scan_hdf5(slidedata.tiles.h5manager.h5))
-        assert scan_hdf5(readslidedata.tiles.h5manager.h5) == scan_hdf5(slidedata.tiles.h5manager.h5)
-        np.testing.assert_equal(readslidedata.tiles.h5manager.tiles, slidedata.tiles.h5manager.tiles)
+    assert scan_hdf5(readslidedata.h5manager.h5) == scan_hdf5(slidedata.h5manager.h5)
+    print(readslidedata.counts.obs)
+    print(slidedata.counts.obs)
+    if readslidedata.counts.obs.empty:
+        assert slidedata.counts.obs.empty
+    else:
+        np.testing.assert_equal(readslidedata.counts.obs, slidedata.counts.obs)
+    if readslidedata.counts.var.empty:
+        assert slidedata.counts.var.empty
+    else:
+        np.testing.assert_equal(readslidedata.counts.var, slidedata.counts.var)
 
 
 def scan_hdf5(f, recursive=True, tab_step=2):

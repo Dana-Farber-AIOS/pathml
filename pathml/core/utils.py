@@ -3,6 +3,9 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
+import tempfile
+import h5py
+import anndata
 from collections import OrderedDict
 import numpy as np
 import ast
@@ -156,7 +159,7 @@ def readtilesdicth5(h5):
     return tilesdict
 
 
-def writecounts(h5, name, counts):
+def writecounts(h5, counts):
     """
     Write counts using anndata h5py.
     Args:
@@ -164,9 +167,11 @@ def writecounts(h5, name, counts):
         name(str): name of dataset to be created
         tup(anndata.AnnData): anndata object to be written
     """
+    print(counts)
     countsh5 = h5py.File(counts.filename, "r") 
+    print(f"counts keys are {countsh5.keys()}")
     for ds in countsh5.keys():
-        countsh5.copy(ds, h5[str(name)])
+        countsh5.copy(ds, h5)
      
 
 def readcounts(h5):
@@ -179,7 +184,9 @@ def readcounts(h5):
     # read using anndata from temp file 
     # this is necessary because anndata does not support reading directly from h5
     path = tempfile.TemporaryFile()
-    f = h5py.file(path, 'w')
+    f = h5py.File(path, 'w')
     for ds in h5.keys():
         h5.copy(ds, f)
+    print(h5.keys())
+    print(f.keys())
     return anndata.read_h5ad(path)

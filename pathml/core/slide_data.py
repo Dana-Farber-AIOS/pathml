@@ -166,14 +166,16 @@ class SlideData:
             # populate the SlideData object from existing h5path file
             with h5py.File(filepath, "r") as f:
                 self.h5manager = pathml.core.h5managers.h5pathManager(h5path=f)
+            self.name = self.h5manager.h5["fields"].attrs["name"]
+            self.labels = {key: val for key,val in self.h5manager.h5["fields"]["labels"].attrs.items()}
+            slide_type = {key: val for key, val in self.h5manager.h5["fields"]["slide_type"].attrs.items() if val is not None}
+            if slide_type:
+                self.slide_type = pathml.core.types.SlideType(**slide_type)
         else:
             self.h5manager = pathml.core.h5managers.h5pathManager(slidedata=self)
 
-        assert isinstance(self.h5manager, pathml.core.h5managers.h5pathManager), f"expecting type pathml.core.h5pathManager but passed type {type(self.h5manager)}"
-        print(self.h5manager)
         self.masks = pathml.core.Masks(h5manager=self.h5manager, masks=masks)
         self.tiles = pathml.core.Tiles(h5manager=self.h5manager, tiles=tiles)
-        self.counts = counts
 
     def __repr__(self):
         out = []
@@ -385,24 +387,11 @@ class SlideData:
         pathdir = Path(os.path.dirname(path))
         pathdir.mkdir(parents = True, exist_ok = True)
         with h5py.File(path, 'w') as f:
-            fieldsgroup = f.create_group('fields')
-            if self.name:
-                pathml.core.utils.writestringh5(fieldsgroup, 'name', str(self.name))
-            if self.labels:
-                pathml.core.utils.writedicth5(fieldsgroup, 'labels', self.labels)
-            if self.backend:
-                pathml.core.utils.writestringh5(fieldsgroup, 'slide_backend', self.backend)
-            if self.slide_type:
-                pathml.core.utils.writestringh5(fieldsgroup, 'slide_type', self.slide_type.asdict())
-            if self.masks:
-                masksgroup = f.create_group('masks')
-                for ds in self.masks.h5manager.h5.keys():
-                    self.masks.h5manager.h5.copy(ds, masksgroup)
-            if self.tiles:
-                for ds in self.tiles.h5manager.h5.keys():
-                    self.tiles.h5manager.h5.copy(ds, f)
-                # add tiles to h5
-                pathml.core.utils.writetilesdicth5(f, 'tiles', self.tiles.h5manager.tiles)
+            for ds in self.h5manager.h5.keys():
+                self.h5manager.h5.copy(ds, f)
+            if self.counts:
+                pathml.core.utils.writecounts(f["counts"], self.counts)
+
 
 
 class HESlide(SlideData):

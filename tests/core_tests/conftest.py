@@ -6,6 +6,7 @@ License: GNU GPL 2.0
 # define fixtures here, and use them throughout the other tests in core_tests/
 import pytest
 import numpy as np
+import anndata
 
 from pathml.core import Tiles, SlideData, SlideDataset
 
@@ -23,8 +24,9 @@ def example_slide_data():
 def example_slide_data_with_tiles(tile):
     labs = {"test_string_label": "testlabel", "test_array_label": np.array([2, 3, 4]),
             "test_int_label": 3, "test_float_label": 3.0}
+    adata = anndata.AnnData()
     wsi = SlideData("tests/testdata/small_HE.svs", name = f"test",
-                    labels = labs, backend = "openslide", tiles = [tile])
+                    labels = labs, backend = "openslide", tiles = [tile], counts=adata)
     return wsi
 
 

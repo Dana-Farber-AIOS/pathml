@@ -38,10 +38,10 @@ class h5pathManager():
                 if ds in ['fields', 'array', 'masks', 'tiles']:
                     h5path.copy(ds, self.h5)
                 if ds in ['counts']:
-                    # TODO: clean readcounts
-                    self.counts = readcounts(h5path['counts'])
-                    with self.countspath as tmpdirname:
-                        self.counts.filename = tmpdirname + '/tmpfile.h5ad'
+                    h5path.copy(ds, self.h5)
+                    if h5path["counts"].keys():
+                        self.counts = readcounts(h5path['counts'])
+                        self.counts.filename = self.countspath + '/tmpfile.h5ad'
             
         else:
             assert slidedata, f"must pass slidedata object to create h5path"
@@ -517,15 +517,16 @@ class h5pathManager():
 
 def check_valid_h5path_format(h5path):
     """
-    Assert that the input h5path matches the expected h5path file format:
+    Assert that the input h5path matches the expected h5path file format.
 
     Args:
         h5path: h5py file object
 
     Returns:
-        bool: whether the input matches expected format or not
+        bool: True if the input matches expected format
     """
     assert set(h5path.keys()) == {"fields", "array", "masks", "counts", "tiles"}
-    assert set(h5path["fields"].keys()) == {"name", "labels", "slide_type"}
-    assert set(h5path["fields/slide_type"].keys()) == {"stain", "platform", "tma", "rgb", "volumetric", "time_series"}
+    assert set(h5path["fields"].keys()) == {"labels", "slide_type"}
+    assert set(h5path["fields"].attrs.keys()) == {"name"}
+    # slide_type attributes are not enforced
     return True
