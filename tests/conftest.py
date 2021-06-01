@@ -82,5 +82,5 @@ def anndata():
     """
     Example anndata.AnnData object
     """
-    adata = sc.read_csv("tests/testdata/adata.csv")
+    adata = sc.datasets.pbmc3k_processed()
     return adata

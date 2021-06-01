@@ -14,7 +14,7 @@ import os
 import pathml.core.masks
 import pathml.core.tile
 import pathml.core
-from pathml.core.utils import writetupleh5, readtupleh5, readtilesdicth5, readcounts
+from pathml.core.utils import readcounts
 
 class h5pathManager():
     """

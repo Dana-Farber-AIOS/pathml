@@ -22,6 +22,7 @@ def spatialneighborhood(
         phenotypekey(str): phenotype key in slidedata.counts.obs
         n_neighbors(int): number of spatial nearest neighbors 
     """
+    raise NotImplementedError(f"spatialneighborhood is WIP")
     assert slidedata.counts, f"must quantify image and generate a single cell anndata object before computing neighborhood enrichment"
     assert phenotypekey in slidedata.counts.obs.keys(), f"passed key {phenotypekey} is not in slidedata.adata.obs"
     assert isinstance(n_neighbors, int), f"n_neighbors is of type {type(n_neighbors)} but must be of type int"
@@ -31,15 +32,16 @@ def spatialneighborhood(
         adata = slidedata.counts.to_memory().copy()
     else:
         adata = slidedata.counts.copy()
-    sq.gr.spatial_neighbors(adata, n_neigh=n_neighbors) 
+    sq.gr.spatial_neighbors(adata, n_neigh=n_neighbors, key_added='spatial') 
     neighborhooddf = None 
 
     # create neighborhood anndata object
-    # TODO: more efficient implementation than single loop
-    for cell, _ in adata.obs.iterrows():
+    # TODO: vectorize
+    for cell, other in adata.obs.iterrows():
         adjacencylist = adata.obsp['spatial_connectivities']
-        neighborids = adjacencylist[int(cell)]
+        # TODO: why doesn't neighborids give neighbors for every cell?
         # get neighbor cells and reduce into vector
+        neighborids = adjacencylist[int(adata.obs.index.get_loc(cell))]
         neighboridstuple = [str(neighbor) for neighbor in neighborids.indices.tolist()]
         neighborcells = adata[adata.obs.index.isin(neighboridstuple)]
         neighborvector = pd.DataFrame(neighborcells.obs.groupby(phenotypekey).count()['x'])

@@ -119,8 +119,6 @@ def test_read_write_heslide(tmp_path, example_slide_data_with_tiles):
     if slidedata.tiles is None:
         assert readslidedata.tiles is None
     assert scan_hdf5(readslidedata.h5manager.h5) == scan_hdf5(slidedata.h5manager.h5)
-    print(readslidedata.counts.obs)
-    print(slidedata.counts.obs)
     if readslidedata.counts.obs.empty:
         assert slidedata.counts.obs.empty
     else:
