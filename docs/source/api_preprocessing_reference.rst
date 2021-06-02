@@ -22,3 +22,7 @@ Transforms
 .. autoclass:: pathml.preprocessing.TissueDetectionHE
 .. autoclass:: pathml.preprocessing.LabelArtifactTileHE
 .. autoclass:: pathml.preprocessing.LabelWhiteSpaceHE
+.. autoclass:: pathml.preprocessing.SegmentMIF
+.. autoclass:: pathml.preprocessing.QuantifyMIF
+.. autoclass:: pathml.preprocessing.CollapseRunsVectra
+.. autoclass:: pathml.preprocessing.CollapseRunsCODEX

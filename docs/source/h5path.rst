@@ -17,20 +17,23 @@ must have sufficient storage. Performance will benefit from storage with fast re
 How it Works
 ------------
 
-The internals of ``PathML`` as well as the **h5path** file format are based on the hierarchical data format
-`HDF5 <https://en.wikipedia.org/wiki/Hierarchical_Data_Format>`_, implemented by
-`h5py <https://docs.h5py.org/en/stable/>`_.
-Each instantiation of :class:`~pathml.core.slide_data.SlideData` contains internal
-references to temporary on-disk h5py objects. As tiles are extracted and passed to a preprocessing pipeline, the
-processed tiles are then aggregated and stored in the slide's h5py object.
-All interaction with h5py is automatically handled by ``PathML`` on the backend by
-:class:`~pathml.core.h5manager._h5manager`. For example, ``slidedata.tiles[tile_key]`` returns the tile at
-key ``tile_key`` from the h5py file on disk. Note that this command has syntax like an in-memory dict.
+Each :class:`~pathml.core.slide_data.SlideData` object is backed by an ``.h5path`` file on disk.
+All interaction with the ``.h5path`` file is handled automatically by the :class:`~pathml.core.h5managers.h5pathManager`.
+For example, when a user calls ``slidedata.tiles[tile_key]``, the :class:`~pathml.core.h5managers.h5pathManager` will
+retrieve the tile from disk and return it, without the user needing to worry about accessing the HDF5 file themself.
+As tiles are extracted and passed to a preprocessing pipeline, the :class:`~pathml.core.h5managers.h5pathManager` also
+handles aggregating the processed tiles into the ``.h5path`` file.
 At the conclusion of preprocessing, the h5py object can optionally be
-permanently written to disk in ``.h5path`` format via the :meth:`SlideData.write() <pathml.core.slide_data.SlideData.write>` method.
+permanently written to disk in ``.h5path`` format via the
+:meth:`SlideData.write() <pathml.core.SlideData.write>` method.
 
 About HDF5
 ----------
+
+The internals of ``PathML`` as well as the ``.h5path`` file format are based on the hierarchical data format
+`HDF5 <https://en.wikipedia.org/wiki/Hierarchical_Data_Format>`_, implemented by
+`h5py <https://docs.h5py.org/en/stable/>`_.
+
 HDF5 format consists of 3 types of elements:
 
 .. list-table::
@@ -132,4 +135,4 @@ Reading and Writing
 :class:`~pathml.core.slide_data.SlideData` objects are easily written to **h5path** format
 by calling :meth:`SlideData.write() <pathml.core.slide_data.SlideData.write>`.
 All files with ``.h5`` or ``.h5path`` extensions are loaded to :class:`~pathml.core.slide_data.SlideData` objects
-automatically by calling :func:`~pathml.core.h5path.read`.
+automatically.

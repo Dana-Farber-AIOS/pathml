@@ -38,7 +38,9 @@ individual :class:`~pathml.core.slide_dataset.SlideData` objects:
 Supported slide types
 ---------------------
 
-``PathML`` provides tools to load common medical image filetypes including proprietary formats from slide scanners.
+All slides are represented as :class:`~pathml.core.SlideData` objects.
+
+We provide several convenience classes for loading common types of slides:
 
 .. list-table:: Slide Classes
    :widths: 20 60
@@ -46,23 +48,26 @@ Supported slide types
 
    * - Slide Class
      - Description
-   * - :class:`~pathml.core.slide_classes.RGBSlide`
-     - Any image that is in RGB.
-   * - :class:`~pathml.core.slide_classes.HESlide`
+   * - :class:`~pathml.core.HESlide`
      - H&E stained images.
-   * - :class:`~pathml.core.slide_classes.MultiparametricSlide`
-     - Multidimensional, multichannel, time-series images (e.g. multiplexed immunofluorescence). 
+   * - :class:`~pathml.core.IHCSlide`
+     - IHC stained images
+   * - :class:`~pathml.core.MultiparametricSlide`
+     - Generic multidimensional, multichannel, time-series images (e.g. multiplexed immunofluorescence).
+   * - :class:`~pathml.core.VectraSlide`
+     - Multiplex images from Vectra platform.
+   * - :class:`~pathml.core.CODEXSlide`
+     - Multiplex images from CODEX platform.
 
-
-In general it is recommended to use the pre-made classes for convenience. They implement a hierarchical
-class structure which is used internally for some operations. (e.g. H&E slides are a subclass of RGB slides).
 
 It is also possible to load a slide by using the generic :class:`~pathml.core.slide_data.SlideData` class and specifying
-explicitly which backend to use (see table below):
+explicitly the slide_type and which backend to use (refer to table below):
 
 .. code-block::
 
-    wsi = SlideData("../data/CMU-1.svs", name = "example", slide_backend = OpenSlideBackend)
+    wsi = SlideData("../data/CMU-1.svs", name = "example", slide_backend = "openslide", slide_type = types.HE)
+
+For more information on specifying ``slide_type``, see full documentation at :class:`~pathml.core.SlideType`
 
 Supported file formats
 ----------------------

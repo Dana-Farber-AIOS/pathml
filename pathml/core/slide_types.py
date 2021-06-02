@@ -47,6 +47,13 @@ class SlideType:
         self.time_series = time_series
 
     def asdict(self):
+        """
+        Convert to a dictionary.
+        None values are represented as zeros and empty strings for compatibility
+        with h5py attributes.
+
+        If ``a`` is a SlideType object, then ``a == SlideType(**a.asdict())`` will be ``True``.
+        """
         return {
             "stain": self.stain if self.stain else "",
             "platform": self.platform if self.platform else "",

@@ -950,15 +950,12 @@ class SegmentMIF(Transform):
 
     Input image must be formatted (c, x, y) or (batch, c, x, y). z and t dimensions must be selected before calling SegmentMIF
 
-    Supported models
-    Mesmer
-        Mesmer uses human-in-the-loop pipeline to train a  ResNet50 backbone w/ Feature Pyramid Network
-        segmentation model on 1.3 million cell annotations and 1.2 million nuclear annotations (TissueNet dataset)
+    Supported models:
 
-        Model outputs predictions for centroid and boundary of every nucleus and cell, then centroid and boundary
-        predictions are used as inputs to a watershed algorithm that creates segmentation masks.
-
-        https://www.biorxiv.org/content/10.1101/2021.03.01.431313v2.full.pdf 
+    Mesmer. Mesmer uses human-in-the-loop pipeline to train a  ResNet50 backbone w/ Feature Pyramid Network
+    segmentation model on 1.3 million cell annotations and 1.2 million nuclear annotations (TissueNet dataset).
+    Model outputs predictions for centroid and boundary of every nucleus and cell, then centroid and boundary
+    predictions are used as inputs to a watershed algorithm that creates segmentation masks.
 
     Args:
         model(str): string indicating which segmentation model to use. Currently only 'mesmer' is supported.
@@ -966,6 +963,11 @@ class SegmentMIF(Transform):
         cytoplasm_channel(int): channel that defines cell membrane or cytoplasm
         image_resolution(float): resolution of image in microns
         gpu(bool): flag indicating whether gpu will be used for inference
+
+    References:
+        Greenwald, N.F., Miller, G., Moen, E., Kong, A., Kagel, A., Fullaway, C.C., McIntosh, B.J., Leow, K., Schwartz,
+        M.S., Dougherty, T. and Pavelchek, C., 2021. Whole-cell segmentation of tissue images with human-level
+        performance using large-scale data annotation and deep learning. bioRxiv.
     """
     def __init__(self, 
             model='mesmer', 

@@ -9,10 +9,13 @@ The central class in ``PathML`` for representing a whole-slide image.
 .. autoclass:: pathml.core.SlideData
 
 
-HESlide
-^^^^^^^
+Convenience SlideData Classes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: pathml.core.HESlide
+.. autoclass:: pathml.core.VectraSlide
+.. autoclass:: pathml.core.MultiparametricSlide
+.. autoclass:: pathml.core.CODEXSlide
 
 
 Slide Types
@@ -69,3 +72,8 @@ DICOMBackend
 ^^^^^^^^^^^^
 
 .. autoclass:: pathml.core.DICOMBackend
+
+h5pathManager
+-------------
+
+.. autoclass:: pathml.core.h5managers.h5pathManager
