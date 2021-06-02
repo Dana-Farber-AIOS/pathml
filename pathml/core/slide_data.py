@@ -405,6 +405,19 @@ class HESlide(SlideData):
         super().__init__(*args, **kwargs)
 
 
+class MultiparametricSlide(SlideData):
+    """
+    Convenience class to load a SlideData object for multiparametric immunofluorescence slides.
+    Passes through all arguments to ``SlideData()``, along with ``slide_type = types.IF`` flag and default ``backend = "bioformats"``.
+    Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
+    """
+    def __init__(self, *args, **kwargs):
+        kwargs["slide_type"] = pathml.core.types.IF
+        if "backend" not in kwargs:
+            kwargs["backend"] = "bioformats"
+        super().__init__(*args, **kwargs)
+
+
 class IHCSlide(SlideData):
     """
     Convenience class to load a SlideData object for IHC slides.
@@ -416,42 +429,33 @@ class IHCSlide(SlideData):
         super().__init__(*args, **kwargs)
 
 
-class MultiparametricSlide(SlideData):
-    """
-    Convenience class to load a SlideData object for multiparametric immunofluorescence slides.
-    Passes through all arguments to ``SlideData()``, along with ``slide_type = types.IF`` flag.
-    Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
-    """
-    def __init__(self, *args, **kwargs):
-        kwargs["slide_type"] = pathml.core.types.IF
-        super().__init__(*args, **kwargs)
-
-
 class VectraSlide(SlideData):
     """
     Convenience class to load a SlideData object for Vectra (Polaris) slides.
-    Passes through all arguments to ``SlideData()``, along with ``slide_type = types.IF`` flag.
+    Passes through all arguments to ``SlideData()``, along with ``slide_type = types.Vectra`` flag and default ``backend = "bioformats"``.
     Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
     """
     def __init__(self, *args, **kwargs):
         kwargs["slide_type"] = pathml.core.types.Vectra
+        if "backend" not in kwargs:
+            kwargs["backend"] = "bioformats"
         super().__init__(*args, **kwargs)
+
 
 
 class CODEXSlide(SlideData):
     """
-    Class for data in Akoya bioscience CODEX format.
-    Expects the following filesystem:
-
-    This class enables transforms in *link to location in docs*.
-    This class enables CODEX pipeline.
+    Convenience class to load a SlideData object from Akoya Biosciences CODEX format.
+    Passes through all arguments to ``SlideData()``, along with ``slide_type = types.CODEX`` flag and default ``backend = "bioformats"``.
+    Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
 
     # TODO:
         hierarchical biaxial gating (flow-style analysis)
-        KNN/FLANN/leiden clustering
     """
     def __init__(self, *args, **kwargs):
         kwargs["slide_type"] = pathml.core.types.CODEX
+        if "backend" not in kwargs:
+            kwargs["backend"] = "bioformats"
         super().__init__(*args, **kwargs)
 
 

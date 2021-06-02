@@ -277,7 +277,6 @@ class BioFormatsBackend(SlideBackend):
         sample = reader.read(z=0, t=0, rescale=False, XYWH=(location[0], location[1], size[0], size[1]))
         # if series is set to read only one channel, explicitly read c
         if len(sample.shape) == 2:
-            print('first')
             for z in range(self.shape[2]):
                 for c in range(self.shape[3]):
                     for t in range(self.shape[4]):
@@ -291,7 +290,6 @@ class BioFormatsBackend(SlideBackend):
                         array[:,:,z,c,t] = slicearray 
         # if series is set to read all channels, read all c simultaneously
         elif len(sample.shape) == 3:
-            print('second')
             for z in range(self.shape[2]):
                 for t in range(self.shape[4]):
                     # or reader.openBytes() but need to declare omemetadata as in init
