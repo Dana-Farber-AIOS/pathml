@@ -32,7 +32,6 @@ Cornell Medicine.
    creating_pipelines
    running_pipelines
    h5path
-   pipeline_repo
 
 .. toctree::
    :maxdepth: 2
@@ -44,9 +43,7 @@ Cornell Medicine.
    :maxdepth: 2
    :caption: Machine Learning
 
-   ml
    models
-   model_repo
 
 .. toctree::
    :maxdepth: 2
