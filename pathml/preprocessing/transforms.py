@@ -9,9 +9,9 @@ import numpy as np
 import pandas as pd
 import spams
 from skimage import restoration
-import deepcell
 import anndata
 from skimage.measure import regionprops_table
+from warnings import warn
 
 import pathml.core
 import pathml.core.slide_data
@@ -940,6 +940,7 @@ class DeconvolveMIF(Transform):
         return deconvolved
     
     def apply(self, tile):
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
         tile.image = self.F(tile.image, tile.slidetype)
 
 
@@ -960,7 +961,7 @@ class SegmentMIF(Transform):
         https://www.biorxiv.org/content/10.1101/2021.03.01.431313v2.full.pdf 
 
     Args:
-        model(str): segmentation model 
+        model(str): string indicating which segmentation model to use. Currently only 'mesmer' is supported.
         nuclear_channel(int): channel that defines cell nucleus
         cytoplasm_channel(int): channel that defines cell membrane or cytoplasm
         image_resolution(float): resolution of image in microns
@@ -981,15 +982,27 @@ class SegmentMIF(Transform):
         self.cytoplasm_channel = cytoplasm_channel
         self.image_resolution = image_resolution
         self.gpu = gpu
-        self.model = model
-        if self.model == 'mesmer':
-            from deepcell.applications import Mesmer
+        if model == 'mesmer':
+            try:
+                from deepcell.applications import Mesmer
+            except ImportError:
+                warn(
+                    """The Mesmer model in SegmentMIF requires extra libraries to be installed.
+                You can install these via pip using:
+
+                pip install deepcell
+                """
+                )
+                raise ImportError(
+                    "The Mesmer model in SegmentMIF requires deepcell to be installed"
+                ) from None
             self.model = Mesmer()
+        elif self.model == 'cellpose':
+            """from cellpose import models
+            self.model = models.Cellpose(gpu=self.gpu, model_type='cyto')"""
+            raise NotImplementedError("Cellpose model not currently supported")
         else:
             raise ValueError(f"currently only support mesmer model")
-        if self.model == 'cellpose':
-            from cellpose import models
-            self.model = models.Cellpose(gpu=self.gpu, model_type='cyto')
     
     def __repr__(self):
         return f"SegmentMIF(model={self.model}, image_resolution={self.image_resolution}, " \
@@ -1010,6 +1023,8 @@ class SegmentMIF(Transform):
         return cell_segmentation_predictions, nuclear_segmentation_predictions
     
     def apply(self, tile):
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        assert tile.slide_type.stain == "IF", f"Tile has slide_type.stain={tile.slide_type.stain}, but must be 'IF'"
         cell_segmentation, nuclear_segmentation = self.F(tile.image) 
         tile.masks['cell_segmentation'] = cell_segmentation
         tile.masks['nuclear_segmentation'] = nuclear_segmentation
@@ -1071,7 +1086,9 @@ class QuantifyMIF(Transform):
         return counts
     
     def apply(self, tile):
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
         assert self.segmentation_mask in tile.masks, f"passed segmentation mask '{self.segmentation_mask}' does not exist for tile {tile}"
+        assert tile.slide_type.stain == "IF", f"Tile has slide_type.stain={tile.slide_type.stain}, but must be 'IF'"
         tile.counts = self.F(tile)
 
 
@@ -1092,6 +1109,8 @@ class CollapseRunsVectra(Transform):
         return image 
 
     def apply(self, tile):
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        assert tile.slide_type.platform == "Vectra", f"Tile has slide_type.platform={tile.slide_type.platform}, but must be 'Vectra'"
         tile.image = self.F(tile.image)
 
 
@@ -1124,4 +1143,6 @@ class CollapseRunsCODEX(Transform):
         return image 
 
     def apply(self, tile):
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        assert tile.slide_type.platform == "CODEX", f"Tile has slide_type.platform={tile.slide_type.platform}, but must be 'CODEX'"
         tile.image = self.F(tile.image)

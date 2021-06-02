@@ -1,10 +1,25 @@
 import anndata
 import numpy as np
 import pandas as pd
-import scanpy as sc
-import squidpy as sq
-import tensorly as tl
-from tensorly.decomposition import non_negative_tucker
+from warnings import warn
+
+try:
+    import scanpy as sc
+    import squidpy as sq
+    import tensorly as tl
+    from tensorly.decomposition import non_negative_tucker
+except ImportError:
+    warn(
+        """The pathml.ml.multiparametric package requires extra libraries to be installed.
+    You can install these via pip using:
+    
+    pip install scanpy squidpy tensorly
+    """
+    )
+    raise ImportError(
+        "pathml.ml.multiparametric requires scanpy squidpy and tensorly to be installed"
+    ) from None
+
 
 def spatialneighborhood(
         slidedata, 
