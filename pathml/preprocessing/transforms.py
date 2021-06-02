@@ -1080,9 +1080,6 @@ class CollapseRunsVectra(Transform):
     Coerce Vectra output to standard format.
     Vectra format is (x, y, 1, c, 1).
     Output format is (x, y, c).
-
-    Args:
-        z(int): in-focus z-plane for cells of interest
     """
     def __init__(self):
         pass

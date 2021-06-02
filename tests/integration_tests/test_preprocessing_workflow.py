@@ -7,7 +7,7 @@ from dask.distributed import Client
 
 
 from pathml.core import HESlide, VectraSlide
-from pathml.preprocessing import Pipeline, BoxBlur, TissueDetectionHE, SegmentMIF, QuantifyMIF
+from pathml.preprocessing import Pipeline, BoxBlur, TissueDetectionHE, SegmentMIF, QuantifyMIF, CollapseRunsVectra
 
 
 def test_pipeline_1(tmp_path):
@@ -17,28 +17,16 @@ def test_pipeline_1(tmp_path):
         TissueDetectionHE(mask_name = "tissue")
     ])
 
-    client = Client()
+    slide.run(pipeline, distributed=False, tile_size = 250)
 
-    slide.run(pipeline, client = client, tile_size = 250)
-
-    #shut down the client after running
-    client.close()
-
-# TODO: implement cpu segmentation model so that pipeline test can be run
-"""
 def test_vectra_pipeline(tmp_path):
     slide = VectraSlide("tests/testdata/small_vectra.qptiff")
     pipeline = Pipeline([
-        SegmentMIF(model='other', nuclear_channel=0, cytoplasm_channel=6, image_resolution=0.5),
+        CollapseRunsVectra(),
+        SegmentMIF(model='mesmer', nuclear_channel=0, cytoplasm_channel=2, image_resolution=0.5),
         QuantifyMIF(segmentation_mask='cell_segmentation')
     ])
 
-    client = Client()
+    slide.run(pipeline, distributed=False, tile_size = 250)
 
-    slide.run(pipeline, client = client, tile_size = 250)
-
-    slide.tiles.write(out_dir = tmp_path, filename = "vectratiles.h5")
-
-    #shut down the client after running
-    client.close()
-"""
+    slide.write(path = str(tmp_path) + "vectraslide.h5")

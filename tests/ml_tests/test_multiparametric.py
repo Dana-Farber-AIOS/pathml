@@ -14,11 +14,13 @@ def test_spatialneighborhood(tileVectra, anndata):
     tiles = [tileVectra]
     slidedata = VectraSlide("tests/testdata/small_vectra.qptiff", name='vectraslide', tiles=tiles)
     slidedata.counts = anndata
-    with pytest.raises((AssertionError, ValueError)):
+    with pytest.raises(NotImplementedError):
         spatialneighborhood(slidedata, phenotypekey='leiden')
     sc.pp.neighbors(slidedata.counts)
     sc.tl.leiden(slidedata.counts)
     sc.tl.pca(slidedata.counts)
     slidedata.counts.obsm['spatial'] = slidedata.counts.obsm['X_pca']
-    spatialneighborhood(slidedata, phenotypekey='leiden', n_neighbors = 2)
-    assert slidedata.counts.obs.leiden_neighborhood
+
+    with pytest.raises(NotImplementedError):
+        spatialneighborhood(slidedata, phenotypekey='leiden', n_neighbors = 2)
+    # assert slidedata.counts.obs.leiden_neighborhood

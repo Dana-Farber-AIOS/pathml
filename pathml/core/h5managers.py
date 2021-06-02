@@ -26,9 +26,8 @@ class h5pathManager():
         self.h5 = f
         # keep a reference to h5 tempfile so that it is never garbage collected
         self.h5reference = path
-        # create temporary directory for slidedata.counts
-        countspath = tempfile.TemporaryDirectory()
-        self.countspath = path
+        # create temporary file for slidedata.counts
+        self.countspath = tempfile.TemporaryDirectory()
         self.counts = anndata.AnnData()
         if h5path:
             assert not slidedata, f"if creating h5pathmanager from h5path, slidedata should not be required"
@@ -41,7 +40,7 @@ class h5pathManager():
                     h5path.copy(ds, self.h5)
                     if h5path["counts"].keys():
                         self.counts = readcounts(h5path['counts'])
-                        self.counts.filename = self.countspath + '/tmpfile.h5ad'
+                        self.counts.filename = str(self.countspath.name) + '/tmpfile.h5ad'
             
         else:
             assert slidedata, f"must pass slidedata object to create h5path"
@@ -196,8 +195,9 @@ class h5pathManager():
         self.h5["tiles"][str(tile.coords)].attrs["coords"] = str(tile.coords) if tile.coords else 0
         self.h5["tiles"][str(tile.coords)].attrs["name"] = str(tile.name) if tile.coords else 0
         tilelabelsgroup = self.h5["tiles"][str(tile.coords)].create_group("labels")
-        for key, val in tile.labels.items():
-            self.h5["tiles"][str(tile.coords)]["labels"].attrs[key] = val 
+        if tile.labels:
+            for key, val in tile.labels.items():
+                self.h5["tiles"][str(tile.coords)]["labels"].attrs[key] = val 
         if tile.counts:
             # cannot concatenate on disk, read into RAM, concatenate, write back to disk
             if self.counts:
@@ -207,7 +207,7 @@ class h5pathManager():
             # cannot concatenate empty AnnData object so set to tile.counts then back in temp file on disk
             else:
                 self.counts = tile.counts
-                self.counts.filename = os.path.join(self.countspath.name + '/tmpfile.h5ad')
+                self.counts.filename = str(self.countspath.name) + '/tmpfile.h5ad'
 
     def update_tile(self, key, val, target):
         """
