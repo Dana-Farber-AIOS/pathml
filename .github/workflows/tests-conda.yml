@@ -50,7 +50,9 @@ jobs:
         use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
     - name: Conda info
       shell: bash -l {0}
-      run: conda info
+      run: |
+        conda info
+        conda list
     - name: Test with pytest
       shell: bash -l {0}
       run: |

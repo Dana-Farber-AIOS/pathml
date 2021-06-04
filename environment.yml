@@ -22,4 +22,5 @@ dependencies:
       - openslide-python>=1.1.1
       - javabridge
       - python-bioformats
+      - scanpy>=1.7.2
       - anndata>=0.7.6
