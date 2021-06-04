@@ -1026,7 +1026,7 @@ class SegmentMIF(Transform):
     
     def apply(self, tile):
         assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
-        assert tile.slide_type.stain == "IF", f"Tile has slide_type.stain={tile.slide_type.stain}, but must be 'IF'"
+        assert tile.slide_type.stain == "Fluor", f"Tile has slide_type.stain='{tile.slide_type.stain}', but must be 'Fluor'"
         cell_segmentation, nuclear_segmentation = self.F(tile.image) 
         tile.masks['cell_segmentation'] = cell_segmentation
         tile.masks['nuclear_segmentation'] = nuclear_segmentation
@@ -1090,7 +1090,7 @@ class QuantifyMIF(Transform):
     def apply(self, tile):
         assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
         assert self.segmentation_mask in tile.masks, f"passed segmentation mask '{self.segmentation_mask}' does not exist for tile {tile}"
-        assert tile.slide_type.stain == "IF", f"Tile has slide_type.stain={tile.slide_type.stain}, but must be 'IF'"
+        assert tile.slide_type.stain == "Fluor", f"Tile has slide_type.stain='{tile.slide_type.stain}', but must be 'Fluor'"
         tile.counts = self.F(tile)
 
 
@@ -1112,7 +1112,7 @@ class CollapseRunsVectra(Transform):
 
     def apply(self, tile):
         assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
-        assert tile.slide_type.platform == "Vectra", f"Tile has slide_type.platform={tile.slide_type.platform}, but must be 'Vectra'"
+        assert tile.slide_type.platform == "Vectra", f"Tile has slide_type.platform='{tile.slide_type.platform}', but must be 'Vectra'"
         tile.image = self.F(tile.image)
 
 
