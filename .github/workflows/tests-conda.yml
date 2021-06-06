@@ -10,7 +10,7 @@ jobs:
     strategy:
       max-parallel: 5
       matrix:
-        python-version: [3.8]
+        python-version: [3.8, 3.9]
 
     steps:
     - uses: actions/checkout@v2
@@ -34,7 +34,7 @@ jobs:
       # uses: conda-incubator/setup-miniconda@f4c00b0ec69bdc87b1ab4972613558dd9f4f36f3
       uses: conda-incubator/setup-miniconda@v2.0.0
       with:
-        environment-file: environment-dev.yml
+        environment-file: environment.yml
         activate-environment: pathml
         python-version: ${{ matrix.python-version }}
     - name: Conda info
