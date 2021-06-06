@@ -21,16 +21,6 @@ jobs:
     # Test matrix by printing the current Python version
     - name: Display Python version
       run: python -c "import sys; print(sys.version)"
-    # cache conda packages: https://github.com/conda-incubator/setup-miniconda#caching
-    - name: Cache conda
-      uses: actions/cache@v2
-      env:
-        # Increase this value to reset cache if etc/example-environment.yml has not changed
-        CACHE_NUMBER: 0
-      with:
-        path: ~/conda_pkgs_dir
-        key:
-          ${{ runner.os }}-conda-${{ matrix.python-version }}-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment.yml') }}
     - name: Install dependencies
       shell: bash -l {0}
       run: |
@@ -47,7 +37,6 @@ jobs:
         environment-file: environment-dev.yml
         activate-environment: pathml
         python-version: ${{ matrix.python-version }}
-        use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
     - name: Conda info
       shell: bash -l {0}
       run: |
