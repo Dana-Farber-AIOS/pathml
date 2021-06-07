@@ -1,7 +1,7 @@
 Models
 ======
 
-``PathML`` comes with several model architectures ready to use out of the box.
+``PathML`` comes with model architectures ready to use out of the box.
 
 .. table::
     :widths: 20, 20, 60
@@ -13,9 +13,9 @@ Models
     :class:`~pathml.ml.hovernet.HoVerNet` [HoVerNet]_  A model for nucleus segmentation and classification in H&E images
     ===================================== ============ =============
 
-You can also use models from `torchvision.models <https://pytorch.org/docs/stable/torchvision/models.html>`_, or create your own!
-
-In many cases, model parameters (weights) for pretrained networks may be available for use through the Model Repository.
+You can also use models from fantastic resources such as
+`torchvision.models <https://pytorch.org/docs/stable/torchvision/models.html>`_ and
+`pytorch-image-models (timm) <https://rwightman.github.io/pytorch-image-models/>`_, or create your own!
 
 References
 ----------

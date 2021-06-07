@@ -1,5 +1,5 @@
-Datasets Quickstart
-===================
+Datasets
+========
 
 The ``pathml.datasets`` module provides easy access to common datasets for standardized model evaluation and comparison.
 

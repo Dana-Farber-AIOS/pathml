@@ -6,12 +6,17 @@ License: GNU GPL 2.0
 import os
 import cv2
 import numpy as np
+import pandas as pd
 import spams
+from skimage import restoration
+import anndata
+from skimage.measure import regionprops_table
+from warnings import warn
 
 import pathml.core
 import pathml.core.slide_data
 
-from pathml.utils import RGB_to_GREY, RGB_to_HSV, normalize_matrix_cols, RGB_to_OD
+from pathml.utils import RGB_to_GREY, RGB_to_HSV, normalize_matrix_cols, RGB_to_OD, RGB_to_HSI
 
 
 # Base class
@@ -28,7 +33,7 @@ class Transform:
         raise NotImplementedError
 
     def apply(self, tile):
-        """modify chunk"""
+        """modify Tile object in-place"""
         raise NotImplementedError
 
 
@@ -143,7 +148,7 @@ class BinaryThreshold(Transform):
     def apply(self, tile):
         assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
         assert self.mask_name is not None, "mask_name is None. Must supply a valid mask name"
-        if issubclass(tile.slidetype, pathml.core.slide_data.RGBSlide):
+        if tile.slide_type.rgb:
             im = RGB_to_GREY(tile.image)
         else:
             im = np.squeeze(tile.image)
@@ -664,8 +669,7 @@ class StainNormalizationHE(Transform):
 
     def apply(self, tile):
         assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
-        assert issubclass(tile.slidetype, pathml.core.slide_data.HESlide), \
-            f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
+        assert tile.slide_type.stain == "HE", f"Tile has slide_type.stain={tile.slide_type.stain}, but must be 'HE'"
         tile.image = self.F(tile.image)
 
 
@@ -719,8 +723,7 @@ class NucleusDetectionHE(Transform):
     def apply(self, tile):
         assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
         assert self.mask_name is not None, "mask_name is None. Must supply a valid mask name"
-        assert issubclass(tile.slidetype, pathml.core.slide_data.HESlide), \
-            f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
+        assert tile.slide_type.stain == "HE", f"Tile has slide_type.stain={tile.slide_type.stain}, but must be 'HE'"
         nucleus_mask = self.F(tile.image)
         tile.masks[self.mask_name] = nucleus_mask
 
@@ -744,7 +747,7 @@ class TissueDetectionHE(Transform):
         outer_contours_only (bool): If true, ignore holes in detected foreground regions. Defaults to False.
         mask_name (str): name for new mask
     """
-
+    
     def __init__(self, mask_name=None, use_saturation=True, blur_ksize=17, threshold=None, morph_n_iter=3, morph_k_size=7,
                  min_region_size=5000, max_hole_size=1500, outer_contours_only=False):
         self.use_sat = use_saturation
@@ -786,7 +789,362 @@ class TissueDetectionHE(Transform):
     def apply(self, tile):
         assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
         assert self.mask_name is not None, "mask_name is None. Must supply a valid mask name"
-        assert issubclass(tile.slidetype, pathml.core.slide_data.HESlide), \
-            f"Input tile has slidetype {tile.slidetype}, but transform is meant for H&E images."
+        assert tile.slide_type.stain == "HE", f"Tile has slide_type.stain={tile.slide_type.stain}, but must be 'HE'"
         mask = self.F(tile.image)
         tile.masks[self.mask_name] =  mask
+
+
+class LabelWhiteSpaceHE(Transform):
+    """
+    Simple threshold method to label an image as majority whitespace.
+    Converts image to greyscale. If the proportion of pixels exceeding the greyscale threshold is greater
+    than the proportion threshold, then the image is labelled as whitespace.
+
+    Args:
+        label_name (str): name for new mask
+    """
+    def __init__(self, label_name=None, greyscale_threshold=230, proportion_threshold=0.5):
+        self.label_name = label_name
+        self.greyscale_threshold = greyscale_threshold
+        self.proportion_threshold = proportion_threshold
+
+    def __repr__(self):
+        return f"LabelWhiteSpaceHE(label_name={self.label_name}, greyscale_threshold={self.greyscale_threshold}, " \
+               f"proportion_threshold={self.proportion_threshold})"
+
+    def F(self, image):
+        grey = RGB_to_GREY(image)
+        pixel_thresh = np.mean(grey > self.greyscale_threshold)
+        return pixel_thresh > self.proportion_threshold
+
+    def apply(self, tile):
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        assert self.label_name is not None, "label_name is None. Must supply a valid label name"
+        assert tile.slide_type.stain == "HE", f"Tile has slide_type.stain={tile.slide_type.stain}, but must be 'HE'"
+        label = self.F(tile.image)
+        if tile.labels:
+            tile.labels[self.label_name] = label
+        else:
+            tile.labels = {self.label_name: label}
+
+
+class LabelArtifactTileHE(Transform):
+    """
+    Applies a rule-based method to identify whether or not an image contains artifacts (e.g. pen marks).
+    Based on criteria from Kothari et al. 2012 ACM-BCB 218-225.
+
+    Args:
+        label_name (str): name for new mask
+
+    References:
+        Kothari, S., Phan, J.H., Osunkoya, A.O. and Wang, M.D., 2012, October. Biological interpretation of
+        morphological patterns in histopathological whole-slide images. In Proceedings of the ACM Conference
+        on Bioinformatics, Computational Biology and Biomedicine (pp. 218-225).
+    """
+    def __init__(self, label_name=None):
+        self.label_name = label_name
+
+    def __repr__(self):
+        return f"LabelArtifactTileHE(label_name={self.label_name})"
+
+    def F(self, image):
+        image_hsi = RGB_to_HSI(image)
+        h = image_hsi[:, :, 0]
+        s = image_hsi[:, :, 1]
+        i = image_hsi[:, :, 2]
+        whitespace = np.logical_and(i >= 0.1, s <= 0.1)
+        p1 = np.logical_and(0.4 < h, 0.7 > h)
+        p2 = np.logical_and(p1, s > 0.1)
+        pen_mark = np.logical_or(p2, i < 0.1)
+        tissue = ~np.logical_or(whitespace, pen_mark)
+        mean_whitespace = np.mean(whitespace)
+        mean_pen = np.mean(pen_mark)
+        mean_tissue = np.mean(tissue)
+        if (mean_whitespace >= 0.8) or (mean_pen >= 0.05) or (mean_tissue < 0.5):
+            return True
+        else:
+            return False
+
+    def apply(self, tile):
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        assert self.label_name is not None, "label_name is None. Must supply a valid label name"
+        assert tile.slide_type.stain == "HE", f"Tile has slide_type.stain={tile.slide_type.stain}, but must be 'HE'"
+        label = self.F(tile.image)
+        if tile.labels:
+            tile.labels[self.label_name] = label
+        else:
+            tile.labels = {self.label_name: label}
+
+
+class DeconvolveMIF(Transform):
+    """
+    NOTE: This function is WIP and untested.
+
+    Apply image deconvolution. Models blurring/noise as caused by
+    diffraction-limited optics through convolution by a point spread 
+    function (psf). 
+    
+    By default utilizes a Theoretical PSF based on microscope parameters.
+    
+    Supports the use of an Experimental PSF measured by imaging beads.
+    
+    Use Richardson-Lucy deconvolution algorithm.
+    Generation of theoretical PSF requires:
+        index of refraction of media
+        numerical aperture
+        wavelength
+        longitudinal spherical aberration at max aperture
+        image pixel spacing (ccd spacing / mag)
+        slice spacing
+        width
+        height
+        depth
+        normalization
+    
+    Args:
+        psf(): point spread function for microscope
+    """
+    def __init__(self, psf=None, psfparameters=None, iterations=30):
+        # ij = imagej.init()
+        assert psf is None or isinstance(psf, np.ndarray), f"psf must be None or an np.ndarray. input psf is type {type(psf)}"
+        self.psf = psf
+        if psfparameters:
+            assert psf is None, f"you passed an empirical psf, cannot simultaneously use theoretical psf"
+        self.psfparameters = psfparameters
+        self.iterations = iterations
+    
+    def __repr__(self):
+        return f"DeconvolveMIF(psf={'empirical' if self.psf else self.psfparameters}, iterations={self.self.iterations}, " \
+               f"gpu={self.gpu})"
+    
+    def F(self, image, slidetype):
+        # TODO: get image in skimage format
+        if self.slidetype == pathml.core.slide_data.VectraSlide:
+            if self.psf is None and self.psfparameters:
+                # create theoretical PSF from parameters
+                # pip psf
+                # astropsf
+                # wetzstein lab version
+                pass
+            else:
+                # default theoretical PSF 
+                pass
+        elif self.slidetype == pathml.core.slide_data.CODEXSlide:
+            if self.psf is None and self.psfparameters:
+                # create theoretical PSF from parameters
+                pass
+            else:
+                # default theoretical PSF 
+                pass
+        deconvolved = restoration.richardson_lucy(image, self.psf, iterations = self.iterations)
+        return deconvolved
+    
+    def apply(self, tile):
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        tile.image = self.F(tile.image, tile.slidetype)
+
+
+class SegmentMIF(Transform):
+    """
+    Transform applying segmentation to MIF images.
+
+    Input image must be formatted (c, x, y) or (batch, c, x, y). z and t dimensions must be selected before calling SegmentMIF
+
+    Supported models:
+
+    Mesmer. Mesmer uses human-in-the-loop pipeline to train a  ResNet50 backbone w/ Feature Pyramid Network
+    segmentation model on 1.3 million cell annotations and 1.2 million nuclear annotations (TissueNet dataset).
+    Model outputs predictions for centroid and boundary of every nucleus and cell, then centroid and boundary
+    predictions are used as inputs to a watershed algorithm that creates segmentation masks.
+
+    Args:
+        model(str): string indicating which segmentation model to use. Currently only 'mesmer' is supported.
+        nuclear_channel(int): channel that defines cell nucleus
+        cytoplasm_channel(int): channel that defines cell membrane or cytoplasm
+        image_resolution(float): resolution of image in microns
+        gpu(bool): flag indicating whether gpu will be used for inference
+
+    References:
+        Greenwald, N.F., Miller, G., Moen, E., Kong, A., Kagel, A., Fullaway, C.C., McIntosh, B.J., Leow, K., Schwartz,
+        M.S., Dougherty, T. and Pavelchek, C., 2021. Whole-cell segmentation of tissue images with human-level
+        performance using large-scale data annotation and deep learning. bioRxiv.
+    """
+    def __init__(self, 
+            model='mesmer', 
+            nuclear_channel=None,
+            cytoplasm_channel=None,
+            image_resolution=0.5, 
+            gpu=True,
+            postprocess_kwargs_whole_cell = None,
+            postprocess_kwrags_nuclear = None
+        ):
+        assert isinstance(nuclear_channel, int), f"nuclear_channel must be an int indicating index"
+        assert isinstance(cytoplasm_channel, int), f"cytoplasm_channel must be an int indicating index"
+        self.nuclear_channel = nuclear_channel
+        self.cytoplasm_channel = cytoplasm_channel
+        self.image_resolution = image_resolution
+        self.gpu = gpu
+        if model == 'mesmer':
+            try:
+                from deepcell.applications import Mesmer
+            except ImportError:
+                warn(
+                    """The Mesmer model in SegmentMIF requires extra libraries to be installed.
+                You can install these via pip using:
+
+                pip install deepcell
+                """
+                )
+                raise ImportError(
+                    "The Mesmer model in SegmentMIF requires deepcell to be installed"
+                ) from None
+            self.model = Mesmer()
+        elif self.model == 'cellpose':
+            """from cellpose import models
+            self.model = models.Cellpose(gpu=self.gpu, model_type='cyto')"""
+            raise NotImplementedError("Cellpose model not currently supported")
+        else:
+            raise ValueError(f"currently only support mesmer model")
+    
+    def __repr__(self):
+        return f"SegmentMIF(model={self.model}, image_resolution={self.image_resolution}, " \
+               f"gpu={self.gpu})"
+    
+    def F(self, image):
+        img = image.copy()
+        if len(img.shape) not in [3, 4]:
+            raise ValueError(f"input image has shape {img.shape}. supported image shapes are x,y,c or batch,x,y,c."
+                             "did you forget to apply 'CollapseRuns*()' transform?")
+        if len(img.shape) == 3:
+            img = np.expand_dims(img, axis=0)
+        nuc_cytoplasm = np.stack((img[:,:,:,self.nuclear_channel], img[:,:,:,self.cytoplasm_channel]), axis=-1)
+        cell_segmentation_predictions = self.model.predict(nuc_cytoplasm, compartment='whole-cell')
+        nuclear_segmentation_predictions = self.model.predict(nuc_cytoplasm, compartment='nuclear')
+        cell_segmentation_predictions = np.squeeze(cell_segmentation_predictions, axis=0)
+        nuclear_segmentation_predictions = np.squeeze(nuclear_segmentation_predictions, axis=0)
+        return cell_segmentation_predictions, nuclear_segmentation_predictions
+    
+    def apply(self, tile):
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        assert tile.slide_type.stain == "Fluor", f"Tile has slide_type.stain='{tile.slide_type.stain}', but must be 'Fluor'"
+        cell_segmentation, nuclear_segmentation = self.F(tile.image) 
+        tile.masks['cell_segmentation'] = cell_segmentation
+        tile.masks['nuclear_segmentation'] = nuclear_segmentation
+
+
+class QuantifyMIF(Transform):
+    """
+    Convert segmented image into anndata.AnnData counts object.
+
+    Args:
+        segmentation_mask (str): key indicating which mask to use as label image
+    """
+    def __init__(self, segmentation_mask):
+        self.segmentation_mask = segmentation_mask
+
+    def __repr__(self):
+        return f"QuantifyMIF(segmentation_mask={self.segmentation_mask})"
+    
+    def F(self, tile):
+        # pass (x, y, channel) image and (x, y) segmentation
+        img = tile.image.copy()
+        segmentation = tile.masks[self.segmentation_mask][:,:,0]
+        countsdataframe = regionprops_table(
+                label_image = segmentation,
+                intensity_image = img,
+                properties = [
+                    'coords','max_intensity',
+                    'mean_intensity','min_intensity',
+                    'centroid','filled_area',
+                    'eccentricity','euler_number','slice'
+                ] 
+        )
+        X = pd.DataFrame()
+        for i in range(img.shape[-1]):
+            X[i] = countsdataframe[f'mean_intensity-{i}'] 
+        # populate anndata object
+        counts = anndata.AnnData(
+                X=X, 
+                obs=[tuple([x+tile.coords[0],y+tile.coords[1]]) for x, y in zip(countsdataframe['centroid-0'], countsdataframe['centroid-1'])]
+        )
+        counts.obs = counts.obs.rename(columns={0:'x',1:'y'})
+        counts.obs['coords'] = countsdataframe['coords']
+        counts.obs['filled_area'] = countsdataframe['filled_area']
+        counts.obs['slice'] = countsdataframe['slice']
+        counts.obs['euler_number'] = countsdataframe['euler_number']
+        min_intensities = pd.DataFrame()
+        for i in range(img.shape[-1]):
+            min_intensities[i] = countsdataframe[f'min_intensity-{i}'] 
+        counts.layers['min_intensity'] = min_intensities 
+        max_intensities = pd.DataFrame()
+        for i in range(img.shape[-1]):
+            max_intensities[i] = countsdataframe[f'max_intensity-{i}'] 
+        counts.layers['max_intensity'] = max_intensities 
+        try:
+            counts.obsm['spatial'] = np.array(counts.obs[['x','y']])
+        except:
+            pass
+        counts.obs['tile'] = str(tile.coords)
+        return counts
+    
+    def apply(self, tile):
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        assert self.segmentation_mask in tile.masks, f"passed segmentation mask '{self.segmentation_mask}' does not exist for tile {tile}"
+        assert tile.slide_type.stain == "Fluor", f"Tile has slide_type.stain='{tile.slide_type.stain}', but must be 'Fluor'"
+        tile.counts = self.F(tile)
+
+
+class CollapseRunsVectra(Transform):
+    """
+    Coerce Vectra output to standard format.
+    Vectra format is (x, y, 1, c, 1).
+    Output format is (x, y, c).
+    """
+    def __init__(self):
+        pass
+
+    def __repr__(self):
+        return f"CollapseRunsVectra()"
+
+    def F(self, image):
+        image = image[:,:,0,:,0]
+        return image 
+
+    def apply(self, tile):
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        assert tile.slide_type.platform == "Vectra", f"Tile has slide_type.platform='{tile.slide_type.platform}', but must be 'Vectra'"
+        tile.image = self.F(tile.image)
+
+
+class CollapseRunsCODEX(Transform):
+    """
+    Coerce CODEX output to standard format.
+    CODEX format is (x, y, z, c, t) where c=4 (4 runs per cycle) and t is the number of cycles.
+    Output format is (x, y, c) where all cycles are collapsed into c (c = 4 * # of cycles).
+
+    Args:
+        z(int): in-focus z-plane for cells of interest
+    """
+    def __init__(self, z):
+        self.z = z
+
+    def __repr__(self):
+        return f"CollapseRunsCODEX(z={self.z})"
+
+    def F(self, image):
+        # collapse channels
+        import functools
+        s = list(image.shape)
+        i=3
+        n=1
+        combined = functools.reduce(lambda x,y: x*y, s[i:i+n+1])
+        image = np.reshape(image, s[:i] + [combined] + s[i+n+1:])
+        # select z plane
+        assert self.z in range(image.shape[3])
+        image = image[:,:,self.z,:]
+        return image 
+
+    def apply(self, tile):
+        assert isinstance(tile, pathml.core.tile.Tile), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        assert tile.slide_type.platform == "CODEX", f"Tile has slide_type.platform={tile.slide_type.platform}, but must be 'CODEX'"
+        tile.image = self.F(tile.image)

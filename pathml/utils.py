@@ -183,7 +183,9 @@ def RGB_to_HSI(imarr):
     R = imarr[:, :, 0]
     G = imarr[:, :, 1]
     B = imarr[:, :, 2]
-    patch_sum = np.sum(imarr, axis = 2)
+    # add some noise to avoid divide by zero
+    eps = 1e-6
+    patch_sum = np.sum(imarr, axis = 2) + eps
     r = R / patch_sum
     g = G / patch_sum
     b = B / patch_sum
@@ -206,7 +208,7 @@ def RGB_to_HSI(imarr):
 def RGB_to_OD(imarr):
     """
     Convert input image from RGB space to optical density (OD) space.
-    `OD = -\log(I)`, where I is the input image in RGB space.
+    `OD = -log(I)`, where I is the input image in RGB space.
 
     :param imarr: Image array, RGB format
     :type imarr: numpy.ndarray
@@ -263,57 +265,6 @@ def normalize_matrix_cols(A):
     :rtype: np.ndarray
     """
     return A / np.linalg.norm(A, axis = 0)[None, :]
-
-
-def label_artifact_tile_HE(imarr):
-    """
-    Applies a rule-based method to identify whether or not a imarr contains artifacts (e.g. pen marks).
-    Based on criteria from Kothari et al. 2012 ACM-BCB 218-225.
-
-    :param imarr: numpy array of RGB image_ref (m, n, 3)
-    :type imarr: np.ndarray
-    :return: artifact status
-    :rtype: bool
-
-    References:
-        Kothari, S., Phan, J.H., Osunkoya, A.O. and Wang, M.D., 2012, October. Biological interpretation of
-        morphological patterns in histopathological whole-slide images. In Proceedings of the ACM Conference
-        on Bioinformatics, Computational Biology and Biomedicine (pp. 218-225).
-    """
-    hsi_patch = RGB_to_HSI(imarr)
-    h = hsi_patch[:, :, 0]
-    s = hsi_patch[:, :, 1]
-    i = hsi_patch[:, :, 2]
-    whitespace = np.logical_and(i >= 0.1, s <= 0.1)
-    p1 = np.logical_and(0.4 < h, 0.7 > h)
-    p2 = np.logical_and(p1, s > 0.1)
-    pen_mark = np.logical_or(p2, i < 0.1)
-    tissue = ~np.logical_or(whitespace, pen_mark)
-    mean_whitespace = np.mean(whitespace)
-    mean_pen = np.mean(pen_mark)
-    mean_tissue = np.mean(tissue)
-    if (mean_whitespace >= 0.8) or (mean_pen >= 0.05) or (mean_tissue < 0.5):
-        return True
-    else:
-        return False
-
-
-def label_whitespace_HE(imarr, greyscale_threshold=230, proportion_threshold=0.5):
-    """
-    Simple threshold method to label an image as majority whitespace.
-    Converts image to greyscale. If the proportion of pixels exceeding the greyscale threshold is greater
-    than the proportion threshold, then the image is labelled as whitespace.
-
-    :param imarr: RGB input image.
-    :param greyscale_threshold: Threshold above which a pixel is classified as whitespace. Defaults to 230.
-    :param proportion_threshold: Proportion of whitespace pixels above which the entire image will be classified
-        as whitespace. Defaults to 0.5.
-    :return: True if whitespace, False otherwise
-    :rtype: bool
-    """
-    grey = RGB_to_GREY(imarr)
-    pixel_thresh = np.mean(grey > greyscale_threshold)
-    return pixel_thresh > proportion_threshold
 
 
 def plot_segmentation(ax, masks, palette=None, markersize=5):

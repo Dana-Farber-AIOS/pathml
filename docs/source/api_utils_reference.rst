@@ -6,13 +6,13 @@ Documentation for various utilities from all modules.
 Core Utils
 ----------
 
-.. autofunction:: pathml.core.utils.readtilesdicth5
 .. autofunction:: pathml.core.utils.readtupleh5
 .. autofunction:: pathml.core.utils.writedataframeh5
 .. autofunction:: pathml.core.utils.writedicth5
 .. autofunction:: pathml.core.utils.writestringh5
-.. autofunction:: pathml.core.utils.writetilesdicth5
 .. autofunction:: pathml.core.utils.writetupleh5
+.. autofunction:: pathml.core.utils.readcounts
+.. autofunction:: pathml.core.utils.writecounts
 
 Datasets Utils
 --------------
@@ -47,6 +47,4 @@ Miscellaneous Utils
 .. autofunction:: pathml.utils.RGB_to_GREY
 .. autofunction:: pathml.utils.normalize_matrix_rows
 .. autofunction:: pathml.utils.normalize_matrix_cols
-.. autofunction:: pathml.utils.label_artifact_tile_HE
-.. autofunction:: pathml.utils.label_whitespace_HE
 .. autofunction:: pathml.utils.plot_segmentation

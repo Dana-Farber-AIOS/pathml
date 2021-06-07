@@ -19,11 +19,9 @@ def test_init_incorrect_input(incorrect_input, incorrect_input_name):
         testname = Tile(np.random.randn((224,224,3)), coords=(1,3), name=incorrect_input_name)
 
 
-def test_image():
+def test_tile():
+    # test init
     tile = Tile(np.ones((224,224,3)), coords=(1,3))
     assert (tile.image).all() == (np.ones((224,224,3))).all()
-
-
-def test_repr(tile_withmasks):
-    tile = tile_withmasks
+    # test repr
     print(tile)

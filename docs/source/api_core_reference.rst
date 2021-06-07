@@ -8,20 +8,34 @@ The central class in ``PathML`` for representing a whole-slide image.
 
 .. autoclass:: pathml.core.SlideData
 
-RGBSlide
-^^^^^^^^
 
-.. autoclass:: pathml.core.RGBSlide
-
-HESlide
-^^^^^^^
+Convenience SlideData Classes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: pathml.core.HESlide
-
-MultiparametricSlide
-^^^^^^^^^^^^^^^^^^^^
-
+.. autoclass:: pathml.core.VectraSlide
 .. autoclass:: pathml.core.MultiparametricSlide
+.. autoclass:: pathml.core.CODEXSlide
+
+
+Slide Types
+-----------
+
+.. autoclass:: pathml.core.SlideType
+    :exclude-members: tma, platform, rgb, stain, volumetric, time_series
+
+
+We also provide instantiations of common slide types for convenience:
+
+    =============================  =======  ========   ======= =======  ==========  ===========
+    Type                           stain    platform   rgb     tma      volumetric  time_series
+    =============================  =======  ========   ======= =======  ==========  ===========
+    ``pathml.core.types.HE``       'HE'     None       True    False    False       False
+    ``pathml.core.types.IHC``      'IHC'    None       True    False    False       False
+    ``pathml.core.types.IF``       'Fluor'  None       False   False    False       False
+    ``pathml.core.types.CODX``     'Fluor'  'CODEX'    False   False    False       False
+    ``pathml.core.types.Vectra``   'Fluor'  'Vectra'   False   False    False       False
+    =============================  =======  ========   ======= =======  ==========  ===========
 
 Tile
 ----
@@ -59,13 +73,7 @@ DICOMBackend
 
 .. autoclass:: pathml.core.DICOMBackend
 
-Reading and Writing
--------------------
+h5pathManager
+-------------
 
-.. autofunction:: pathml.core.h5path.write_h5path
-.. autofunction:: pathml.core.h5path.read
-.. autofunction:: pathml.core.h5path.read_h5path
-.. autofunction:: pathml.core.h5path.read_openslide
-.. autofunction:: pathml.core.h5path.read_bioformats
-.. autofunction:: pathml.core.h5path.read_dicom
-.. autofunction:: pathml.core.h5path.is_valid_path
+.. autoclass:: pathml.core.h5managers.h5pathManager
