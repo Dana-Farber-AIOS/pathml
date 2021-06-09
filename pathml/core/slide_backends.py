@@ -23,6 +23,7 @@ from pathml.utils import pil_to_rgb
 import pathml.core
 import pathml.core.tile
 
+
 class SlideBackend:
     """base class for backends that interface with slides on disk"""
     def extract_region(self, location, size, level, **kwargs):
@@ -50,6 +51,9 @@ class OpenSlideBackend(SlideBackend):
     def __init__(self, filename):
         self.filename = filename
         self.slide = openslide.open_slide(filename = filename)
+
+    def __repr__(self):
+        return f"OpenSlideBackend('{self.filename}')"
 
     def extract_region(self, location, size, level=None):
         """
@@ -226,6 +230,9 @@ class BioFormatsBackend(SlideBackend):
         self.shape = (sizex, sizey, sizez, sizec, sizet)
         self.imagecache = None
         self.metadata = bioformats.get_omexml_metadata(self.filename)
+
+    def __repr__(self):
+        return f"BioFormatsBackend('{self.filename}')"
 
     def get_image_shape(self):
         """
@@ -440,6 +447,11 @@ class DICOMBackend(SlideBackend):
         # get basic offset table, to enable reading individual frames without loading entire image
         self.bot = self.get_bot(self.fp)
         self.first_frame = self.fp.tell()
+
+    def __repr__(self):
+        out = f"DICOMBackend('{self.filename}')\n"
+        out += f"image shape: {self.shape}; frame shape: {self.frame_shape}; frame grid: {(self.n_rows, self.n_cols)}"
+        return out
 
     @staticmethod
     def get_bot(fp):
