@@ -4,6 +4,8 @@
 
 A toolkit for computational pathology and machine learning.
 
+![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg)
+
 * [Installing](#installing)
    * [Requirements](#requirements)
    * [Installation](#installation)
