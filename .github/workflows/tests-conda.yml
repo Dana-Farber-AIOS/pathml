@@ -1,4 +1,4 @@
-name: Python Package using Conda
+name: Tests
 
 on: 
   pull_request:
@@ -42,6 +42,9 @@ jobs:
       run: |
         conda info
         conda list
+    - name: pip install pathml
+      shell: bash -l {0}
+      run: pip install -e .
     - name: Test with pytest
       shell: bash -l {0}
       run: |

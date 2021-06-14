@@ -15,7 +15,6 @@ setuptools.setup(
     install_requires=[
         'numpy>=1.16.4,<1.20',
         'openslide-python',
-        'openjdk==8.0.152',
         'javabridge',
         'python-bioformats',
         'pydicom',
@@ -28,7 +27,7 @@ setuptools.setup(
         'dask',
         'anndata',
         'scanpy',
-        'pytorch',
+        'torch',
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
