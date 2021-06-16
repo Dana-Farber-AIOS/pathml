@@ -10,7 +10,14 @@ import numpy as np
 import h5py
 
 import pathml
-from pathml.core import SlideData, HESlide, MultiparametricSlide, OpenSlideBackend, BioFormatsBackend, Tile
+from pathml.core import (
+    SlideData,
+    HESlide,
+    MultiparametricSlide,
+    OpenSlideBackend,
+    BioFormatsBackend,
+    Tile,
+)
 from pathml.core.slide_data import get_file_ext
 from pathml.preprocessing import Pipeline, BoxBlur
 
@@ -21,13 +28,16 @@ def test_repr(slide):
     repr(s)
 
 
-@pytest.mark.parametrize("path,ext", [
-    ("/test/testing/test.txt", ".txt"),
-    ("/test/testing/test.txt.gz", ".txt"),
-    ("/test/testing/test.txt.bz2", ".txt"),
-    ("/test/testing/test.qptiff", ".qptiff"),
-    ("/test/testing/test.ext1.ext2", ".ext1.ext2")
-])
+@pytest.mark.parametrize(
+    "path,ext",
+    [
+        ("/test/testing/test.txt", ".txt"),
+        ("/test/testing/test.txt.gz", ".txt"),
+        ("/test/testing/test.txt.bz2", ".txt"),
+        ("/test/testing/test.qptiff", ".qptiff"),
+        ("/test/testing/test.ext1.ext2", ".ext1.ext2"),
+    ],
+)
 def test_get_file_ext(path, ext):
     result = get_file_ext(path)
     assert result == ext
@@ -39,11 +49,11 @@ def test_write_with_array_labels(tmp_path, example_slide_data):
 
 
 def test_run_pipeline(example_slide_data):
-    pipeline = Pipeline([BoxBlur(kernel_size = 15)])
+    pipeline = Pipeline([BoxBlur(kernel_size=15)])
     # start the dask client
     client = Client()
     # run the pipeline
-    example_slide_data.run(pipeline = pipeline, client = client, tile_size = 50)
+    example_slide_data.run(pipeline=pipeline, client=client, tile_size=50)
     # close the dask client
     client.close()
 
@@ -51,23 +61,23 @@ def test_run_pipeline(example_slide_data):
 @pytest.mark.parametrize("overwrite_tiles", [True, False])
 def test_run_existing_tiles(slide_dataset_with_tiles, overwrite_tiles):
     dataset = slide_dataset_with_tiles
-    pipeline = Pipeline([BoxBlur(kernel_size = 15)])
+    pipeline = Pipeline([BoxBlur(kernel_size=15)])
     if overwrite_tiles:
-        dataset.run(pipeline, overwrite_existing_tiles = overwrite_tiles)
+        dataset.run(pipeline, overwrite_existing_tiles=overwrite_tiles)
     else:
         with pytest.raises(Exception):
-            dataset.run(pipeline, overwrite_existing_tiles = overwrite_tiles)
+            dataset.run(pipeline, overwrite_existing_tiles=overwrite_tiles)
 
 
 @pytest.fixture
 def he_slide():
-    wsi = HESlide("tests/testdata/small_HE.svs", backend = "openslide")
+    wsi = HESlide("tests/testdata/small_HE.svs", backend="openslide")
     return wsi
 
 
 @pytest.fixture
 def multiparametric_slide():
-    wsi = MultiparametricSlide("tests/testdata/smalltif.tif", backend = "bioformats")
+    wsi = MultiparametricSlide("tests/testdata/smalltif.tif", backend="bioformats")
     return wsi
 
 
@@ -81,7 +91,9 @@ def test_multiparametric(multiparametric_slide):
 @pytest.mark.parametrize("pad", [True, False])
 @pytest.mark.parametrize("level", [0])
 def test_generate_tiles_he(he_slide, shape, stride, pad, level):
-    for tile in he_slide.generate_tiles(shape = shape, stride = stride, pad = pad, level = level):
+    for tile in he_slide.generate_tiles(
+        shape=shape, stride=stride, pad=pad, level=level
+    ):
         assert isinstance(tile, Tile)
 
 
@@ -89,7 +101,9 @@ def test_generate_tiles_he(he_slide, shape, stride, pad, level):
 @pytest.mark.parametrize("stride", [None, 100])
 @pytest.mark.parametrize("pad", [True, False])
 def test_generate_tiles_multiparametric(multiparametric_slide, shape, stride, pad):
-    for tile in multiparametric_slide.generate_tiles(shape = shape, stride = stride, pad = pad):
+    for tile in multiparametric_slide.generate_tiles(
+        shape=shape, stride=stride, pad=pad
+    ):
         assert isinstance(tile, Tile)
 
 
@@ -97,7 +111,7 @@ def test_generate_tiles_multiparametric(multiparametric_slide, shape, stride, pa
 def test_generate_tiles_padding(he_slide, pad):
     shape = 300
     stride = 300
-    tiles = list(he_slide.generate_tiles(shape = shape, stride = stride, pad = pad))
+    tiles = list(he_slide.generate_tiles(shape=shape, stride=stride, pad=pad))
     # he_slide.slide.get_image_shape() --> (2967, 2220)
     # if no padding, expect: 9*7 = 63 tiles
     # if padding, expect: 10*8 - 80 tiles
@@ -109,7 +123,7 @@ def test_generate_tiles_padding(he_slide, pad):
 
 def test_read_write_heslide(tmp_path, example_slide_data_with_tiles):
     slidedata = example_slide_data_with_tiles
-    path = tmp_path / 'testhe.h5'
+    path = tmp_path / "testhe.h5"
     slidedata.write(path)
     readslidedata = SlideData(path)
     assert readslidedata.name == slidedata.name
@@ -138,6 +152,7 @@ def scan_hdf5(f, recursive=True, tab_step=2):
             elif isinstance(v, h5py.Group) and recursive:
                 elems.append((v.name, scan_node(v, tabs=tabs + tab_step)))
         return elems
+
     return scan_node(f)
 
 

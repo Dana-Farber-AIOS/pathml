@@ -17,9 +17,11 @@ class Pipeline(Transform):
         transform_sequence (list): sequence of transforms to be consecutively applied.
             List of `pathml.core.Transform` objects
     """
+
     def __init__(self, transform_sequence):
-        assert all([isinstance(t, Transform) for t in transform_sequence]), f"All elements in input list must be of" \
-                                                                            f" type pathml.core.Transform"
+        assert all([isinstance(t, Transform) for t in transform_sequence]), (
+            f"All elements in input list must be of" f" type pathml.core.Transform"
+        )
         self.transforms = transform_sequence
 
     def __len__(self):
@@ -36,7 +38,9 @@ class Pipeline(Transform):
         # this function has side effects
         # modifies the tile in place, but also returns the modified tile
         # need to do this for dask distributed
-        assert isinstance(tile, pathml.core.tile.Tile), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        assert isinstance(
+            tile, pathml.core.tile.Tile
+        ), f"argument of type {type(tile)} must be a pathml.core.Tile object."
         for t in self.transforms:
             t.apply(tile)
         return tile

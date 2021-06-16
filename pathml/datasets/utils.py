@@ -13,11 +13,7 @@ def parse_file_size(fs):
     """
     Parse a file size string into bytes.
     """
-    units = {"B": 1,
-             "KB": 10 ** 3,
-             "MB": 10 ** 6,
-             "GB": 10 ** 9,
-             "TB": 10 ** 12}
+    units = {"B": 1, "KB": 10 ** 3, "MB": 10 ** 6, "GB": 10 ** 9, "TB": 10 ** 12}
     number, unit = [s.strip() for s in fs.split()]
     return int(float(number) * units[unit.upper()])
 
@@ -42,10 +38,10 @@ def download_from_url(url, download_dir, name=None):
     if os.path.exists(path):
         return
     else:
-        os.makedirs(download_dir, exist_ok = True)
+        os.makedirs(download_dir, exist_ok=True)
 
         # Download the file from `url` and save it locally under `file_name`:
-        with urllib.request.urlopen(url) as response, open(path, 'wb') as out_file:
+        with urllib.request.urlopen(url) as response, open(path, "wb") as out_file:
             shutil.copyfileobj(response, out_file)
 
 
@@ -64,10 +60,12 @@ def pannuke_multiclass_mask_to_nucleus_mask(multiclass_mask):
         Tensor of shape (256, 256).
     """
     # verify shape of input
-    assert multiclass_mask.ndim == 3 and multiclass_mask.shape[0] == 6, \
-        f"Expecting a mask with dims (6, 256, 256). Got input of shape {multiclass_mask.shape}"
-    assert multiclass_mask.shape[1] == 256 and multiclass_mask.shape[2] == 256, \
-        f"Expecting a mask with dims (6, 256, 256). Got input of shape {multiclass_mask.shape}"
+    assert (
+        multiclass_mask.ndim == 3 and multiclass_mask.shape[0] == 6
+    ), f"Expecting a mask with dims (6, 256, 256). Got input of shape {multiclass_mask.shape}"
+    assert (
+        multiclass_mask.shape[1] == 256 and multiclass_mask.shape[2] == 256
+    ), f"Expecting a mask with dims (6, 256, 256). Got input of shape {multiclass_mask.shape}"
     # ignore last channel
-    out = np.sum(multiclass_mask[:-1, :, :], axis = 0)
+    out = np.sum(multiclass_mask[:-1, :, :], axis=0)
     return out

@@ -15,7 +15,10 @@ import cv2
 import shutil
 
 from pathml.datasets.base_data_module import BaseDataModule
-from pathml.datasets.utils import download_from_url, pannuke_multiclass_mask_to_nucleus_mask
+from pathml.datasets.utils import (
+    download_from_url,
+    pannuke_multiclass_mask_to_nucleus_mask,
+)
 from pathml.ml.hovernet import compute_hv_map
 
 
@@ -61,7 +64,15 @@ class PanNukeDataset(data.Dataset):
             distance of each nuclear pixel to its center of mass in the horizontal and vertical dimensions.
             This corresponds to Gamma(I) from the HoVer-Net paper. Defaults to ``False``.
     """
-    def __init__(self, data_dir, fold_ix=None, transforms=None, nucleus_type_labels=False, hovernet_preprocess=False):
+
+    def __init__(
+        self,
+        data_dir,
+        fold_ix=None,
+        transforms=None,
+        nucleus_type_labels=False,
+        hovernet_preprocess=False,
+    ):
         self.data_dir = data_dir
         self.fold_ix = fold_ix
         self.transforms = transforms
@@ -94,7 +105,7 @@ class PanNukeDataset(data.Dataset):
         stem = self.paths[ix]
         impath = self.imdir / f"{stem}.png"
         maskpath = self.maskdir / f"{stem}.npy"
-        tissue_type = str(impath.stem).split(sep = "_")[2]
+        tissue_type = str(impath.stem).split(sep="_")[2]
 
         im = cv2.imread(str(impath))
         mask = np.load(str(maskpath))
@@ -106,7 +117,7 @@ class PanNukeDataset(data.Dataset):
             mask = 1 - mask
 
         if self.transforms is not None:
-            transformed = self.transforms(image = im, mask = mask)
+            transformed = self.transforms(image=im, mask=mask)
             im = transformed["image"]
             mask = transformed["mask"]
 
@@ -124,7 +135,12 @@ class PanNukeDataset(data.Dataset):
             hv_map = compute_hv_map(mask_1c)
 
         if self.hovernet_preprocess:
-            out = torch.from_numpy(im), torch.from_numpy(mask), torch.from_numpy(hv_map), tissue_type
+            out = (
+                torch.from_numpy(im),
+                torch.from_numpy(mask),
+                torch.from_numpy(hv_map),
+                tissue_type,
+            )
         else:
             out = torch.from_numpy(im), torch.from_numpy(mask), tissue_type
 
@@ -180,8 +196,17 @@ class PanNukeDataModule(BaseDataModule):
         2020. PanNuke Dataset Extension, Insights and Baselines. arXiv preprint arXiv:2003.10778.
     """
 
-    def __init__(self, data_dir, download=False, shuffle=True, transforms=None,
-                 nucleus_type_labels=False, split=None, batch_size=8, hovernet_preprocess=False):
+    def __init__(
+        self,
+        data_dir,
+        download=False,
+        shuffle=True,
+        transforms=None,
+        nucleus_type_labels=False,
+        split=None,
+        batch_size=8,
+        hovernet_preprocess=False,
+    ):
         self.data_dir = Path(data_dir)
         self.download = download
         if download:
@@ -190,24 +215,33 @@ class PanNukeDataModule(BaseDataModule):
             # make sure that subdirectories exist
             imdir = self.data_dir / "images"
             maskdir = self.data_dir / "masks"
-            assert imdir.is_dir(), f"`download is False` but 'images' subdirectory not found at {imdir}"
-            assert maskdir.is_dir(), f"`download is False` but 'masks' subdirectory not found at {maskdir}"
+            assert (
+                imdir.is_dir()
+            ), f"`download is False` but 'images' subdirectory not found at {imdir}"
+            assert (
+                maskdir.is_dir()
+            ), f"`download is False` but 'masks' subdirectory not found at {maskdir}"
 
         self.shuffle = shuffle
         self.transforms = transforms
         self.nucleus_type_labels = nucleus_type_labels
-        assert split in [1, 2, 3, None], f"Error: input split {split} not valid. Must be one of [1, 2, 3] or None."
+        assert split in [
+            1,
+            2,
+            3,
+            None,
+        ], f"Error: input split {split} not valid. Must be one of [1, 2, 3] or None."
         self.split = split
         self.batch_size = batch_size
         self.hovernet_preprocess = hovernet_preprocess
 
     def _get_dataset(self, fold_ix):
         return PanNukeDataset(
-            data_dir = self.data_dir,
-            fold_ix = fold_ix,
-            transforms = self.transforms,
-            nucleus_type_labels = self.nucleus_type_labels,
-            hovernet_preprocess = self.hovernet_preprocess
+            data_dir=self.data_dir,
+            fold_ix=fold_ix,
+            transforms=self.transforms,
+            nucleus_type_labels=self.nucleus_type_labels,
+            hovernet_preprocess=self.hovernet_preprocess,
         )
 
     def _download_pannuke(self, download_dir):
@@ -219,13 +253,15 @@ class PanNukeDataModule(BaseDataModule):
                 print(f"Downloading fold {fold_ix}")
                 url = f"https://warwick.ac.uk/fac/sci/dcs/research/tia/data/pannuke/fold_{fold_ix}.zip"
                 name = os.path.basename(url)
-                download_from_url(url = url, download_dir = download_dir, name = name)
+                download_from_url(url=url, download_dir=download_dir, name=name)
                 path = os.path.join(download_dir, name)
                 # unzip
-                with zipfile.ZipFile(path, 'r') as zip_ref:
+                with zipfile.ZipFile(path, "r") as zip_ref:
                     zip_ref.extractall(download_dir)
             else:
-                warn(f"Skipping download of fold {fold_ix}, using local data found at {p}")
+                warn(
+                    f"Skipping download of fold {fold_ix}, using local data found at {p}"
+                )
 
         self._process_downloaded_pannuke(download_dir)
         self._clean_up_download_pannuke(download_dir)
@@ -245,24 +281,50 @@ class PanNukeDataModule(BaseDataModule):
 
         # stop if the output files already exist
         assert not imdir.is_dir(), f"Error: 'images' directory already exists: {imdir}"
-        assert not maskdir.is_dir(), f"Error: 'masks' directory already exists: {maskdir}"
+        assert (
+            not maskdir.is_dir()
+        ), f"Error: 'masks' directory already exists: {maskdir}"
 
         imdir.mkdir()
         maskdir.mkdir()
 
         for fold_ix in [1, 2, 3]:
-            ims_fold_path = pannuke_dir / f"Fold {fold_ix}" / "images" / f"fold{fold_ix}" / "images.npy"
-            masks_fold_path = pannuke_dir / f"Fold {fold_ix}" / "masks" / f"fold{fold_ix}" / "masks.npy"
-            types_fold_path = pannuke_dir / f"Fold {fold_ix}" / "images" / f"fold{fold_ix}" / "types.npy"
+            ims_fold_path = (
+                pannuke_dir
+                / f"Fold {fold_ix}"
+                / "images"
+                / f"fold{fold_ix}"
+                / "images.npy"
+            )
+            masks_fold_path = (
+                pannuke_dir
+                / f"Fold {fold_ix}"
+                / "masks"
+                / f"fold{fold_ix}"
+                / "masks.npy"
+            )
+            types_fold_path = (
+                pannuke_dir
+                / f"Fold {fold_ix}"
+                / "images"
+                / f"fold{fold_ix}"
+                / "types.npy"
+            )
 
             # make sure the input files exist
-            assert ims_fold_path.is_file(), f"Error: image file not found at {ims_fold_path}"
-            assert masks_fold_path.is_file(), f"Error: masks file not found at {masks_fold_path}"
-            assert types_fold_path.is_file(), f"Error: types file not found at {types_fold_path}"
+            assert (
+                ims_fold_path.is_file()
+            ), f"Error: image file not found at {ims_fold_path}"
+            assert (
+                masks_fold_path.is_file()
+            ), f"Error: masks file not found at {masks_fold_path}"
+            assert (
+                types_fold_path.is_file()
+            ), f"Error: types file not found at {types_fold_path}"
 
-            ims_fold = np.load(ims_fold_path, mmap_mode = 'r')
-            masks_fold = np.load(masks_fold_path, mmap_mode = 'r')
-            types_fold = np.load(types_fold_path, mmap_mode = 'r')
+            ims_fold = np.load(ims_fold_path, mmap_mode="r")
+            masks_fold = np.load(masks_fold_path, mmap_mode="r")
+            types_fold = np.load(types_fold_path, mmap_mode="r")
 
             # change masks dims from (B, H, W, C) to (B, C, H, W)
             masks_fold = np.moveaxis(masks_fold, 3, 1)
@@ -274,7 +336,7 @@ class PanNukeDataModule(BaseDataModule):
                 mask = masks_fold[j, ...]
                 tissue_type = types_fold[j]
                 # change underscores in tissue type label to dashes
-                tissue_type = re.sub(pattern = "_", repl = "-", string = tissue_type)
+                tissue_type = re.sub(pattern="_", repl="-", string=tissue_type)
                 file_basename = f"fold{fold_ix}_{j}_{tissue_type}"
                 im_fname = imdir / f"{file_basename}.png"
                 im_fname = str(im_fname.resolve())
@@ -302,10 +364,10 @@ class PanNukeDataModule(BaseDataModule):
         Yields (image, mask, tissue_type), or (image, mask, hv, tissue_type) for HoVer-Net
         """
         return data.DataLoader(
-            dataset = self._get_dataset(fold_ix = self.split),
-            batch_size = self.batch_size,
-            shuffle = self.shuffle, 
-            pin_memory=True
+            dataset=self._get_dataset(fold_ix=self.split),
+            batch_size=self.batch_size,
+            shuffle=self.shuffle,
+            pin_memory=True,
         )
 
     @property
@@ -319,10 +381,10 @@ class PanNukeDataModule(BaseDataModule):
         else:
             fold_ix = 1
         return data.DataLoader(
-            self._get_dataset(fold_ix = fold_ix),
-            batch_size = self.batch_size,
-            shuffle = self.shuffle, 
-            pin_memory=True
+            self._get_dataset(fold_ix=fold_ix),
+            batch_size=self.batch_size,
+            shuffle=self.shuffle,
+            pin_memory=True,
         )
 
     @property
@@ -336,8 +398,8 @@ class PanNukeDataModule(BaseDataModule):
         else:
             fold_ix = 1
         return data.DataLoader(
-            self._get_dataset(fold_ix = fold_ix),
-            batch_size = self.batch_size,
-            shuffle = self.shuffle, 
-            pin_memory=True
+            self._get_dataset(fold_ix=fold_ix),
+            batch_size=self.batch_size,
+            shuffle=self.shuffle,
+            pin_memory=True,
         )

@@ -14,6 +14,7 @@ class SlideDataset:
     Args:
         slides: list of SlideData objects
     """
+
     def __init__(self, slides):
         self.slides = slides
         self._tile_dataset = None
@@ -42,7 +43,7 @@ class SlideDataset:
 
     def reshape(self, shape, centercrop=False):
         for slide in self.slides:
-            slide.tiles.reshape(shape = shape, centercrop = centercrop)
+            slide.tiles.reshape(shape=shape, centercrop=centercrop)
 
     def write(self, dir, filenames=None):
         """
@@ -57,8 +58,10 @@ class SlideDataset:
         d = Path(dir)
         if filenames:
             if len(filenames) != self.__len__():
-                raise ValueError(f"input list of filenames has {len(filenames)} elements "
-                                 f"but must be same length as number of slides in dataset ({self.__len__()})")
+                raise ValueError(
+                    f"input list of filenames has {len(filenames)} elements "
+                    f"but must be same length as number of slides in dataset ({self.__len__()})"
+                )
 
         for i, slide in enumerate(self.slides):
             if filenames:
@@ -66,7 +69,9 @@ class SlideDataset:
             elif slide.name:
                 slide_path = d / (slide.name + ".h5path")
             else:
-                raise ValueError("slide does not have a .name attribute. Must supply a 'filenames' argument.")
+                raise ValueError(
+                    "slide does not have a .name attribute. Must supply a 'filenames' argument."
+                )
             slide.write(slide_path)
 
     @property
