@@ -42,12 +42,14 @@ Here's how to contribute code, documentation, etc.
 1. Create a new GitHub issue for what you will be working on, if one does not already exist
 2. Create a new fork of the ``PathML`` repository
 3. Clone your fork to your local machine
-4. Ensure that your environment is properly configured and that all tests pass
-5. Implement your changes
-6. Write new tests as needed to maintain code coverage
-7. Ensure that all tests still pass
-8. Commit your changes and submit a pull request referencing the corresponding issue
-9. Respond to discussion/feedback about the pull request. Make changes as necessary.
+4. Set up the PathML environment: ``conda env create -f environment.yml``
+5. Install pre-commit hooks: ``pre-commit install``
+6. Ensure that your environment is properly configured and that all tests pass
+7. Implement your changes
+8. Write new tests as needed to maintain code coverage
+9. Ensure that all tests still pass
+10. Commit your changes and submit a pull request referencing the corresponding issue
+11. Respond to discussion/feedback about the pull request. Make changes as necessary.
 
 Code Standards
 ==============
@@ -72,6 +74,7 @@ Here are some general tips and ideas:
 
 All code should be reviewed by someone else before merging.
 
+We use `Black`_ to enforce consistency of code style.
 
 Documentation Standards
 -----------------------
@@ -129,3 +132,4 @@ Thank you for helping make ``PathML`` better!
 .. _reStructuredText: https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
 .. _docstring example: https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
 .. _napoleon: https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html
+.. _Black: https://black.readthedocs.io/en/stable
