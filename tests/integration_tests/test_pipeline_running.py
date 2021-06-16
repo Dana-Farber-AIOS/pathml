@@ -6,6 +6,7 @@ License: GNU GPL 2.0
 from dask.distributed import Client, LocalCluster
 import pytest
 import numpy as np
+import os
 
 from pathml.core import HESlide, VectraSlide
 from pathml.preprocessing import Pipeline, BoxBlur, TissueDetectionHE, SegmentMIF, QuantifyMIF, CollapseRunsVectra
@@ -46,6 +47,7 @@ def test_pipeline_bioformats_tiff(tmp_path, dist, tile_size):
         cli = None
     slide.run(pipeline, distributed = dist, client = cli, tile_size = tile_size)
     slide.write(path = str(tmp_path) + "tifslide.h5")
+    os.remove(str(tmp_path) + "tifslide.h5")
     if dist:
         cli.shutdown()
 
@@ -67,5 +69,6 @@ def test_pipeline_bioformats_vectra(tmp_path, dist, tile_size):
         cli = None
     slide.run(pipeline, distributed = dist, client = cli, tile_size = tile_size)
     slide.write(path = str(tmp_path) + "vectraslide.h5")
+    os.remove(str(tmp_path) + "vectraslide.h5")
     if dist:
         cli.shutdown()
