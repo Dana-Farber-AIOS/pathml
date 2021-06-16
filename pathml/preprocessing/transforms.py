@@ -1017,7 +1017,6 @@ class SegmentMIF(Transform):
                              "did you forget to apply 'CollapseRuns*()' transform?")
         if len(img.shape) == 3:
             img = np.expand_dims(img, axis=0)
-        print(img.shape)
         nuc_cytoplasm = np.stack((img[:,:,:,self.nuclear_channel], img[:,:,:,self.cytoplasm_channel]), axis=-1)
         cell_segmentation_predictions = self.model.predict(nuc_cytoplasm, compartment='whole-cell')
         nuclear_segmentation_predictions = self.model.predict(nuc_cytoplasm, compartment='nuclear')
