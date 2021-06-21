@@ -15,12 +15,14 @@ from pathml.preprocessing.tiling import extract_tiles, extract_tiles_with_mask
 def test_extract_tiles(n_channels, stride, tile_size):
     # square
     arr_size = 100
-    arr = np.arange(arr_size*arr_size*n_channels).reshape((arr_size, arr_size, n_channels))
-    tiled = extract_tiles(arr, tile_size = tile_size, stride = stride)
+    arr = np.arange(arr_size * arr_size * n_channels).reshape(
+        (arr_size, arr_size, n_channels)
+    )
+    tiled = extract_tiles(arr, tile_size=tile_size, stride=stride)
     if stride is None:
         stride = tile_size
     n_tiles_expected = 1 + (arr_size - tile_size) / stride
-    assert tiled.shape == (n_tiles_expected**2, tile_size, tile_size, n_channels)
+    assert tiled.shape == (n_tiles_expected ** 2, tile_size, tile_size, n_channels)
     assert np.array_equal(tiled[0, ...], arr[0:tile_size, 0:tile_size, :])
 
 
@@ -30,12 +32,16 @@ def test_extract_tiles(n_channels, stride, tile_size):
 @pytest.mark.parametrize("tile_size", [5, 10, 25])
 def test_extract_tiles_with_mask(n_channels_arr, n_channels_mask, stride, tile_size):
     arr_size = 100
-    arr = np.arange(arr_size * arr_size * n_channels_arr).reshape((arr_size, arr_size, n_channels_arr))
+    arr = np.arange(arr_size * arr_size * n_channels_arr).reshape(
+        (arr_size, arr_size, n_channels_arr)
+    )
 
-    mask = np.zeros(shape = (arr_size, arr_size, n_channels_mask), dtype = np.uint8)
+    mask = np.zeros(shape=(arr_size, arr_size, n_channels_mask), dtype=np.uint8)
     mask[0:25, 0:25, ...] = 1
 
-    tiled = extract_tiles_with_mask(arr, mask = mask, tile_size = tile_size, stride = stride, threshold = 0.99)
+    tiled = extract_tiles_with_mask(
+        arr, mask=mask, tile_size=tile_size, stride=stride, threshold=0.99
+    )
 
     if stride is None:
         stride = tile_size

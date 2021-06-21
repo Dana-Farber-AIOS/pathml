@@ -18,6 +18,7 @@ dependencies:
   - dask>=2021.04.0
   - pydicom>=2.1.2
   - pytest>=6.2.2
+  - pre-commit
   - pip:
       - opencv-contrib-python>=4.1.1
       - openslide-python>=1.1.1

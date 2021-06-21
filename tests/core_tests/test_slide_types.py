@@ -8,7 +8,9 @@ import pytest
 from pathml.core import SlideType, types
 
 
-@pytest.mark.parametrize("slide_type", [types.IF, types.HE, types.IHC, types.CODEX, types.Vectra])
+@pytest.mark.parametrize(
+    "slide_type", [types.IF, types.HE, types.IHC, types.CODEX, types.Vectra]
+)
 def test_asdict_load_from_dict(slide_type):
     slide_type_dict = slide_type.asdict()
     # make sure no Nones in the dict

@@ -25,16 +25,22 @@ def pytest_sessionfinish(session, exitstatus):
 
 def create_HE_tile():
     s = openslide.open_slide("tests/testdata/small_HE.svs")
-    im_image = s.read_region(level = 0, location = (900, 800), size = (500, 500))
+    im_image = s.read_region(level=0, location=(900, 800), size=(500, 500))
     im_np = np.asarray(im_image)
     im_np_rgb = cv2.cvtColor(im_np, cv2.COLOR_RGBA2RGB)
     # make mask object
-    masks = np.random.randint(low = 1, high = 255, size = (im_np_rgb.shape[0], im_np_rgb.shape[1]), dtype = np.uint8)
+    masks = np.random.randint(
+        low=1, high=255, size=(im_np_rgb.shape[0], im_np_rgb.shape[1]), dtype=np.uint8
+    )
     masks = {"testmask": masks}
     # labels dict
-    labs = {"test_string_label": "testlabel", "test_array_label": np.array([2, 3, 4]),
-            "test_int_label": 3,  "test_float_label": 3.0}
-    tile = Tile(image = im_np_rgb, coords = (1, 3), masks = masks, labels = labs)
+    labs = {
+        "test_string_label": "testlabel",
+        "test_array_label": np.array([2, 3, 4]),
+        "test_int_label": 3,
+        "test_float_label": 3.0,
+    }
+    tile = Tile(image=im_np_rgb, coords=(1, 3), masks=masks, labels=labs)
     return tile
 
 
@@ -62,18 +68,26 @@ def tileVectra():
     """
     Example of pathml.core.Tile representation of Vectra image
     """
-    slidedata = VectraSlide("tests/testdata/small_vectra.qptiff", backend = "bioformats")
+    slidedata = VectraSlide("tests/testdata/small_vectra.qptiff", backend="bioformats")
     region = slidedata.slide.extract_region(location=(0, 0), size=(500, 500))
 
     # make mask object
-    masks = np.random.randint(low = 1, high = 255, size = (region.shape[0], region.shape[1]), dtype = np.uint8)
+    masks = np.random.randint(
+        low=1, high=255, size=(region.shape[0], region.shape[1]), dtype=np.uint8
+    )
     masks = {"testmask": masks}
 
     # labels dict
-    labs = {"test_string_label": "testlabel", "test_array_label": np.array([2, 3, 4]),
-            "test_int_label": 3, "test_float_label": 3.0}
+    labs = {
+        "test_string_label": "testlabel",
+        "test_array_label": np.array([2, 3, 4]),
+        "test_int_label": 3,
+        "test_float_label": 3.0,
+    }
 
-    tile = Tile(image = region, coords = (0, 0), masks = masks, slide_type = types.Vectra, labels = labs)
+    tile = Tile(
+        image=region, coords=(0, 0), masks=masks, slide_type=types.Vectra, labels=labs
+    )
     return tile
 
 

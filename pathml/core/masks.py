@@ -21,19 +21,28 @@ class Masks:
         h5manager(pathml.core.h5pathManager)
         masks(dict): dictionary of np.ndarray objects representing ex. labels, segmentations.
     """
+
     def __init__(self, h5manager, masks=None):
-        assert isinstance(h5manager, pathml.core.h5managers.h5pathManager), f"expecting type pathml.core.h5pathManager but passed type {type(h5manager)}"
+        assert isinstance(
+            h5manager, pathml.core.h5managers.h5pathManager
+        ), f"expecting type pathml.core.h5pathManager but passed type {type(h5manager)}"
         self.h5manager = h5manager
         # if masks are supplied, add them to the h5manager
         if masks:
             if not isinstance(masks, dict):
-                raise ValueError(f"masks must be passed as dicts of the form key1:mask1,key2:mask2,...")
+                raise ValueError(
+                    f"masks must be passed as dicts of the form key1:mask1,key2:mask2,..."
+                )
             for val in masks.values():
                 if not isinstance(val, np.ndarray):
-                    raise ValueError(f"can not add {type(val)}, mask must be of type np.ndarray")
+                    raise ValueError(
+                        f"can not add {type(val)}, mask must be of type np.ndarray"
+                    )
             for key in masks.keys():
                 if not isinstance(key, str):
-                    raise ValueError(f"can not add {type(key)}, key must be of type str")
+                    raise ValueError(
+                        f"can not add {type(key)}, key must be of type str"
+                    )
             self._masks = OrderedDict(masks)
         else:
             self._masks = OrderedDict()
@@ -76,9 +85,13 @@ class Masks:
             slices: list where each element is an object of type slice indicating
                     how the dimension should be sliced
         """
-        if not (isinstance(slicer, list) and all([isinstance(a, slice) for a in slicer])):
-            raise KeyError(f"slices must of of type list[slice] but is {type(slicer)} with elements {type(slicer[0])}")
-        sliced = {key:mask for key, mask in self.h5manager.slice_masks(slicer)} 
+        if not (
+            isinstance(slicer, list) and all([isinstance(a, slice) for a in slicer])
+        ):
+            raise KeyError(
+                f"slices must of of type list[slice] but is {type(slicer)} with elements {type(slicer[0])}"
+            )
+        sliced = {key: mask for key, mask in self.h5manager.slice_masks(slicer)}
         return sliced
 
     def remove(self, key):
