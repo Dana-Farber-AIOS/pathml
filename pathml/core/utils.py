@@ -20,17 +20,17 @@ def writedataframeh5(h5, name, df):
     """
     Write dataframe as h5 dataset.
     Args:
-        h5(h5py.Dataset): root of h5 object that df will be written into 
+        h5(h5py.Dataset): root of h5 object that df will be written into
         name(str): name of dataset to be created
         df(pd.DataFrame): dataframe to be written
     """
     dataset = h5.create_dataset(
         str(name),
-        data = df,
-        chunks = True,
-        compression = "gzip",
-        compression_opts = 5,
-        shuffle = True
+        data=df,
+        chunks=True,
+        compression="gzip",
+        compression_opts=5,
+        shuffle=True,
     )
 
 
@@ -38,7 +38,7 @@ def writestringh5(h5, name, st):
     """
     Write string as h5 attribute.
     Args:
-        h5(h5py.Dataset): root of h5 object that st will be written into 
+        h5(h5py.Dataset): root of h5 object that st will be written into
         name(str): name of dataset to be created
         st(str): string to be written
     """
@@ -48,25 +48,22 @@ def writestringh5(h5, name, st):
 
 def writedicth5(h5, name, dic):
     """
-    Write dict as attributes of h5py.Group. 
+    Write dict as attributes of h5py.Group.
     Args:
-        h5(h5py.Dataset): root of h5 object that dic will be written into 
+        h5(h5py.Dataset): root of h5 object that dic will be written into
         name(str): name of dataset to be created
         dic(str): dict to be written
     """
     h5.create_group(str(name))
     for key, val in dic.items():
-        h5[name].attrs.create(
-            str(key),
-            data = val
-        )
+        h5[name].attrs.create(str(key), data=val)
 
 
 def writetupleh5(h5, name, tup):
     """
     Write tuple as h5 attribute.
     Args:
-        h5(h5py.Dataset): root of h5 object that tup will be written into 
+        h5(h5py.Dataset): root of h5 object that tup will be written into
         name(str): name of dataset to be created
         tup(str): tuple to be written
     """
@@ -81,35 +78,35 @@ def readtupleh5(h5, key):
         h5(h5py.Dataset or h5py.Group): h5 object that will be read from
         key(str): key where data to read is stored
     """
-    return eval(h5.attrs[key]) if key in h5.attrs.keys() else None 
+    return eval(h5.attrs[key]) if key in h5.attrs.keys() else None
 
 
 def writecounts(h5, counts):
     """
     Write counts using anndata h5py.
     Args:
-        h5(h5py.Dataset): root of h5 object that counts will be written into 
+        h5(h5py.Dataset): root of h5 object that counts will be written into
         name(str): name of dataset to be created
         tup(anndata.AnnData): anndata object to be written
     """
     print(counts)
-    countsh5 = h5py.File(counts.filename, "r") 
+    countsh5 = h5py.File(counts.filename, "r")
     print(f"counts keys are {countsh5.keys()}")
     for ds in countsh5.keys():
         countsh5.copy(ds, h5)
-     
+
 
 def readcounts(h5):
     """
     Read counts using anndata h5py.
     Args:
-        h5(h5py.Dataset): h5 object that will be read 
+        h5(h5py.Dataset): h5 object that will be read
     """
     # create and save temp h5py file
-    # read using anndata from temp file 
+    # read using anndata from temp file
     # this is necessary because anndata does not support reading directly from h5
     path = tempfile.TemporaryFile()
-    f = h5py.File(path, 'w')
+    f = h5py.File(path, "w")
     for ds in h5.keys():
         h5.copy(ds, f)
     return anndata.read_h5ad(path)

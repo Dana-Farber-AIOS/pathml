@@ -22,7 +22,9 @@ def upsample_array(arr, factor):
     """
     r, c = arr.shape  # number of rows/columns
     rs, cs = arr.strides  # row/column strides
-    x = np.lib.stride_tricks.as_strided(arr, (r, factor, c, factor), (rs, 0, cs, 0))  # view a as larger 4D array
+    x = np.lib.stride_tricks.as_strided(
+        arr, (r, factor, c, factor), (rs, 0, cs, 0)
+    )  # view a as larger 4D array
     return x.reshape(r * factor, c * factor)  # create new 2D array
 
 
@@ -40,7 +42,9 @@ def segmentation_lines(mask_in):
     Generate coords of points bordering segmentations from a given mask.
     Useful for plotting results of tissue detection or other segmentation.
     """
-    assert mask_in.dtype == np.uint8, f"Input mask dtype {mask_in.dtype} must be np.uint8"
+    assert (
+        mask_in.dtype == np.uint8
+    ), f"Input mask dtype {mask_in.dtype} must be np.uint8"
     kernel = np.ones((3, 3), np.uint8)
     dilated = cv2.dilate(mask_in, kernel)
     diff = np.logical_xor(dilated.astype(bool), mask_in.astype(bool))
@@ -48,7 +52,7 @@ def segmentation_lines(mask_in):
     return x, y
 
 
-def plot_mask(im, mask_in, ax=None, color='red', downsample_factor=None):
+def plot_mask(im, mask_in, ax=None, color="red", downsample_factor=None):
     """
     plot results of segmentation, overlaying on original image_ref
 
@@ -68,8 +72,8 @@ def plot_mask(im, mask_in, ax=None, color='red', downsample_factor=None):
     if ax is None:
         fig, ax = plt.subplots()
     ax.imshow(im)
-    ax.scatter(x, y, color = color, marker = ".", s = 1)
-    ax.axis('off')
+    ax.scatter(x, y, color=color, marker=".", s=1)
+    ax.axis("off")
     return ax
 
 
@@ -89,7 +93,7 @@ def contour_centroid(contour):
     mu = cv2.moments(contour)
     # get the centers of mass
     # add 1e-5 to avoid division by zero
-    i, j = (mu['m10'] / (mu['m00'] + 1e-5), mu['m01'] / (mu['m00'] + 1e-5))
+    i, j = (mu["m10"] / (mu["m00"] + 1e-5), mu["m01"] / (mu["m00"] + 1e-5))
     return i, j
 
 
@@ -137,7 +141,7 @@ def _pad_or_crop_1d(array, axis, target_dim):
         # pad
         n_pad = [(0, 0)] * array.ndim
         n_pad[axis] = offset
-        return np.pad(array, pad_width = n_pad, mode = 'constant', constant_values = 0)
+        return np.pad(array, pad_width=n_pad, mode="constant", constant_values=0)
     else:
         # crop
         # need to use slice(none) to access only target dimension
@@ -163,7 +167,7 @@ def pad_or_crop(array, target_shape):
         return array
 
     for axis, target in enumerate(target_shape):
-        array = _pad_or_crop_1d(array, axis = axis, target_dim = target)
+        array = _pad_or_crop_1d(array, axis=axis, target_dim=target)
     return array
 
 
@@ -185,23 +189,25 @@ def RGB_to_HSI(imarr):
     B = imarr[:, :, 2]
     # add some noise to avoid divide by zero
     eps = 1e-6
-    patch_sum = np.sum(imarr, axis = 2) + eps
+    patch_sum = np.sum(imarr, axis=2) + eps
     r = R / patch_sum
     g = G / patch_sum
     b = B / patch_sum
-    h = np.zeros_like(r, dtype = np.float32)
+    h = np.zeros_like(r, dtype=np.float32)
     # when R=G=B, we need to assign h=0 otherwise we get divide by 0
     h_0 = np.logical_and(R == G, G == B)
     num_h = 0.5 * ((r[~h_0] - g[~h_0]) + (r[~h_0] - b[~h_0]))
-    denom_h = (np.sqrt((r[~h_0] - g[~h_0]) ** 2 + (r[~h_0] - b[~h_0]) * (g[~h_0] - b[~h_0])))
+    denom_h = np.sqrt(
+        (r[~h_0] - g[~h_0]) ** 2 + (r[~h_0] - b[~h_0]) * (g[~h_0] - b[~h_0])
+    )
     h[~h_0] = np.arccos(num_h / denom_h)
     h[B > G] = 2 * np.pi - h[B > G]
-    h = h / (2. * np.pi)
-    patch_norm = np.stack([r, g, b], axis = 2)
-    s = 1 - 3 * np.amin(patch_norm, axis = 2)
-    patchsum = np.sum(imarr, axis = 2)
+    h = h / (2.0 * np.pi)
+    patch_norm = np.stack([r, g, b], axis=2)
+    s = 1 - 3 * np.amin(patch_norm, axis=2)
+    patchsum = np.sum(imarr, axis=2)
     i = patchsum / (3 * 255)
-    out = np.stack([h, s, i], axis = 2)
+    out = np.stack([h, s, i], axis=2)
     return out
 
 
@@ -217,7 +223,7 @@ def RGB_to_OD(imarr):
     """
     assert imarr.dtype == np.uint8, f"Input image dtype {imarr.dtype} must be np.uint8"
     # need to account for possible zero values
-    OD = -np.log((imarr.astype(np.float32) + 1) / 255.)
+    OD = -np.log((imarr.astype(np.float32) + 1) / 255.0)
     return OD
 
 
@@ -252,7 +258,7 @@ def normalize_matrix_rows(A):
     :return: Array with rows normalized.
     :rtype: np.ndarray
     """
-    return A / np.linalg.norm(A, axis = 1)[:, None]
+    return A / np.linalg.norm(A, axis=1)[:, None]
 
 
 def normalize_matrix_cols(A):
@@ -264,7 +270,7 @@ def normalize_matrix_cols(A):
     :return: Array with columns normalized
     :rtype: np.ndarray
     """
-    return A / np.linalg.norm(A, axis = 0)[None, :]
+    return A / np.linalg.norm(A, axis=0)[None, :]
 
 
 def plot_segmentation(ax, masks, palette=None, markersize=5):
@@ -291,4 +297,4 @@ def plot_segmentation(ax, masks, palette=None, markersize=5):
         for i in range(n_channels):
             nuclei_mask = masks[i, ...] == label
             x, y = segmentation_lines(nuclei_mask.astype(np.uint8))
-            ax.scatter(x, y, color = palette[i], marker = ".", s = markersize)
+            ax.scatter(x, y, color=palette[i], marker=".", s=markersize)

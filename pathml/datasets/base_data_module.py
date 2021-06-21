@@ -3,6 +3,7 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
+
 class BaseDataModule:
     """
     A base class for a DataModule.
@@ -10,6 +11,7 @@ class BaseDataModule:
     Specific DataModules should inherit from this class.
     Inspired by pytorch-lightning LightningDataModule
     """
+
     def train_dataloader(self):
         raise NotImplementedError
 

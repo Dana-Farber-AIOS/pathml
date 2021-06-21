@@ -39,13 +39,13 @@ def get_file_ext(path):
         if ext[-1] in {".gz", ".bz2"}:
             ext = ext[-2]
         else:
-            ext = ''.join(ext[-2:])
+            ext = "".join(ext[-2:])
     return ext
 
 
 class SlideData:
     """
-    Main class representing a slide and its annotations. 
+    Main class representing a slide and its annotations.
 
     Args:
         filepath (str): Path to file on disk.
@@ -73,48 +73,71 @@ class SlideData:
             Defaults to ``None``. Ignored if ``slide_type`` is specified.
         counts (anndata.AnnData): object containing counts matrix associated with image quantification
     """
-    def __init__(self,
-                 filepath,
-                 name=None,
-                 masks=None,
-                 tiles=None,
-                 labels=None,
-                 backend=None,
-                 slide_type=None,
-                 stain=None,
-                 platform=None,
-                 tma=None,
-                 rgb=None,
-                 volumetric=None,
-                 time_series=None,
-                 counts=None
-                 ):
+
+    def __init__(
+        self,
+        filepath,
+        name=None,
+        masks=None,
+        tiles=None,
+        labels=None,
+        backend=None,
+        slide_type=None,
+        stain=None,
+        platform=None,
+        tma=None,
+        rgb=None,
+        volumetric=None,
+        time_series=None,
+        counts=None,
+    ):
         # check inputs
-        assert masks is None or isinstance(masks, dict), \
-            f"mask are of type {type(masks)} but must be type dict"
+        assert masks is None or isinstance(
+            masks, dict
+        ), f"mask are of type {type(masks)} but must be type dict"
         if labels:
-            assert all([isinstance(key, str) for key in labels.keys()]), \
-                f"Input label keys are of types {[type(k) for k in labels.keys()]}. All label keys must be of type str."
             assert all(
-                [isinstance(val, (str, np.ndarray)) or np.issubdtype(type(val), np.number) for val in labels.values()]
-            ), \
-                f"Input label vals are of types {[type(v) for v in labels.values()]}. " \
+                [isinstance(key, str) for key in labels.keys()]
+            ), f"Input label keys are of types {[type(k) for k in labels.keys()]}. All label keys must be of type str."
+            assert all(
+                [
+                    isinstance(val, (str, np.ndarray))
+                    or np.issubdtype(type(val), np.number)
+                    for val in labels.values()
+                ]
+            ), (
+                f"Input label vals are of types {[type(v) for v in labels.values()]}. "
                 f"All label values must be of type str or np.ndarray or a number (i.e. a subdtype of np.number) "
-        assert tiles is None or (isinstance(tiles, list) and all([isinstance(tile, pathml.core.Tile) for tile in tiles])), \
-            f"tiles are of type {type(tiles)} but must be a list of objects of type pathml.core.tiles.Tile"
-        assert slide_type is None or isinstance(slide_type, pathml.core.SlideType), \
-            f"slide_type is of type {type(slide_type)} but must be of type pathml.core.types.SlideType"
-        assert backend is None or (isinstance(backend, str) and backend.lower() in {"openslide", "bioformats", "dicom"}), \
-            f"backend {backend} must be one of ['OpenSlide', 'BioFormats', 'DICOM'] (case-insensitive)."
-        assert counts is None or isinstance(counts, anndata.AnnData), \
-            f"counts is if type {type(counts)} but must be of type anndata.AnnData"
-        
+            )
+        assert tiles is None or (
+            isinstance(tiles, list)
+            and all([isinstance(tile, pathml.core.Tile) for tile in tiles])
+        ), f"tiles are of type {type(tiles)} but must be a list of objects of type pathml.core.tiles.Tile"
+        assert slide_type is None or isinstance(
+            slide_type, pathml.core.SlideType
+        ), f"slide_type is of type {type(slide_type)} but must be of type pathml.core.types.SlideType"
+        assert backend is None or (
+            isinstance(backend, str)
+            and backend.lower() in {"openslide", "bioformats", "dicom"}
+        ), f"backend {backend} must be one of ['OpenSlide', 'BioFormats', 'DICOM'] (case-insensitive)."
+        assert counts is None or isinstance(
+            counts, anndata.AnnData
+        ), f"counts is if type {type(counts)} but must be of type anndata.AnnData"
+
         # instantiate SlideType object if needed
         if not slide_type and any([stain, platform, tma, rgb, volumetric, time_series]):
-            stain_type_dict = {"stain": stain, "platform": platform, "tma": tma,
-                               "rgb": rgb, "volumetric": volumetric, "time_series": time_series}
+            stain_type_dict = {
+                "stain": stain,
+                "platform": platform,
+                "tma": tma,
+                "rgb": rgb,
+                "volumetric": volumetric,
+                "time_series": time_series,
+            }
             # remove any Nones
-            stain_type_dict = {key: val for key, val in stain_type_dict.items() if val is not None}
+            stain_type_dict = {
+                key: val for key, val in stain_type_dict.items() if val is not None
+            }
             if stain_type_dict:
                 slide_type = pathml.core.types.SlideType(**stain_type_dict)
 
@@ -142,7 +165,8 @@ class SlideData:
                 _load_from_h5path = True
             else:
                 raise ValueError(
-                    f"Backend not specified, but cannot infer correct backend from input path {filepath}")
+                    f"Backend not specified, but cannot infer correct backend from input path {filepath}"
+                )
 
         if backend.lower() == "openslide":
             backend_obj = pathml.core.OpenSlideBackend(filepath)
@@ -167,8 +191,15 @@ class SlideData:
             with h5py.File(filepath, "r") as f:
                 self.h5manager = pathml.core.h5managers.h5pathManager(h5path=f)
             self.name = self.h5manager.h5["fields"].attrs["name"]
-            self.labels = {key: val for key,val in self.h5manager.h5["fields"]["labels"].attrs.items()}
-            slide_type = {key: val for key, val in self.h5manager.h5["fields"]["slide_type"].attrs.items() if val is not None}
+            self.labels = {
+                key: val
+                for key, val in self.h5manager.h5["fields"]["labels"].attrs.items()
+            }
+            slide_type = {
+                key: val
+                for key, val in self.h5manager.h5["fields"]["slide_type"].attrs.items()
+                if val is not None
+            }
             if slide_type:
                 self.slide_type = pathml.core.types.SlideType(**slide_type)
         else:
@@ -190,7 +221,9 @@ class SlideData:
         if self.tiles:
             out.append(f"tile_shape={eval(self.tiles.tile_shape)}")
         if self.labels:
-            out.append(f"{len(self.labels)} labels: {reprlib.repr(list(self.labels.keys()))}")
+            out.append(
+                f"{len(self.labels)} labels: {reprlib.repr(list(self.labels.keys()))}"
+            )
         else:
             out.append("labels=None")
         if self.counts:
@@ -200,10 +233,19 @@ class SlideData:
 
         out = ",\n\t".join(out)
         out += ")"
-        return out 
+        return out
 
-    def run(self, pipeline, distributed=True, client=None, tile_size=3000, tile_stride=None, level=0, tile_pad=False,
-            overwrite_existing_tiles=False):
+    def run(
+        self,
+        pipeline,
+        distributed=True,
+        client=None,
+        tile_size=3000,
+        tile_stride=None,
+        level=0,
+        tile_pad=False,
+        overwrite_existing_tiles=False,
+    ):
         """
         Run a preprocessing pipeline on SlideData.
         Tiles are generated by calling self.generate_tiles() and pipeline is applied to each tile.
@@ -222,15 +264,18 @@ class SlideData:
             overwrite_existing_tiles (bool): Whether to overwrite existing tiles. If ``False``, running a pipeline will
                 fail if ``tiles is not None``. Defaults to ``False``.
         """
-        assert isinstance(pipeline, pathml.preprocessing.pipeline.Pipeline), \
-            f"pipeline is of type {type(pipeline)} but must be of type pathml.preprocessing.pipeline.Pipeline"
+        assert isinstance(
+            pipeline, pathml.preprocessing.pipeline.Pipeline
+        ), f"pipeline is of type {type(pipeline)} but must be of type pathml.preprocessing.pipeline.Pipeline"
         assert self.slide is not None, "cannot run pipeline because self.slide is None"
 
         if len(self.tiles) != 0:
             # in this case, tiles already exist
             if not overwrite_existing_tiles:
-                raise Exception("Slide already has tiles. Running the pipeline will overwrite the existing tiles."
-                                "use overwrite_existing_tiles=True to force overwriting existing tiles.")
+                raise Exception(
+                    "Slide already has tiles. Running the pipeline will overwrite the existing tiles."
+                    "use overwrite_existing_tiles=True to force overwriting existing tiles."
+                )
             else:
                 # delete all existing tiles
                 for tile_key in self.tiles.keys:
@@ -243,7 +288,9 @@ class SlideData:
             # map pipeline application onto each tile
             processed_tile_futures = []
 
-            for tile in self.generate_tiles(level = level, shape = tile_size, stride = tile_stride, pad = tile_pad):
+            for tile in self.generate_tiles(
+                level=level, shape=tile_size, stride=tile_stride, pad=tile_pad
+            ):
                 if not tile.slide_type:
                     tile.slide_type = self.slide_type
                 # explicitly scatter data, i.e. send the tile data out to the cluster before applying the pipeline
@@ -253,11 +300,15 @@ class SlideData:
                 processed_tile_futures.append(f)
 
             # as tiles are processed, add them to h5
-            for future, tile in dask.distributed.as_completed(processed_tile_futures, with_results = True):
+            for future, tile in dask.distributed.as_completed(
+                processed_tile_futures, with_results=True
+            ):
                 self.tiles.add(tile)
 
         else:
-            for tile in self.generate_tiles(level = level, shape = tile_size, stride = tile_stride, pad = tile_pad):
+            for tile in self.generate_tiles(
+                level=level, shape=tile_size, stride=tile_stride, pad=tile_pad
+            ):
                 if not tile.slide_type:
                     tile.slide_type = self.slide_type
                 pipeline.apply(tile)
@@ -277,7 +328,9 @@ class SlideData:
         class TileDataset(Dataset):
             def __init__(self, slidedata):
                 if slidedata.tiles is None:
-                    raise ValueError("Can't create tile dataset because self.tiles is None")
+                    raise ValueError(
+                        "Can't create tile dataset because self.tiles is None"
+                    )
                 self.tiles = slidedata.tiles
                 self.labels = slidedata.labels
 
@@ -323,8 +376,9 @@ class SlideData:
                     # this should work since the backend reads from image only
                     # adding safety check just in case to make sure we don't overwrite any existing mask
                     # if this assertion fails, we will need to rewrite this part
-                    assert len(tile.masks) == 0, \
-                        "tile yielded from backend already has mask. slide_data.generate_tiles is trying to overwrite it"
+                    assert (
+                        len(tile.masks) == 0
+                    ), "tile yielded from backend already has mask. slide_data.generate_tiles is trying to overwrite it"
 
                     tile_slices = [slice(i, i + di), slice(j, j + dj)]
                     tile.masks = self.masks.slice(tile_slices)
@@ -348,10 +402,12 @@ class SlideData:
             ax: matplotlib axis object on which to plot the thumbnail. Optional.
         """
         try:
-            thumbnail = self.slide.get_thumbnail(size = (500, 500))
+            thumbnail = self.slide.get_thumbnail(size=(500, 500))
         except:
             if not self.slide:
-                raise NotImplementedError("Plotting only supported via backend, but SlideData has no backend.")
+                raise NotImplementedError(
+                    "Plotting only supported via backend, but SlideData has no backend."
+                )
             else:
                 raise NotImplementedError(
                     f"plotting not supported for slide_backend={self.slide.__class__.__name__}"
@@ -370,11 +426,14 @@ class SlideData:
     @counts.setter
     def counts(self, value):
         if self.tiles.h5manager:
-            assert value is None or isinstance(value, anndata.AnnData),\
-                f"cannot set counts with obj of type {type(value)}. Must be Anndata"
+            assert value is None or isinstance(
+                value, anndata.AnnData
+            ), f"cannot set counts with obj of type {type(value)}. Must be Anndata"
             self.tiles.h5manager.counts = value
         else:
-            raise AttributeError("cannot assign counts slidedata contains no tiles, first generate tiles")
+            raise AttributeError(
+                "cannot assign counts slidedata contains no tiles, first generate tiles"
+            )
 
     def write(self, path):
         """
@@ -385,13 +444,12 @@ class SlideData:
         """
         path = Path(path)
         pathdir = Path(os.path.dirname(path))
-        pathdir.mkdir(parents = True, exist_ok = True)
-        with h5py.File(path, 'w') as f:
+        pathdir.mkdir(parents=True, exist_ok=True)
+        with h5py.File(path, "w") as f:
             for ds in self.h5manager.h5.keys():
                 self.h5manager.h5.copy(ds, f)
             if self.counts:
                 pathml.core.utils.writecounts(f["counts"], self.counts)
-
 
 
 class HESlide(SlideData):
@@ -400,6 +458,7 @@ class HESlide(SlideData):
     Passes through all arguments to ``SlideData()``, along with ``slide_type = types.HE`` flag.
     Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
     """
+
     def __init__(self, *args, **kwargs):
         kwargs["slide_type"] = pathml.core.types.HE
         super().__init__(*args, **kwargs)
@@ -411,6 +470,7 @@ class MultiparametricSlide(SlideData):
     Passes through all arguments to ``SlideData()``, along with ``slide_type = types.IF`` flag and default ``backend = "bioformats"``.
     Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
     """
+
     def __init__(self, *args, **kwargs):
         kwargs["slide_type"] = pathml.core.types.IF
         if "backend" not in kwargs:
@@ -424,6 +484,7 @@ class IHCSlide(SlideData):
     Passes through all arguments to ``SlideData()``, along with ``slide_type = types.IHC`` flag.
     Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
     """
+
     def __init__(self, *args, **kwargs):
         kwargs["slide_type"] = pathml.core.types.IHC
         super().__init__(*args, **kwargs)
@@ -435,12 +496,12 @@ class VectraSlide(SlideData):
     Passes through all arguments to ``SlideData()``, along with ``slide_type = types.Vectra`` flag and default ``backend = "bioformats"``.
     Refer to :class:`~pathml.core.slide_data.SlideData` for full documentation.
     """
+
     def __init__(self, *args, **kwargs):
         kwargs["slide_type"] = pathml.core.types.Vectra
         if "backend" not in kwargs:
             kwargs["backend"] = "bioformats"
         super().__init__(*args, **kwargs)
-
 
 
 class CODEXSlide(SlideData):
@@ -452,6 +513,7 @@ class CODEXSlide(SlideData):
     # TODO:
         hierarchical biaxial gating (flow-style analysis)
     """
+
     def __init__(self, *args, **kwargs):
         kwargs["slide_type"] = pathml.core.types.CODEX
         if "backend" not in kwargs:
@@ -461,40 +523,190 @@ class CODEXSlide(SlideData):
 
 # dicts used to infer correct backend from file extension
 
-pathmlext = {
-    '.h5',
-    '.h5path'
-}
+pathmlext = {".h5", ".h5path"}
 
 openslideext = {
-    '.svs',
-    '.tif',
-    '.ndpi',
-    '.vms',
-    '.vmu',
-    '.scn',
-    '.mrxs',
-    '.svslide',
-    '.bif'
+    ".svs",
+    ".tif",
+    ".ndpi",
+    ".vms",
+    ".vmu",
+    ".scn",
+    ".mrxs",
+    ".svslide",
+    ".bif",
 }
 
 bioformatsext = {
-    '.tiff', '.tif', '.sld', '.aim', '.al3d', '.gel', '.am', '.amiramesh', '.grey', '.hx', '.labels', '.cif', '.img',
-    '.hdr', '.sif', '.png', '.afi', '.htd',  '.pnl', '.avi', '.arf', '.exp', '.spc', '.sdt', '.xml', '.1sc', '.pic',
-    '.raw', '.scn', '.ims', '.img', '.cr2', '.crw',  '.ch5', '.c01', '.dib', '.vsi', '.wpi', '.dv', '.r3d', '.rcpnl',
-    '.eps', '.epsi', '.ps', '.fits', '.dm3', '.dm4', '.dm2',  '.vff', '.naf', '.his', '.i2i', '.ics', '.ids', '.fff',
-    '.seq', '.ipw', '.hed', '.mod', '.liff', '.obf', '.msr', '.xdce', '.frm', '.inr', '.hdr', '.ipl', '.ipm', '.dat',
-    '.par', '.jp2', '.j2k', '.jpf', '.jpk', '.jpx', '.klb', '.xv', '.bip', '.fli', '.msr', '.lei', '.lif', '.scn',
-    '.sxm', '.l2d', '.lim', '.stk', '.nd', '.htd', '.mnc', '.mrw', '.mng', '.stp', '.mrc', '.st', '.ali', '.map',
-    '.rec', '.mrcs', '.nef', '.hdr', '.nii', '.nii.gz', '.nrrd', '.nhdr', '.apl', '.mtb', '.tnb', '.obsep', '.oib',
-    '.oif', '.oir', '.ome.tiff', '.ome.tif', '.ome.tf2', '.ome.tf8', '.ome.btf', '.ome.xml', '.ome', '.top', '.pcoraw',
-    '.rec', '.pcx', '.pds', '.im3', '.qptiff', '.pbm', '.pgm', '.ppm', '.psd', '.bin', '.pict', '.cfg', '.spe', '.afm',
-    '.mov', '.sm2', '.sm3', '.xqd', '.xqf', '.cxd', '.spi', '.stk', '.tga', '.db', '.vws', '.tfr', '.ffr', '.zfr',
-    '.zfp',  '.2fl', '.sld', '.pr3', '.dat', '.hdr', '.fdf', '.bif', '.dti', '.xys', '.mvd2', '.acff', '.wat', '.bmp',
-    '.wlz', '.lms',  '.zvi', '.czi', '.lsm', '.mdb'
+    ".tiff",
+    ".tif",
+    ".sld",
+    ".aim",
+    ".al3d",
+    ".gel",
+    ".am",
+    ".amiramesh",
+    ".grey",
+    ".hx",
+    ".labels",
+    ".cif",
+    ".img",
+    ".hdr",
+    ".sif",
+    ".png",
+    ".afi",
+    ".htd",
+    ".pnl",
+    ".avi",
+    ".arf",
+    ".exp",
+    ".spc",
+    ".sdt",
+    ".xml",
+    ".1sc",
+    ".pic",
+    ".raw",
+    ".scn",
+    ".ims",
+    ".img",
+    ".cr2",
+    ".crw",
+    ".ch5",
+    ".c01",
+    ".dib",
+    ".vsi",
+    ".wpi",
+    ".dv",
+    ".r3d",
+    ".rcpnl",
+    ".eps",
+    ".epsi",
+    ".ps",
+    ".fits",
+    ".dm3",
+    ".dm4",
+    ".dm2",
+    ".vff",
+    ".naf",
+    ".his",
+    ".i2i",
+    ".ics",
+    ".ids",
+    ".fff",
+    ".seq",
+    ".ipw",
+    ".hed",
+    ".mod",
+    ".liff",
+    ".obf",
+    ".msr",
+    ".xdce",
+    ".frm",
+    ".inr",
+    ".hdr",
+    ".ipl",
+    ".ipm",
+    ".dat",
+    ".par",
+    ".jp2",
+    ".j2k",
+    ".jpf",
+    ".jpk",
+    ".jpx",
+    ".klb",
+    ".xv",
+    ".bip",
+    ".fli",
+    ".msr",
+    ".lei",
+    ".lif",
+    ".scn",
+    ".sxm",
+    ".l2d",
+    ".lim",
+    ".stk",
+    ".nd",
+    ".htd",
+    ".mnc",
+    ".mrw",
+    ".mng",
+    ".stp",
+    ".mrc",
+    ".st",
+    ".ali",
+    ".map",
+    ".rec",
+    ".mrcs",
+    ".nef",
+    ".hdr",
+    ".nii",
+    ".nii.gz",
+    ".nrrd",
+    ".nhdr",
+    ".apl",
+    ".mtb",
+    ".tnb",
+    ".obsep",
+    ".oib",
+    ".oif",
+    ".oir",
+    ".ome.tiff",
+    ".ome.tif",
+    ".ome.tf2",
+    ".ome.tf8",
+    ".ome.btf",
+    ".ome.xml",
+    ".ome",
+    ".top",
+    ".pcoraw",
+    ".rec",
+    ".pcx",
+    ".pds",
+    ".im3",
+    ".qptiff",
+    ".pbm",
+    ".pgm",
+    ".ppm",
+    ".psd",
+    ".bin",
+    ".pict",
+    ".cfg",
+    ".spe",
+    ".afm",
+    ".mov",
+    ".sm2",
+    ".sm3",
+    ".xqd",
+    ".xqf",
+    ".cxd",
+    ".spi",
+    ".stk",
+    ".tga",
+    ".db",
+    ".vws",
+    ".tfr",
+    ".ffr",
+    ".zfr",
+    ".zfp",
+    ".2fl",
+    ".sld",
+    ".pr3",
+    ".dat",
+    ".hdr",
+    ".fdf",
+    ".bif",
+    ".dti",
+    ".xys",
+    ".mvd2",
+    ".acff",
+    ".wat",
+    ".bmp",
+    ".wlz",
+    ".lms",
+    ".zvi",
+    ".czi",
+    ".lsm",
+    ".mdb",
 }
 
-dicomext = {
-    '.dicom',
-    '.dcm'
-}
+dicomext = {".dicom", ".dcm"}

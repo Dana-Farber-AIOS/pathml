@@ -26,20 +26,23 @@ def extract_tiles(arr, tile_size, stride=None):
         stride = tile_size
     i, j, n_channels = arr.shape
     if (i - tile_size) % stride != 0 or (j - tile_size) % stride != 0:
-        raise NotImplementedError(f"Array of shape {arr.shape} is not perfectly tiled by tiles of size "
-                                  f"{tile_size} and stride {stride}.")
+        raise NotImplementedError(
+            f"Array of shape {arr.shape} is not perfectly tiled by tiles of size "
+            f"{tile_size} and stride {stride}."
+        )
     patch_strides = arr.strides
     patch_shape = (tile_size, tile_size, n_channels)
     extraction_step = (stride, stride, 1)
     slices = tuple(slice(None, None, st) for st in extraction_step)
     indexing_strides = arr[slices].strides
-    patch_indices_shape = ((np.array(arr.shape) - np.array(patch_shape)) //
-                           np.array(extraction_step)) + 1
+    patch_indices_shape = (
+        (np.array(arr.shape) - np.array(patch_shape)) // np.array(extraction_step)
+    ) + 1
     shape = tuple(list(patch_indices_shape) + list(patch_shape))
     strides = tuple(list(indexing_strides) + list(patch_strides))
-    tiles = np.lib.stride_tricks.as_strided(arr, shape = shape, strides = strides)
+    tiles = np.lib.stride_tricks.as_strided(arr, shape=shape, strides=strides)
     # squeeze out unnecessary axis
-    tiles = tiles.squeeze(axis = 2)
+    tiles = tiles.squeeze(axis=2)
     tiles = tiles.reshape(-1, *tiles.shape[2:])
     return tiles
 
@@ -63,18 +66,25 @@ def extract_tiles_with_mask(arr, mask, tile_size, stride=None, threshold=0.5):
         np.ndarray: Array of extracted tiles of shape `(n_tiles, tile_size, tile_size, n_channels)`
     """
     # check inputs here
-    assert isinstance(mask, np.ndarray), f"Input mask type {type(mask)} must be a numpy array"
-    assert isinstance(arr, np.ndarray), f"input array type {type(arr)} must be a numpy array"
+    assert isinstance(
+        mask, np.ndarray
+    ), f"Input mask type {type(mask)} must be a numpy array"
+    assert isinstance(
+        arr, np.ndarray
+    ), f"input array type {type(arr)} must be a numpy array"
     assert arr.ndim == 3, f"array of shape {arr.shape} must be 3 dimensional"
     assert mask.ndim == 3, f"mask of shape {mask.shape} must be 3 dimensional"
-    assert arr.shape[0:2] == mask.shape[0:2], f"Dims of input image_ref {arr.shape} and mask {mask.shape} must match"
+    assert (
+        arr.shape[0:2] == mask.shape[0:2]
+    ), f"Dims of input image_ref {arr.shape} and mask {mask.shape} must match"
 
-    arr_tiles = extract_tiles(arr, tile_size = tile_size, stride = stride)
-    mask_tiles = extract_tiles(mask, tile_size = tile_size, stride = stride)
+    arr_tiles = extract_tiles(arr, tile_size=tile_size, stride=stride)
+    mask_tiles = extract_tiles(mask, tile_size=tile_size, stride=stride)
 
-    tile_mask_means = mask_tiles.mean(axis = tuple(range(1, mask_tiles.ndim)))
+    tile_mask_means = mask_tiles.mean(axis=tuple(range(1, mask_tiles.ndim)))
 
     out = arr_tiles[tile_mask_means >= threshold, ...]
     return out
+
 
 # TODO: do we need to have coords for each tile?
