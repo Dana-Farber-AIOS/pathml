@@ -45,6 +45,11 @@ jobs:
     - name: pip install pathml
       shell: bash -l {0}
       run: pip install -e .
+    - name: disk usage
+      shell: bash -l {0}
+      run: |
+        sudo df -h
+        sudo du -h
     - name: Test with pytest
       shell: bash -l {0}
       run: |
