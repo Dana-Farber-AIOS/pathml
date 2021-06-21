@@ -17,6 +17,11 @@ def bioformats_backend():
     return BioFormatsBackend("tests/testdata/smalltif.tif")
 
 
+def bioformats_backend_qptiff():
+    """Bioformats behaves differently for images that have shape XYZCT, so we need to test that separately"""
+    return BioFormatsBackend("tests/testdata/small_vectra.qptiff")
+
+
 def dicom_backend():
     return DICOMBackend("tests/testdata/small_dicom.dcm")
 
@@ -24,7 +29,9 @@ def dicom_backend():
 ## test each method for each backend
 
 
-@pytest.mark.parametrize("backend", [openslide_backend(), bioformats_backend()])
+@pytest.mark.parametrize(
+    "backend", [openslide_backend(), bioformats_backend(), bioformats_backend_qptiff()]
+)
 @pytest.mark.parametrize("location", [(0, 0), (50, 100)])
 @pytest.mark.parametrize("size", [50, (50, 100)])
 @pytest.mark.parametrize("level", [None, 0])
@@ -47,7 +54,11 @@ def test_extract_region_dicom(backend, location, size, level):
 
 @pytest.mark.parametrize(
     "backend,shape",
-    [(bioformats_backend(), (640, 480)), (dicom_backend(), (2638, 3236))],
+    [
+        (bioformats_backend(), (640, 480)),
+        (dicom_backend(), (2638, 3236)),
+        (bioformats_backend_qptiff(), (1920, 1440)),
+    ],
 )
 @pytest.mark.parametrize("pad", [True, False])
 @pytest.mark.parametrize("tile_shape", [500, (500, 500)])
@@ -90,6 +101,7 @@ def test_tile_generator_with_level(backend, shape, tile_shape, pad, level):
     [
         (openslide_backend(), (2967, 2220)),
         (bioformats_backend(), (640, 480)),
+        (bioformats_backend_qptiff(), (1920, 1440)),
         (dicom_backend(), (2638, 3236)),
     ],
 )
@@ -97,7 +109,9 @@ def test_get_image_shape(backend, shape):
     assert backend.get_image_shape() == shape
 
 
-@pytest.mark.parametrize("backend", [openslide_backend(), bioformats_backend()])
+@pytest.mark.parametrize(
+    "backend", [openslide_backend(), bioformats_backend(), bioformats_backend_qptiff()]
+)
 def test_get_thumbnail(backend):
     print(dir(backend))
     print(type(backend))
@@ -106,7 +120,13 @@ def test_get_thumbnail(backend):
 
 
 @pytest.mark.parametrize(
-    "backend", [openslide_backend(), bioformats_backend(), dicom_backend()]
+    "backend",
+    [
+        openslide_backend(),
+        bioformats_backend(),
+        dicom_backend(),
+        bioformats_backend_qptiff(),
+    ],
 )
 def test_repr(backend):
     # make sure there are no errors during repr or str

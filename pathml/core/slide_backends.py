@@ -3,25 +3,25 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-import openslide
-import numpy as np
+from io import BytesIO
 from typing import Tuple
+
 import bioformats
 import javabridge
-from scipy.ndimage import zoom
-from bioformats.metadatatools import createOMEXMLMetadata
-from pydicom.filereader import dcmread, data_element_offset_to_value
-from pydicom.uid import UID
-from pydicom.encaps import get_frame_offsets
-from pydicom.filebase import DicomFile
-from pydicom.tag import TupleTag, SequenceDelimiterTag
-from pydicom.dataset import Dataset
-from io import BytesIO
-from PIL import Image
-
-from pathml.utils import pil_to_rgb
+import numpy as np
+import openslide
 import pathml.core
 import pathml.core.tile
+from bioformats.metadatatools import createOMEXMLMetadata
+from pathml.utils import pil_to_rgb
+from PIL import Image
+from pydicom.dataset import Dataset
+from pydicom.encaps import get_frame_offsets
+from pydicom.filebase import DicomFile
+from pydicom.filereader import data_element_offset_to_value, dcmread
+from pydicom.tag import SequenceDelimiterTag, TupleTag
+from pydicom.uid import UID
+from scipy.ndimage import zoom
 
 
 class SlideBackend:
@@ -53,6 +53,9 @@ class OpenSlideBackend(SlideBackend):
     def __init__(self, filename):
         self.filename = filename
         self.slide = openslide.open_slide(filename=filename)
+
+    def __repr__(self):
+        return f"OpenSlideBackend('{self.filename}')"
 
     def extract_region(self, location, size, level=None):
         """
@@ -248,6 +251,9 @@ class BioFormatsBackend(SlideBackend):
         self.imagecache = None
         self.metadata = bioformats.get_omexml_metadata(self.filename)
 
+    def __repr__(self):
+        return f"BioFormatsBackend('{self.filename}')"
+
     def get_image_shape(self):
         """
         Get the shape of the image.
@@ -317,7 +323,6 @@ class BioFormatsBackend(SlideBackend):
             for z in range(self.shape[2]):
                 for c in range(self.shape[3]):
                     for t in range(self.shape[4]):
-                        # or reader.openBytes() but need to declare omemetadata as in init
                         slicearray = reader.read(
                             z=z,
                             t=t,
@@ -329,13 +334,11 @@ class BioFormatsBackend(SlideBackend):
                         # some file formats read x, y out of order, transpose
                         if slicearray.shape[:2] != array.shape[:2]:
                             slicearray = np.transpose(slicearray)
-                        # slicearray = np.moveaxis(slicearray, 0, -1)
                         array[:, :, z, c, t] = slicearray
         # if series is set to read all channels, read all c simultaneously
         elif len(sample.shape) == 3:
             for z in range(self.shape[2]):
                 for t in range(self.shape[4]):
-                    # or reader.openBytes() but need to declare omemetadata as in init
                     slicearray = reader.read(
                         z=z,
                         t=t,
@@ -346,9 +349,10 @@ class BioFormatsBackend(SlideBackend):
                     # some file formats read x, y out of order, transpose
                     if slicearray.shape[:2] != array.shape[:2]:
                         slicearray = np.transpose(slicearray)
+                        slicearray = np.moveaxis(slicearray, 0, -1)
                     array[:, :, z, :, t] = slicearray
         else:
-            raise Exception(f"image format not supported")
+            raise Exception("image format not supported")
         array = array.astype(np.uint8)
         return array
 
@@ -508,6 +512,11 @@ class DICOMBackend(SlideBackend):
         # get basic offset table, to enable reading individual frames without loading entire image
         self.bot = self.get_bot(self.fp)
         self.first_frame = self.fp.tell()
+
+    def __repr__(self):
+        out = f"DICOMBackend('{self.filename}')\n"
+        out += f"image shape: {self.shape}; frame shape: {self.frame_shape}; frame grid: {(self.n_rows, self.n_cols)}"
+        return out
 
     @staticmethod
     def get_bot(fp):

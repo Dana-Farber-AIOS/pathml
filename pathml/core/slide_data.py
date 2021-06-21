@@ -216,6 +216,7 @@ class SlideData:
             out.append(f"filepath='{self._filepath}'")
         if self.backend:
             out.append(f"backend={repr(self.backend)}")
+        out.append(f"image shape: {self.shape}")
         out.append(repr(self.tiles))
         out.append(repr(self.masks))
         if self.tiles:
@@ -321,6 +322,17 @@ class SlideData:
         slide-level labels
         """
         return self._create_tile_dataset(self)
+
+    @property
+    def shape(self):
+        """
+        Convenience method for getting the image shape.
+        Calling ``wsi.shape`` is equivalent to calling ``wsi.slide.get_image_shape()`` with default arguments.
+
+        Returns:
+            Tuple[int, int]: Shape of image (H, W)
+        """
+        return self.slide.get_image_shape()
 
     @staticmethod
     def _create_tile_dataset(slidedata):

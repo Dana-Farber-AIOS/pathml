@@ -5,6 +5,7 @@ License: GNU GPL 2.0
 
 from torch.utils.data import ConcatDataset
 from pathlib import Path
+import reprlib
 
 
 class SlideDataset:
@@ -24,6 +25,16 @@ class SlideDataset:
 
     def __len__(self):
         return len(self.slides)
+
+    def __repr__(self):
+        out = []
+        out.append(f"SlideDataset object with {len(self)} slides")
+        out.append(f"names: {reprlib.repr([s.name for s in self.slides])}")
+        out.append(f"shapes: {reprlib.repr([s.shape for s in self.slides])}")
+
+        out = ",\n\t".join(out)
+        out += ")"
+        return out
 
     def run(self, pipeline, **kwargs):
         """

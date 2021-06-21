@@ -1345,8 +1345,7 @@ class QuantifyMIF(Transform):
 class CollapseRunsVectra(Transform):
     """
     Coerce Vectra output to standard format.
-    Vectra format is (x, y, 1, c, 1).
-    Output format is (x, y, c).
+    For compatibility with transforms, tiles need to have their shape collapsed to (x, y, c)
     """
 
     def __init__(self):
@@ -1356,7 +1355,7 @@ class CollapseRunsVectra(Transform):
         return f"CollapseRunsVectra()"
 
     def F(self, image):
-        image = image[:, :, 0, :, 0]
+        image = np.squeeze(image)
         return image
 
     def apply(self, tile):
@@ -1376,7 +1375,7 @@ class CollapseRunsCODEX(Transform):
     Output format is (x, y, c) where all cycles are collapsed into c (c = 4 * # of cycles).
 
     Args:
-        z(int): in-focus z-plane for cells of interest
+        z(int): in-focus z-plane
     """
 
     def __init__(self, z):
