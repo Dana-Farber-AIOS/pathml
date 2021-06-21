@@ -37,7 +37,7 @@ def test_vectra_pipeline(tmp_path):
                 cytoplasm_channel=2,
                 image_resolution=0.5,
             ),
-            QuantifyMIF(segmentation_mask="cell_segmentation"),
+            # QuantifyMIF(segmentation_mask="cell_segmentation"),
         ]
     )
 
