@@ -3,14 +3,14 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-import tempfile
-import h5py
-import anndata
-from collections import OrderedDict
-import numpy as np
 import ast
+import tempfile
+from collections import OrderedDict
 from dataclasses import asdict
 
+import anndata
+import h5py
+import numpy as np
 import pathml.core.slide_backends
 import pathml.core.slide_data
 
@@ -89,9 +89,7 @@ def writecounts(h5, counts):
         name(str): name of dataset to be created
         tup(anndata.AnnData): anndata object to be written
     """
-    print(counts)
     countsh5 = h5py.File(counts.filename, "r")
-    print(f"counts keys are {countsh5.keys()}")
     for ds in countsh5.keys():
         countsh5.copy(ds, h5)
 
@@ -104,9 +102,9 @@ def readcounts(h5):
     """
     # create and save temp h5py file
     # read using anndata from temp file
-    # this is necessary because anndata does not support reading directly from h5
-    path = tempfile.TemporaryFile()
+    # anndata does not support reading directly from h5
+    path = tempfile.NamedTemporaryFile()
     f = h5py.File(path, "w")
     for ds in h5.keys():
         h5.copy(ds, f)
-    return anndata.read_h5ad(path)
+    return anndata.read_h5ad(path.name)

@@ -4,25 +4,19 @@ License: GNU GPL 2.0
 """
 
 import os
+from warnings import warn
+
+import anndata
 import cv2
 import numpy as np
 import pandas as pd
-import spams
-from skimage import restoration
-import anndata
-from skimage.measure import regionprops_table
-from warnings import warn
-
 import pathml.core
 import pathml.core.slide_data
-
-from pathml.utils import (
-    RGB_to_GREY,
-    RGB_to_HSV,
-    normalize_matrix_cols,
-    RGB_to_OD,
-    RGB_to_HSI,
-)
+import spams
+from pathml.utils import (RGB_to_GREY, RGB_to_HSI, RGB_to_HSV, RGB_to_OD,
+                          normalize_matrix_cols)
+from skimage import restoration
+from skimage.measure import regionprops_table
 
 
 # Base class
