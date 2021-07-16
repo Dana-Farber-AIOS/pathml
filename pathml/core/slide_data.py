@@ -3,18 +3,19 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-import h5py
-import dask.distributed
-from torch.utils.data import Dataset
-from pathlib import Path
-import matplotlib.pyplot as plt
-import anndata
 import os
-import numpy as np
 import reprlib
+from pathlib import Path
 
+import anndata
+import dask.distributed
+import h5py
+import matplotlib.pyplot as plt
+import numpy as np
 import pathml.core
 import pathml.preprocessing.pipeline
+from pathml.core.slide_types import SlideType
+from torch.utils.data import Dataset
 
 
 def get_file_ext(path):
@@ -195,13 +196,16 @@ class SlideData:
                 key: val
                 for key, val in self.h5manager.h5["fields"]["labels"].attrs.items()
             }
+            # empty dict evaluates to False
+            if not self.labels:
+                self.labels = None
             slide_type = {
                 key: val
                 for key, val in self.h5manager.h5["fields"]["slide_type"].attrs.items()
                 if val is not None
             }
             if slide_type:
-                self.slide_type = pathml.core.types.SlideType(**slide_type)
+                self.slide_type = SlideType(**slide_type)
         else:
             self.h5manager = pathml.core.h5managers.h5pathManager(slidedata=self)
 

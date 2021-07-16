@@ -3,12 +3,11 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
+import anndata
+import numpy as np
 # define fixtures here, and use them throughout the other tests in core_tests/
 import pytest
-import numpy as np
-import anndata
-
-from pathml.core import Tiles, SlideData, SlideDataset
+from pathml.core import SlideData, SlideDataset, Tiles
 
 
 @pytest.fixture
