@@ -17,6 +17,9 @@ from pathml.utils import (RGB_to_GREY, RGB_to_HSI, RGB_to_HSV, RGB_to_OD,
                           normalize_matrix_cols)
 from skimage import restoration
 from skimage.measure import regionprops_table
+from skimage.util import img_as_ubyte
+from skimage.exposure import equalize_adapthist
+
 
 
 # Base class
@@ -125,6 +128,42 @@ class BoxBlur(Transform):
             tile, pathml.core.tile.Tile
         ), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
         tile.image = self.F(tile.image)
+
+
+
+class AdaptiveHistogramEqualization(Transform):
+    """
+    Adaptive histogram equalization
+
+    Args:
+        kernel_size (int or array_like, optional): Defines the shape of contextual regions used in the algorithm. If iterable is passed, it must have the same number of elements as image.ndim (without color channel). If integer, it is broadcasted to each image dimension. By default, kernel_size is 1/8 of image height by 1/8 of its width.
+        clip_limit (float): Clipping limit, normalized between 0 and 1 (higher values give more contrast).
+        nbins (int): Number of gray bins for histogram (“data range”).
+
+    """
+
+    def __init__(self, kernel_size=None, clip_limit = 0.3, nbins=256):
+        self.kernel_size = kernel_size
+        self.clip_limit = clip_limit
+        self.nbins = nbins
+
+    def __repr__(self):
+        return f"AdaptiveHistogramEqualization(kernel_size={self.kernel_size}, clip_limit={self.clip_limit}, nbins={self.nbins})"
+
+    def F(self, image):
+        assert image.dtype == np.uint8, f"image dtype {image.dtype} must be np.uint8"
+        image =  equalize_adapthist(image, kernel_size=self.kernel_size, clip_limit=self.clip_limit, nbins=self.nbins)
+        image = img_as_ubyte(image)
+        return image
+
+    def apply(self, tile):
+        assert isinstance(
+            tile, pathml.core.tile.Tile
+        ), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        tile.image = tile.image.astype(np.uint8)
+        tile.image = self.F(tile.image)
+
+
 
 
 class BinaryThreshold(Transform):
@@ -1305,8 +1344,10 @@ class QuantifyMIF(Transform):
         )
         counts.obs = counts.obs.rename(columns={0: "x", 1: "y"})
         counts.obs["coords"] = countsdataframe["coords"]
+        counts.obs["coords"] = counts.obs["coords"].astype('str')
         counts.obs["filled_area"] = countsdataframe["filled_area"]
         counts.obs["slice"] = countsdataframe["slice"]
+        counts.obs["slice"] = counts.obs["slice"].astype('str')
         counts.obs["euler_number"] = countsdataframe["euler_number"]
         min_intensities = pd.DataFrame()
         for i in range(img.shape[-1]):
