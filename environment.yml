@@ -1,36 +1,9 @@
 name: pathml
 
 channels:
-  - conda-forge
-  - pytorch
+    - conda-forge
+    - pytorch
 
 dependencies:
-  - python>=3.8
-  - numpy>=1.16.4,<1.19.0
-  - scipy>=1.4.1
-  - scikit-image>=0.16.2
-  - matplotlib>=3.1.3
-  - python-spams>=2.6.1
-  - pip>=20.0.2
-  - pytorch>=1.7.0
-  - openjdk==8.0.152
-  - h5py>=3.1.0
-  - dask>=2021.04.0
-  - pydicom>=2.1.2
-  - pytest>=6.2.2
-  - pre-commit
-  - pip:
-      - opencv-contrib-python>=4.1.1
-      - openslide-python>=1.1.1
-      - javabridge
-      - python-bioformats
-      - scanpy>=1.7.2
-      - anndata>=0.7.6
-      - deepcell>=0.9.0
-      - cellpose>=0.6.1
-      - tensorly>=0.6.0
-      - ipython>=7.20.0
-      - sphinx>=3.4.3
-      - nbsphinx>=0.8.1
-      - nbsphinx-link>=1.3.0
-      - sphinx-rtd-theme>=0.5.1
+    - python>=3.8
+    - openjdk==8.0.152

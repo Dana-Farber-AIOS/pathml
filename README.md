@@ -66,6 +66,9 @@ conda env update -f environment.yml     # install dependencies
 pip install -e .                        # install pathml
 ````
 
+5. (Optionally) Install OpenJDK
+conda install openjdk==8.0.152
+
 Optionally verify PyTorch installation with GPU support: `python -c "import torch; print(torch.cuda.is_available())"`
 
 ## Generate Documentation
