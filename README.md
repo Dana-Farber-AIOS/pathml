@@ -39,7 +39,7 @@ cd pathml
 2. Set Up Conda Environment
 
 ````
-conda create --name pathml
+conda create --name pathml python=3.8
 conda activate pathml
 ````
 
@@ -59,17 +59,35 @@ conda activate pathml
         ````
 
 
-4. Install PathML
-
+4.a. Install PathML (conda)
 ````
 conda env update -f environment.yml     # install dependencies
+````
+
+Optionally verify PyTorch installation with GPU support: `python -c "import torch; print(torch.cuda.is_available())"`
+
+4.b. Install PathML (pip)
+
+(Optionally) Install libraries to support multiparametric images  
+````
+conda install openjdk==8.0.152
+pip install javabridge==1.0.19
+pip install python-bioformats==4.0.0
+````
+
+Optionally verify PyTorch installation with GPU support: `python -c "import torch; print(torch.cuda.is_available())"`
+
+(Optionally) Install cell segmentation libraries
+````
+pip install deepcell
+pip install cellpose
+````
+
+Install main package
+````
 pip install -e .                        # install pathml
 ````
 
-5. (Optionally) Install OpenJDK
-conda install openjdk==8.0.152
-
-Optionally verify PyTorch installation with GPU support: `python -c "import torch; print(torch.cuda.is_available())"`
 
 ## Generate Documentation
 
@@ -100,7 +118,7 @@ this may require installing additional packages as well.
 
 You may also optionally measure code coverage, i.e. what percentage of code is covered in the testing suite.
 
-To run tests and check code coverage:
+To run tests and check code coverage, install all dependencies (including dependencies for multiparametric images), then:
 ```
 conda install coverage  # install coverage package for code coverage
 coverage run            # run tests and calculate code coverage

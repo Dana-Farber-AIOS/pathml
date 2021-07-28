@@ -3,8 +3,6 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-# "DeepCell==0.9.1",
-# "cellpose==0.6.1",
 setuptools.setup(
     name="pathml",
     version="1.0.0",
@@ -15,22 +13,19 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
     install_requires=[
-        "pip==21.1.3",
-        "numpy>=1.16.4,<1.20",
+        "pip==21.2.1",
+        "numpy>=1.16.4,<1.19.0",
         "pandas==1.1.5",
         "scipy==1.5.4",
         "scikit-image",
         "statsmodels==0.12.2",
-        "six==1.16.0",
         "matplotlib==3.1.3",
         "openslide-python==1.1.2",
-        "javabridge==1.0.19",
-        "python-bioformats",
         "pydicom==2.1.2",
         "h5py==3.1.0",
-        "python-spams==2.6.1.11",
+        "spams==2.6.2.5",
         "scikit-learn==0.24.2",
-        "dask==2.30.0",
+        "dask[distributed]==2021.7.1",
         "anndata==0.7.4",
         "scanpy==1.7.2",
         "pre-commit==2.13.0",
