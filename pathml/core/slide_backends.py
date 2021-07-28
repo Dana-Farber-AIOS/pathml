@@ -25,7 +25,7 @@ try:
     import javabridge
     from bioformats.metadatatools import createOMEXMLMetadata
 except ImportError:
-    print("to use bioformats backend see (6) in installation instructions")
+    print("bioformats and javabridge are not installed by default, please follow 4a or 4b in README to use functions with these dependencies")
 
 
 class SlideBackend:
