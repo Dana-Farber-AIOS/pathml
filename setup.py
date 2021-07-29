@@ -8,7 +8,7 @@ setuptools.setup(
     version="1.0.0",
     author="Jacob Rosenthal, Ryan Carelli et al.",
     author_email="PathML@dfci.harvard.edu",
-    description="Toolbox for computational pathology",
+    description="Tools for computational pathology",
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
@@ -35,7 +35,19 @@ setuptools.setup(
         "python-bioformats==4.0.0",
     ],
     classifiers=[
+        "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.8",
         "Operating System :: OS Independent",
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Science/Research",
+        "Framework :: Sphinx",
+        "Framework :: Pytest",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
+        "Topic :: Scientific/Engineering :: Bio-Informatics",
+        "Topic :: Scientific/Engineering :: Image Processing",
+        "Topic :: Scientific/Engineering :: Image Recognition",
+        "Topic :: Scientific/Engineering :: Medical Science Apps.",
+        "Topic :: Software Development :: Libraries :: Python Modules"
     ],
 )
