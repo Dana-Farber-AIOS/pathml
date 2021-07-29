@@ -1260,6 +1260,7 @@ class SegmentMIF(Transform):
 class QuantifyMIF(Transform):
     """
     Convert segmented image into anndata.AnnData counts object.
+    This function requires deepcell dependency ``pip install deepcell ``
 
     Args:
         segmentation_mask (str): key indicating which mask to use as label image

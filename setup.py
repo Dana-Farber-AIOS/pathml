@@ -32,10 +32,9 @@ setuptools.setup(
         "torch==1.9.0",
         "opencv-contrib-python==4.5.3.56",
         "tensorly==0.6.0",
+        "javabridge==1.0.19",
+        "python-bioformats==4.0.0",
     ],
-    extras_require={
-        "multiparametric":["javabridge==1.0.19", "python-bioformats==4.0.0"]
-    },
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",

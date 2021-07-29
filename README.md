@@ -17,74 +17,35 @@ A toolkit for computational pathology and machine learning.
 * [Contact](#contact)
 
 # Installing
-
-## Requirements
-
+## Installation
+0. Requirements
+* Set up Conda environment
+    * Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
+    * Create conda environment
+        ````
+        conda create --name pathml python=3.8
+        conda activate pathml
+        ````
+* Install CUDA. This step only applies if you want to use GPU acceleration for model training or other tasks. This guide should work, but for the most up-to-date instructions, refer to the [official PyTorch installation instructions](https://pytorch.org/get-started/locally/).
+    - Check the version of CUDA:
+        ````
+        nvidia-smi
+        ````
+    - Install correct version of `cudatoolkit`:
+        ````
+        # update this command with your CUDA version number
+        conda install cudatoolkit=11.0
+        ````
 * Install [OpenSlide](https://openslide.org/download/)  
     * Linux: ``sudo apt-get install openslide-tools``
     * Mac: ``brew install openslide``
 * Install [OpenJDK](https://openjdk.java.net/)
     * ``conda install openjdk==8.0.152``
 
-* For managing environments, we recommend using Conda. 
-    Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
+2. Install PathML (conda)
+    * pip: ``pip install pathml`` 
 
-## Installation
-
-1. Clone repo
-
-````
-git clone https://github.com/Dana-Farber/pathml.git
-cd pathml
-````
-
-2. Set Up Conda Environment
-
-````
-conda create --name pathml python=3.8
-conda activate pathml
-````
-
-3. Install CUDA. This step only applies if you want to use GPU acceleration for model training or other tasks. This guide should work, but for the most up-to-date instructions, refer to the [official PyTorch installation instructions](https://pytorch.org/get-started/locally/).
-
-    - Check the version of CUDA:
-    
-        ````
-        nvidia-smi
-        ````
-    
-    - Install correct version of `cudatoolkit`:
-
-        ````
-        # update this command with your CUDA version number
-        conda install cudatoolkit=11.0
-        ````
-
-
-4.a. Install PathML (conda)
-````
-conda env update -f environment.yml     # install dependencies
-````
-
-Optionally verify PyTorch installation with GPU support: `python -c "import torch; print(torch.cuda.is_available())"`
-
-4.b. Install PathML (pip)
-
-````
-pip install pathml                        # install pathml
-````
-
-(Optionally) Install with multiparametric module 
-````
-pip install pathml[multiparametric]
-pip install deepcell # optional segmentation model
-pip install # optional segmentation model 
-````
-
-Optionally verify PyTorch installation with GPU support: `python -c "import torch; print(torch.cuda.is_available())"`
-
-
-Install main package
+3. Optionally verify PyTorch installation with GPU support: `python -c "import torch; print(torch.cuda.is_available())"`
 
 
 ## Generate Documentation
