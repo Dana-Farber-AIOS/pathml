@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pathml",
-    version="1.0.0",
+    version="1.0.5",
     author="Jacob Rosenthal, Ryan Carelli et al.",
     author_email="PathML@dfci.harvard.edu",
     description="Toolbox for computational pathology",
@@ -32,7 +32,6 @@ setuptools.setup(
         "torch==1.9.0",
         "opencv-contrib-python==4.5.3.56",
         "tensorly==0.6.0",
-        "javabridge==1.0.19",
         "python-bioformats==4.0.0",
     ],
     classifiers=[
