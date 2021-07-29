@@ -39,8 +39,8 @@ A toolkit for computational pathology and machine learning.
 * Install external dependencies  
     * Linux: ``sudo apt-get install openslide-tools g++ gcc libblas-dev liblapack-dev``
     * Mac: ``brew install openslide``
-* Install [OpenJDK](https://openjdk.java.net/)
-    * ``conda install openjdk==8.0.152``
+* Install conda dependencies [OpenJDK](https://openjdk.java.net/)
+    * ``conda install openjdk==8.0.152 numpy==1.8.15``
 
 2. Install PathML (conda)
     * pip: ``pip install pathml`` 
