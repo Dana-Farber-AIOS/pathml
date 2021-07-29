@@ -1,6 +1,6 @@
-<img src=docs/source/_static/images/logo.png width="300"> 
+<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/logo.png width="300"> 
 
-<img src=docs/source/_static/images/overview.png width="750"> 
+<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/overview.png width="750"> 
 
 A toolkit for computational pathology and machine learning.
 
@@ -17,35 +17,45 @@ A toolkit for computational pathology and machine learning.
 * [Contact](#contact)
 
 # Installing
-## Installation
+
+*Note: these instructions are for Linux. Commands may be different for other platforms.*
+
 0. Requirements
-* Set up Conda environment
-    * Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
-    * Create conda environment
+    * Set up Conda environment
+        * Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
+        * Create conda environment
+            ````
+            conda create --name pathml python=3.8 numpy=1.8.15
+            conda activate pathml
+            ````
+    * Install external dependencies
         ````
-        conda create --name pathml python=3.8 numpy==1.8.15
-        conda activate pathml
+        sudo apt-get install openslide-tools g++ gcc libblas-dev liblapack-dev
         ````
-* Install CUDA. This step only applies if you want to use GPU acceleration for model training or other tasks. This guide should work, but for the most up-to-date instructions, refer to the [official PyTorch installation instructions](https://pytorch.org/get-started/locally/).
-    - Check the version of CUDA:
+    * Install conda dependencies [OpenJDK](https://openjdk.java.net/)
         ````
-        nvidia-smi
+        conda install openjdk==8.0.152
         ````
-    - Install correct version of `cudatoolkit`:
-        ````
-        # update this command with your CUDA version number
-        conda install cudatoolkit=11.0
-        ````
-* Install external dependencies  
-    * Linux: ``sudo apt-get install openslide-tools g++ gcc libblas-dev liblapack-dev``
-    * Mac: ``brew install openslide``
-* Install conda dependencies [OpenJDK](https://openjdk.java.net/)
-    * ``conda install openjdk==8.0.152``
+    * [Optional]: Install CUDA. This step only applies if you want to use GPU acceleration for model training or other tasks. This guide should work, but for the most up-to-date instructions, refer to the [official PyTorch installation instructions](https://pytorch.org/get-started/locally/).
+        - Check the version of CUDA:
+            ````
+            nvidia-smi
+            ````
+        - Install correct version of `cudatoolkit`:
+            ````
+            # update this command with your CUDA version number
+            conda install cudatoolkit=11.0
+            ````
+    
+1. Install PathML:
+    ````
+    pip install pathml
+    ```` 
 
-2. Install PathML (conda)
-    * pip: ``pip install pathml`` 
-
-3. Optionally verify PyTorch installation with GPU support: `python -c "import torch; print(torch.cuda.is_available())"`
+2. Optionally verify PyTorch installation with GPU support: 
+   ````
+   python -c "import torch; print(torch.cuda.is_available())"
+   ````
 
 
 ## Generate Documentation
@@ -112,4 +122,4 @@ Questions? Comments? Suggestions? Get in touch!
 
 [PathML@dfci.harvard.edu](mailto:PathML@dfci.harvard.edu)
 
-<img src=docs/source/_static/images/dfci_cornell_joint_logos.png width="750"> 
+<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/dfci_cornell_joint_logos.png width="750"> 
