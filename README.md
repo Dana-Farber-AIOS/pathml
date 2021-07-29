@@ -42,10 +42,10 @@ A toolkit for computational pathology and machine learning.
 * Install conda dependencies [OpenJDK](https://openjdk.java.net/)
     * ``conda install openjdk==8.0.152``
 
-2. Install PathML (conda)
+1. Install PathML (conda)
     * pip: ``pip install pathml`` 
 
-3. Optionally verify PyTorch installation with GPU support: `python -c "import torch; print(torch.cuda.is_available())"`
+2. Optionally verify PyTorch installation with GPU support: `python -c "import torch; print(torch.cuda.is_available())"`
 
 
 ## Generate Documentation
