@@ -6,13 +6,10 @@ License: GNU GPL 2.0
 from io import BytesIO
 from typing import Tuple
 
-import bioformats
-import javabridge
 import numpy as np
 import openslide
 import pathml.core
 import pathml.core.tile
-from bioformats.metadatatools import createOMEXMLMetadata
 from pathml.utils import pil_to_rgb
 from PIL import Image
 from pydicom.dataset import Dataset
@@ -22,6 +19,17 @@ from pydicom.filereader import data_element_offset_to_value, dcmread
 from pydicom.tag import SequenceDelimiterTag, TupleTag
 from pydicom.uid import UID
 from scipy.ndimage import zoom
+
+try:
+    import bioformats
+    import javabridge
+    from bioformats.metadatatools import createOMEXMLMetadata
+except ImportError:
+    raise Exception("""Installation of PathML not complete. Please install openjdk8, bioformats, and javabridge:
+            conda install openjdk==8.0.152
+            pip install javabridge==1.0.19 python-bioformats==4.0.0
+            
+            For detailed installation instructions, please see https://github.com/Dana-Farber-AIOS/pathml/""")
 
 
 class SlideBackend:

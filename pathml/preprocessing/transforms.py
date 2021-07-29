@@ -1260,6 +1260,7 @@ class SegmentMIF(Transform):
 class QuantifyMIF(Transform):
     """
     Convert segmented image into anndata.AnnData counts object.
+    This function requires deepcell dependency ``pip install deepcell ``
 
     Args:
         segmentation_mask (str): key indicating which mask to use as label image
@@ -1304,9 +1305,9 @@ class QuantifyMIF(Transform):
             ],
         )
         counts.obs = counts.obs.rename(columns={0: "x", 1: "y"})
-        counts.obs["coords"] = countsdataframe["coords"]
+        counts.obs["coords"] = str(countsdataframe["coords"])
         counts.obs["filled_area"] = countsdataframe["filled_area"]
-        counts.obs["slice"] = countsdataframe["slice"]
+        counts.obs["slice"] = str(countsdataframe["slice"])
         counts.obs["euler_number"] = countsdataframe["euler_number"]
         min_intensities = pd.DataFrame()
         for i in range(img.shape[-1]):

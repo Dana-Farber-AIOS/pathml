@@ -17,56 +17,36 @@ A toolkit for computational pathology and machine learning.
 * [Contact](#contact)
 
 # Installing
-
-## Requirements
-
-* Install [OpenSlide](https://openslide.org/download/)  
-    * Linux: ``sudo apt-get install openslide-tools``
-    * Mac: ``brew install openslide``
-
-* For managing environments, we recommend using Conda. 
-    Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
-
 ## Installation
-
-1. Clone repo
-
-````
-git clone https://github.com/Dana-Farber/pathml.git
-cd pathml
-````
-
-2. Set Up Conda Environment
-
-````
-conda create --name pathml
-conda activate pathml
-````
-
-3. Install CUDA. This step only applies if you want to use GPU acceleration for model training or other tasks. This guide should work, but for the most up-to-date instructions, refer to the [official PyTorch installation instructions](https://pytorch.org/get-started/locally/).
-
+0. Requirements
+* Set up Conda environment
+    * Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
+    * Create conda environment
+        ````
+        conda create --name pathml python=3.8 numpy==1.8.15
+        conda activate pathml
+        ````
+* Install CUDA. This step only applies if you want to use GPU acceleration for model training or other tasks. This guide should work, but for the most up-to-date instructions, refer to the [official PyTorch installation instructions](https://pytorch.org/get-started/locally/).
     - Check the version of CUDA:
-    
         ````
         nvidia-smi
         ````
-    
     - Install correct version of `cudatoolkit`:
-
         ````
         # update this command with your CUDA version number
         conda install cudatoolkit=11.0
         ````
+* Install external dependencies  
+    * Linux: ``sudo apt-get install openslide-tools g++ gcc libblas-dev liblapack-dev``
+    * Mac: ``brew install openslide``
+* Install conda dependencies [OpenJDK](https://openjdk.java.net/)
+    * ``conda install openjdk==8.0.152``
 
+2. Install PathML (conda)
+    * pip: ``pip install pathml`` 
 
-4. Install PathML
+3. Optionally verify PyTorch installation with GPU support: `python -c "import torch; print(torch.cuda.is_available())"`
 
-````
-conda env update -f environment.yml     # install dependencies
-pip install -e .                        # install pathml
-````
-
-Optionally verify PyTorch installation with GPU support: `python -c "import torch; print(torch.cuda.is_available())"`
 
 ## Generate Documentation
 
@@ -97,7 +77,7 @@ this may require installing additional packages as well.
 
 You may also optionally measure code coverage, i.e. what percentage of code is covered in the testing suite.
 
-To run tests and check code coverage:
+To run tests and check code coverage, install all dependencies (including dependencies for multiparametric images), then:
 ```
 conda install coverage  # install coverage package for code coverage
 coverage run            # run tests and calculate code coverage
