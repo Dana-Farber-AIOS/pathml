@@ -23,7 +23,7 @@ A toolkit for computational pathology and machine learning.
     * Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
     * Create conda environment
         ````
-        conda create --name pathml python=3.8
+        conda create --name pathml python=3.8 numpy==1.8.15
         conda activate pathml
         ````
 * Install CUDA. This step only applies if you want to use GPU acceleration for model training or other tasks. This guide should work, but for the most up-to-date instructions, refer to the [official PyTorch installation instructions](https://pytorch.org/get-started/locally/).
@@ -40,7 +40,7 @@ A toolkit for computational pathology and machine learning.
     * Linux: ``sudo apt-get install openslide-tools g++ gcc libblas-dev liblapack-dev``
     * Mac: ``brew install openslide``
 * Install conda dependencies [OpenJDK](https://openjdk.java.net/)
-    * ``conda install openjdk==8.0.152 numpy==1.8.15``
+    * ``conda install openjdk==8.0.152``
 
 2. Install PathML (conda)
     * pip: ``pip install pathml`` 
