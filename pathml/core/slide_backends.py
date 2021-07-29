@@ -25,7 +25,11 @@ try:
     import javabridge
     from bioformats.metadatatools import createOMEXMLMetadata
 except ImportError:
-    print("bioformats and javabridge are not installed by default, please follow 4a or 4b in README to use functions with these dependencies")
+    raise Exception("""Installation of PathML not complete. Please install openjdk8, bioformats, and javabridge:
+            conda install openjdk==8.0.152
+            pip install javabridge==1.0.19 python-bioformats==4.0.0
+            
+            For detailed installation instructions, please see https://github.com/Dana-Farber-AIOS/pathml/""")
 
 
 class SlideBackend:
