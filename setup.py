@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pathml",
-    version="1.0.0",
+    version="1.0.4",
     author="Jacob Rosenthal, Ryan Carelli et al.",
     author_email="PathML@dfci.harvard.edu",
     description="Toolbox for computational pathology",
@@ -33,6 +33,9 @@ setuptools.setup(
         "opencv-contrib-python==4.5.3.56",
         "tensorly==0.6.0",
     ],
+    extras_require={
+        "multiparametric":["javabridge==1.0.19", "python-bioformats==4.0.0"]
+    },
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",

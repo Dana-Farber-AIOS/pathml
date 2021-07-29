@@ -23,6 +23,8 @@ A toolkit for computational pathology and machine learning.
 * Install [OpenSlide](https://openslide.org/download/)  
     * Linux: ``sudo apt-get install openslide-tools``
     * Mac: ``brew install openslide``
+* Install [OpenJDK](https://openjdk.java.net/)
+    * ``conda install openjdk==8.0.152``
 
 * For managing environments, we recommend using Conda. 
     Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
@@ -68,25 +70,21 @@ Optionally verify PyTorch installation with GPU support: `python -c "import torc
 
 4.b. Install PathML (pip)
 
-(Optionally) Install libraries to support multiparametric images  
 ````
-conda install openjdk==8.0.152
-pip install javabridge==1.0.19
-pip install python-bioformats==4.0.0
+pip install pathml                        # install pathml
+````
+
+(Optionally) Install with multiparametric module 
+````
+pip install pathml[multiparametric]
+pip install deepcell # optional segmentation model
+pip install # optional segmentation model 
 ````
 
 Optionally verify PyTorch installation with GPU support: `python -c "import torch; print(torch.cuda.is_available())"`
 
-(Optionally) Install cell segmentation libraries
-````
-pip install deepcell
-pip install cellpose
-````
 
 Install main package
-````
-pip install -e .                        # install pathml
-````
 
 
 ## Generate Documentation
