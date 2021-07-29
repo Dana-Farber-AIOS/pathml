@@ -36,8 +36,8 @@ A toolkit for computational pathology and machine learning.
         # update this command with your CUDA version number
         conda install cudatoolkit=11.0
         ````
-* Install [OpenSlide](https://openslide.org/download/)  
-    * Linux: ``sudo apt-get install openslide-tools``
+* Install external dependencies  
+    * Linux: ``sudo apt-get install openslide-tools g++ gcc libblas-dev liblapack-dev``
     * Mac: ``brew install openslide``
 * Install [OpenJDK](https://openjdk.java.net/)
     * ``conda install openjdk==8.0.152``
