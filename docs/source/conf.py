@@ -18,10 +18,10 @@ sys.path.insert(0, os.path.abspath('../../'))
 # -- Project information -----------------------------------------------------
 
 project = 'PathML'
-copyright = '2020, Jacob Rosenthal'
-author = 'Jacob Rosenthal'
+copyright = '2021, Dana-Farber Cancer Institute and Weill Cornell Medicine'
+author = 'Jacob Rosenthal et al.'
 
-version = '0.0.1'
+version = '1.0.0'
 # The full version, including alpha/beta/rc tags
 release = version
 
@@ -39,6 +39,11 @@ extensions = [
     'sphinx.ext.imgmath',
     'IPython.sphinxext.ipython_console_highlighting'
 ]
+
+autodoc_default_options = {
+    'members': True,
+    'undoc-members': True
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -67,10 +72,14 @@ html_theme_options = {
 }
 
 # link to logo
-html_logo = '_static/logo.png'
+html_logo = '_static/images/logo.png'
 
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+
+def setup(app):
+    app.add_css_file('css/pathml.css')

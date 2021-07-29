@@ -1,67 +1,55 @@
-from pathml.preprocessing.base_preprocessor import (BaseSlideLoader, BaseSlidePreprocessor,
-                                                    BaseTileExtractor, BaseTilePreprocessor)
+"""
+Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
+License: GNU GPL 2.0
+"""
+
+import pickle
+
+import pathml.core.tile
+from pathml.preprocessing.transforms import Transform
 
 
-class Pipeline:
+class Pipeline(Transform):
     """
-    Object for running preprocessing pipelines.
+    Compose a sequence of Transforms
 
-    :param slide_loader: preprocessor which loads slide from disk
-    :type slide_loader: :class:`~pathml.preprocessing.base_preprocessor.BaseSlideLoader`
-    :param slide_preprocessor: preprocessor to apply on slide level
-    :type slide_preprocessor: :class:`~pathml.preprocessing.base_preprocessor.BaseSlidePreprocessor`
-    :param tile_extractor: preprocessor to extract tiles
-    :type tile_extractor: :class:`~pathml.preprocessing.base_preprocessor.BaseTileExtractor`
-    :param tile_preprocessor: preprocessor to run on each tile
-    :type tile_preprocessor: :class:`~pathml.preprocessing.base_preprocessor.BaseTilePreprocessor`
+    Args:
+        transform_sequence (list): sequence of transforms to be consecutively applied.
+            List of `pathml.core.Transform` objects
     """
 
-    def __init__(self, slide_loader, slide_preprocessor, tile_extractor, tile_preprocessor):
-        assert isinstance(slide_loader, BaseSlideLoader), \
-            f"slide_loader is of type {type(slide_loader)}. Must inherit from BaseSlideLoader"
-        assert isinstance(slide_preprocessor, BaseSlidePreprocessor), \
-            f"slide_preprocessor is of type {type(slide_preprocessor)}. Must inherit from BaseSlidePreprocessor"
-        assert isinstance(tile_extractor, BaseTileExtractor), \
-            f"tile_extractor is of type {type(tile_extractor)}. Must inherit from BaseTileExtractor"
-        assert isinstance(tile_preprocessor, BaseTilePreprocessor), \
-            f"tile_preprocessor is of type {type(tile_preprocessor)}. Must inherit from BaseTilePreprocessor"
+    def __init__(self, transform_sequence):
+        assert all([isinstance(t, Transform) for t in transform_sequence]), (
+            f"All elements in input list must be of" f" type pathml.core.Transform"
+        )
+        self.transforms = transform_sequence
 
-        self.slide_loader = slide_loader
-        self.slide_preprocessor = slide_preprocessor
-        self.tile_extractor = tile_extractor
-        self.tile_preprocessor = tile_preprocessor
+    def __len__(self):
+        return len(self.transforms)
 
-    def load_slide(self, path):
-        """Run only the slide_loader component of the pipeline"""
-        data = self.slide_loader.apply(path)
-        return data
+    def __repr__(self):
+        out = f"Pipeline([\n"
+        for t in self.transforms:
+            out += f"\t{repr(t)},\n"
+        out += "])"
+        return out
 
-    def run_slide_level(self, data):
-        """Run only the slide_preprocessor component of the pipeline"""
-        data = self.slide_preprocessor.apply(data)
-        return data
+    def apply(self, tile):
+        # this function has side effects
+        # modifies the tile in place, but also returns the modified tile
+        # need to do this for dask distributed
+        assert isinstance(
+            tile, pathml.core.tile.Tile
+        ), f"argument of type {type(tile)} must be a pathml.core.Tile object."
+        for t in self.transforms:
+            t.apply(tile)
+        return tile
 
-    def extract_tiles(self, data):
-        """Run only the tile_extractor component of the pipeline"""
-        data = self.tile_extractor.apply(data)
-        return data
-
-    def run_tile_level(self, data):
-        """Run only the tile_preprocessor component of the pipeline"""
-        data = self.tile_preprocessor.apply(data)
-        return data
-
-    def run(self, path):
+    def save(self, filename):
         """
-        Run full preprocessing pipeline
+        save pipeline to disk
 
-        :param path: path to input WSI
-        :type path: str
-        :return: :class:`~pathml.preprocessing.slide_data.SlideData` object resulting from running full pipeline on
-            input image
+        Args:
+            filename (str): save path on disk
         """
-        data = self.load_slide(path)
-        data = self.run_slide_level(data)
-        data = self.extract_tiles(data)
-        data = self.run_tile_level(data)
-        return data
+        pickle.dump(self, open(filename, "wb"))

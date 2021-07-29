@@ -1,6 +1,11 @@
-<img src=docs/source/_static/logo.png width="500"> 
+<img src=docs/source/_static/images/logo.png width="300"> 
+
+<img src=docs/source/_static/images/overview.png width="750"> 
 
 A toolkit for computational pathology and machine learning.
+
+![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 * [Installing](#installing)
    * [Requirements](#requirements)
@@ -12,25 +17,36 @@ A toolkit for computational pathology and machine learning.
 * [Contact](#contact)
 
 # Installing
-
-## Requirements
-
-* Install [OpenSlide](https://openslide.org/download/)  
-    * Linux: ``sudo apt-get install openslide-tools``
-    * Mac: ``brew install openslide``
-
-* For managing environments, we recommend using Conda. 
-    Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
-
 ## Installation
+0. Requirements
+* Set up Conda environment
+    * Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
+    * Create conda environment
+        ````
+        conda create --name pathml python=3.8 numpy==1.8.15
+        conda activate pathml
+        ````
+* Install CUDA. This step only applies if you want to use GPU acceleration for model training or other tasks. This guide should work, but for the most up-to-date instructions, refer to the [official PyTorch installation instructions](https://pytorch.org/get-started/locally/).
+    - Check the version of CUDA:
+        ````
+        nvidia-smi
+        ````
+    - Install correct version of `cudatoolkit`:
+        ````
+        # update this command with your CUDA version number
+        conda install cudatoolkit=11.0
+        ````
+* Install external dependencies  
+    * Linux: ``sudo apt-get install openslide-tools g++ gcc libblas-dev liblapack-dev``
+    * Mac: ``brew install openslide``
+* Install conda dependencies [OpenJDK](https://openjdk.java.net/)
+    * ``conda install openjdk==8.0.152``
 
-````
-git clone https://github.com/Dana-Farber/pathml.git     # clone repo
-cd pathml                               # enter repo directory
-conda env create -f environment.yml     # create conda environment
-conda activate pathml                   # activate conda environment
-pip install -e .                        # install pathml in conda environment
-````
+2. Install PathML (conda)
+    * pip: ``pip install pathml`` 
+
+3. Optionally verify PyTorch installation with GPU support: `python -c "import torch; print(torch.cuda.is_available())"`
+
 
 ## Generate Documentation
 
@@ -61,7 +77,7 @@ this may require installing additional packages as well.
 
 You may also optionally measure code coverage, i.e. what percentage of code is covered in the testing suite.
 
-To run tests and check code coverage:
+To run tests and check code coverage, install all dependencies (including dependencies for multiparametric images), then:
 ```
 conda install coverage  # install coverage package for code coverage
 coverage run            # run tests and calculate code coverage
@@ -72,11 +88,6 @@ coverage html           # optionally generate HTML coverage report
 # Getting Started
 
 The [example notebooks](examples) are a good place start with `PathML`.
-
-1. [Building a basic preprocessing pipeline for H&E images](examples/basic_HE.ipynb)
-1. [Building a more efficient custom preprocessing pipeline](examples/advanced_HE_chunks.ipynb)
-1. [Stain normalization for H&E images](examples/stain_normalization.ipynb)
-1. [Nucleus detection for H&E images](examples/nucleus_detection.ipynb)
 
 # Contributing
 
@@ -99,7 +110,6 @@ See [contributing](CONTRIBUTING.rst) for more details.
 
 Questions? Comments? Suggestions? Get in touch!
 
-[Jacob Rosenthal](mailto:Jacob_Rosenthal@dfci.harvard.edu)  
-Data Science Team  
-Department of Informatics and Analytics  
-Dana-Farber Cancer Institute
+[PathML@dfci.harvard.edu](mailto:PathML@dfci.harvard.edu)
+
+<img src=docs/source/_static/images/dfci_cornell_joint_logos.png width="750"> 

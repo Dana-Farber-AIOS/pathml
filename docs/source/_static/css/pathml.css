@@ -1,0 +1,21 @@
+/* This file is for custom CSS adjustments for PathML docs */
+
+
+/* override table width restrictions, sidable horizontal scrossbar in tables */
+/* from: https://sphinx-argparse.readthedocs.io/en/stable/misc.html */
+
+.wy-table-responsive table td {
+   /* !important prevents the common CSS stylesheets from overriding
+      this as on RTD they are loaded after this stylesheet */
+   white-space: normal !important;
+}
+
+.wy-table-responsive {
+   overflow: visible !important;
+}
+
+/* colors for in-line code. From: https://stackoverflow.com/a/65485656 */
+code.literal {
+    color: #404040 !important;
+    background-color: #fbfbfb !important;
+}

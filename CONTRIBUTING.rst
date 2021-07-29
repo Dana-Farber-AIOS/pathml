@@ -16,11 +16,9 @@ There are many ways to contribute to PathML, including:
 * Sharing trained model parameters [coming soon]
 * Sharing ``PathML`` with colleagues, students, etc.
 
-How To:
-=======
 
-Submit a bug report
--------------------
+Submitting a bug report
+=======================
 Report bugs or errors by filing an issue on GitHub. Make sure to include the following information:
 
 * Short description of the bug
@@ -29,52 +27,91 @@ Report bugs or errors by filing an issue on GitHub. Make sure to include the fol
 * Actual result
 * Any other useful information
 
-Request a new feature
----------------------
+Requesting a new feature
+=========================
 Request a new feature by filing an issue on GitHub. Make sure to include the following information:
 
 * Description of the feature
 * Pseudocode of how the feature might work (if applicable)
 * Any other useful information
 
-Contribute Code/Documentation
------------------------------
+Writing code and/or documentation
+==============================================
 Here's how to contribute code, documentation, etc.
 
-1. Create an issue for what you will be working on, if one does not already exist 
+1. Create a new GitHub issue for what you will be working on, if one does not already exist
 2. Create a new fork of the ``PathML`` repository
 3. Clone your fork to your local machine
-4. Ensure that your environment is properly configured and that all tests pass
-5. Implement your changes
-6. Write new tests as needed to maintain code coverage
-7. Ensure that all tests still pass
-8. Commit your changes and submit a pull request reference the corresponding issue
+4. Set up the PathML environment: ``conda env create -f environment.yml``
+5. Install pre-commit hooks: ``pre-commit install``
+6. Ensure that your environment is properly configured and that all tests pass
+7. Implement your changes
+8. Write new tests as needed to maintain code coverage
+9. Ensure that all tests still pass
+10. Commit your changes and submit a pull request referencing the corresponding issue
+11. Respond to discussion/feedback about the pull request. Make changes as necessary.
+
+Code Standards
+==============
+
+
+Code Quality
+------------
+
+We want PathML to be built on high-quality code. However, the idea of "code quality" is somewhat subjective.
+If the code works perfectly but cannot be read and understood by someone else, then it can't be maintained,
+and this accumulated tech debt is something we want to avoid.
+Writing code that "works", i.e. does what you want it to do, is therefore necessary but not sufficient.
+Good code also demands efficiency, consistency, good design, clarity, and many other factors.
+
+Here are some general tips and ideas:
+
+- Strive to make code concise, but not at the expense of clarity.
+- Seek efficient and general designs, but avoid premature optimization.
+- Prefer informative variable names.
+- Encapsulate code in functions or objects.
+- Comment, comment, comment your code.
+
+All code should be reviewed by someone else before merging.
+
+We use `Black`_ to enforce consistency of code style.
 
 Documentation Standards
-=======================
+-----------------------
 
 All code should be documented, including docstrings for users AND inline comments for
 other developers whenever possible! Both are crucial for ensuring long-term usability and maintainability.
-Documentation is automatically generated using the Sphinx `autodoc`_ extension from properly formatted docstrings.
-All documentation (including docstrings) are written in `reStructuredText`_ format.
+Documentation is automatically generated using the Sphinx `autodoc`_ and `napoleon`_ extensions from
+properly formatted Google-style docstrings.
+All documentation (including docstrings) is written in `reStructuredText`_ format.
 See this `docstring example`_ to get started.
 
 To build documentation:
 
 .. code-block::
 
-    conda install sphinx    # install sphinx package for generating docs
+    # first install packages for generating docs
+    pip install ipython sphinx nbsphinx nbsphinx-link sphinx-rtd-theme
     cd docs                 # enter docs directory
     make html               # build docs in html format
 
+Then use your favorite web browser to open ``pathml/docs/build/html/index.html``
+
 Testing Standards
-=================
+-----------------
 
-All new code should be accompanied by tests, whenever possible, to maintain good code coverage.
+All code should be accompanied by tests, whenever possible, to ensure that everything is working as intended.
+
+The type of testing required may vary depending on the type of contribution:
+
+- New features should use tests to ensure that the code is working as intended, e.g. comparing output of
+  a function with the expected output.
+- Bug fixes should first add a failing test, then make it pass by fixing the bug
+
+No pull request can be merged unless all tests pass.
+We aim to maintain good code coverage for the testing suite (target >90%).
 We use the `pytest`_ testing framework.
-All tests should pass for new code, and new tests should be added as necessary when fixing bugs.
-
-To run tests and check code coverage:
+To run the test suite and check code coverage:
 
 .. code-block::
 
@@ -93,4 +130,6 @@ Thank you for helping make ``PathML`` better!
 .. _pytest: https://docs.pytest.org/en/stable/
 .. _autodoc: https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
 .. _reStructuredText: https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
-.. _docstring example: https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html
+.. _docstring example: https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
+.. _napoleon: https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html
+.. _Black: https://black.readthedocs.io/en/stable

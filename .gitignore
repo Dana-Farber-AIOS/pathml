@@ -30,3 +30,6 @@ scratch.ipynb
 
 # Pycharm
 .idea/
+
+# dask
+dask-worker-space/
