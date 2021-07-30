@@ -13,8 +13,13 @@ import pandas as pd
 import pathml.core
 import pathml.core.slide_data
 import spams
-from pathml.utils import (RGB_to_GREY, RGB_to_HSI, RGB_to_HSV, RGB_to_OD,
-                          normalize_matrix_cols)
+from pathml.utils import (
+    RGB_to_GREY,
+    RGB_to_HSI,
+    RGB_to_HSV,
+    RGB_to_OD,
+    normalize_matrix_cols,
+)
 from skimage import restoration
 from skimage.measure import regionprops_table
 
@@ -1157,6 +1162,13 @@ class SegmentMIF(Transform):
     Model outputs predictions for centroid and boundary of every nucleus and cell, then centroid and boundary
     predictions are used as inputs to a watershed algorithm that creates segmentation masks.
 
+    .. warning::
+        Mesmer model requires installation of deepcell dependency: ``pip install deepcell``
+
+    .. warning::
+        Mesmer model is incompatible with dask.distributed. Pipelines containing Mesmer model must be run with
+        ``distributed=False``. See: https://github.com/Dana-Farber-AIOS/pathml/issues/130
+
     Args:
         model(str): string indicating which segmentation model to use. Currently only 'mesmer' is supported.
         nuclear_channel(int): channel that defines cell nucleus
@@ -1260,7 +1272,6 @@ class SegmentMIF(Transform):
 class QuantifyMIF(Transform):
     """
     Convert segmented image into anndata.AnnData counts object.
-    This function requires deepcell dependency ``pip install deepcell ``
 
     Args:
         segmentation_mask (str): key indicating which mask to use as label image
