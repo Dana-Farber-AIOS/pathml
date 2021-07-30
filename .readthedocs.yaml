@@ -7,9 +7,9 @@ version: 2
 
 # Build documentation with Sphinx
 sphinx:
-   configuration: docs/source/conf.py
-   builder: html
-   fail_on_warning: false
+    configuration: docs/source/conf.py
+    builder: html
+    fail_on_warning: false
 
 conda:
-  environment: environment.yml
+    environment: environment.yml
