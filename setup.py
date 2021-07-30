@@ -12,6 +12,10 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
+    project_urls={
+            "Documentation": "https://pathml.readthedocs.io/en/stable",
+            "Source Code": "https://github.com/Dana-Farber-AIOS/pathml",
+    },
     install_requires=[
         "pip==21.2.1",
         "numpy>=1.16.4,<1.19.0",
