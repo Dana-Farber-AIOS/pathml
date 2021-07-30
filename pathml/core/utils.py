@@ -19,6 +19,7 @@ import pathml.core.slide_data
 def writedataframeh5(h5, name, df):
     """
     Write dataframe as h5 dataset.
+
     Args:
         h5(h5py.Dataset): root of h5 object that df will be written into
         name(str): name of dataset to be created
@@ -37,6 +38,7 @@ def writedataframeh5(h5, name, df):
 def writestringh5(h5, name, st):
     """
     Write string as h5 attribute.
+
     Args:
         h5(h5py.Dataset): root of h5 object that st will be written into
         name(str): name of dataset to be created
@@ -49,6 +51,7 @@ def writestringh5(h5, name, st):
 def writedicth5(h5, name, dic):
     """
     Write dict as attributes of h5py.Group.
+
     Args:
         h5(h5py.Dataset): root of h5 object that dic will be written into
         name(str): name of dataset to be created
@@ -62,6 +65,7 @@ def writedicth5(h5, name, dic):
 def writetupleh5(h5, name, tup):
     """
     Write tuple as h5 attribute.
+
     Args:
         h5(h5py.Dataset): root of h5 object that tup will be written into
         name(str): name of dataset to be created
@@ -74,6 +78,7 @@ def writetupleh5(h5, name, tup):
 def readtupleh5(h5, key):
     """
     Read tuple from h5.
+
     Args:
         h5(h5py.Dataset or h5py.Group): h5 object that will be read from
         key(str): key where data to read is stored
@@ -84,6 +89,7 @@ def readtupleh5(h5, key):
 def writecounts(h5, counts):
     """
     Write counts using anndata h5py.
+
     Args:
         h5(h5py.Dataset): root of h5 object that counts will be written into
         name(str): name of dataset to be created
@@ -97,6 +103,7 @@ def writecounts(h5, counts):
 def readcounts(h5):
     """
     Read counts using anndata h5py.
+
     Args:
         h5(h5py.Dataset): h5 object that will be read
     """
