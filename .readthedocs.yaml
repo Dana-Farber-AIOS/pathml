@@ -12,4 +12,4 @@ sphinx:
     fail_on_warning: false
 
 conda:
-    environment: environment.yml
+    environment: docs/env_readthedocs.yml
