@@ -3,8 +3,6 @@ Contributing
 
 ``PathML`` is an open source project. Consider contributing to benefit the entire community!
 
-Ways to Contribute
-==================
 There are many ways to contribute to PathML, including:
 
 * Submitting bug reports
@@ -35,28 +33,61 @@ Request a new feature by filing an issue on GitHub. Make sure to include the fol
 * Pseudocode of how the feature might work (if applicable)
 * Any other useful information
 
-Writing code and/or documentation
-==============================================
-Here's how to contribute code, documentation, etc.
-
-1. Create a new GitHub issue for what you will be working on, if one does not already exist
-2. Create a new fork of the ``PathML`` repository
-3. Clone your fork to your local machine
-4. Set up the PathML environment: ``conda env create -f environment.yml``
-5. Install pre-commit hooks: ``pre-commit install``
-6. Ensure that your environment is properly configured and that all tests pass
-7. Implement your changes
-8. Write new tests as needed to maintain code coverage
-9. Ensure that all tests still pass
-10. Commit your changes and submit a pull request referencing the corresponding issue
-11. Respond to discussion/feedback about the pull request. Make changes as necessary.
-
-Code Standards
+For developers
 ==============
 
+Setting up a local development environment
+-------------------------------------------
+
+1. Create a new fork of the ``PathML`` repository
+2. Clone your fork to your local machine
+3. Set up the PathML environment: ``conda env create -f environment.yml; conda activate pathml``
+4. Install PathML: ``pip install -e .``
+5. Install pre-commit hooks: ``pre-commit install``
+
+Running tests
+-------------
+
+.. code-block::
+
+    python -m pytest
+
+Building documentation locally
+------------------------------
+
+.. code-block::
+
+    cd docs         # enter docs directory
+    make html       # build docs in html format
+
+Then use your favorite web browser to open ``pathml/docs/build/html/index.html``
+
+Checking code coverage
+----------------------
+
+.. code-block::
+
+    conda install coverage  # install coverage package for code coverage
+    coverage run            # run tests and calculate code coverage
+    coverage report         # view coverage report
+    coverage html           # optionally generate HTML coverage report
+
+How to contribute code, documentation, etc.
+-------------------------------------------
+
+1. Create a new GitHub issue for what you will be working on, if one does not already exist
+2. Create a local development environment (see above)
+3. Implement your changes
+4. Write new tests as needed to maintain code coverage
+5. Ensure that all tests pass
+6. Commit your changes and submit a pull request referencing the corresponding issue
+7. Respond to discussion/feedback about the pull request, make changes as necessary
+
+Code Standards
+--------------
 
 Code Quality
-------------
+^^^^^^^^^^^^
 
 We want PathML to be built on high-quality code. However, the idea of "code quality" is somewhat subjective.
 If the code works perfectly but cannot be read and understood by someone else, then it can't be maintained,
@@ -77,7 +108,7 @@ All code should be reviewed by someone else before merging.
 We use `Black`_ to enforce consistency of code style.
 
 Documentation Standards
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 All code should be documented, including docstrings for users AND inline comments for
 other developers whenever possible! Both are crucial for ensuring long-term usability and maintainability.
@@ -86,19 +117,8 @@ properly formatted Google-style docstrings.
 All documentation (including docstrings) is written in `reStructuredText`_ format.
 See this `docstring example`_ to get started.
 
-To build documentation:
-
-.. code-block::
-
-    # first install packages for generating docs
-    pip install ipython sphinx nbsphinx nbsphinx-link sphinx-rtd-theme
-    cd docs                 # enter docs directory
-    make html               # build docs in html format
-
-Then use your favorite web browser to open ``pathml/docs/build/html/index.html``
-
 Testing Standards
------------------
+^^^^^^^^^^^^^^^^^^
 
 All code should be accompanied by tests, whenever possible, to ensure that everything is working as intended.
 
@@ -121,9 +141,14 @@ To run the test suite and check code coverage:
     coverage report         # view coverage report
     coverage html           # optionally generate HTML coverage report
 
+We suggest using test-driven development when applicable. I.e., if you're fixing a bug or adding new features,
+write the tests first! (they should all fail). Then, write the actual code. When all tests pass, you know
+that your implementation is working. This helps ensure that all code is tested and that the tests are testing
+what we want them to.
 
 Thank You!
 ==========
+
 Thank you for helping make ``PathML`` better!
 
 
