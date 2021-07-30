@@ -80,6 +80,10 @@ html_logo = '_static/images/logo.png'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+# mocking imports which require C extension for readthedocs builds
+# see: https://docs.readthedocs.io/en/stable/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules
+autodoc_mock_imports = ["openslide", "spams"]
+
 
 def setup(app):
     app.add_css_file('css/pathml.css')
