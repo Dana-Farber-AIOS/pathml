@@ -17,7 +17,7 @@ from pathml.utils import (RGB_to_GREY, RGB_to_HSI, RGB_to_HSV, RGB_to_OD,
                           normalize_matrix_cols)
 from skimage import restoration
 from skimage.measure import regionprops_table
-
+from skimage.exposure import equalize_hist, equalize_adapthist, rescale_intensity
 
 # Base class
 class Transform:
