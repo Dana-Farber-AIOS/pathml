@@ -26,7 +26,7 @@ from pathml.preprocessing import (
     CollapseRunsCODEX,
 )
 from pathml.utils import RGB_to_GREY
-
+from pathml.preprocessing.transforms import RescaleIntensity, HistogramEqualization, AdaptiveHistogramEqualization
 
 @pytest.mark.parametrize("ksize", [3, 7, 21])
 @pytest.mark.parametrize("transform", [MedianBlur, BoxBlur])
