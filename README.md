@@ -13,45 +13,88 @@ A toolkit for computational pathology and machine learning.
 
 # Installation
 
+There are several ways to install `PathML`:
+
+1. pip install
+2. clone repo to local machine and install from source
+
+Options (1) and (2) require that you first install all external dependencies:
+* openslide
+* JDK 8
+
+We recommend using conda for environment management. 
+Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
+
 *Note: these instructions are for Linux. Commands may be different for other platforms.*
 
-## Requirements
+## Installation option 1: pip install
 
-* Set up Conda environment
-    * Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
-    * Create conda environment
-        ````
-        conda create --name pathml python=3.8 numpy=1.8.15
-        conda activate pathml
-        ````
-* Install external dependencies
-    ````
-    sudo apt-get install openslide-tools g++ gcc libblas-dev liblapack-dev
-    ````
-* Install [OpenJDK 8](https://openjdk.java.net/)
-    ````
-    conda install openjdk==8.0.152
-    ````
-* [Optional]: Install CUDA. This step only applies if you want to use GPU acceleration for model training or other tasks. This guide should work, but for the most up-to-date instructions, refer to the [official PyTorch installation instructions](https://pytorch.org/get-started/locally/).
-    - Check the version of CUDA:
-        ````
-        nvidia-smi
-        ````
-    - Install correct version of `cudatoolkit`:
-        ````
-        # update this command with your CUDA version number
-        conda install cudatoolkit=11.0
-        ````
-    
-## Install PathML
+Create conda environment
+````
+conda create --name pathml python=3.8 numpy=1.18.5
+conda activate pathml
+````
+
+Install external dependencies
+````
+sudo apt-get install openslide-tools g++ gcc libblas-dev liblapack-dev
+````
+
+Install [OpenJDK 8](https://openjdk.java.net/)
+````
+conda install openjdk==8.0.152
+````
+
+Optionally install CUDA (instructions [here](#CUDA))
+
+Install `PathML`
 ````
 pip install pathml
-```` 
+````
 
-[Optional]: If using GPUs, verify successful PyTorch installation with CUDA support: 
+## Installation option 2: clone repo and install from source
+
+Clone repo
+````
+git clone https://github.com/Dana-Farber-AIOS/pathml.git
+cd pathml
+````
+
+Create conda environment
+````
+conda env create -f environment.yml
+conda activate pathml
+````
+
+Optionally install CUDA (instructions [here](#CUDA))
+
+Install PathML: 
+````
+pip install -e .
+````
+
+
+## CUDA
+
+To use GPU acceleration for model training or other tasks, you must install CUDA. 
+This guide should work, but for the most up-to-date instructions, refer to the [official PyTorch installation instructions](https://pytorch.org/get-started/locally/).
+
+Check the version of CUDA:
+````
+nvidia-smi
+````
+
+Install correct version of `cudatoolkit`:
+````
+# update this command with your CUDA version number
+conda install cudatoolkit=11.0
+````
+
+After installing PyTorch, optionally verify successful PyTorch installation with CUDA support: 
 ````
 python -c "import torch; print(torch.cuda.is_available())"
 ````
+
 
 # Contributing
 
