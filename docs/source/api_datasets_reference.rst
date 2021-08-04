@@ -4,10 +4,10 @@ Datasets API
 PanNuke
 -------
 
-.. autoclass:: pathml.datasets.PanNukeDataModule
+.. autoapiclass:: pathml.datasets.PanNukeDataModule
 
 
 DeepFocus
 ---------
 
-.. autoclass:: pathml.datasets.DeepFocusDataModule
+.. autoapiclass:: pathml.datasets.DeepFocusDataModule

@@ -4,16 +4,16 @@ ML API
 HoVer-Net
 ---------
 
-.. autoclass:: pathml.ml.HoVerNet
+.. autoapiclass:: pathml.ml.HoVerNet
     :members:
 
 Helper functions
 ^^^^^^^^^^^^^^^^
 
-.. autofunction:: pathml.ml.hovernet.compute_hv_map
+.. autoapifunction:: pathml.ml.hovernet.compute_hv_map
 
-.. autofunction:: pathml.ml.hovernet.loss_hovernet
+.. autoapifunction:: pathml.ml.hovernet.loss_hovernet
 
-.. autofunction:: pathml.ml.hovernet.remove_small_objs
+.. autoapifunction:: pathml.ml.hovernet.remove_small_objs
 
-.. autofunction:: pathml.ml.hovernet.post_process_batch_hovernet
+.. autoapifunction:: pathml.ml.hovernet.post_process_batch_hovernet
