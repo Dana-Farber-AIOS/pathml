@@ -56,9 +56,7 @@ exclude_patterns = ['../tests/*', 'build', '../*.ipynb_checkpoints']
 
 # using autoapi to generate docs which should use less resources and improve readthedocs builds:
 # https://docs.readthedocs.io/en/stable/guides/build-using-too-many-resources.html#document-python-modules-api-statically
-
 autoapi_dirs = ['../../pathml']
-
 # still use autodoc directives:
 # https://sphinx-autoapi.readthedocs.io/en/latest/reference/directives.html#autodoc-style-directives
 autoapi_generate_api_docs = False
@@ -83,15 +81,12 @@ html_theme_options = {
 # link to logo
 html_logo = '_static/images/logo.png'
 
+html_show_sphinx = False
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-
-# mocking imports which require C extension for readthedocs builds
-# see: https://docs.readthedocs.io/en/stable/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules
-autodoc_mock_imports = ["openslide", "spams"]
 
 
 def setup(app):
