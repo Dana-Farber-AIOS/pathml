@@ -1,37 +1,20 @@
-## Welcome to GitHub Pages
+<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/logo.png width="300"> 
 
-You can use the [editor on GitHub](https://github.com/Dana-Farber-AIOS/pathml/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/overview.png width="750">
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg)
+[![Documentation Status](https://readthedocs.org/projects/pathml/badge/?version=latest)](https://pathml.readthedocs.io/en/latest/?badge=latest)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![PyPI version](https://img.shields.io/pypi/v/pathml)](https://pypi.org/project/pathml/)
 
-### Markdown
+A toolkit for computational pathology and machine learning.
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+# **View [documentation](https://pathml.readthedocs.io/en/latest/)**
 
-```markdown
-Syntax highlighted code block
+# Contact
 
-# Header 1
-## Header 2
-### Header 3
+Questions? Comments? Suggestions? Get in touch!
 
-- Bulleted
-- List
+[PathML@dfci.harvard.edu](mailto:PathML@dfci.harvard.edu)
 
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/Dana-Farber-AIOS/pathml/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/dfci_cornell_joint_logos.png width="750"> 
