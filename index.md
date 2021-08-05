@@ -11,7 +11,7 @@ A toolkit for computational pathology and machine learning.
 
 # **View [documentation](https://pathml.readthedocs.io/en/latest/)**
 
-# Contact
+**Contact**
 
 Questions? Comments? Suggestions? Get in touch!
 
