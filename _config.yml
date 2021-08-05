@@ -3,3 +3,6 @@ logo: https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/gh-pages/pathml_
 title: PathML
 description: Tools for Computational Pathology
 show_downloads: true
+github:
+  zip_url: https://github.com/Dana-Farber-AIOS/pathml/zipball/master
+  tar_url: https://github.com/Dana-Farber-AIOS/pathml/tarball/master
