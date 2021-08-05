@@ -142,3 +142,8 @@ def test_dicom_coords_index_conversion():
     for index, coords in check.items():
         assert backend._index_to_coords(index) == coords
         assert backend._coords_to_index(coords) == index
+
+
+def test_bioformats_vm_handling(vectra_slide):
+    tiles = vectra_slide.generate_tiles(shape = 10)
+    list_of_tiles = list(tiles)

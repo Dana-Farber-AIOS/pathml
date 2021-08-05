@@ -7,7 +7,7 @@ import anndata
 import numpy as np
 # define fixtures here, and use them throughout the other tests in core_tests/
 import pytest
-from pathml.core import SlideData, SlideDataset, Tiles
+from pathml.core import SlideData, SlideDataset, Tile, VectraSlide, types
 
 
 @pytest.fixture
@@ -87,3 +87,10 @@ def slide_dataset_with_tiles(tile, example_slide_data_with_tiles):
     ]
     slide_dataset = SlideDataset(slide_list)
     return slide_dataset
+
+
+@pytest.fixture
+def vectra_slide():
+    temp_path = "tests/testdata/small_vectra.qptiff"
+    vectra_slide = VectraSlide(temp_path, backend="bioformats", slide_type=types.Vectra)
+    return vectra_slide
