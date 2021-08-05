@@ -1,1 +1,5 @@
 theme: jekyll-theme-minimal
+logo: https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/logo.png
+title: PathML
+description: Tools for Computational Pathology
+show_downloads: true
