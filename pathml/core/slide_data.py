@@ -336,6 +336,9 @@ class SlideData:
         Returns:
             Tuple[int, int]: Shape of image (H, W)
         """
+        # when we read from .h5path there is no self.slide
+        if self.h5manager.h5["array"]:
+            return self.h5manager.h5["array"].shape
         return self.slide.get_image_shape()
 
     @staticmethod
