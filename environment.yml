@@ -14,7 +14,7 @@ dependencies:
     - python-spams>=2.6.1
     - openjdk==8.0.152
     - pytorch==1.9.0
-    - h5py==3.1.0
+    - h5py==3.3.0
     - dask==2021.7.1
     - pydicom==2.1.2
     - pytest>=6.2.2

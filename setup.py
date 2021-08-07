@@ -26,7 +26,7 @@ setuptools.setup(
         "matplotlib==3.1.3",
         "openslide-python==1.1.2",
         "pydicom==2.1.2",
-        "h5py==3.1.0",
+        "h5py==3.3.0",
         "spams==2.6.2.5",
         "scikit-learn==0.24.2",
         "dask[distributed]==2021.7.1",
