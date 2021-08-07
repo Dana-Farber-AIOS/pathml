@@ -17,7 +17,7 @@ setuptools.setup(
             "Source Code": "https://github.com/Dana-Farber-AIOS/pathml",
     },
     install_requires=[
-        "pip==21.2.1",
+        "pip==21.2.2",
         "numpy>=1.16.4,<1.19.0",
         "pandas==1.1.5",
         "scipy==1.5.4",
@@ -30,7 +30,7 @@ setuptools.setup(
         "spams==2.6.2.5",
         "scikit-learn==0.24.2",
         "dask[distributed]==2021.7.1",
-        "anndata==0.7.4",
+        "anndata==0.7.6",
         "scanpy==1.7.2",
         "pre-commit==2.13.0",
         "torch==1.9.0",
