@@ -105,7 +105,7 @@ def readcounts(h5):
     Read counts using anndata h5py.
 
     Args:
-        h5(h5py.Dataset): h5 object that will be read
+        h5(h5py.Group): h5.Group object from /counts/
     """
     # create and save temp h5py file
     # read using anndata from temp file
@@ -114,4 +114,5 @@ def readcounts(h5):
     f = h5py.File(path, "w")
     for ds in h5.keys():
         h5.copy(ds, f)
+    f.close()
     return anndata.read_h5ad(path.name)
