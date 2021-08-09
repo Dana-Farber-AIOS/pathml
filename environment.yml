@@ -19,6 +19,7 @@ dependencies:
     - pydicom==2.1.2
     - pytest>=6.2.2
     - pre-commit==2.13.0
+    - coverage==5.5
     - pip:
         - opencv-contrib-python==4.5.3.56
         - openslide-python==1.1.2

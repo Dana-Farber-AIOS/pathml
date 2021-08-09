@@ -144,6 +144,8 @@ def test_dicom_coords_index_conversion():
         assert backend._coords_to_index(coords) == index
 
 
+# this test takes a long time, so skip by running 'python -m pytest -m "not slow"'
+@pytest.mark.slow
 def test_bioformats_vm_handling(vectra_slide):
-    tiles = vectra_slide.generate_tiles(shape = 10)
+    tiles = vectra_slide.generate_tiles(shape=10)
     list_of_tiles = list(tiles)
