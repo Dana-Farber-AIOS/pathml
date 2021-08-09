@@ -11,5 +11,7 @@ sphinx:
     builder: html
     fail_on_warning: false
 
-conda:
-    environment: docs/env_readthedocs.yml
+python:
+   version: "3.8"
+   install:
+   - requirements: docs/readthedocs-requirements.txt
