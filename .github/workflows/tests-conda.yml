@@ -53,7 +53,7 @@ jobs:
     - name: Test with pytest and generate coverage report
       shell: bash -l {0}
       run: |
-        coverage run
+        coverage run -m pytest -m "not slow"
         coverage xml
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v2
