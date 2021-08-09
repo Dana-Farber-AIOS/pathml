@@ -1248,17 +1248,14 @@ class SegmentMIF(Transform):
 
     Supported models:
 
-    Mesmer. Mesmer uses human-in-the-loop pipeline to train a  ResNet50 backbone w/ Feature Pyramid Network
-    segmentation model on 1.3 million cell annotations and 1.2 million nuclear annotations (TissueNet dataset).
-    Model outputs predictions for centroid and boundary of every nucleus and cell, then centroid and boundary
-    predictions are used as inputs to a watershed algorithm that creates segmentation masks.
+        * **Mesmer**: Mesmer uses human-in-the-loop pipeline to train a  ResNet50 backbone w/ Feature Pyramid Network
+          segmentation model on 1.3 million cell annotations and 1.2 million nuclear annotations (TissueNet dataset).
+          Model outputs predictions for centroid and boundary of every nucleus and cell, then centroid and boundary
+          predictions are used as inputs to a watershed algorithm that creates segmentation masks.
+        * **Cellpose**: [coming soon]
 
-    .. warning::
+    .. note::
         Mesmer model requires installation of deepcell dependency: ``pip install deepcell``
-
-    .. warning::
-        Mesmer model is incompatible with dask.distributed. Pipelines containing Mesmer model must be run with
-        ``distributed=False``. See: https://github.com/Dana-Farber-AIOS/pathml/issues/130
 
     Args:
         model(str): string indicating which segmentation model to use. Currently only 'mesmer' is supported.
@@ -1271,6 +1268,9 @@ class SegmentMIF(Transform):
         Greenwald, N.F., Miller, G., Moen, E., Kong, A., Kagel, A., Fullaway, C.C., McIntosh, B.J., Leow, K., Schwartz,
         M.S., Dougherty, T. and Pavelchek, C., 2021. Whole-cell segmentation of tissue images with human-level
         performance using large-scale data annotation and deep learning. bioRxiv.
+
+        Stringer, C., Wang, T., Michaelos, M. and Pachitariu, M., 2021. Cellpose: a generalist algorithm for cellular
+        segmentation. Nature Methods, 18(1), pp.100-106.
     """
 
     def __init__(
@@ -1293,7 +1293,8 @@ class SegmentMIF(Transform):
         self.cytoplasm_channel = cytoplasm_channel
         self.image_resolution = image_resolution
         self.gpu = gpu
-        if model == "mesmer":
+
+        if model.lower() == "mesmer":
             try:
                 from deepcell.applications import Mesmer
             except ImportError:
@@ -1307,8 +1308,8 @@ class SegmentMIF(Transform):
                 raise ImportError(
                     "The Mesmer model in SegmentMIF requires deepcell to be installed"
                 ) from None
-            self.model = Mesmer()
-        elif self.model == "cellpose":
+            self.model = model.lower()
+        elif model.lower() == "cellpose":
             """from cellpose import models
             self.model = models.Cellpose(gpu=self.gpu, model_type='cyto')"""
             raise NotImplementedError("Cellpose model not currently supported")
@@ -1334,19 +1335,28 @@ class SegmentMIF(Transform):
             (img[:, :, :, self.nuclear_channel], img[:, :, :, self.cytoplasm_channel]),
             axis=-1,
         )
-        cell_segmentation_predictions = self.model.predict(
-            nuc_cytoplasm, compartment="whole-cell"
-        )
-        nuclear_segmentation_predictions = self.model.predict(
-            nuc_cytoplasm, compartment="nuclear"
-        )
-        cell_segmentation_predictions = np.squeeze(
-            cell_segmentation_predictions, axis=0
-        )
-        nuclear_segmentation_predictions = np.squeeze(
-            nuclear_segmentation_predictions, axis=0
-        )
-        return cell_segmentation_predictions, nuclear_segmentation_predictions
+
+        # initialize model
+        # need to do it inside F() instead of __init__() for compatibility with dask distributed
+        if self.model == "mesmer":
+            from deepcell.applications import Mesmer
+
+            model = Mesmer()
+            cell_segmentation_predictions = model.predict(
+                nuc_cytoplasm, compartment="whole-cell"
+            )
+            nuclear_segmentation_predictions = model.predict(
+                nuc_cytoplasm, compartment="nuclear"
+            )
+            cell_segmentation_predictions = np.squeeze(
+                cell_segmentation_predictions, axis=0
+            )
+            nuclear_segmentation_predictions = np.squeeze(
+                nuclear_segmentation_predictions, axis=0
+            )
+            return cell_segmentation_predictions, nuclear_segmentation_predictions
+        else:
+            raise NotImplementedError(f"model={self.model} currently not supported.")
 
     def apply(self, tile):
         assert isinstance(

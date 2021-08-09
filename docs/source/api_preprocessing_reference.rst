@@ -4,25 +4,25 @@ Preprocessing API
 Pipeline
 --------
 
-.. autoclass:: pathml.preprocessing.Pipeline
+.. autoapiclass:: pathml.preprocessing.Pipeline
 
 Transforms
 ----------
 
-.. autoclass:: pathml.preprocessing.MedianBlur
-.. autoclass:: pathml.preprocessing.GaussianBlur
-.. autoclass:: pathml.preprocessing.BoxBlur
-.. autoclass:: pathml.preprocessing.BinaryThreshold
-.. autoclass:: pathml.preprocessing.MorphOpen
-.. autoclass:: pathml.preprocessing.MorphClose
-.. autoclass:: pathml.preprocessing.ForegroundDetection
-.. autoclass:: pathml.preprocessing.SuperpixelInterpolation
-.. autoclass:: pathml.preprocessing.StainNormalizationHE
-.. autoclass:: pathml.preprocessing.NucleusDetectionHE
-.. autoclass:: pathml.preprocessing.TissueDetectionHE
-.. autoclass:: pathml.preprocessing.LabelArtifactTileHE
-.. autoclass:: pathml.preprocessing.LabelWhiteSpaceHE
-.. autoclass:: pathml.preprocessing.SegmentMIF
-.. autoclass:: pathml.preprocessing.QuantifyMIF
-.. autoclass:: pathml.preprocessing.CollapseRunsVectra
-.. autoclass:: pathml.preprocessing.CollapseRunsCODEX
+.. autoapiclass:: pathml.preprocessing.MedianBlur
+.. autoapiclass:: pathml.preprocessing.GaussianBlur
+.. autoapiclass:: pathml.preprocessing.BoxBlur
+.. autoapiclass:: pathml.preprocessing.BinaryThreshold
+.. autoapiclass:: pathml.preprocessing.MorphOpen
+.. autoapiclass:: pathml.preprocessing.MorphClose
+.. autoapiclass:: pathml.preprocessing.ForegroundDetection
+.. autoapiclass:: pathml.preprocessing.SuperpixelInterpolation
+.. autoapiclass:: pathml.preprocessing.StainNormalizationHE
+.. autoapiclass:: pathml.preprocessing.NucleusDetectionHE
+.. autoapiclass:: pathml.preprocessing.TissueDetectionHE
+.. autoapiclass:: pathml.preprocessing.LabelArtifactTileHE
+.. autoapiclass:: pathml.preprocessing.LabelWhiteSpaceHE
+.. autoapiclass:: pathml.preprocessing.SegmentMIF
+.. autoapiclass:: pathml.preprocessing.QuantifyMIF
+.. autoapiclass:: pathml.preprocessing.CollapseRunsVectra
+.. autoapiclass:: pathml.preprocessing.CollapseRunsCODEX

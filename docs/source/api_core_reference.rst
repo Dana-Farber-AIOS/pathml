@@ -6,22 +6,22 @@ SlideData
 
 The central class in ``PathML`` for representing a whole-slide image.
 
-.. autoclass:: pathml.core.SlideData
+.. autoapiclass:: pathml.core.SlideData
 
 
 Convenience SlideData Classes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: pathml.core.HESlide
-.. autoclass:: pathml.core.VectraSlide
-.. autoclass:: pathml.core.MultiparametricSlide
-.. autoclass:: pathml.core.CODEXSlide
+.. autoapiclass:: pathml.core.HESlide
+.. autoapiclass:: pathml.core.VectraSlide
+.. autoapiclass:: pathml.core.MultiparametricSlide
+.. autoapiclass:: pathml.core.CODEXSlide
 
 
 Slide Types
 -----------
 
-.. autoclass:: pathml.core.SlideType
+.. autoapiclass:: pathml.core.SlideType
     :exclude-members: tma, platform, rgb, stain, volumetric, time_series
 
 
@@ -40,19 +40,19 @@ We also provide instantiations of common slide types for convenience:
 Tile
 ----
 
-.. autoclass:: pathml.core.Tile
+.. autoapiclass:: pathml.core.Tile
 
 SlideDataset
 ------------
 
-.. autoclass:: pathml.core.SlideDataset
+.. autoapiclass:: pathml.core.SlideDataset
 
 Tiles and Masks helper classes
 ------------------------------
 
-.. autoclass:: pathml.core.Tiles
+.. autoapiclass:: pathml.core.Tiles
 
-.. autoclass:: pathml.core.Masks
+.. autoapiclass:: pathml.core.Masks
 
 
 Slide Backends
@@ -61,19 +61,19 @@ Slide Backends
 OpenslideBackend
 ^^^^^^^^^^^^^^^^
 
-.. autoclass:: pathml.core.OpenSlideBackend
+.. autoapiclass:: pathml.core.OpenSlideBackend
 
 BioFormatsBackend
 ^^^^^^^^^^^^^^^^^
 
-.. autoclass:: pathml.core.BioFormatsBackend
+.. autoapiclass:: pathml.core.BioFormatsBackend
 
 DICOMBackend
 ^^^^^^^^^^^^
 
-.. autoclass:: pathml.core.DICOMBackend
+.. autoapiclass:: pathml.core.DICOMBackend
 
 h5pathManager
 -------------
 
-.. autoclass:: pathml.core.h5managers.h5pathManager
+.. autoapiclass:: pathml.core.h5managers.h5pathManager
