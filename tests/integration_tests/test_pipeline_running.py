@@ -10,14 +10,8 @@ import numpy as np
 import pytest
 from dask.distributed import Client, LocalCluster
 from pathml.core import HESlide, SlideData, VectraSlide
-from pathml.preprocessing import (
-    BoxBlur,
-    CollapseRunsVectra,
-    Pipeline,
-    QuantifyMIF,
-    SegmentMIF,
-    TissueDetectionHE,
-)
+from pathml.preprocessing import (BoxBlur, CollapseRunsVectra, Pipeline,
+                                  QuantifyMIF, SegmentMIF, TissueDetectionHE)
 
 
 # test HE pipelines with both DICOM and OpenSlide backends
@@ -58,8 +52,6 @@ def test_pipeline_bioformats_tiff(tmp_path, dist, tile_size):
     slide.write(path=str(tmp_path) + "tifslide.h5")
     readslidedata = SlideData(str(tmp_path) + "tifslide.h5")
     assert readslidedata.name == slide.name
-    print(readslidedata.labels)
-    print(slide.labels)
     np.testing.assert_equal(readslidedata.labels, slide.labels)
     if slide.masks is None:
         assert readslidedata.masks is None
@@ -74,6 +66,7 @@ def test_pipeline_bioformats_tiff(tmp_path, dist, tile_size):
         assert slide.counts.var.empty
     else:
         np.testing.assert_equal(readslidedata.counts.var, slide.counts.var)
+
     os.remove(str(tmp_path) + "tifslide.h5")
     if dist:
         cli.shutdown()
@@ -103,6 +96,22 @@ def test_pipeline_bioformats_vectra(tmp_path, dist, tile_size):
         cli = None
     slide.run(pipeline, distributed=dist, client=cli, tile_size=tile_size)
     slide.write(path=str(tmp_path) + "vectraslide.h5")
+    readslidedata = SlideData(str(tmp_path) + "vectraslide.h5")
+    assert readslidedata.name == slide.name
+    np.testing.assert_equal(readslidedata.labels, slide.labels)
+    if slide.masks is None:
+        assert readslidedata.masks is None
+    if slide.tiles is None:
+        assert readslidedata.tiles is None
+    assert scan_hdf5(readslidedata.h5manager.h5) == scan_hdf5(slide.h5manager.h5)
+    if readslidedata.counts.obs.empty:
+        assert slide.counts.obs.empty
+    else:
+        np.testing.assert_equal(readslidedata.counts.obs, slide.counts.obs)
+    if readslidedata.counts.var.empty:
+        assert slide.counts.var.empty
+    else:
+        np.testing.assert_equal(readslidedata.counts.var, slide.counts.var)
     os.remove(str(tmp_path) + "vectraslide.h5")
     if dist:
         cli.shutdown()
