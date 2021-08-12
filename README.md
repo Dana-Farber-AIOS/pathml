@@ -73,6 +73,13 @@ Install PathML:
 pip install -e .
 ````
 
+## (Optionally) Register PathML as an IPython kernel
+````
+conda activate pathml
+conda install ipykernel
+python -m ipykernel install --user --name=pathml
+````
+This makes PathML available as a kernel in jupyter lab or notebook.
 
 ## CUDA
 
