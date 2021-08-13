@@ -35,9 +35,14 @@ conda create --name pathml python=3.8 numpy=1.18.5
 conda activate pathml
 ````
 
-Install external dependencies
+Install external dependencies (Linux) with [Apt](https://ubuntu.com/server/docs/package-management)
 ````
 sudo apt-get install openslide-tools g++ gcc libblas-dev liblapack-dev
+````
+
+Install external dependencies (MacOS) with [Brew](www.brew.sh)
+````
+brew install openslide
 ````
 
 Install [OpenJDK 8](https://openjdk.java.net/)
