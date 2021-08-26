@@ -78,14 +78,6 @@ Install PathML:
 pip install -e .
 ````
 
-## (Optionally) Register PathML as an IPython kernel
-````
-conda activate pathml
-conda install ipykernel
-python -m ipykernel install --user --name=pathml
-````
-This makes PathML available as a kernel in jupyter lab or notebook.
-
 ## CUDA
 
 To use GPU acceleration for model training or other tasks, you must install CUDA. 
@@ -107,6 +99,31 @@ After installing PyTorch, optionally verify successful PyTorch installation with
 python -c "import torch; print(torch.cuda.is_available())"
 ````
 
+# Using with Jupyter
+
+Jupyter notebooks are a convenient way to work interactively. To use PathML in Jupyter notebooks: 
+
+## Set JAVA_HOME environment variable
+
+PathML relies on Java to enable support for reading a wide range of file formats.
+Before using PathML in Jupyter, you may need to manually set the `JAVA_HOME` environment variable 
+specifying the path to Java. To do so:
+
+1. Get the path to Java by running `echo $JAVA_HOME` in the terminal in your pathml conda environment (outside of Jupyter)
+2. Set that path as the `JAVA_HOME` environment variable in Jupyter:
+    ````
+    import os
+    os.environ["JAVA_HOME"] = "/opt/conda/envs/pathml" # change path as needed
+    ````
+
+## Register PathML as an IPython kernel
+````
+conda activate pathml
+conda install ipykernel
+python -m ipykernel install --user --name=pathml
+````
+This makes PathML available as a kernel in jupyter lab or notebook.
+
 
 # Contributing
 
@@ -124,6 +141,13 @@ There are many ways to contribute to PathML, including:
 * Sharing ``PathML`` with colleagues, students, etc.
 
 See [contributing](https://github.com/Dana-Farber-AIOS/pathml/blob/master/CONTRIBUTING.rst) for more details.
+
+# License
+
+The GNU GPL v2 version of PathML is made available via Open Source licensing. 
+The user is free to use, modify, and distribute under the terms of the GNU General Public License version 2.
+
+Commercial license options are available also.
 
 # Contact
 
