@@ -9,6 +9,13 @@ A toolkit for computational pathology and machine learning.
 
 # **View [documentation](https://pathml.readthedocs.io/en/latest/)**
 
+**License**
+
+The GNU GPL v2 version of PathML is made available via Open Source licensing.
+The user is free to use, modify, and distribute under the terms of the GNU General Public License version 2.
+
+Commercial license options are also available.
+
 **Contact**
 
 Questions? Comments? Suggestions? Get in touch!
