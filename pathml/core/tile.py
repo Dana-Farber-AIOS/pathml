@@ -117,7 +117,7 @@ class Tile:
                         f"mask is of shape {val.shape} but must match tile shape {image.shape}"
                     )
             self.masks = masks
-        elif masks is None:
+        else:
             self.masks = OrderedDict()
 
         self.image = image

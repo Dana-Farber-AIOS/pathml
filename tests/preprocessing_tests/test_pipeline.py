@@ -29,6 +29,18 @@ from pathml.preprocessing import (
 from pathml.utils import RGB_to_GREY
 
 
+def test_pipeline_passthru(tileHE):
+    p = Pipeline()
+    assert p.apply(tileHE) == tileHE
+
+
+def test_pipeline_repr():
+    p = Pipeline()
+    p2 = Pipeline([MedianBlur()])
+    repr(p)
+    repr(p2)
+
+
 # make an example pipeline
 def test_pipeline_HE(tileHE):
     pipe = Pipeline(
