@@ -33,3 +33,9 @@ def test_tile():
     assert (tile.image).all() == (np.ones((224, 224, 3))).all()
     # test repr
     print(tile)
+
+
+def test_tile_mask():
+    # https://github.com/Dana-Farber-AIOS/pathml/issues/175
+    tile = Tile(np.ones((224, 224, 3)), coords=(1, 3), masks={})
+    print(tile)
