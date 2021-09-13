@@ -25,11 +25,13 @@ try:
     import javabridge
     from bioformats.metadatatools import createOMEXMLMetadata
 except ImportError:
-    raise Exception("""Installation of PathML not complete. Please install openjdk8, bioformats, and javabridge:
+    raise Exception(
+        """Installation of PathML not complete. Please install openjdk8, bioformats, and javabridge:
             conda install openjdk==8.0.152
             pip install javabridge==1.0.19 python-bioformats==4.0.0
-            
-            For detailed installation instructions, please see https://github.com/Dana-Farber-AIOS/pathml/""")
+
+            For detailed installation instructions, please see https://github.com/Dana-Farber-AIOS/pathml/"""
+    )
 
 
 class SlideBackend:
@@ -70,7 +72,7 @@ class OpenSlideBackend(SlideBackend):
         Extract a region of the image
 
         Args:
-            location (Tuple[int, int]): Location of top-left corner of tile
+            location (Tuple[int, int]): Location of top-left corner of tile (i, j)
             size (Union[int, Tuple[int, int]]): Size of each tile. May be a tuple of (height, width) or a
                 single integer, in which case square tiles of that size are generated.
             level (int): level from which to extract chunks. Level 0 is highest resolution.
@@ -94,8 +96,10 @@ class OpenSlideBackend(SlideBackend):
             assert (
                 level < self.slide.level_count
             ), f"input level {level} invalid for a slide with {self.slide.level_count} levels"
-
-        region = self.slide.read_region(location=location, level=level, size=size)
+        # openslide read_region expects (x, y) coords, so need to switch order for compatibility with pathml (i, j)
+        i, j = location
+        h, w = size
+        region = self.slide.read_region(location=(j, i), level=level, size=(w, h))
         region_rgb = pil_to_rgb(region)
         return region_rgb
 
@@ -107,7 +111,7 @@ class OpenSlideBackend(SlideBackend):
             level (int): Which level to get shape from. Level 0 is highest resolution. Defaults to 0.
 
         Returns:
-            Tuple[int, int]: Shape of image at target level.
+            Tuple[int, int]: Shape of image at target level, in (i, j) coordinates.
         """
         assert isinstance(level, int), f"level {level} invalid. Must be an int."
         assert (
@@ -314,27 +318,45 @@ class BioFormatsBackend(SlideBackend):
                 f"input size {size} invalid. Must be a tuple of integer coordinates of len<2"
             )
         javabridge.start_vm(class_path=bioformats.JARS, max_heap_size="100G")
-        reader = bioformats.ImageReader(str(self.filename), perform_init=True)
-        # expand size
-        size = list(size)
-        arrayshape = list(size)
-        for i in range(len(self.shape)):
-            if i > len(size) - 1:
-                arrayshape.append(self.shape[i])
-        arrayshape = tuple(arrayshape)
-        array = np.empty(arrayshape)
-        sample = reader.read(
-            z=0, t=0, rescale=False, XYWH=(location[0], location[1], size[0], size[1])
-        )
-        # if series is set to read only one channel, explicitly read c
-        if len(sample.shape) == 2:
-            for z in range(self.shape[2]):
-                for c in range(self.shape[3]):
+        with bioformats.ImageReader(str(self.filename), perform_init=True) as reader:
+            # expand size
+            size = list(size)
+            arrayshape = list(size)
+            for i in range(len(self.shape)):
+                if i > len(size) - 1:
+                    arrayshape.append(self.shape[i])
+            arrayshape = tuple(arrayshape)
+            array = np.empty(arrayshape)
+            sample = reader.read(
+                z=0,
+                t=0,
+                rescale=False,
+                XYWH=(location[0], location[1], size[0], size[1]),
+            )
+            # if series is set to read only one channel, explicitly read c
+            if len(sample.shape) == 2:
+                for z in range(self.shape[2]):
+                    for c in range(self.shape[3]):
+                        for t in range(self.shape[4]):
+                            slicearray = reader.read(
+                                z=z,
+                                t=t,
+                                series=c,
+                                rescale=False,
+                                XYWH=(location[0], location[1], size[0], size[1]),
+                            )
+                            slicearray = np.asarray(slicearray)
+                            # some file formats read x, y out of order, transpose
+                            if slicearray.shape[:2] != array.shape[:2]:
+                                slicearray = np.transpose(slicearray)
+                            array[:, :, z, c, t] = slicearray
+            # if series is set to read all channels, read all c simultaneously
+            elif len(sample.shape) == 3:
+                for z in range(self.shape[2]):
                     for t in range(self.shape[4]):
                         slicearray = reader.read(
                             z=z,
                             t=t,
-                            series=c,
                             rescale=False,
                             XYWH=(location[0], location[1], size[0], size[1]),
                         )
@@ -342,25 +364,10 @@ class BioFormatsBackend(SlideBackend):
                         # some file formats read x, y out of order, transpose
                         if slicearray.shape[:2] != array.shape[:2]:
                             slicearray = np.transpose(slicearray)
-                        array[:, :, z, c, t] = slicearray
-        # if series is set to read all channels, read all c simultaneously
-        elif len(sample.shape) == 3:
-            for z in range(self.shape[2]):
-                for t in range(self.shape[4]):
-                    slicearray = reader.read(
-                        z=z,
-                        t=t,
-                        rescale=False,
-                        XYWH=(location[0], location[1], size[0], size[1]),
-                    )
-                    slicearray = np.asarray(slicearray)
-                    # some file formats read x, y out of order, transpose
-                    if slicearray.shape[:2] != array.shape[:2]:
-                        slicearray = np.transpose(slicearray)
-                        slicearray = np.moveaxis(slicearray, 0, -1)
-                    array[:, :, z, :, t] = slicearray
-        else:
-            raise Exception("image format not supported")
+                            slicearray = np.moveaxis(slicearray, 0, -1)
+                        array[:, :, z, :, t] = slicearray
+            else:
+                raise Exception("image format not supported")
         array = array.astype(np.uint8)
         return array
 

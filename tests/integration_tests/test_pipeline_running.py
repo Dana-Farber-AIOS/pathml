@@ -10,8 +10,14 @@ import numpy as np
 import pytest
 from dask.distributed import Client, LocalCluster
 from pathml.core import HESlide, SlideData, VectraSlide
-from pathml.preprocessing import (BoxBlur, CollapseRunsVectra, Pipeline,
-                                  QuantifyMIF, SegmentMIF, TissueDetectionHE)
+from pathml.preprocessing import (
+    BoxBlur,
+    CollapseRunsVectra,
+    Pipeline,
+    QuantifyMIF,
+    SegmentMIF,
+    TissueDetectionHE,
+)
 
 
 # test HE pipelines with both DICOM and OpenSlide backends
@@ -74,7 +80,7 @@ def test_pipeline_bioformats_tiff(tmp_path, dist, tile_size):
 
 
 # currently can't use distributed with SegmentMIF, since mesmer tensorflow model isn't pickleable for dask
-@pytest.mark.parametrize("dist", [False])
+@pytest.mark.parametrize("dist", [False, True])
 @pytest.mark.parametrize("tile_size", [1000, (1920, 1440)])
 def test_pipeline_bioformats_vectra(tmp_path, dist, tile_size):
     slide = VectraSlide("tests/testdata/small_vectra.qptiff")
