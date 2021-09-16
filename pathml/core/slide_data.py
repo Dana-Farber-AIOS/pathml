@@ -248,6 +248,7 @@ class SlideData:
         tile_size=3000,
         tile_stride=None,
         level=0,
+        magnification = None,
         tile_pad=False,
         overwrite_existing_tiles=False,
     ):
@@ -263,6 +264,7 @@ class SlideData:
             tile_stride (int, optional): Stride between tiles. If ``None``, uses ``tile_stride = tile_size``
                 for non-overlapping tiles. Defaults to ``None``.
             level (int, optional): Level to extract tiles from. Defaults to ``None``.
+            magnification (str, optional): Magnification to extract tiles from. If ``None``, level will be used for tiling. Otherwise level will be ignored. Defaults to ``None``.
             tile_pad (bool): How to handle chunks on the edges. If ``True``, these edge chunks will be zero-padded
                 symmetrically and yielded with the other chunks. If ``False``, incomplete edge chunks will be ignored.
                 Defaults to ``False``.
@@ -285,7 +287,8 @@ class SlideData:
                 # delete all existing tiles
                 for tile_key in self.tiles.keys:
                     self.tiles.remove(tile_key)
-
+        ##TODO if valid magnification recalculate level and size, add resize to pipline  
+        
         if distributed:
             if client is None:
                 client = dask.distributed.Client()
