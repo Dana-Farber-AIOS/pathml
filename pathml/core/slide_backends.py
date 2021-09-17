@@ -19,6 +19,7 @@ from pydicom.filereader import data_element_offset_to_value, dcmread
 from pydicom.tag import SequenceDelimiterTag, TupleTag
 from pydicom.uid import UID
 from scipy.ndimage import zoom
+from skimage.transform import rescale
 
 try:
     import bioformats
@@ -67,7 +68,7 @@ class OpenSlideBackend(SlideBackend):
     def __repr__(self):
         return f"OpenSlideBackend('{self.filename}')"
 
-    def extract_region(self, location, size, level=None):
+    def extract_region(self, location, size, level=None, magnification=None):
         """
         Extract a region of the image
 
@@ -76,6 +77,9 @@ class OpenSlideBackend(SlideBackend):
             size (Union[int, Tuple[int, int]]): Size of each tile. May be a tuple of (height, width) or a
                 single integer, in which case square tiles of that size are generated.
             level (int): level from which to extract chunks. Level 0 is highest resolution.
+            magnification (str): magnification for extract chunks. If magnification was specified,
+                level will be ignored and calculated automatically. Otherwise will use level argument.
+                Default to ``None``
 
         Returns:
             np.ndarray: image at the specified region
@@ -85,22 +89,55 @@ class OpenSlideBackend(SlideBackend):
             size = (size, size)
         else:
             assert (
-                isinstance(size, tuple)
-                and all([isinstance(a, int) for a in size])
-                and len(size) == 2
+                    isinstance(size, tuple)
+                    and all([isinstance(a, int) for a in size])
+                    and len(size) == 2
             ), f"Input size {size} not valid. Must be an integer or a tuple of two integers."
-        if level is None:
+
+        rescale_factor = 0
+        if magnification is not None:
+            assert (
+                    isinstance(magnification, str)
+                    and magnification.lower() in ['2.5x', '5x', '10x', '20x', '40x']
+            ), f"Input magnification {magnification} not valid. Must be a valid string from '2.5X', '5X','10X','20X','40X'. Case insensitive"
+
+            mag_dict = {'2.5x': 2.5, '5x': 5, '10x': 10, '20x': 20, '40x': 40}
+            mag = mag_dict[magnification.lower()]
+            assert (
+                    'aperio.MPP' in self.slide.properties.keys()
+            ), f"No valid metadata for querying required magnification"
+
+            magnification_level0 = int(40 / (round(float(self.slide.properties['aperio.MPP']), 2) // 0.25))
+            assert (
+                    magnification_level0 >= mag
+            ), f"No input magnification {magnification} can be read, consider lower magnification."
+
+            level = 0
+            for i in range(self.slide.level_count):
+                if round(magnification_level0 / self.slide.level_downsamples[i], 1) // mag > 0:
+                    level = i
+            rescale_factor = round(magnification_level0 / self.slide.level_downsamples[level], 1) / mag
+        elif level is None:
             level = 0
         else:
             assert isinstance(level, int), f"level {level} must be an integer"
             assert (
-                level < self.slide.level_count
+                    level < self.slide.level_count
             ), f"input level {level} invalid for a slide with {self.slide.level_count} levels"
+
         # openslide read_region expects (x, y) coords, so need to switch order for compatibility with pathml (i, j)
         i, j = location
         h, w = size
-        region = self.slide.read_region(location=(j, i), level=level, size=(w, h))
-        region_rgb = pil_to_rgb(region)
+        if rescale_factor > 1:
+            h = int(h * rescale_factor)
+            w = int(w * rescale_factor)
+            region = self.slide.read_region(location=(j, i), level=level, size=(w, h))
+            region_rgb = pil_to_rgb(region)
+            region_rgb = rescale(region_rgb, 1 / rescale_factor, multichannel=True, preserve_range=True,
+                                 anti_aliasing=True).astype(np.uint8)
+        else:
+            region = self.slide.read_region(location=(j, i), level=level, size=(w, h))
+            region_rgb = pil_to_rgb(region)
         return region_rgb
 
     def get_image_shape(self, level=0):
@@ -115,7 +152,7 @@ class OpenSlideBackend(SlideBackend):
         """
         assert isinstance(level, int), f"level {level} invalid. Must be an int."
         assert (
-            level < self.slide.level_count
+                level < self.slide.level_count
         ), f"input level {level} invalid for slide with {self.slide.level_count} levels total"
         j, i = self.slide.level_dimensions[level]
         return i, j
@@ -134,7 +171,7 @@ class OpenSlideBackend(SlideBackend):
         thumbnail = pil_to_rgb(thumbnail)
         return thumbnail
 
-    def generate_tiles(self, shape=3000, stride=None, pad=False, level=0):
+    def generate_tiles(self, shape=3000, stride=None, pad=False, level=0, magnification = None):
         """
         Generator over tiles.
 
@@ -162,28 +199,61 @@ class OpenSlideBackend(SlideBackend):
             pathml.core.tile.Tile: Extracted Tile object
         """
         assert isinstance(shape, int) or (
-            isinstance(shape, tuple) and len(shape) == 2
+                isinstance(shape, tuple) and len(shape) == 2
         ), f"input shape {shape} invalid. Must be a tuple of (H, W), or a single integer for square tiles"
         if isinstance(shape, int):
             shape = (shape, shape)
         assert (
-            stride is None
-            or isinstance(stride, int)
-            or (isinstance(stride, tuple) and len(stride) == 2)
+                stride is None
+                or isinstance(stride, int)
+                or (isinstance(stride, tuple) and len(stride) == 2)
         ), f"input stride {stride} invalid. Must be a tuple of (stride_H, stride_W), or a single int"
+
+        coords_scale_factor = None
+        # if use magnification for tiling
+        rescale_factor = None
+        if magnification is not None:
+            assert (
+                    isinstance(magnification, str)
+                    and magnification.lower() in ['2.5x', '5x', '10x', '20x', '40x']
+            ), f"Input magnification {magnification} not valid. Must be a valid string from '2.5X', '5X','10X','20X','40X'. Case insensitive"
+
+            mag_dict = {'2.5x': 2.5, '5x': 5, '10x': 10, '20x': 20, '40x': 40}
+            mag = mag_dict[magnification.lower()]
+            assert (
+                    'aperio.MPP' in self.slide.properties.keys()
+            ), f"No valid metadata for querying required magnification"
+
+            magnification_level0 = int(40 / (round(float(self.slide.properties['aperio.MPP']), 2) // 0.25))
+            assert (
+                    magnification_level0 >= mag
+            ), f"No input magnification {magnification} can be read, consider lower magnification."
+
+            #generate level from magnification
+            level = 0
+            for i in range(self.slide.level_count):
+                if round(magnification_level0 / self.slide.level_downsamples[i], 1) // mag > 0:
+                    level = i
+            coords_scale_factor = magnification_level0 / mag
+            rescale_factor = round(magnification_level0 / self.slide.level_downsamples[level], 1) / mag
+
+        #if use level for tiling (magnification is None)
         if level is None:
             level = 0
         assert isinstance(level, int), f"level {level} invalid. Must be an int."
         assert (
-            level < self.slide.level_count
+                level < self.slide.level_count
         ), f"input level {level} invalid for slide with {self.slide.level_count} levels total"
 
+        #calculate location and size
         if stride is None:
             stride = shape
         elif isinstance(stride, int):
             stride = (stride, stride)
 
         i, j = self.get_image_shape(level=level)
+        i = i/rescale_factor
+        j = j/rescale_factor
 
         stride_i, stride_j = stride
 
@@ -195,38 +265,14 @@ class OpenSlideBackend(SlideBackend):
             n_chunk_i = (i - shape[0]) // stride_i + 1
             n_chunk_j = (j - shape[1]) // stride_j + 1
 
+        if magnification is None:
+            coords_scale_factor = round(self.slide.level_downsamples[level])
         for ix_i in range(n_chunk_i):
             for ix_j in range(n_chunk_j):
-                coords = (int(ix_i * stride_i), int(ix_j * stride_j))
+                coords = (int(ix_i * stride_i*coords_scale_factor), int(ix_j * stride_j*coords_scale_factor))
                 # get image for tile
-                tile_im = self.extract_region(location=coords, size=shape, level=level)
+                tile_im = self.extract_region(location=coords, size=shape, level=level, magnification=magnification)
                 yield pathml.core.tile.Tile(image=tile_im, coords=coords)
-
-
-def _init_logger():
-    """
-    This is so that Javabridge doesn't spill out a lot of DEBUG messages
-    during runtime.
-    From CellProfiler/python-bioformats.
-
-    Credits to: https://github.com/pskeshu/microscoper/blob/master/microscoper/io.py#L141-L162
-    """
-    rootLoggerName = javabridge.get_static_field(
-        "org/slf4j/Logger", "ROOT_LOGGER_NAME", "Ljava/lang/String;"
-    )
-    rootLogger = javabridge.static_call(
-        "org/slf4j/LoggerFactory",
-        "getLogger",
-        "(Ljava/lang/String;)Lorg/slf4j/Logger;",
-        rootLoggerName,
-    )
-    logLevel = javabridge.get_static_field(
-        "ch/qos/logback/classic/Level", "WARN", "Lch/qos/logback/classic/Level;"
-    )
-    javabridge.call(
-        rootLogger, "setLevel", "(Lch/qos/logback/classic/Level;)V", logLevel
-    )
-
 
 class BioFormatsBackend(SlideBackend):
     """

@@ -248,6 +248,7 @@ class SlideData:
         tile_size=3000,
         tile_stride=None,
         level=0,
+        magnification=None,
         tile_pad=False,
         overwrite_existing_tiles=False,
     ):
@@ -263,6 +264,8 @@ class SlideData:
             tile_stride (int, optional): Stride between tiles. If ``None``, uses ``tile_stride = tile_size``
                 for non-overlapping tiles. Defaults to ``None``.
             level (int, optional): Level to extract tiles from. Defaults to ``None``.
+            magnification (str, optional): Magnification to extract from. Defaults to ``None``.
+                Set from '2.5X', '5X','10X','20X','40X'. If not none, level will be ignored and automatically been calculated.
             tile_pad (bool): How to handle chunks on the edges. If ``True``, these edge chunks will be zero-padded
                 symmetrically and yielded with the other chunks. If ``False``, incomplete edge chunks will be ignored.
                 Defaults to ``False``.
@@ -294,7 +297,7 @@ class SlideData:
             processed_tile_futures = []
 
             for tile in self.generate_tiles(
-                level=level, shape=tile_size, stride=tile_stride, pad=tile_pad
+                level=level, shape=tile_size, stride=tile_stride, pad=tile_pad, magnification=magnification
             ):
                 if not tile.slide_type:
                     tile.slide_type = self.slide_type
@@ -312,7 +315,7 @@ class SlideData:
 
         else:
             for tile in self.generate_tiles(
-                level=level, shape=tile_size, stride=tile_stride, pad=tile_pad
+                level=level, shape=tile_size, stride=tile_stride, pad=tile_pad, magnification=magnification
             ):
                 if not tile.slide_type:
                     tile.slide_type = self.slide_type
