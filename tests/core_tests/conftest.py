@@ -5,6 +5,7 @@ License: GNU GPL 2.0
 
 import anndata
 import numpy as np
+
 # define fixtures here, and use them throughout the other tests in core_tests/
 import pytest
 from pathml.core import SlideData, SlideDataset, Tile, VectraSlide, types
@@ -17,6 +18,7 @@ def example_slide_data():
         "test_array_label": np.array([2, 3, 4]),
         "test_int_label": 3,
         "test_float_label": 3.0,
+        "test_bool_label": True,
     }
     wsi = SlideData(
         "tests/testdata/small_HE.svs", name=f"test", labels=labs, backend="openslide"
@@ -31,6 +33,7 @@ def example_slide_data_with_tiles(tile):
         "test_array_label": np.array([2, 3, 4]),
         "test_int_label": 3,
         "test_float_label": 3.0,
+        "test_bool_label": True,
     }
     adata = anndata.AnnData()
     wsi = SlideData(
@@ -52,6 +55,7 @@ def slide_dataset(example_slide_data_with_tiles):
         "test_array_label": np.array([2, 3, 4]),
         "test_int_label": 3,
         "test_float_label": 3.0,
+        "test_bool_label": True,
     }
     slide_list = [
         SlideData(
@@ -74,6 +78,7 @@ def slide_dataset_with_tiles(tile, example_slide_data_with_tiles):
         "test_array_label": np.array([2, 3, 4]),
         "test_int_label": 3,
         "test_float_label": 3.0,
+        "test_bool_label": True,
     }
     slide_list = [
         SlideData(
