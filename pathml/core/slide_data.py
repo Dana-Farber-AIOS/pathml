@@ -104,6 +104,7 @@ class SlideData:
                 [
                     isinstance(val, (str, np.ndarray))
                     or np.issubdtype(type(val), np.number)
+                    or np.issubdtype(type(val), np.bool_)
                     for val in labels.values()
                 ]
             ), (
@@ -220,7 +221,8 @@ class SlideData:
             out.append(f"filepath='{self._filepath}'")
         if self.backend:
             out.append(f"backend={repr(self.backend)}")
-        out.append(f"image shape: {self.shape}")
+        if self.backend != "h5path":
+            out.append(f"image shape: {self.shape}")
         out.append(repr(self.tiles))
         out.append(repr(self.masks))
         if self.tiles:
@@ -336,7 +338,12 @@ class SlideData:
         Returns:
             Tuple[int, int]: Shape of image (H, W)
         """
-        return self.slide.get_image_shape()
+        if self.backend == "h5path":
+            raise NotImplementedError(
+                "wsi.shape convenience method not supported if loaded directly from h5path"
+            )
+        else:
+            return self.slide.get_image_shape()
 
     @staticmethod
     def _create_tile_dataset(slidedata):

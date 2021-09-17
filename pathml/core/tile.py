@@ -77,6 +77,7 @@ class Tile:
                 [
                     isinstance(val, (str, np.ndarray))
                     or np.issubdtype(type(val), np.number)
+                    or np.issubdtype(type(val), np.bool_)
                     for val in labels.values()
                 ]
             ), (
