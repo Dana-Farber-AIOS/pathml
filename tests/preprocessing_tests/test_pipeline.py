@@ -7,9 +7,9 @@ import pickle
 import numpy as np
 import pandas as pd
 import copy
+import pytest
 
 from pathml.preprocessing import Pipeline
-
 from pathml.preprocessing import (
     MedianBlur,
     GaussianBlur,
@@ -22,7 +22,6 @@ from pathml.preprocessing import (
     StainNormalizationHE,
     NucleusDetectionHE,
     TissueDetectionHE,
-    SegmentMIF,
     QuantifyMIF,
     CollapseRunsVectra,
 )
@@ -75,6 +74,7 @@ def test_pipeline_mif(tileVectra):
     """
     Run MIF pipeline
     """
+    SegmentMIF = pytest.importorskip("pathml.preprocessing.transforms.SegmentMIF")
     orig_tile = copy.copy(tileVectra)
     pipe = Pipeline(
         [
