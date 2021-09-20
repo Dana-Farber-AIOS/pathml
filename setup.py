@@ -34,7 +34,6 @@ setuptools.setup(
         "scanpy",
         "torch",
         "opencv-contrib-python",
-        "tensorly",
         "python-bioformats",
     ],
     classifiers=[
