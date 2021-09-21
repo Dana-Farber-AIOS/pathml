@@ -104,6 +104,7 @@ class SlideData:
                 [
                     isinstance(val, (str, np.ndarray))
                     or np.issubdtype(type(val), np.number)
+                    or np.issubdtype(type(val), np.bool_)
                     for val in labels.values()
                 ]
             ), (
@@ -336,7 +337,10 @@ class SlideData:
         Returns:
             Tuple[int, int]: Shape of image (H, W)
         """
-        return self.slide.get_image_shape()
+        if self.backend == "h5path":
+            return tuple(self.h5manager.h5["fields"].attrs["shape"])
+        else:
+            return self.slide.get_image_shape()
 
     @staticmethod
     def _create_tile_dataset(slidedata):
