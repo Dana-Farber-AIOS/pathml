@@ -83,6 +83,7 @@ def test_pipeline_bioformats_tiff(tmp_path, dist, tile_size):
 @pytest.mark.parametrize("dist", [False, True])
 @pytest.mark.parametrize("tile_size", [1000, (1920, 1440)])
 def test_pipeline_bioformats_vectra(tmp_path, dist, tile_size):
+    SegmentMIF = pytest.importorskip("pathml.preprocessing.transforms.SegmentMIF")
     slide = VectraSlide("tests/testdata/small_vectra.qptiff")
     pipeline = Pipeline(
         [
