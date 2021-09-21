@@ -56,6 +56,7 @@ class h5pathManager:
             #    create group
             fieldsgroup = self.h5.create_group("fields")
             fieldsgroup.attrs["name"] = slidedata.name
+            fieldsgroup.attrs["shape"] = slidedata.slide.get_image_shape()
             labelsgroup = self.h5["fields"].create_group("labels")
             if slidedata.labels:
                 for key, label in slidedata.labels.items():
@@ -638,6 +639,6 @@ def check_valid_h5path_format(h5path):
     """
     assert set(h5path.keys()) == {"fields", "array", "masks", "counts", "tiles"}
     assert set(h5path["fields"].keys()) == {"labels", "slide_type"}
-    assert set(h5path["fields"].attrs.keys()) == {"name"}
+    assert set(h5path["fields"].attrs.keys()) == {"name", "shape"}
     # slide_type attributes are not enforced
     return True
