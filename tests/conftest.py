@@ -39,6 +39,7 @@ def create_HE_tile():
         "test_array_label": np.array([2, 3, 4]),
         "test_int_label": 3,
         "test_float_label": 3.0,
+        "test_bool_label": True,
     }
     tile = Tile(image=im_np_rgb, coords=(1, 3), masks=masks, labels=labs)
     return tile
@@ -83,6 +84,7 @@ def tileVectra():
         "test_array_label": np.array([2, 3, 4]),
         "test_int_label": 3,
         "test_float_label": 3.0,
+        "test_bool_label": True,
     }
 
     tile = Tile(

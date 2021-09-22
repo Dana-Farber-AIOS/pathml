@@ -126,7 +126,9 @@ def test_read_write_heslide(tmp_path, example_slide_data_with_tiles):
     path = tmp_path / "testhe.h5"
     slidedata.write(path)
     readslidedata = SlideData(path)
+    repr(readslidedata)
     assert readslidedata.name == slidedata.name
+    assert readslidedata.shape == slidedata.shape
     np.testing.assert_equal(readslidedata.labels, slidedata.labels)
     if slidedata.masks is None:
         assert readslidedata.masks is None
