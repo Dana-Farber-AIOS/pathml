@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pathml",
-    version="1.0.0",
+    version="1.0.2",
     author="Jacob Rosenthal, Ryan Carelli et al.",
     author_email="PathML@dfci.harvard.edu",
     description="Tools for computational pathology",
