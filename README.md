@@ -31,7 +31,7 @@ Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
 
 Create conda environment
 ````
-conda create --name pathml python=3.8 numpy=1.18.5
+conda create --name pathml python=3.8
 conda activate pathml
 ````
 
