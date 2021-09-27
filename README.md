@@ -16,7 +16,7 @@ A toolkit for computational pathology and machine learning.
 
 There are several ways to install `PathML`:
 
-1. pip install (recommended for users)
+1. pip install (**recommended for users**)
 2. clone repo to local machine and install from source (recommended for developers/contributors)
 
 Options (1) and (2) require that you first install all external dependencies:
