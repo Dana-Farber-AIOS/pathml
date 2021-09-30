@@ -9,7 +9,7 @@ import h5py
 import numpy as np
 import pytest
 from dask.distributed import Client, LocalCluster
-from pathml.core import HESlide, SlideData, VectraSlide
+from pathml.core import HESlide, SlideData, VectraSlide, TileDataset
 from pathml.preprocessing import (
     BoxBlur,
     CollapseRunsVectra,
@@ -26,7 +26,14 @@ from pathml.preprocessing import (
 )
 @pytest.mark.parametrize("dist", [False, True])
 def test_pipeline_HE(tmp_path, im_path, dist):
-    slide = HESlide(im_path)
+    labs = {
+        "test_string_label": "testlabel",
+        "test_array_label": np.array([2, 3, 4]),
+        "test_int_label": 3,
+        "test_float_label": 3.0,
+        "test_bool_label": True,
+    }
+    slide = HESlide(im_path, labels=labs)
     pipeline = Pipeline(
         [BoxBlur(kernel_size=15), TissueDetectionHE(mask_name="tissue")]
     )
@@ -36,9 +43,23 @@ def test_pipeline_HE(tmp_path, im_path, dist):
     else:
         cli = None
     slide.run(pipeline, distributed=dist, client=cli, tile_size=500)
-    slide.write(path=str(tmp_path) + str(np.round(np.random.rand(), 8)) + "HE_slide.h5")
+    save_path = str(tmp_path) + str(np.round(np.random.rand(), 8)) + "HE_slide.h5"
+    slide.write(path=save_path)
     if dist:
         cli.shutdown()
+
+    # test out the dataset
+    dataset = TileDataset(save_path)
+    assert len(dataset) == len(slide.tiles)
+
+    im, mask, lab_tile, lab_slide = dataset[0]
+
+    for k, v in lab_slide.items():
+        if isinstance(v, np.ndarray):
+            assert np.array_equal(v, labs[k])
+        else:
+            assert v == labs[k]
+    assert np.array_equal(im, slide.tiles[0].image.transpose(2, 0, 1))
 
 
 # test pipelines with bioformats backends, both tiff and qptiff files
@@ -58,8 +79,6 @@ def test_pipeline_bioformats_tiff(tmp_path, dist, tile_size):
     slide.write(path=str(tmp_path) + "tifslide.h5")
     readslidedata = SlideData(str(tmp_path) + "tifslide.h5")
     assert readslidedata.name == slide.name
-    print(readslidedata.labels)
-    print(slide.labels)
     np.testing.assert_equal(readslidedata.labels, slide.labels)
     if slide.masks is None:
         assert readslidedata.masks is None
@@ -79,7 +98,6 @@ def test_pipeline_bioformats_tiff(tmp_path, dist, tile_size):
         cli.shutdown()
 
 
-# currently can't use distributed with SegmentMIF, since mesmer tensorflow model isn't pickleable for dask
 @pytest.mark.parametrize("dist", [False, True])
 @pytest.mark.parametrize("tile_size", [1000, (1920, 1440)])
 def test_pipeline_bioformats_vectra(tmp_path, dist, tile_size):

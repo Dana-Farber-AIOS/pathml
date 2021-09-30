@@ -17,3 +17,4 @@ from .slide_dataset import SlideDataset
 from .tile import Tile
 from .tiles import Tiles
 from .slide_types import SlideType, types
+from .dataset import TileDataset
