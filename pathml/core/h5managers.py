@@ -321,6 +321,8 @@ class h5pathManager:
         Returns:
             Tile(pathml.core.tile.Tile)
         """
+        ##
+
         if isinstance(item, bool):
             raise KeyError(f"invalid key, pass str or tuple")
         if isinstance(item, (str, tuple)):
@@ -378,13 +380,22 @@ class h5pathManager:
         if name == "None":
             name = None
         coords = eval(self.h5["tiles"][item].attrs["coords"])
+
+        slide_type = {
+            key: val
+            for key, val in self.h5["fields"]["slide_type"].attrs.items()
+            if val is not None
+        }
+        if slide_type:
+            slide_type = pathml.core.SlideType(**slide_type)
+
         return pathml.core.tile.Tile(
             tile,
             masks=masks,
             labels=labels,
             name=name,
             coords=coords,
-            slide_type=self.slide_type,
+            slide_type=slide_type,
         )
 
     def slice_tiles(self, slicer):
