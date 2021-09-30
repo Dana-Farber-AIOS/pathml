@@ -12,17 +12,18 @@ class TileDataset(torch.utils.data.Dataset):
     """
     PyTorch Dataset class for h5path files
 
-    Each item is a tuple of (tile_image, tile_masks, tile_labels, slide_labels) where:
-        - tile_image is a torch.Tensor of shape (n_channels, tile_height, tile_width)
-        - tile_masks is a torch.Tensor of shape (n_masks, tile_height, tile_width)
-        - tile_labels is a dict
-        - slide_labels is a dict
+    Each item is a tuple of (``tile_image``, ``tile_masks``, ``tile_labels``, ``slide_labels``) where:
+
+        - ``tile_image`` is a torch.Tensor of shape (n_channels, tile_height, tile_width)
+        - ``tile_masks`` is a torch.Tensor of shape (n_masks, tile_height, tile_width)
+        - ``tile_labels`` is a dict
+        - ``slide_labels`` is a dict
 
     This is designed to be wrapped in a PyTorch DataLoader for feeding tiles into ML models.
 
     Note that label dictionaries are not standardized, as users are free to store whatever labels they want.
     For that reason, PyTorch cannot automatically stack labels into batches.
-    When creating a DataLoader from a TileDataset, it may therefore be necessary to create a custom `collate_fn` to
+    When creating a DataLoader from a TileDataset, it may therefore be necessary to create a custom ``collate_fn`` to
     specify how to create batches of labels. See: https://discuss.pytorch.org/t/how-to-use-collate-fn/27181
 
     Args:
