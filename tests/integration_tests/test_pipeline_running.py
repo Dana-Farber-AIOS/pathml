@@ -9,7 +9,7 @@ import h5py
 import numpy as np
 import pytest
 from dask.distributed import Client, LocalCluster
-from pathml.core import HESlide, SlideData, VectraSlide, TileDataset
+from pathml.core import HESlide, SlideData, VectraSlide
 from pathml.preprocessing import (
     BoxBlur,
     CollapseRunsVectra,
@@ -18,6 +18,7 @@ from pathml.preprocessing import (
     SegmentMIF,
     TissueDetectionHE,
 )
+from pathml.ml import TileDataset
 
 
 # test HE pipelines with both DICOM and OpenSlide backends

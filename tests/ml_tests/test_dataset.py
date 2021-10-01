@@ -5,9 +5,10 @@ License: GNU GPL 2.0
 
 import numpy as np
 
-from pathml.core import TileDataset, HESlide
+from pathml.core import HESlide
 from pathml.preprocessing import Pipeline
 from pathml.preprocessing.transforms import Transform
+from pathml.ml import TileDataset
 
 
 class TestingTransform(Transform):
