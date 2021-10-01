@@ -126,16 +126,6 @@ class h5pathManager:
         if self.h5["array"].shape:
             # extend array if coords+shape is larger than self.h5['tiles/array']
             coords = tile.coords
-            coordslength = len(coords)
-            currentshape = self.h5["array"].shape[0:coordslength]
-            requiredshape = [
-                coord + tile_shape
-                for coord, tile_shape in zip(coords, tile.image.shape[0:coordslength])
-            ]
-            for dim, (current, required) in enumerate(zip(currentshape, requiredshape)):
-                if current < required:
-                    self.h5["array"].resize(required, axis=dim)
-
             # add tile to self.h5["array"]
             slicer = [
                 slice(coords[i], coords[i] + tile.image.shape[i])
@@ -146,17 +136,17 @@ class h5pathManager:
         # initialize self.h5['array'] if it does not exist
         # note that the first tile is not necessarily (0,0) so we init with zero padding
         else:
+            arrayshape = list(tuple(self.h5["fields"].attrs["shape"]))
             coords = list(tile.coords)
-            shape = list(tile.image.shape)
             for dim, coord in enumerate(coords):
-                shape[dim] += coord
-            maxshape = tuple([None] * len(shape))
+                arrayshape[dim] += coord
+            maxshape = tuple([None] * len(arrayshape))
             del self.h5["array"]
             self.h5.create_dataset(
                 "array",
-                shape=shape,
+                shape=arrayshape,
                 maxshape=maxshape,
-                data=np.zeros(shape),
+                data=np.zeros(arrayshape),
                 chunks=True,
                 compression="gzip",
                 compression_opts=5,
@@ -181,22 +171,6 @@ class h5pathManager:
                 if mask in self.h5["masks"].keys():
                     # extend array
                     coords = tile.coords
-
-                    coords = tile.coords
-                    coordslength = len(coords)
-                    currentshape = self.h5["masks"][mask].shape[0:coordslength]
-                    requiredshape = [
-                        coord + tile_shape
-                        for coord, tile_shape in zip(
-                            coords, tile.masks[mask].shape[0:coordslength]
-                        )
-                    ]
-                    for dim, (current, required) in enumerate(
-                        zip(currentshape, requiredshape)
-                    ):
-                        if current < required:
-                            self.h5["masks"][mask].resize(required, axis=dim)
-
                     # add mask to mask array
                     slicer = [
                         slice(coords[i], coords[i] + tile.masks[mask].shape[i])
@@ -206,16 +180,16 @@ class h5pathManager:
 
                 else:
                     # create mask array
+                    arrayshape = list(tuple(self.h5["fields"].attrs["shape"]))
                     maskarray = tile.masks[mask][:]
                     coords = list(tile.coords)
                     coords = coords + [0] * len(maskarray.shape[len(coords) :])
-                    shape = [i + j for i, j in zip(maskarray.shape, coords)]
-                    maxshape = tuple([None] * len(shape))
+                    maxshape = tuple([None] * len(arrayshape))
                     self.h5["masks"].create_dataset(
                         str(mask),
-                        shape=shape,
+                        shape=arrayshape,
                         maxshape=maxshape,
-                        data=np.zeros(shape),
+                        data=np.zeros(arrayshape),
                         chunks=True,
                         compression="gzip",
                         compression_opts=5,
