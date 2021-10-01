@@ -381,21 +381,13 @@ class h5pathManager:
             name = None
         coords = eval(self.h5["tiles"][item].attrs["coords"])
 
-        slide_type = {
-            key: val
-            for key, val in self.h5["fields"]["slide_type"].attrs.items()
-            if val is not None
-        }
-        if slide_type:
-            slide_type = pathml.core.SlideType(**slide_type)
-
         return pathml.core.tile.Tile(
             tile,
             masks=masks,
             labels=labels,
             name=name,
             coords=coords,
-            slide_type=slide_type,
+            slide_type=self.slide_type,
         )
 
     def slice_tiles(self, slicer):
