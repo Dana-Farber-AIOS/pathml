@@ -136,10 +136,16 @@ class h5pathManager:
         # initialize self.h5['array'] if it does not exist
         # note that the first tile is not necessarily (0,0) so we init with zero padding
         else:
-            arrayshape = list(tuple(self.h5["fields"].attrs["shape"]))
+            tileshape = list(tile.image.shape)
             coords = list(tile.coords)
+            arrayshape = list(tuple(self.h5["fields"].attrs["shape"]))
             for dim, coord in enumerate(coords):
                 arrayshape[dim] += coord
+            # broadcast tile.shape
+            for dim, val in enumerate(tileshape):
+                if dim < len(arrayshape):
+                    tileshape[dim] = max(arrayshape[dim], val)
+            arrayshape = tileshape
             maxshape = tuple([None] * len(arrayshape))
             del self.h5["array"]
             self.h5.create_dataset(
@@ -180,7 +186,16 @@ class h5pathManager:
 
                 else:
                     # create mask array
+                    tileshape = list(tile.masks[mask].shape)
+                    coords = list(tile.coords)
                     arrayshape = list(tuple(self.h5["fields"].attrs["shape"]))
+                    for dim, coord in enumerate(coords):
+                        arrayshape[dim] += coord
+                    # broadcast tile.shape
+                    for dim, val in enumerate(tileshape):
+                        if dim < len(arrayshape):
+                            tileshape[dim] = max(arrayshape[dim], val)
+                    arrayshape = tileshape
                     maskarray = tile.masks[mask][:]
                     coords = list(tile.coords)
                     coords = coords + [0] * len(maskarray.shape[len(coords) :])
