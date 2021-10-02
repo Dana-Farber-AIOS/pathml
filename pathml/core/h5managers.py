@@ -152,11 +152,12 @@ class h5pathManager:
                 "array",
                 shape=arrayshape,
                 maxshape=maxshape,
-                data=np.zeros(arrayshape),
+                fillvalue=0,
                 chunks=True,
                 compression="gzip",
                 compression_opts=5,
                 shuffle=True,
+                dtype="f16",
             )
             # write tile.image
             slicer = [
@@ -204,11 +205,12 @@ class h5pathManager:
                         str(mask),
                         shape=arrayshape,
                         maxshape=maxshape,
-                        data=np.zeros(arrayshape),
+                        fillvalue=0,
                         chunks=True,
                         compression="gzip",
                         compression_opts=5,
                         shuffle=True,
+                        dtype="f16",
                     )
                     # now overwrite by mask
                     slicer = [
