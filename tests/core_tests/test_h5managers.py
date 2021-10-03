@@ -45,6 +45,8 @@ def test_h5manager2(tileHE):
         np.testing.assert_array_equal(tile1.image, tile2.image)
 
 
+# this test takes a long time, so skip by running 'python -m pytest -m "not slow"'
+@pytest.mark.slow
 def test_h5_dataset_memory(tmp_path, helpers):
     # this test fails if h5.Group.create_dataset allocates
     # more memory than available on the test machine when declaring
