@@ -13,8 +13,8 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
     project_urls={
-            "Documentation": "https://pathml.readthedocs.io/en/stable",
-            "Source Code": "https://github.com/Dana-Farber-AIOS/pathml",
+        "Documentation": "https://pathml.readthedocs.io/en/stable",
+        "Source Code": "https://github.com/Dana-Farber-AIOS/pathml",
     },
     install_requires=[
         "pip",
@@ -35,6 +35,7 @@ setuptools.setup(
         "torch",
         "opencv-contrib-python",
         "python-bioformats",
+        "memory_profiler",
     ],
     classifiers=[
         "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
@@ -50,6 +51,6 @@ setuptools.setup(
         "Topic :: Scientific/Engineering :: Image Processing",
         "Topic :: Scientific/Engineering :: Image Recognition",
         "Topic :: Scientific/Engineering :: Medical Science Apps.",
-        "Topic :: Software Development :: Libraries :: Python Modules"
+        "Topic :: Software Development :: Libraries :: Python Modules",
     ],
 )
