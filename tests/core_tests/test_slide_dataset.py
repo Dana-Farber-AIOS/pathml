@@ -29,18 +29,12 @@ def test_run_pipeline_and_tile_dataset_and_reshape(slide_dataset):
     pipeline = Pipeline([BoxBlur(kernel_size=15)])
     # run the pipeline
     slide_dataset.run(pipeline=pipeline, distributed=False, tile_size=50)
-    assert len(slide_dataset.tile_dataset) == sum(
-        [len(s.tile_dataset) for s in slide_dataset]
-    )
-    tile, labels = slide_dataset.tile_dataset[0]
-    assert isinstance(tile, Tile) and isinstance(labels, dict)
+
+    tile = slide_dataset[0].tiles[0]
+    assert isinstance(tile, Tile)
     assert tile.image.shape == (50, 50, 3)
 
     slide_dataset.reshape(shape=(25, 25, 3))
-    tile_after_reshape, labels_after_reshape = slide_dataset.tile_dataset[0]
-    assert isinstance(tile_after_reshape, Tile) and isinstance(
-        labels_after_reshape, dict
-    )
+    tile_after_reshape = slide_dataset[0].tiles[0]
+    assert isinstance(tile_after_reshape, Tile)
     assert tile_after_reshape.image.shape == (25, 25, 3)
-
-    assert labels_after_reshape == labels

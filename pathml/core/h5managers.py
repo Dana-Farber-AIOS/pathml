@@ -3,17 +3,17 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-import h5py
+import itertools
+import os
 import tempfile
 from collections import OrderedDict
-import numpy as np
-import itertools
-import anndata
-import os
 
+import anndata
+import h5py
+import numpy as np
+import pathml.core
 import pathml.core.masks
 import pathml.core.tile
-import pathml.core
 from pathml.core.utils import readcounts
 
 
@@ -56,6 +56,7 @@ class h5pathManager:
             #    create group
             fieldsgroup = self.h5.create_group("fields")
             fieldsgroup.attrs["name"] = slidedata.name
+            fieldsgroup.attrs["shape"] = slidedata.slide.get_image_shape()
             labelsgroup = self.h5["fields"].create_group("labels")
             if slidedata.labels:
                 for key, label in slidedata.labels.items():
@@ -132,7 +133,8 @@ class h5pathManager:
                 for coord, tile_shape in zip(coords, tile.image.shape[0:coordslength])
             ]
             for dim, (current, required) in enumerate(zip(currentshape, requiredshape)):
-                self.h5["array"].resize(required, axis=dim)
+                if current < required:
+                    self.h5["array"].resize(required, axis=dim)
 
             # add tile to self.h5["array"]
             slicer = [
@@ -192,7 +194,8 @@ class h5pathManager:
                     for dim, (current, required) in enumerate(
                         zip(currentshape, requiredshape)
                     ):
-                        self.h5["masks"][mask].resize(required, axis=dim)
+                        if current < required:
+                            self.h5["masks"][mask].resize(required, axis=dim)
 
                     # add mask to mask array
                     slicer = [
@@ -375,6 +378,7 @@ class h5pathManager:
         if name == "None":
             name = None
         coords = eval(self.h5["tiles"][item].attrs["coords"])
+
         return pathml.core.tile.Tile(
             tile,
             masks=masks,
@@ -636,6 +640,6 @@ def check_valid_h5path_format(h5path):
     """
     assert set(h5path.keys()) == {"fields", "array", "masks", "counts", "tiles"}
     assert set(h5path["fields"].keys()) == {"labels", "slide_type"}
-    assert set(h5path["fields"].attrs.keys()) == {"name"}
+    assert set(h5path["fields"].attrs.keys()) == {"name", "shape"}
     # slide_type attributes are not enforced
     return True

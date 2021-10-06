@@ -98,6 +98,7 @@ Here we examine the **h5path** file format in detail:
     root/                           (Group)
     ├── fields/                     (Group)
     │   ├── name                    (Attribute, str)
+    │   ├── shape                   (Attribute, tuple)
     │   ├── labels                  (Group)
     │   │   ├── label1              (Attribute, [str, int, float, array])
     │   │   ├── label2              (Attribute, [str, int, float, array])

@@ -43,6 +43,7 @@ Cornell Medicine.
    :maxdepth: 2
    :caption: Machine Learning
 
+   dataloaders
    models
 
 .. toctree::

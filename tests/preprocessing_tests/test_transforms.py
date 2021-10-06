@@ -5,19 +5,27 @@ License: GNU GPL 2.0
 
 import numpy as np
 import pytest
-from pathml.preprocessing import (AdaptiveHistogramEqualization,
-                                  BinaryThreshold, BoxBlur, CollapseRunsCODEX,
-                                  CollapseRunsVectra, ForegroundDetection,
-                                  GaussianBlur, HistogramEqualization,
-                                  LabelArtifactTileHE, LabelWhiteSpaceHE,
-                                  MedianBlur, MorphClose, MorphOpen,
-                                  NucleusDetectionHE, QuantifyMIF,
-                                  RescaleIntensity, SegmentMIF,
-                                  StainNormalizationHE,
-                                  SuperpixelInterpolation, TissueDetectionHE)
-from pathml.preprocessing.transforms import (AdaptiveHistogramEqualization,
-                                             HistogramEqualization,
-                                             RescaleIntensity)
+from pathml.preprocessing import (
+    MedianBlur,
+    GaussianBlur,
+    BoxBlur,
+    BinaryThreshold,
+    MorphOpen,
+    MorphClose,
+    ForegroundDetection,
+    SuperpixelInterpolation,
+    StainNormalizationHE,
+    NucleusDetectionHE,
+    TissueDetectionHE,
+    LabelArtifactTileHE,
+    LabelWhiteSpaceHE,
+    QuantifyMIF,
+    CollapseRunsVectra,
+    CollapseRunsCODEX,
+    AdaptiveHistogramEqualization,
+    HistogramEqualization,
+    RescaleIntensity,
+)
 from pathml.utils import RGB_to_GREY
 
 
@@ -157,6 +165,7 @@ def test_binary_label_transforms(tileHE, transform):
 
 
 def test_segment_mif(tileVectra):
+    SegmentMIF = pytest.importorskip("pathml.preprocessing.transforms.SegmentMIF")
     vectra_collapse = CollapseRunsVectra()
     vectra_collapse.apply(tileVectra)
     t = SegmentMIF(nuclear_channel=0, cytoplasm_channel=1)
@@ -168,6 +177,7 @@ def test_segment_mif(tileVectra):
 
 
 def test_quantify_mif(tileVectra):
+    SegmentMIF = pytest.importorskip("pathml.preprocessing.transforms.SegmentMIF")
     t = QuantifyMIF("cell_segmentation")
     with pytest.raises(AssertionError):
         t.apply(tileVectra)
@@ -205,10 +215,17 @@ def test_collapse_runs_vectra(tileVectra):
         LabelArtifactTileHE(),
         LabelWhiteSpaceHE(),
         QuantifyMIF(segmentation_mask="test"),
-        SegmentMIF(nuclear_channel=0, cytoplasm_channel=1),
         CollapseRunsVectra(),
         CollapseRunsCODEX(z=0),
+        AdaptiveHistogramEqualization(),
+        HistogramEqualization(),
+        RescaleIntensity(),
     ],
 )
 def test_repr(transform):
     repr(transform)
+
+
+def test_segmentMIF_repr():
+    SegmentMIF = pytest.importorskip("pathml.preprocessing.transforms.SegmentMIF")
+    repr(SegmentMIF(nuclear_channel=0, cytoplasm_channel=1))

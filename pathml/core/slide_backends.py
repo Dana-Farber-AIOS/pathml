@@ -72,7 +72,7 @@ class OpenSlideBackend(SlideBackend):
         Extract a region of the image
 
         Args:
-            location (Tuple[int, int]): Location of top-left corner of tile
+            location (Tuple[int, int]): Location of top-left corner of tile (i, j)
             size (Union[int, Tuple[int, int]]): Size of each tile. May be a tuple of (height, width) or a
                 single integer, in which case square tiles of that size are generated.
             level (int): level from which to extract chunks. Level 0 is highest resolution.
@@ -96,8 +96,10 @@ class OpenSlideBackend(SlideBackend):
             assert (
                 level < self.slide.level_count
             ), f"input level {level} invalid for a slide with {self.slide.level_count} levels"
-
-        region = self.slide.read_region(location=location, level=level, size=size)
+        # openslide read_region expects (x, y) coords, so need to switch order for compatibility with pathml (i, j)
+        i, j = location
+        h, w = size
+        region = self.slide.read_region(location=(j, i), level=level, size=(w, h))
         region_rgb = pil_to_rgb(region)
         return region_rgb
 
@@ -109,7 +111,7 @@ class OpenSlideBackend(SlideBackend):
             level (int): Which level to get shape from. Level 0 is highest resolution. Defaults to 0.
 
         Returns:
-            Tuple[int, int]: Shape of image at target level.
+            Tuple[int, int]: Shape of image at target level, in (i, j) coordinates.
         """
         assert isinstance(level, int), f"level {level} invalid. Must be an int."
         assert (
