@@ -139,11 +139,16 @@ class RescaleIntensity(Transform):
     This function is a wrapper for 'rescale_intensity' function from scikit-image: https://scikit-image.org/docs/dev/api/skimage.exposure.html#skimage.exposure.rescale_intensity
 
     Args:
-        in_range, out_range (str or 2-tuple, optional): Min and max intensity values of input and output image. The possible values for this parameter are enumerated below.
-        ‘image’ : Use image min/max as the intensity range.
-        ‘dtype’ : Use min/max of the image’s dtype as the intensity range.
-        'dtype-name' : Use intensity range based on desired dtype. Must be valid key in DTYPE_RANGE.
-        '2-tuple' : Use range_values as explicit min/max intensities.
+        in_range (str or 2-tuple, optional): Min and max intensity values of input image. The possible values for this parameter are enumerated below.
+            ‘image’ : Use image min/max as the intensity range.
+            ‘dtype’ : Use min/max of the image’s dtype as the intensity range.
+            'dtype-name' : Use intensity range based on desired dtype. Must be valid key in DTYPE_RANGE.
+            '2-tuple' : Use range_values as explicit min/max intensities.
+        out_range (str or 2-tuple, optional): Min and max intensity values of output image. The possible values for this parameter are enumerated below.
+            ‘image’ : Use image min/max as the intensity range.
+            ‘dtype’ : Use min/max of the image’s dtype as the intensity range.
+            'dtype-name' : Use intensity range based on desired dtype. Must be valid key in DTYPE_RANGE.
+            '2-tuple' : Use range_values as explicit min/max intensities.
     """
 
     def __init__(self, in_range='image', out_range = 'dtype'):

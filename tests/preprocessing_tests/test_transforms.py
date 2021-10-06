@@ -24,6 +24,9 @@ from pathml.preprocessing import (
     SegmentMIF,
     CollapseRunsVectra,
     CollapseRunsCODEX,
+    RescaleIntensity,
+    HistogramEqualization,
+    AdaptiveHistogramEqualization
 )
 from pathml.utils import RGB_to_GREY
 from pathml.preprocessing.transforms import RescaleIntensity, HistogramEqualization, AdaptiveHistogramEqualization
@@ -48,14 +51,14 @@ def test_gaussian_blur(tileHE, ksize, sigma):
 
 @pytest.mark.parametrize("in_range", ['image', (0, 255), 'dtype'])
 @pytest.mark.parametrize("out_range", ['image', (0,255), 'dtype'])
-def test_RescaleIntensity(tileVectra, in_range, out_range):
+def test_rescale_intensity(tileVectra, in_range, out_range):
     t = RescaleIntensity(in_range=in_range, out_range=out_range)
     orig_im = tileVectra.image
     t.apply(tileVectra)
     assert np.array_equal(tileVectra.image, t.F(orig_im))
 
 @pytest.mark.parametrize("nbins", [120, 255, 500])
-def test_HistogramEqualization(tileVectra, nbins):
+def test_histogram_equalization(tileVectra, nbins):
     t = HistogramEqualization(nbins = nbins)
     orig_im = tileVectra.image
     t.apply(tileVectra)
@@ -68,7 +71,7 @@ def test_HistogramEqualization(tileVectra, nbins):
                                          ])
 @pytest.mark.parametrize("clip_limit", [0.05, 0.1, 0.3])
 @pytest.mark.parametrize("nbins", [120, 255, 500])
-def test_AdaptiveHistogramEqualization(tileVectra, nbins):
+def test_adaptive_histogram_equalization(tileVectra, nbins):
     t = AdaptiveHistogramEqualization(kernel_size = kernel_size, clip_limit = clip_limit, nbins = nbins)
     orig_im = tileVectra.image
     t.apply(tileVectra)
