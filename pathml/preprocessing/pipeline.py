@@ -18,21 +18,24 @@ class Pipeline(Transform):
             List of `pathml.core.Transform` objects
     """
 
-    def __init__(self, transform_sequence):
-        assert all([isinstance(t, Transform) for t in transform_sequence]), (
-            f"All elements in input list must be of" f" type pathml.core.Transform"
-        )
+    def __init__(self, transform_sequence=None):
+        assert transform_sequence is None or all(
+            [isinstance(t, Transform) for t in transform_sequence]
+        ), (f"All elements in input list must be of" f" type pathml.core.Transform")
         self.transforms = transform_sequence
 
     def __len__(self):
         return len(self.transforms)
 
     def __repr__(self):
-        out = f"Pipeline([\n"
-        for t in self.transforms:
-            out += f"\t{repr(t)},\n"
-        out += "])"
-        return out
+        if self.transforms is None:
+            return "Pipeline()"
+        else:
+            out = f"Pipeline([\n"
+            for t in self.transforms:
+                out += f"\t{repr(t)},\n"
+            out += "])"
+            return out
 
     def apply(self, tile):
         # this function has side effects
@@ -41,8 +44,9 @@ class Pipeline(Transform):
         assert isinstance(
             tile, pathml.core.tile.Tile
         ), f"argument of type {type(tile)} must be a pathml.core.Tile object."
-        for t in self.transforms:
-            t.apply(tile)
+        if self.transforms:
+            for t in self.transforms:
+                t.apply(tile)
         return tile
 
     def save(self, filename):

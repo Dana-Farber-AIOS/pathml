@@ -41,6 +41,31 @@ def test_extract_region(backend, location, size, level):
     assert region.dtype == np.uint8
 
 
+@pytest.mark.parametrize("shape", [500, (500, 250)])
+def test_extract_region_openslide(example_slide_data, shape):
+    """
+    make sure that the coordinates for openslide backend are in correct order.
+    Issue #181 caused by discrepancy between openslide (x, y) coord system and the rest of pathml which uses (i, j)
+    """
+    # get the array for the image
+    # note that calling np.array() on the PIL image automatically takes care of flipping it to (i, j) coords!!
+    raw_im_array = np.array(
+        example_slide_data.slide.slide.read_region(
+            location=(0, 0),
+            size=example_slide_data.slide.slide.level_dimensions[0],
+            level=0,
+        )
+    )
+    raw_im_array = raw_im_array[:, :, 0:3]
+    if isinstance(shape, int):
+        shape = (shape, shape)
+    h, w = shape
+    for tile in example_slide_data.generate_tiles(shape=shape):
+        i, j = tile.coords
+        assert np.array_equal(tile.image, raw_im_array[i : i + h, j : j + w, :])
+        assert tile.image.shape[0:2] == shape
+
+
 # separate dicom tests because dicom frame requires 500x500 tiles while bioformats has dim <500
 @pytest.mark.parametrize("backend", [dicom_backend()])
 @pytest.mark.parametrize("location", [(0, 0), (500, 500)])
