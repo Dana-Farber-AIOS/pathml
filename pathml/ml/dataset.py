@@ -64,7 +64,7 @@ class TileDataset(torch.utils.data.Dataset):
         ]
         tile_image = self.h5["array"][tuple(tiler)][:]
 
-        # add masks to tile if there are masks
+        # get corresponding masks if there are masks
         if "masks" in self.h5.keys():
             try:
                 masks = {

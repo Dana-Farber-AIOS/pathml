@@ -321,8 +321,6 @@ class h5pathManager:
         Returns:
             Tile(pathml.core.tile.Tile)
         """
-        ##
-
         if isinstance(item, bool):
             raise KeyError(f"invalid key, pass str or tuple")
         if isinstance(item, (str, tuple)):
