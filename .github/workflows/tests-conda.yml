@@ -2,7 +2,13 @@ name: Tests
 
 on: 
   pull_request:
-    branches: [dev, master]
+    branches:
+      - dev
+      - master
+  push:
+    branches:
+      - dev
+      - master
 
 jobs:
   build-linux:
