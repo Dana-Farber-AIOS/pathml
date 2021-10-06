@@ -1,6 +1,12 @@
 ML API
 ======
 
+h5path Dataset
+--------------
+
+.. autoapiclass:: pathml.ml.TileDataset
+    :members:
+
 HoVer-Net
 ---------
 

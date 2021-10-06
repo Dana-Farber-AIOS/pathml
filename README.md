@@ -6,6 +6,7 @@
 [![Documentation Status](https://readthedocs.org/projects/pathml/badge/?version=latest)](https://pathml.readthedocs.io/en/latest/?badge=latest)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![PyPI version](https://img.shields.io/pypi/v/pathml)](https://pypi.org/project/pathml/)
+[![codecov](https://codecov.io/gh/Dana-Farber-AIOS/pathml/branch/master/graph/badge.svg?token=UHSQPTM28Y)](https://codecov.io/gh/Dana-Farber-AIOS/pathml)
 
 A toolkit for computational pathology and machine learning.
 
@@ -15,7 +16,7 @@ A toolkit for computational pathology and machine learning.
 
 There are several ways to install `PathML`:
 
-1. pip install (recommended for users)
+1. pip install (**recommended for users**)
 2. clone repo to local machine and install from source (recommended for developers/contributors)
 
 Options (1) and (2) require that you first install all external dependencies:
