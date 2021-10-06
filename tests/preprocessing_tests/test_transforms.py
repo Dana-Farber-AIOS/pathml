@@ -58,7 +58,7 @@ def test_histogram_equalization(tileVectra, nbins):
 
 @pytest.mark.parametrize("clip_limit", [0.05, 0.1, 0.3])
 @pytest.mark.parametrize("nbins", [120, 255, 500])
-def test_adaptive_histogram_equalization(tileVectra, nbins):
+def test_adaptive_histogram_equalization(tileVectra, clip_limit, nbins):
     ks = [
         np.array((tileVectra.shape[0] // 10, tileVectra.shape[1] // 10, 1)),
         np.array((tileVectra.shape[0] // 8, tileVectra.shape[1] // 8, 1)),
