@@ -26,3 +26,6 @@ Transforms
 .. autoapiclass:: pathml.preprocessing.QuantifyMIF
 .. autoapiclass:: pathml.preprocessing.CollapseRunsVectra
 .. autoapiclass:: pathml.preprocessing.CollapseRunsCODEX
+.. autoapiclass:: pathml.preprocessing.RescaleIntensity    
+.. autoapiclass:: pathml.preprocessing.HistogramEqualization
+.. autoapiclass:: pathml.preprocessing.AdaptiveHistogramEqualization
