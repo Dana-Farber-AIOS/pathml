@@ -67,18 +67,18 @@ def test_histogram_equalization(tileVectra, nbins):
 @pytest.mark.parametrize("clip_limit", [0.05, 0.1, 0.3])
 @pytest.mark.parametrize("nbins", [120, 255, 500])
 def test_adaptive_histogram_equalization(tileVectra, clip_limit, nbins):
+    orig_im = tileVectra.image
     ks = [
-        np.array((tileVectra.shape[0] // 10, tileVectra.shape[1] // 10, 1)),
-        np.array((tileVectra.shape[0] // 8, tileVectra.shape[1] // 8, 1)),
-        np.array((tileVectra.shape[0] // 5, tileVectra.shape[1] // 5, 1)),
+        np.array((orig_im.shape[0] // 10, orig_im.shape[1] // 10, 1)),
+        np.array((orig_im.shape[0] // 8, orig_im.shape[1] // 8, 1)),
+        np.array((orig_im.shape[0] // 5, orig_im.shape[1] // 5, 1)),
     ]
     for kernel_size in ks:
         t = AdaptiveHistogramEqualization(
             kernel_size=kernel_size, clip_limit=clip_limit, nbins=nbins
         )
-        orig_im = tileVectra.image
-        t.apply(tileVectra)
-        assert np.array_equal(tileVectra.image, t.F(orig_im))
+    t.apply(tileVectra)
+    assert np.array_equal(tileVectra.image, t.F(orig_im))
 
 
 @pytest.mark.parametrize("thresh", [0, 0.5, 200])
