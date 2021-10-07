@@ -2,10 +2,11 @@
 
 <img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/overview.png width="750">
 
-![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg)
+![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg?branch=dev)
 [![Documentation Status](https://readthedocs.org/projects/pathml/badge/?version=latest)](https://pathml.readthedocs.io/en/latest/?badge=latest)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![PyPI version](https://img.shields.io/pypi/v/pathml)](https://pypi.org/project/pathml/)
+[![codecov](https://codecov.io/gh/Dana-Farber-AIOS/pathml/branch/master/graph/badge.svg?token=UHSQPTM28Y)](https://codecov.io/gh/Dana-Farber-AIOS/pathml)
 
 A toolkit for computational pathology and machine learning.
 
@@ -15,8 +16,8 @@ A toolkit for computational pathology and machine learning.
 
 There are several ways to install `PathML`:
 
-1. pip install
-2. clone repo to local machine and install from source
+1. pip install (**recommended for users**)
+2. clone repo to local machine and install from source (recommended for developers/contributors)
 
 Options (1) and (2) require that you first install all external dependencies:
 * openslide
@@ -31,13 +32,18 @@ Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
 
 Create conda environment
 ````
-conda create --name pathml python=3.8 numpy=1.18.5
+conda create --name pathml python=3.8
 conda activate pathml
 ````
 
-Install external dependencies
+Install external dependencies (Linux) with [Apt](https://ubuntu.com/server/docs/package-management)
 ````
 sudo apt-get install openslide-tools g++ gcc libblas-dev liblapack-dev
+````
+
+Install external dependencies (MacOS) with [Brew](www.brew.sh)
+````
+brew install openslide
 ````
 
 Install [OpenJDK 8](https://openjdk.java.net/)
@@ -73,14 +79,6 @@ Install PathML:
 pip install -e .
 ````
 
-## (Optionally) Register PathML as an IPython kernel
-````
-conda activate pathml
-conda install ipykernel
-python -m ipykernel install --user --name=pathml
-````
-This makes PathML available as a kernel in jupyter lab or notebook.
-
 ## CUDA
 
 To use GPU acceleration for model training or other tasks, you must install CUDA. 
@@ -102,6 +100,31 @@ After installing PyTorch, optionally verify successful PyTorch installation with
 python -c "import torch; print(torch.cuda.is_available())"
 ````
 
+# Using with Jupyter
+
+Jupyter notebooks are a convenient way to work interactively. To use PathML in Jupyter notebooks: 
+
+## Set JAVA_HOME environment variable
+
+PathML relies on Java to enable support for reading a wide range of file formats.
+Before using PathML in Jupyter, you may need to manually set the `JAVA_HOME` environment variable 
+specifying the path to Java. To do so:
+
+1. Get the path to Java by running `echo $JAVA_HOME` in the terminal in your pathml conda environment (outside of Jupyter)
+2. Set that path as the `JAVA_HOME` environment variable in Jupyter:
+    ````
+    import os
+    os.environ["JAVA_HOME"] = "/opt/conda/envs/pathml" # change path as needed
+    ````
+
+## Register PathML as an IPython kernel
+````
+conda activate pathml
+conda install ipykernel
+python -m ipykernel install --user --name=pathml
+````
+This makes PathML available as a kernel in jupyter lab or notebook.
+
 
 # Contributing
 
@@ -119,6 +142,13 @@ There are many ways to contribute to PathML, including:
 * Sharing ``PathML`` with colleagues, students, etc.
 
 See [contributing](https://github.com/Dana-Farber-AIOS/pathml/blob/master/CONTRIBUTING.rst) for more details.
+
+# License
+
+The GNU GPL v2 version of PathML is made available via Open Source licensing. 
+The user is free to use, modify, and distribute under the terms of the GNU General Public License version 2.
+
+Commercial license options are available also.
 
 # Contact
 

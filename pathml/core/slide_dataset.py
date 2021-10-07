@@ -48,10 +48,6 @@ class SlideDataset:
         for slide in self.slides:
             slide.run(pipeline, **kwargs)
 
-        assert not any([s.tile_dataset is None for s in self.slides])
-        # create a tile dataset for the whole dataset
-        self._tile_dataset = ConcatDataset([s.tile_dataset for s in self.slides])
-
     def reshape(self, shape, centercrop=False):
         for slide in self.slides:
             slide.tiles.reshape(shape=shape, centercrop=centercrop)
@@ -84,11 +80,3 @@ class SlideDataset:
                     "slide does not have a .name attribute. Must supply a 'filenames' argument."
                 )
             slide.write(slide_path)
-
-    @property
-    def tile_dataset(self):
-        """
-        Returns:
-            torch.utils.data.Dataset: A PyTorch Dataset object of preprocessed tiles
-        """
-        return self._tile_dataset

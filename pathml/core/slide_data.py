@@ -104,6 +104,7 @@ class SlideData:
                 [
                     isinstance(val, (str, np.ndarray))
                     or np.issubdtype(type(val), np.number)
+                    or np.issubdtype(type(val), np.bool_)
                     for val in labels.values()
                 ]
             ), (
@@ -320,14 +321,6 @@ class SlideData:
                 self.tiles.add(tile)
 
     @property
-    def tile_dataset(self):
-        """
-        Creates a Pytorch Dataset object over tiles. Each item contains a (Tile, labels) pair where labels is the
-        slide-level labels
-        """
-        return self._create_tile_dataset(self)
-
-    @property
     def shape(self):
         """
         Convenience method for getting the image shape.
@@ -336,27 +329,10 @@ class SlideData:
         Returns:
             Tuple[int, int]: Shape of image (H, W)
         """
-        return self.slide.get_image_shape()
-
-    @staticmethod
-    def _create_tile_dataset(slidedata):
-        # create a pytorch dataset for tiles, also with slide-level labels
-        class TileDataset(Dataset):
-            def __init__(self, slidedata):
-                if slidedata.tiles is None:
-                    raise ValueError(
-                        "Can't create tile dataset because self.tiles is None"
-                    )
-                self.tiles = slidedata.tiles
-                self.labels = slidedata.labels
-
-            def __len__(self):
-                return len(self.tiles)
-
-            def __getitem__(self, ix):
-                return self.tiles[ix], self.labels
-
-        return TileDataset(slidedata)
+        if self.backend == "h5path":
+            return tuple(self.h5manager.h5["fields"].attrs["shape"])
+        else:
+            return self.slide.get_image_shape()
 
     def generate_tiles(self, shape=3000, stride=None, pad=False, **kwargs):
         """
