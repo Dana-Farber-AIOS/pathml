@@ -5,7 +5,6 @@ License: GNU GPL 2.0
 
 import numpy as np
 import pytest
-
 from pathml.preprocessing import (
     MedianBlur,
     GaussianBlur,
@@ -23,9 +22,12 @@ from pathml.preprocessing import (
     QuantifyMIF,
     CollapseRunsVectra,
     CollapseRunsCODEX,
+    AdaptiveHistogramEqualization,
+    HistogramEqualization,
+    RescaleIntensity,
 )
 from pathml.utils import RGB_to_GREY
-from pathml.preprocessing.transforms import RescaleIntensity, HistogramEqualization, AdaptiveHistogramEqualization
+
 
 @pytest.mark.parametrize("ksize", [3, 7, 21])
 @pytest.mark.parametrize("transform", [MedianBlur, BoxBlur])
@@ -45,33 +47,38 @@ def test_gaussian_blur(tileHE, ksize, sigma):
     assert np.array_equal(tileHE.image, t.F(orig_im))
 
 
-@pytest.mark.parametrize("in_range", ['image', (0, 255), 'dtype'])
-@pytest.mark.parametrize("out_range", ['image', (0,255), 'dtype'])
-def test_RescaleIntensity(tileVectra, in_range, out_range):
+@pytest.mark.parametrize("in_range", ["image", (0, 255), "dtype"])
+@pytest.mark.parametrize("out_range", ["image", (0, 255), "dtype"])
+def test_rescale_intensity(tileVectra, in_range, out_range):
     t = RescaleIntensity(in_range=in_range, out_range=out_range)
     orig_im = tileVectra.image
     t.apply(tileVectra)
     assert np.array_equal(tileVectra.image, t.F(orig_im))
 
+
 @pytest.mark.parametrize("nbins", [120, 255, 500])
-def test_HistogramEqualization(tileVectra, nbins):
-    t = HistogramEqualization(nbins = nbins)
+def test_histogram_equalization(tileVectra, nbins):
+    t = HistogramEqualization(nbins=nbins)
     orig_im = tileVectra.image
     t.apply(tileVectra)
     assert np.array_equal(tileVectra.image, t.F(orig_im))
 
 
-@pytest.mark.parametrize("kernel_size", [np.array((tileVectra.shape[0] // 10, tileVectra.shape[1] // 10, 1)),
-                                         np.array((tileVectra.shape[0] // 8, tileVectra.shape[1] // 8, 1)),
-                                         np.array((tileVectra.shape[0] // 5, tileVectra.shape[1] // 5, 1))
-                                         ])
 @pytest.mark.parametrize("clip_limit", [0.05, 0.1, 0.3])
 @pytest.mark.parametrize("nbins", [120, 255, 500])
-def test_AdaptiveHistogramEqualization(tileVectra, nbins):
-    t = AdaptiveHistogramEqualization(kernel_size = kernel_size, clip_limit = clip_limit, nbins = nbins)
-    orig_im = tileVectra.image
-    t.apply(tileVectra)
-    assert np.array_equal(tileVectra.image, t.F(orig_im))
+def test_adaptive_histogram_equalization(tileVectra, clip_limit, nbins):
+    ks = [
+        np.array((tileVectra.shape[0] // 10, tileVectra.shape[1] // 10, 1)),
+        np.array((tileVectra.shape[0] // 8, tileVectra.shape[1] // 8, 1)),
+        np.array((tileVectra.shape[0] // 5, tileVectra.shape[1] // 5, 1)),
+    ]
+    for kernel_size in ks:
+        t = AdaptiveHistogramEqualization(
+            kernel_size=kernel_size, clip_limit=clip_limit, nbins=nbins
+        )
+        orig_im = tileVectra.image
+        t.apply(tileVectra)
+        assert np.array_equal(tileVectra.image, t.F(orig_im))
 
 
 @pytest.mark.parametrize("thresh", [0, 0.5, 200])
@@ -210,6 +217,9 @@ def test_collapse_runs_vectra(tileVectra):
         QuantifyMIF(segmentation_mask="test"),
         CollapseRunsVectra(),
         CollapseRunsCODEX(z=0),
+        AdaptiveHistogramEqualization(),
+        HistogramEqualization(),
+        RescaleIntensity(),
     ],
 )
 def test_repr(transform):
