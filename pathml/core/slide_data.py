@@ -141,7 +141,7 @@ class SlideData:
                 key: val for key, val in stain_type_dict.items() if val is not None
             }
             if stain_type_dict:
-                slide_type = pathml.core.types.SlideType(**stain_type_dict)
+                slide_type = pathml.core.slide_types.SlideType(**stain_type_dict)
 
         # get name from filepath if no name is provided
         if name is None and filepath is not None:
