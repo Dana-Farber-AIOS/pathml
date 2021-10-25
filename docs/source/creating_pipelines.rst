@@ -30,6 +30,13 @@ tile contains any pen marks).
     several labels (depicted here as cubes).
 
 
+.. figure:: _static/images/transforms.png
+    :alt: examples of Transforms
+    :scale: 75 %
+    :align: center
+
+    Examples of several types of :class:`~pathml.preprocessing.transforms.Transform`
+
 What is a Pipeline?
 -----------------------
 

@@ -50,8 +50,9 @@ Cornell Medicine.
    :maxdepth: 2
    :caption: Examples
 
+   examples/link_loading_images
    examples/link_stain_normalization
-   examples/link_preprocessing_pipeline
+   examples/link_workflow_HE_vignette
    examples/link_multiplex_if
    examples/link_codex
    examples/link_train_hovernet
