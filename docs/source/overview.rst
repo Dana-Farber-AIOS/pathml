@@ -1,12 +1,7 @@
 Overview
 ========
 
-``PathML`` is a toolkit supporting each step in the computational pathology research workflow:
-
-Whether you want to get started quickly with pre-built tools and tutorials,
-or if you want to mix-and-match components to design your own analysis pipelines,
-or if you want to dig into the code and write completely custom extensions and new features -
-``PathML`` has something for you!
+``PathML`` is a toolkit supporting each step in the computational pathology research workflow.
 
 .. image:: _static/images/schematic_design.jpg
 

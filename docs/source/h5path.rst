@@ -7,7 +7,7 @@ Overview
 --------
 
 A single whole-slide image may contain on the order of 10\ :superscript:`10` pixels, making it infeasible to
-load entire images in RAM. ``PathML`` supports efficient manipulation of large-scale imaging data via
+process entire images in RAM. ``PathML`` supports efficient manipulation of large-scale imaging data via
 the **h5path** format, a hierarchical data structure which allows users to access small regions of the processed WSI
 without loading the entire image. This feature reduces the RAM required to run a ``PathML`` workflow (pipelines can be
 run on a consumer laptop), simplifies the reading and writing of processed WSIs, improves data exploration utilities,

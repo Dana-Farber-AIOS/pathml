@@ -8,7 +8,7 @@ Welcome to PathML's documentation!
 
 ``PathML`` is a toolbox to facilitate machine learning workflows for high-resolution whole-slide pathology
 images. This includes modular pipelines for preprocessing, PyTorch DataLoaders for training and benchmarking
-machine learning model performance on standardized datasets, and support for sharing preprocessing pipelines,
+machine learning model performance on standardized datasets, support for sharing preprocessing pipelines,
 pretrained models, and more.
 
 Development is a collaboration between the AI Operations and Data Science Group in the Department of Informatics

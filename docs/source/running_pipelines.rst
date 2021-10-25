@@ -4,7 +4,7 @@ Running Preprocessing Pipelines
 How it works
 ------------
 
-Whole-slide images are typically too large to load in memory.
+Whole-slide images are typically too large to load in memory, and computational requirements scale poorly in image size.
 ``PathML`` therefore runs preprocessing on smaller regions of the image which can be held in RAM,
 and then aggregates the results at the end.
 
@@ -31,7 +31,7 @@ and scale up to large datasets of gigapixel-scale whole-slide images.
 Preprocessing a single WSI
 --------------------------
 
-Get started by loading a WSI from disk and running a preprocessing pipeline in 10 lines of code:
+Get started by loading a WSI from disk and running a preprocessing pipeline:
 
 .. code-block::
 
@@ -53,7 +53,7 @@ Preprocessing a dataset of WSI
 ------------------------------
 
 Pipelines can also be run on entire datasets, with no change to the code:
-Here we create a demo :class:`~pathml.core.slide_dataset.SlideDataset`
+Here we create a mock :class:`~pathml.core.slide_dataset.SlideDataset` and run the same pipeline as above:
 
 .. code-block::
 
