@@ -14,11 +14,11 @@ What is a Transform?
 --------------------
 
 The :class:`~pathml.preprocessing.transforms.Transform` is the building block for creating preprocessing pipelines.
-Each :class:`~pathml.preprocessing.transforms.Transform` contains an operation which,
-when applied to a :class:`~pathml.core.tile.Tile` object, modifies it in some way.
-For example, a :class:`~pathml.preprocessing.transforms.Transform` may modify the image (e.g. apply a blur),
-create/modify a mask (e.g. tissue detection), or create/modify a label (e.g. binary classification whether the
-tile contains any pen marks).
+
+Each :class:`~pathml.preprocessing.transforms.Transform` applies a specific operation to a
+:class:`~pathml.core.tile.Tile` which may include modifying
+an input image, creating or modifying pixel-level metadata (i.e., masks), or creating or modifying image-level metadata
+(e.g., image quality metrics or an AnnData counts matrix).
 
 .. figure:: _static/images/transform_schematic.png
     :alt: schematic diagram of Transform
@@ -30,11 +30,18 @@ tile contains any pen marks).
     several labels (depicted here as cubes).
 
 
+.. figure:: _static/images/transforms.png
+    :alt: examples of Transforms
+    :scale: 75 %
+    :align: center
+
+    Examples of several types of :class:`~pathml.preprocessing.transforms.Transform`
+
 What is a Pipeline?
 -----------------------
 
 A preprocessing pipeline is a set of independent operations applied sequentially.
-In ``PathML``, :class:`~pathml.preprocessing.pipeline.Pipeline` s are defined as a sequence of
+In ``PathML``, a :class:`~pathml.preprocessing.pipeline.Pipeline` is defined as a sequence of
 :class:`~pathml.preprocessing.transforms.Transform` objects. This makes it easy to compose a custom
 :class:`~pathml.preprocessing.pipeline.Pipeline` by mixing-and-matching:
 
@@ -46,7 +53,7 @@ In ``PathML``, :class:`~pathml.preprocessing.pipeline.Pipeline` s are defined as
     Schematic diagram of :class:`~pathml.preprocessing.pipeline.Pipeline` composition from a set of modular components
 
 
-In practice, this requires only a few lines of code:
+In the PathML API, this is concise:
 
 .. code-block::
 
@@ -59,8 +66,6 @@ In practice, this requires only a few lines of code:
     ])
 
 In this example, the preprocessing pipeline will first apply a box blur kernel, and then apply tissue detection.
-It is that easy to compose pipelines by mixing and matching :class:`~pathml.preprocessing.transforms.Transform` objects!
-
 
 
 Creating custom Transforms
@@ -93,6 +98,6 @@ For example, let's take a look at how :class:`~pathml.preprocessing.transforms.B
             tile.image = self.F(tile.image)
 
 
-That's it! Once you define your custom :class:`~pathml.preprocessing.transforms.Transform`,
+Once you define your custom :class:`~pathml.preprocessing.transforms.Transform`,
 you can plug it in with any of the other :class:`~pathml.preprocessing.transforms.Transform`s,
 compose :class:`~pathml.preprocessing.pipeline.Pipeline`, etc.

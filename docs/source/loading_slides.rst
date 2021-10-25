@@ -88,8 +88,28 @@ for the file format:
      - | ``.svs``, ``.tif``, ``.tiff``, ``.bif``, ``.ndpi``, ``.vms``, ``.vmu``, ``.scn``, ``.mrxs``, ``.svslide``
        | `Complete list of file types supported by OpenSlide <https://openslide.org/formats/>`_
    * - :class:`~pathml.core.slide_backends.DICOMBackend`
-     - | ``.dcm``
+     - | ``.dcm``, ``.dicom``
        | Digital Imaging and Communications in Medicine (DICOM)
    * - :class:`~pathml.core.slide_backends.BioFormatsBackend`
      - | Supports almost all commonly used file formats, including multiparametric and volumetric TIFF files.
+       | ``.1sc``, ``.2fl``, ``.acff``, ``.afi``, ``.afm``, ``.aim``, ``.al3d``, ``.ali``, ``.am``,
+       | ``.amiramesh``, ``.apl``, ``.arf``, ``.avi``, ``.bif``, ``.bin``, ``.bip``, ``.bmp``,
+       | ``.c01``, ``.cfg``, ``.ch5``, ``.cif``, ``.cr2``, ``.crw``, ``.cxd``, ``.czi``,
+       | ``.dat``, ``.dat``, ``.db``, ``.dib``, ``.dm2``, ``.dm3``, ``.dm4``, ``.dti``, ``.dv``,
+       | ``.eps``, ``.epsi``, ``.exp``, ``.fdf``, ``.fff``, ``.ffr``, ``.fits``, ``.fli``, ``.frm``,
+       | ``.gel``, ``.grey``, ``.hdr``, ``.hdr``, ``.hdr``, ``.hdr``, ``.hed``, ``.his``, ``.htd``,
+       | ``.htd``, ``.hx``, ``.i2i``, ``.ics``, ``.ids``, ``.im3``, ``.img``, ``.img``, ``.ims``,
+       | ``.inr``, ``.ipl``, ``.ipm``, ``.ipw``, ``.j2k``, ``.jp2``, ``.jpf``, ``.jpk``, ``.jpx``,
+       | ``.klb``, ``.l2d``, ``.labels``, ``.lei``, ``.lif``, ``.liff``, ``.lim``, ``.lms``,
+       | ``.lsm``, ``.map``, ``.mdb``, ``.mnc``, ``.mng``, ``.mod``, ``.mov``, ``.mrc``,
+       | ``.mrcs``, ``.mrw``, ``.msr``, ``.msr``, ``.mtb``, ``.mvd2``, ``.naf``, ``.nd``,
+       | ``.nef``, ``.nhdr``, ``.nii``, ``.nii.gz``, ``.nrrd``, ``.obf``, ``.obsep``, ``.oib``,
+       | ``.oif``, ``.oir``, ``.ome``, ``.ome.btf``, ``.ome.tf2``, ``.ome.tf8``, ``.ome.tif``,
+       | ``.ome.tiff``, ``.ome.xml``, ``.par``, ``.pbm``, ``.pcoraw``, ``.pcx``, ``.pds``,
+       | ``.pgm``, ``.pic``, ``.pict``, ``.png``, ``.pnl``, ``.ppm``, ``.pr3``, ``.ps``, ``.psd``,
+       | ``.qptiff``, ``.r3d``, ``.raw``, ``.rcpnl``, ``.rec``, ``.rec``, ``.scn``, ``.scn``, ``.sdt``,
+       | ``.seq``, ``.sif``, ``.sld``, ``.sld``, ``.sm2``, ``.sm3``, ``.spc``, ``.spe``, ``.spi``,
+       | ``.st``, ``.stk``, ``.stk``, ``.stp``, ``.sxm``, ``.tfr``, ``.tga``, ``.tif``, ``.tiff``,
+       | ``.tnb``, ``.top``, ``.vff``, ``.vsi``, ``.vws``, ``.wat``, ``.wlz``, ``.wpi``,
+       | ``.xdce``, ``.xml``, ``.xqd``, ``.xqf``, ``.xv``, ``.xys``, ``.zfp``, ``.zfr``, ``.zvi``
        | `Complete list of file types supported by Bio-Formats <https://docs.openmicroscopy.org/bio-formats/latest/supported-formats.html>`_

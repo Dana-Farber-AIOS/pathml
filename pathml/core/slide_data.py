@@ -141,7 +141,7 @@ class SlideData:
                 key: val for key, val in stain_type_dict.items() if val is not None
             }
             if stain_type_dict:
-                slide_type = pathml.core.types.SlideType(**stain_type_dict)
+                slide_type = pathml.core.slide_types.SlideType(**stain_type_dict)
 
         # get name from filepath if no name is provided
         if name is None and filepath is not None:
@@ -321,14 +321,6 @@ class SlideData:
                 self.tiles.add(tile)
 
     @property
-    def tile_dataset(self):
-        """
-        Creates a Pytorch Dataset object over tiles. Each item contains a (Tile, labels) pair where labels is the
-        slide-level labels
-        """
-        return self._create_tile_dataset(self)
-
-    @property
     def shape(self):
         """
         Convenience method for getting the image shape.
@@ -341,26 +333,6 @@ class SlideData:
             return tuple(self.h5manager.h5["fields"].attrs["shape"])
         else:
             return self.slide.get_image_shape()
-
-    @staticmethod
-    def _create_tile_dataset(slidedata):
-        # create a pytorch dataset for tiles, also with slide-level labels
-        class TileDataset(Dataset):
-            def __init__(self, slidedata):
-                if slidedata.tiles is None:
-                    raise ValueError(
-                        "Can't create tile dataset because self.tiles is None"
-                    )
-                self.tiles = slidedata.tiles
-                self.labels = slidedata.labels
-
-            def __len__(self):
-                return len(self.tiles)
-
-            def __getitem__(self, ix):
-                return self.tiles[ix], self.labels
-
-        return TileDataset(slidedata)
 
     def generate_tiles(self, shape=3000, stride=None, pad=False, **kwargs):
         """

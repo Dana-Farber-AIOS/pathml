@@ -22,4 +22,7 @@ from .transforms import (
     QuantifyMIF,
     CollapseRunsVectra,
     CollapseRunsCODEX,
+    RescaleIntensity,
+    HistogramEqualization,
+    AdaptiveHistogramEqualization
 )

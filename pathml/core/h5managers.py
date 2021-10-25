@@ -378,6 +378,7 @@ class h5pathManager:
         if name == "None":
             name = None
         coords = eval(self.h5["tiles"][item].attrs["coords"])
+
         return pathml.core.tile.Tile(
             tile,
             masks=masks,

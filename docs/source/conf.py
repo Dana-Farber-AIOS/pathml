@@ -21,7 +21,7 @@ project = 'PathML'
 copyright = '2021, Dana-Farber Cancer Institute and Weill Cornell Medicine'
 author = 'Jacob Rosenthal et al.'
 
-version = '1.0.0'
+version = '1.0.3'
 # The full version, including alpha/beta/rc tags
 release = version
 
@@ -38,7 +38,8 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.imgmath',
     'IPython.sphinxext.ipython_console_highlighting',
-    'autoapi.extension'
+    'autoapi.extension',
+    'sphinx_copybutton'
 ]
 
 autodoc_default_options = {

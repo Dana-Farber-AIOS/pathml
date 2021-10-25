@@ -15,7 +15,7 @@ Models
 
 You can also use models from fantastic resources such as
 `torchvision.models <https://pytorch.org/docs/stable/torchvision/models.html>`_ and
-`pytorch-image-models (timm) <https://rwightman.github.io/pytorch-image-models/>`_, or create your own!
+`pytorch-image-models (timm) <https://rwightman.github.io/pytorch-image-models/>`_.
 
 References
 ----------

@@ -5,7 +5,6 @@ License: GNU GPL 2.0
 
 import numpy as np
 import pytest
-
 from pathml.preprocessing import (
     MedianBlur,
     GaussianBlur,
@@ -23,6 +22,9 @@ from pathml.preprocessing import (
     QuantifyMIF,
     CollapseRunsVectra,
     CollapseRunsCODEX,
+    AdaptiveHistogramEqualization,
+    HistogramEqualization,
+    RescaleIntensity,
 )
 from pathml.utils import RGB_to_GREY
 
@@ -43,6 +45,34 @@ def test_gaussian_blur(tileHE, ksize, sigma):
     orig_im = tileHE.image
     t.apply(tileHE)
     assert np.array_equal(tileHE.image, t.F(orig_im))
+
+
+@pytest.mark.parametrize("in_range", ["image", (0, 255), "dtype"])
+@pytest.mark.parametrize("out_range", ["image", (0, 255), "dtype"])
+def test_rescale_intensity(tileVectra, in_range, out_range):
+    t = RescaleIntensity(in_range=in_range, out_range=out_range)
+    orig_im = tileVectra.image
+    t.apply(tileVectra)
+    assert np.array_equal(tileVectra.image, t.F(orig_im))
+
+
+@pytest.mark.parametrize("nbins", [120, 255, 500])
+def test_histogram_equalization(tileVectra, nbins):
+    t = HistogramEqualization(nbins=nbins)
+    orig_im = tileVectra.image
+    t.apply(tileVectra)
+    assert np.array_equal(tileVectra.image, t.F(orig_im))
+
+
+@pytest.mark.parametrize("clip_limit", [0.05, 0.1, 0.3])
+@pytest.mark.parametrize("nbins", [120, 255, 500])
+def test_adaptive_histogram_equalization(tileVectra, clip_limit, nbins):
+    t = AdaptiveHistogramEqualization(clip_limit=clip_limit, nbins=nbins)
+    vectra_collapse = CollapseRunsVectra()
+    vectra_collapse.apply(tileVectra)
+    orig_im = tileVectra.image
+    t.apply(tileVectra)
+    assert np.array_equal(tileVectra.image, t.F(orig_im))
 
 
 @pytest.mark.parametrize("thresh", [0, 0.5, 200])
@@ -181,6 +211,9 @@ def test_collapse_runs_vectra(tileVectra):
         QuantifyMIF(segmentation_mask="test"),
         CollapseRunsVectra(),
         CollapseRunsCODEX(z=0),
+        AdaptiveHistogramEqualization(),
+        HistogramEqualization(),
+        RescaleIntensity(),
     ],
 )
 def test_repr(transform):
