@@ -22,7 +22,7 @@ from pathml.utils import (
 )
 from skimage import restoration
 from skimage.measure import regionprops_table
-
+from skimage.exposure import equalize_hist, equalize_adapthist, rescale_intensity
 
 # Base class
 class Transform:
@@ -124,6 +124,102 @@ class BoxBlur(Transform):
         return cv2.boxFilter(
             image, ksize=(self.kernel_size, self.kernel_size), ddepth=-1
         )
+
+    def apply(self, tile):
+        assert isinstance(
+            tile, pathml.core.tile.Tile
+        ), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        tile.image = self.F(tile.image)
+
+
+class RescaleIntensity(Transform):
+    """
+    Return image after stretching or shrinking its intensity levels.
+    The desired intensity range of the input and output, in_range and out_range respectively, are used to stretch or shrink the intensity range of the input image
+    This function is a wrapper for 'rescale_intensity' function from scikit-image: https://scikit-image.org/docs/dev/api/skimage.exposure.html#skimage.exposure.rescale_intensity
+
+    Args:
+        in_range (str or 2-tuple, optional): Min and max intensity values of input image. The possible values for this parameter are enumerated below.
+            ‘image’ : Use image min/max as the intensity range.
+            ‘dtype’ : Use min/max of the image’s dtype as the intensity range.
+            'dtype-name' : Use intensity range based on desired dtype. Must be valid key in DTYPE_RANGE.
+            '2-tuple' : Use range_values as explicit min/max intensities.
+        out_range (str or 2-tuple, optional): Min and max intensity values of output image. The possible values for this parameter are enumerated below.
+            ‘image’ : Use image min/max as the intensity range.
+            ‘dtype’ : Use min/max of the image’s dtype as the intensity range.
+            'dtype-name' : Use intensity range based on desired dtype. Must be valid key in DTYPE_RANGE.
+            '2-tuple' : Use range_values as explicit min/max intensities.
+    """
+
+    def __init__(self, in_range='image', out_range = 'dtype'):
+        self.in_range = in_range
+        self.out_range = out_range
+
+    def __repr__(self):
+        return f"RescaleIntensity(in_range={self.in_range}, out_range={self.out_range})"
+
+    def F(self, image):
+        image = rescale_intensity(image, in_range=self.in_range, out_range=self.out_range)
+        return image
+
+    def apply(self, tile):
+        assert isinstance(
+            tile, pathml.core.tile.Tile
+        ), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        tile.image = self.F(tile.image)
+
+
+class HistogramEqualization(Transform):
+    """
+     Return image after histogram equalization.
+     This function is a wrapper for 'equalize_hist' function from scikit-image: https://scikit-image.org/docs/dev/api/skimage.exposure.html#skimage.exposure.equalize_hist
+
+    Args:
+        nbins (int, optional): Number of gray bins for histogram. Note: this argument is ignored for integer images, for which each integer is its own bin.
+        mask (ndarray of bools or 0s and 1s, optional): Array of same shape as image. Only points at which mask == True are used for the equalization, which is applied to the whole image.
+    """
+
+    def __init__(self, nbins=256, mask=None):
+        self.nbins = nbins
+        self.mask = mask
+
+    def __repr__(self):
+        return f"HistogramEqualization(nbins={self.nbins}, mask = {self.mask})"
+
+    def F(self, image):
+        image = equalize_hist(image, nbins=self.nbins, mask = self.mask)
+        return image
+
+    def apply(self, tile):
+        assert isinstance(
+            tile, pathml.core.tile.Tile
+        ), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        tile.image = self.F(tile.image)
+
+
+class AdaptiveHistogramEqualization(Transform):
+    """
+    Contrast Limited Adaptive Histogram Equalization (CLAHE).
+    An algorithm for local contrast enhancement, that uses histograms computed over different tile regions of the image. Local details can therefore be enhanced even in regions that are darker or lighter than most of the image.
+    This function is a wrapper for 'equalize_adapthist' function from scikit-image: https://scikit-image.org/docs/dev/api/skimage.exposure.html#skimage.exposure.equalize_adapthist
+
+    Args:
+        kernel_size (int or array_like, optional): Defines the shape of contextual regions used in the algorithm. If iterable is passed, it must have the same number of elements as image.ndim (without color channel). If integer, it is broadcasted to each image dimension. By default, kernel_size is 1/8 of image height by 1/8 of its width.
+        clip_limit (float): Clipping limit, normalized between 0 and 1 (higher values give more contrast).
+        nbins (int): Number of gray bins for histogram (“data range”).
+    """
+
+    def __init__(self, kernel_size=None, clip_limit = 0.3, nbins=256):
+        self.kernel_size = kernel_size
+        self.clip_limit = clip_limit
+        self.nbins = nbins
+
+    def __repr__(self):
+        return f"AdaptiveHistogramEqualization(kernel_size={self.kernel_size}, clip_limit={self.clip_limit}, nbins={self.nbins})"
+
+    def F(self, image):
+        image = equalize_adapthist(image, kernel_size=self.kernel_size, clip_limit=self.clip_limit, nbins=self.nbins)
+        return image
 
     def apply(self, tile):
         assert isinstance(
