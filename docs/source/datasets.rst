@@ -7,8 +7,8 @@ DataModules
 --------------
 
 ``PathML`` uses ``DataModules`` to encapsulate datasets.
-DataModule objects are responsible for downloading the data (if necessary) and formatting the data into ``DataSet`` s and
-``DataLoader`` s for use in downstream tasks.
+DataModule objects are responsible for downloading the data (if necessary) and formatting the data into ``DataSet`` and
+``DataLoader`` objects for use in downstream tasks.
 Keeping everything in a single object is easier for users and also facilitates reproducibility.
 
 Inspired by `PyTorch Lightning <https://pytorch-lightning.readthedocs.io/en/latest/datamodules.html>`_.

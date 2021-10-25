@@ -4,3 +4,4 @@ nbsphinx-link>=1.3.0
 sphinx-rtd-theme>=0.5.1
 sphinx-autoapi
 Ipython
+sphinx-copybutton

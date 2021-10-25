@@ -38,7 +38,8 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.imgmath',
     'IPython.sphinxext.ipython_console_highlighting',
-    'autoapi.extension'
+    'autoapi.extension',
+    'sphinx_copybutton'
 ]
 
 autodoc_default_options = {
