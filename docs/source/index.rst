@@ -50,12 +50,12 @@ Cornell Medicine.
    :maxdepth: 2
    :caption: Examples
 
-   examples/link_gallery
    examples/link_stain_normalization
-   examples/link_nucleus_detection
    examples/link_preprocessing_pipeline
-   examples/link_train_hovernet
    examples/link_multiplex_if
+   examples/link_codex
+   examples/link_train_hovernet
+   examples/link_gallery
 
 .. toctree::
    :maxdepth: 2
