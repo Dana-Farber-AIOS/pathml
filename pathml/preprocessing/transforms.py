@@ -13,16 +13,13 @@ import pandas as pd
 import pathml.core
 import pathml.core.slide_data
 import spams
-from pathml.utils import (
-    RGB_to_GREY,
-    RGB_to_HSI,
-    RGB_to_HSV,
-    RGB_to_OD,
-    normalize_matrix_cols,
-)
+from pathml.utils import (RGB_to_GREY, RGB_to_HSI, RGB_to_HSV, RGB_to_OD,
+                          normalize_matrix_cols)
 from skimage import restoration
+from skimage.exposure import (equalize_adapthist, equalize_hist,
+                              rescale_intensity)
 from skimage.measure import regionprops_table
-from skimage.exposure import equalize_hist, equalize_adapthist, rescale_intensity
+
 
 # Base class
 class Transform:
@@ -151,7 +148,7 @@ class RescaleIntensity(Transform):
             '2-tuple' : Use range_values as explicit min/max intensities.
     """
 
-    def __init__(self, in_range='image', out_range = 'dtype'):
+    def __init__(self, in_range="image", out_range="dtype"):
         self.in_range = in_range
         self.out_range = out_range
 
@@ -159,7 +156,9 @@ class RescaleIntensity(Transform):
         return f"RescaleIntensity(in_range={self.in_range}, out_range={self.out_range})"
 
     def F(self, image):
-        image = rescale_intensity(image, in_range=self.in_range, out_range=self.out_range)
+        image = rescale_intensity(
+            image, in_range=self.in_range, out_range=self.out_range
+        )
         return image
 
     def apply(self, tile):
@@ -187,7 +186,7 @@ class HistogramEqualization(Transform):
         return f"HistogramEqualization(nbins={self.nbins}, mask = {self.mask})"
 
     def F(self, image):
-        image = equalize_hist(image, nbins=self.nbins, mask = self.mask)
+        image = equalize_hist(image, nbins=self.nbins, mask=self.mask)
         return image
 
     def apply(self, tile):
@@ -209,7 +208,7 @@ class AdaptiveHistogramEqualization(Transform):
         nbins (int): Number of gray bins for histogram (“data range”).
     """
 
-    def __init__(self, kernel_size=None, clip_limit = 0.3, nbins=256):
+    def __init__(self, kernel_size=None, clip_limit=0.3, nbins=256):
         self.kernel_size = kernel_size
         self.clip_limit = clip_limit
         self.nbins = nbins
@@ -218,7 +217,12 @@ class AdaptiveHistogramEqualization(Transform):
         return f"AdaptiveHistogramEqualization(kernel_size={self.kernel_size}, clip_limit={self.clip_limit}, nbins={self.nbins})"
 
     def F(self, image):
-        image = equalize_adapthist(image, kernel_size=self.kernel_size, clip_limit=self.clip_limit, nbins=self.nbins)
+        image = equalize_adapthist(
+            image,
+            kernel_size=self.kernel_size,
+            clip_limit=self.clip_limit,
+            nbins=self.nbins,
+        )
         return image
 
     def apply(self, tile):
@@ -1359,6 +1363,7 @@ class SegmentMIF(Transform):
             nuclear_segmentation_predictions = np.squeeze(
                 nuclear_segmentation_predictions, axis=0
             )
+            del model
             return cell_segmentation_predictions, nuclear_segmentation_predictions
         else:
             raise NotImplementedError(f"model={self.model} currently not supported.")
