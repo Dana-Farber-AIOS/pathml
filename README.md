@@ -12,7 +12,7 @@ A toolkit for computational pathology and machine learning.
 
 **View [documentation](https://pathml.readthedocs.io/en/latest/)**
 
-**Please cite [our paper](https://www.biorxiv.org/content/10.1101/2021.10.21.465212v1)**
+**Please cite [our paper](https://www.biorxiv.org/content/10.1101/2021.10.21.465212)**
 
 # Installation
 
