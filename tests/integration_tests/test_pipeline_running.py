@@ -139,3 +139,38 @@ def scan_hdf5(f, recursive=True, tab_step=2):
         return elems
 
     return scan_node(f)
+
+
+@pytest.mark.parametrize("tile_size", [500])
+@pytest.mark.parametrize("stride", [250, 500, 1000])
+@pytest.mark.parametrize("pad", [True, False])
+def test_pipeline_overlapping_tiles(tmp_path, stride, pad, tile_size):
+    # test that we can run pipeline with overlapping tiles
+    # pass-thru pipeline
+    pipe = Pipeline()
+    wsi = SlideData("tests/testdata/small_HE.svs")
+
+    wsi.run(
+        pipe, distributed=False, tile_size=tile_size, tile_stride=stride, tile_pad=pad
+    )
+
+    if pad:
+        tile_count = [dim // stride + 1 for dim in wsi.shape]
+    else:
+        tile_count = [(dim - tile_size) // stride + 1 for dim in wsi.shape]
+
+    # make sure that the h5 array is the appropriate shape
+    h5_arr_shape_expected = [count * tile_size for count in tile_count]
+    for expected, actual in zip(
+        h5_arr_shape_expected,
+        wsi.h5manager.h5["array"].shape[0 : len(h5_arr_shape_expected)],
+    ):
+        assert expected == actual
+
+    # make sure that getting tiles works as expected
+    # if overlapping tiles are not implemented correctly, this will fail because parts of the tile will
+    # get overwritten by subsequent overlapping tiles
+    assert np.array_equal(
+        wsi.tiles[(1000, 1000)].image,
+        wsi.slide.extract_region(location=(1000, 1000), size=tile_size),
+    )
