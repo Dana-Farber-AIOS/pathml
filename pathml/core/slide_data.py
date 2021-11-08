@@ -401,7 +401,10 @@ class SlideData:
                     ), "tile yielded from backend already has mask. slide_data.generate_tiles is trying to overwrite it"
 
                     tile_slices = [slice(i, i + di), slice(j, j + dj)]
-                    tile.masks = self.masks.slice(tile_slices)
+                    tile.masks = {
+                        key: self.masks[key][:][tuple(tile_slices)]
+                        for key in self.masks[str(tile.coords)].keys()
+                    }
 
             # add slide-level labels to each tile, if possible
             if self.labels is not None:

@@ -3,13 +3,13 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-import numpy as np
 import os
-from pathlib import Path
-from collections import OrderedDict
-import h5py
 import reprlib
+from collections import OrderedDict
+from pathlib import Path
 
+import h5py
+import numpy as np
 import pathml.core.h5managers
 
 
@@ -54,14 +54,11 @@ class Masks:
         rep = f"{len(self.h5manager.h5['masks'])} masks: {reprlib.repr(list(self.h5manager.h5['masks'].keys()))}"
         return rep
 
-    def __len__(self):
-        return len(self.h5manager.h5["masks"].keys())
+    def __getitem__(self, tile, item):
+        return self.h5manager.get_mask(tile, item)
 
-    def __getitem__(self, item):
-        return self.h5manager.get_mask(item)
-
-    def __setitem__(self, key, mask):
-        self.h5manager.update_mask(key, mask)
+    def __setitem__(self, tile, key, mask):
+        self.h5manager.update_mask(tile, key, mask)
 
     @property
     def keys(self):
@@ -76,23 +73,6 @@ class Masks:
             mask (np.ndarray): array of mask. Must contain elements of type int8
         """
         self.h5manager.add_mask(key, mask)
-
-    def slice(self, slicer):
-        """
-        Slice all masks in self.h5manager extending of numpy array slicing.
-
-        Args:
-            slices: list where each element is an object of type slice indicating
-                    how the dimension should be sliced
-        """
-        if not (
-            isinstance(slicer, list) and all([isinstance(a, slice) for a in slicer])
-        ):
-            raise KeyError(
-                f"slices must of of type list[slice] but is {type(slicer)} with elements {type(slicer[0])}"
-            )
-        sliced = {key: mask for key, mask in self.h5manager.slice_masks(slicer)}
-        return sliced
 
     def remove(self, key):
         """
