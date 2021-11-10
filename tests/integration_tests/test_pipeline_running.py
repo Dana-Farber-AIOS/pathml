@@ -19,6 +19,8 @@ from pathml.preprocessing import (
     TissueDetectionHE,
 )
 from pathml.ml import TileDataset
+from pathml.utils import pil_to_rgb
+from pathml.preprocessing.transforms import Transform
 
 
 # test HE pipelines with both DICOM and OpenSlide backends
@@ -141,13 +143,22 @@ def scan_hdf5(f, recursive=True, tab_step=2):
     return scan_node(f)
 
 
+class AddMean(Transform):
+    """Transform using global statistic for tile (average)"""
+
+    def F(self, arr):
+        return arr + np.mean(arr)
+
+    def apply(self, tile):
+        tile.image = self.F(tile.image)
+
+
 @pytest.mark.parametrize("tile_size", [500])
 @pytest.mark.parametrize("stride", [250, 500, 1000])
 @pytest.mark.parametrize("pad", [True, False])
 def test_pipeline_overlapping_tiles(tmp_path, stride, pad, tile_size):
-    # test that we can run pipeline with overlapping tiles
-    # pass-thru pipeline
-    pipe = Pipeline()
+    """test that we can run pipeline with overlapping tiles"""
+    pipe = Pipeline([AddMean()])
     wsi = SlideData("tests/testdata/small_HE.svs")
 
     wsi.run(
@@ -159,18 +170,23 @@ def test_pipeline_overlapping_tiles(tmp_path, stride, pad, tile_size):
     else:
         tile_count = [(dim - tile_size) // stride + 1 for dim in wsi.shape]
 
-    # make sure that the h5 array is the appropriate shape
-    h5_arr_shape_expected = [count * tile_size for count in tile_count]
-    for expected, actual in zip(
-        h5_arr_shape_expected,
-        wsi.h5manager.h5["array"].shape[0 : len(h5_arr_shape_expected)],
-    ):
-        assert expected == actual
+    # make sure that we have the correct number of tiles
+    assert len(wsi.tiles) == np.prod(tile_count)
+
+    path = tmp_path / "testhe.h5"
+    wsi.write(path)
+    readslidedata = SlideData(path)
+
+    assert len(readslidedata.tiles) == np.prod(tile_count)
 
     # make sure that getting tiles works as expected
     # if overlapping tiles are not implemented correctly, this will fail because parts of the tile will
-    # get overwritten by subsequent overlapping tiles
-    assert np.array_equal(
-        wsi.tiles[(1000, 1000)].image,
-        wsi.slide.extract_region(location=(1000, 1000), size=tile_size),
+    # get overwritten by subsequent overlapping tiles, and because we are using a transform which is different
+    # for each tile, we will be able to identify if this has happened
+    im = pil_to_rgb(
+        wsi.slide.slide.read_region(
+            location=(1000, 1000), level=0, size=(tile_size, tile_size)
+        )
     )
+    expected = AddMean().F(im)
+    assert np.array_equal(readslidedata.tiles[(1000, 1000)].image, expected)
