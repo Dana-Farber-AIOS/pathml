@@ -72,7 +72,7 @@ class h5pathManager:
             # initialize tile_shape with zeros
             tilesgroup.attrs["tile_shape"] = b"(0, 0)"
             # initialize stride with 0
-            tilesgroup.attrs["tile_stride"] = 0
+            tilesgroup.attrs["tile_stride"] = b"(0, 0)"
             # masks
             masksgroup = self.h5.create_group("masks")
             # counts

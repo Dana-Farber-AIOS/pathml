@@ -33,8 +33,3 @@ def test_run_pipeline_and_tile_dataset_and_reshape(slide_dataset):
     tile = slide_dataset[0].tiles[0]
     assert isinstance(tile, Tile)
     assert tile.image.shape == (50, 50, 3)
-
-    slide_dataset.reshape(shape=(25, 25, 3))
-    tile_after_reshape = slide_dataset[0].tiles[0]
-    assert isinstance(tile_after_reshape, Tile)
-    assert tile_after_reshape.image.shape == (25, 25, 3)
