@@ -26,7 +26,7 @@ class h5pathManager:
         path = tempfile.TemporaryFile()
         f = h5py.File(path, "w")
         self.h5 = f
-        # keep a reference to h5 tempfile so that it is never garbage collected
+        # keep a reference to the h5 tempfile so that it is never garbage collected
         self.h5reference = path
         # create temporary file for slidedata.counts
         self.countspath = tempfile.TemporaryDirectory()
@@ -52,25 +52,25 @@ class h5pathManager:
 
         else:
             assert slidedata, f"must pass slidedata object to create h5path"
+            # initialize h5path file hierarchy
             # fields
-            #    create group
             fieldsgroup = self.h5.create_group("fields")
+            # name, shape, labels
             fieldsgroup.attrs["name"] = slidedata.name
             fieldsgroup.attrs["shape"] = slidedata.slide.get_image_shape()
             labelsgroup = self.h5["fields"].create_group("labels")
             if slidedata.labels:
                 for key, label in slidedata.labels.items():
                     self.h5["fields/labels"].attrs[key] = label
+            # slidetype
             slidetypegroup = self.h5["fields"].create_group("slide_type")
             if slidedata.slide_type:
                 for key, val in slidedata.slide_type.asdict().items():
                     self.h5["fields/slide_type"].attrs[key] = val
             # tiles
             tilesgroup = self.h5.create_group("tiles")
-            # intitialize tile_shape with zeros
+            # initialize tile_shape with zeros
             tilesgroup.attrs["tile_shape"] = b"(0, 0)"
-            # array
-            self.h5.create_dataset("array", data=h5py.Empty("f"))
             # masks
             masksgroup = self.h5.create_group("masks")
             # counts
@@ -87,7 +87,7 @@ class h5pathManager:
 
     def add_tile(self, tile):
         """
-        Add tile to h5.
+        Add a tile to h5path.
 
         Args:
             tile(pathml.core.tile.Tile): Tile object
@@ -123,121 +123,46 @@ class h5pathManager:
             if tile.slide_type:
                 self.slide_type = tile.slide_type
 
-        if self.h5["array"].shape:
-            # extend array if coords+shape is larger than self.h5['tiles/array']
-            coords = tile.coords
-            coordslength = len(coords)
-            currentshape = self.h5["array"].shape[0:coordslength]
-            requiredshape = [
-                coord + tile_shape
-                for coord, tile_shape in zip(coords, tile.image.shape[0:coordslength])
-            ]
-            for dim, (current, required) in enumerate(zip(currentshape, requiredshape)):
-                if current < required:
-                    self.h5["array"].resize(required, axis=dim)
-
-            # add tile to self.h5["array"]
-            slicer = [
-                slice(coords[i], coords[i] + tile.image.shape[i])
-                for i in range(len(coords))
-            ]
-            self.h5["array"][tuple(slicer)] = tile.image
-
-        # initialize self.h5['array'] if it does not exist
-        # note that the first tile is not necessarily (0,0) so we init with zero padding
-        else:
-            coords = list(tile.coords)
-            shape = list(tile.image.shape)
-            for dim, coord in enumerate(coords):
-                shape[dim] += coord
-            maxshape = tuple([None] * len(shape))
-            del self.h5["array"]
-            self.h5.create_dataset(
-                "array",
-                shape=shape,
-                maxshape=maxshape,
-                data=np.zeros(shape),
-                chunks=True,
-                compression="gzip",
-                compression_opts=5,
-                shuffle=True,
-            )
-            # write tile.image
-            slicer = [
-                slice(coords[i], coords[i] + tile.image.shape[i])
-                for i in range(len(coords))
-            ]
-            self.h5["array"][tuple(slicer)] = tile.image
-            # save tile shape as attribute to enforce consistency
-            self.h5["tiles"].attrs["tile_shape"] = str(tile.image.shape).encode("utf-8")
-
-        if tile.masks:
-            # create self.h5["masks"]
-            if "masks" not in self.h5.keys():
-                masksgroup = self.h5.create_group("masks")
-
-            for mask in tile.masks:
-                # add masks to large mask array
-                if mask in self.h5["masks"].keys():
-                    # extend array
-                    coords = tile.coords
-
-                    coords = tile.coords
-                    coordslength = len(coords)
-                    currentshape = self.h5["masks"][mask].shape[0:coordslength]
-                    requiredshape = [
-                        coord + tile_shape
-                        for coord, tile_shape in zip(
-                            coords, tile.masks[mask].shape[0:coordslength]
-                        )
-                    ]
-                    for dim, (current, required) in enumerate(
-                        zip(currentshape, requiredshape)
-                    ):
-                        if current < required:
-                            self.h5["masks"][mask].resize(required, axis=dim)
-
-                    # add mask to mask array
-                    slicer = [
-                        slice(coords[i], coords[i] + tile.masks[mask].shape[i])
-                        for i in range(len(coords))
-                    ]
-                    self.h5["masks"][mask][tuple(slicer)] = tile.masks[mask]
-
-                else:
-                    # create mask array
-                    maskarray = tile.masks[mask][:]
-                    coords = list(tile.coords)
-                    coords = coords + [0] * len(maskarray.shape[len(coords) :])
-                    shape = [i + j for i, j in zip(maskarray.shape, coords)]
-                    maxshape = tuple([None] * len(shape))
-                    self.h5["masks"].create_dataset(
-                        str(mask),
-                        shape=shape,
-                        maxshape=maxshape,
-                        data=np.zeros(shape),
-                        chunks=True,
-                        compression="gzip",
-                        compression_opts=5,
-                        shuffle=True,
-                    )
-                    # now overwrite by mask
-                    slicer = [
-                        slice(coords[i], coords[i] + tile.image.shape[i])
-                        for i in range(len(coords))
-                    ]
-                    self.h5["masks"][mask][tuple(slicer)] = maskarray
-        # create group for tile
+        # create a group for tile and write tile
         if str(tile.coords) in self.h5["tiles"]:
             print(f"overwriting tile at {str(tile.coords)}")
             del self.h5["tiles"][str(tile.coords)]
-        self.h5["tiles"].create_group(str(tile.coords[:2]))
-        # add tile fields to tiles
+        self.h5["tiles"].create_group(str(tile.coords))
+        self.h5["tiles"][str(tile.coords)].create_dataset(
+            "array",
+            data=tile.image,
+            chunks=True,
+            compression="gzip",
+            compression_opts=5,
+            shuffle=True,
+            dtype="f16",
+        )
+
+        # save tile_shape as an attribute to enforce consistency
+        if "tile_shape" not in self.h5["tiles"].attrs or (
+            "tile_shape" in self.h5["tiles"].attrs
+            and self.h5["tiles"].attrs["tile_shape"] == b"(0, 0)"
+        ):
+            self.h5["tiles"].attrs["tile_shape"] = str(tile.image.shape).encode("utf-8")
+
+        if tile.masks:
+            # create a group to hold tile-level masks
+            if "masks" not in self.h5["tiles"][str(tile.coords)].keys():
+                masksgroup = self.h5["tiles"][str(tile.coords)].create_group("masks")
+
+            # add tile-level masks
+            for key, mask in tile.masks.items():
+                self.h5["tiles"][str(tile.coords)]["masks"].create_dataset(
+                    str(key), data=mask, dtype="f16",
+                )
+
+        # add coords
         self.h5["tiles"][str(tile.coords)].attrs["coords"] = (
             str(tile.coords) if tile.coords else 0
         )
+        # add name
         self.h5["tiles"][str(tile.coords)].attrs["name"] = (
-            str(tile.name) if tile.coords else 0
+            str(tile.name) if tile.name else 0
         )
         tilelabelsgroup = self.h5["tiles"][str(tile.coords)].create_group("labels")
         if tile.labels:
@@ -251,7 +176,8 @@ class h5pathManager:
                 self.counts.filename = os.path.join(
                     self.countspath.name + "/tmpfile.h5ad"
                 )
-            # cannot concatenate empty AnnData object so set to tile.counts then back in temp file on disk
+            # cannot concatenate empty AnnData object so set to tile.counts then set filename
+            # so the h5ad object is backed by tempfile
             else:
                 self.counts = tile.counts
                 self.counts.filename = str(self.countspath.name) + "/tmpfile.h5ad"
