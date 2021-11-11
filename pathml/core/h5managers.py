@@ -237,138 +237,6 @@ class h5pathManager:
             slide_type=self.slide_type,
         )
 
-    def slice_tiles(self, slicer):
-        """
-        Generator slicing all tiles, extending numpy array slicing.
-
-        Args:
-            slicer: List where each element is an object of type slice https://docs.python.org/3/c-api/slice.html
-                    indicating how the corresponding dimension should be sliced. The list length should correspond to the
-                    dimension of the tile. For 2D H&E images, pass a length 2 list of slice objects.
-
-        Yields:
-            key(str): tile coordinates
-            val(pathml.core.tile.Tile): tile
-        """
-        for key in self.h5["tiles"].keys():
-            yield self.get_tile(key, slicer=slicer)
-
-    def reshape_tiles(self, shape, centercrop=False):
-        """
-        Resample tiles to shape.
-        If shape does not evenly divide current tile shape, this method deletes tile labels and names.
-        This method not mutate h5['tiles']['array'].
-
-        Args:
-            shape(tuple): new shape of tile.
-            centercrop(bool): if shape does not evenly divide slide shape, take center crop
-        """
-        arrayshape = list(self.h5["array"].shape)
-        # impute missing dimensions of shape from f['tiles/array'].shape
-        if len(arrayshape) > len(shape):
-            shape = list(shape)
-            shape = shape + arrayshape[len(shape) :]
-        divisors = [range(int(n // d)) for n, d in zip(arrayshape, shape)]
-        coordlist = list(itertools.product(*divisors))
-        # multiply each element of coordlist by shape
-        coordlist = [[int(c * s) for c, s in zip(coord, shape)] for coord in coordlist]
-        if centercrop:
-            offset = [int(n % d / 2) for n, d in zip(arrayshape, shape)]
-            offsetcoordlist = []
-            for item1, item2 in zip(offset, coordlist):
-                offsetcoordlist.append(tuple([int(item1 + x) for x in item2]))
-            coordlist = offsetcoordlist
-        newtilesdict = OrderedDict()
-        # if shape evenly divides arrayshape transfer labels
-        remainders = [int(n % d) for n, d in zip(arrayshape, shape)]
-        offsetstooriginal = [
-            [
-                int(n % d)
-                for n, d in zip(coord, eval(self.h5["tiles"].attrs["tile_shape"]))
-            ]
-            for coord in coordlist
-        ]
-        if all(x <= y for x, y in zip(shape, arrayshape)) and all(
-            rem == 0 for rem in remainders
-        ):
-            # transfer labels
-            for coord, off in zip(coordlist, offsetstooriginal):
-                # find coordinate from which to transfer labels
-                oldtilecoordlen = len(eval(list(self.h5["tiles"].keys())[0]))
-                oldtilecoord = [int(x - y) for x, y in zip(coord, off)]
-                oldtilecoord = oldtilecoord[:oldtilecoordlen]
-                labels = {
-                    key: val
-                    for key, val in self.h5["tiles"][str(tuple(oldtilecoord))][
-                        "labels"
-                    ].attrs.items()
-                }
-                name = self.h5["tiles"][str(tuple(oldtilecoord))].attrs["name"]
-                newtilesdict[str(tuple(coord[:2]))] = {
-                    "name": None,
-                    "labels": labels,
-                    "coords": str(tuple(coord)),
-                    "slidetype": None,
-                }
-            del self.h5["tiles"]
-            self.h5.create_group("tiles")
-            for tile in newtilesdict:
-                self.h5["tiles"].create_group(str(tile))
-                self.h5["tiles"][str(tile)].attrs["coords"] = newtilesdict[str(tile)][
-                    "coords"
-                ]
-                self.h5["tiles"][str(tile)].attrs["name"] = str(
-                    newtilesdict[str(tile)]["name"]
-                )
-                tilelabelsgroup = self.h5["tiles"][str(tile)].create_group("labels")
-                for key, val in newtilesdict[str(tile)]["labels"].items():
-                    self.h5["tiles"][str(tile)]["labels"].attrs[key] = val
-
-        else:
-            # TODO: fix tests (monkeypatch) to implement the check above (the y/n hangs)
-            """
-            choice = None
-            yes = {'yes', 'y'}
-            no = {'no', 'n'}
-            while choice not in yes or no:
-                choice = input('Reshaping to a shape that does not evenly divide old tile shape deletes labels and names. Would you like to continue? [y/n]\n').lower()
-                if choice in yes:
-                    for coord in coordlist:
-                        newtilesdict[str(tuple(coord))] = {
-                                'name': None,
-                                'labels': None,
-                                'coords': str(tuple(coord)),
-                                'slidetype': None
-                        }
-                elif choice in no:
-                    raise Exception(f"User cancellation.")
-                else:
-                    sys.stdout.write("Please respond with 'y' or 'n'")
-            """
-            for coord in coordlist:
-                newtilesdict[str(tuple(coord)[:2])] = {
-                    "name": None,
-                    "labels": None,
-                    "coords": str(tuple(coord)),
-                    "slidetype": None,
-                }
-            del self.h5["tiles"]
-            self.h5.create_group("tiles")
-            for tile in newtilesdict:
-                self.h5["tiles"].create_group(str(tile))
-                self.h5["tiles"][str(tile)].attrs["coords"] = newtilesdict[str(tile)][
-                    "coords"
-                ]
-                self.h5["tiles"][str(tile)].attrs["name"] = str(
-                    newtilesdict[str(tile)]["name"]
-                )
-                tilelabelsgroup = self.h5["tiles"][str(tile)].create_group("labels")
-                if newtilesdict[str(tile)]["labels"]:
-                    for key, val in newtilesdict[str(tile)]["labels"].items():
-                        self.h5["tiles"][str(tile.coords)]["labels"].attrs[key] = val
-        self.tiles = newtilesdict
-        self.h5["tiles"].attrs["tile_shape"] = str(shape).encode("utf-8")
-
     def remove_tile(self, key):
         """
         Remove tile from self.h5 by key.
@@ -382,9 +250,10 @@ class h5pathManager:
     def add_mask(self, key, mask):
         """
         Add mask to h5.
+        This manages **slide-level masks**.
 
         Args:
-            key(str): key labeling mask
+            key(str): mask key
             mask(np.ndarray): mask array
         """
         if not isinstance(mask, np.ndarray):
