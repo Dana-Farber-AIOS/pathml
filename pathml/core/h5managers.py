@@ -182,61 +182,6 @@ class h5pathManager:
                 self.counts = tile.counts
                 self.counts.filename = str(self.countspath.name) + "/tmpfile.h5ad"
 
-    def update_tile(self, key, val, target):
-        """
-        Update a tile.
-
-        Args:
-            key(str): key of tile to be updated
-            val(str): element that will replace target at key
-            target(str): element of {all, image, labels} indicating field to be updated
-        """
-        key = str(key)
-        if key not in self.h5["tiles"].keys():
-            raise ValueError(f"key {key} does not exist. Use add.")
-
-        if target == "all":
-            assert eval(self.h5["tiles"].attrs["tile_shape"]) == val.image.shape, (
-                f"Cannot update a tile of shape {self.h5['tiles'].attrs['tile_shape']} with a tile"
-                f"of shape {val.image.shape}. Shapes must match."
-            )
-            # overwrite
-            self.remove_tile(key)
-            self.add_tile(val)
-            print(f"tile at {key} overwritten")
-
-        elif target == "image":
-            assert isinstance(
-                val, np.ndarray
-            ), f"when replacing tile image must pass np.ndarray"
-            assert eval(self.h5["tiles"].attrs["tile_shape"]) == val.shape, (
-                f"Cannot update a tile of shape {self.h5['tiles'].attrs['tile_shape']} with a tile"
-                f"of shape {val.shape}. Shapes must match."
-            )
-            coords = list(eval(self.h5["tiles"][key].attrs["coords"]))
-            slicer = [
-                slice(
-                    coords[i], coords[i] + eval(self.h5["tiles"].attrs["tile_shape"])[i]
-                )
-                for i in range(len(coords))
-            ]
-            self.h5["array"][tuple(slicer)] = val
-            print(f"array at {key} overwritten")
-
-        elif target == "masks":
-            raise NotImplementedError
-
-        elif target == "labels":
-            assert isinstance(
-                val, dict
-            ), f"when replacing labels must pass collections.OrderedDict of labels"
-            for k, v in val.items():
-                self.h5["tiles"][key]["labels"].attrs[k] = v
-            print(f"label at {key} overwritten")
-
-        else:
-            raise KeyError("target must be all, image, masks, or labels")
-
     def get_tile(self, item, slicer=None):
         """
         Retrieve tile from h5manager by key or index.
