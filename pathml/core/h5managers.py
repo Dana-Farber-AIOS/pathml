@@ -182,7 +182,7 @@ class h5pathManager:
                 self.counts = tile.counts
                 self.counts.filename = str(self.countspath.name) + "/tmpfile.h5ad"
 
-    def get_tile(self, item, slicer=None):
+    def get_tile(self, item):
         """
         Retrieve tile from h5manager by key or index.
 
@@ -209,38 +209,16 @@ class h5pathManager:
                 f"invalid item type: {type(item)}. must getitem by coord (type tuple[int]),"
                 f"index (type int), or name (type str)"
             )
-        # impute missing dimensions from self.h5["tiles"].attrs["tile_shape"]
-        coords = list(eval(self.h5["tiles"][item].attrs["coords"]))
-        tile_shape = eval(self.h5["tiles"].attrs["tile_shape"])
-        if len(tile_shape) > len(coords):
-            shape = list(tile_shape)
-            coords = coords + [0] * len(shape[len(coords) - 1 :])
-        tiler = [
-            slice(coords[i], coords[i] + tile_shape[i]) for i in range(len(tile_shape))
-        ]
-        tile = self.h5["array"][tuple(tiler)][:]
+            tile = self.h5["tiles"][item]["array"][:]
 
         # add masks to tile if there are masks
-        if "masks" in self.h5.keys():
-            try:
-                masks = {
-                    mask: self.h5["masks"][mask][tuple(tiler)][:]
-                    for mask in self.h5["masks"]
-                }
-            except (ValueError, TypeError):
-                # mask may have fewer dimensions, e.g. a 2-d mask for a 3-d image.
-                masks = {}
-                for mask in self.h5["masks"]:
-                    n_dim_mask = self.h5["masks"][mask].ndim
-                    mask_tiler = tuple(tiler)[0:n_dim_mask]
-                    masks[mask] = self.h5["masks"][mask][mask_tiler][:]
+        if "masks" in self.h5["tiles"][item].keys():
+            masks = {
+                mask: self.h5["tiles"][item]["masks"][mask][:]
+                for mask in self.h5["tiles"][item]["masks"]
+            }
         else:
             masks = None
-
-        if slicer:
-            tile = tile[slicer]
-            if masks is not None:
-                masks = {key: masks[key][slicer] for key in masks}
 
         labels = {
             key: val for key, val in self.h5["tiles"][item]["labels"].attrs.items()
