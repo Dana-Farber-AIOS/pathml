@@ -3,9 +3,11 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-from torch.utils.data import ConcatDataset
-from pathlib import Path
 import reprlib
+from pathlib import Path
+
+import dask.distributed
+from torch.utils.data import ConcatDataset
 
 
 class SlideDataset:
@@ -36,17 +38,23 @@ class SlideDataset:
         out += ")"
         return out
 
-    def run(self, pipeline, **kwargs):
+    def run(self, pipeline, client=None, distributed=True, **kwargs):
         """
         Runs a preprocessing pipeline on all slides in the dataset
 
         Args:
             pipeline (pathml.preprocessing.pipeline.Pipeline): Preprocessing pipeline.
+            client: dask.distributed client
+            distributed (bool): Whether to distribute model using client. Defaults to True.
             kwargs (dict): keyword arguments passed to :meth:`~pathml.core.slide_data.SlideData.run` for each slide
         """
         # run preprocessing
+        if client is None and distributed:
+            client = dask.distributed.Client()
         for slide in self.slides:
-            slide.run(pipeline, **kwargs)
+            slide.run(
+                pipeline=pipeline, client=client, distributed=distributed, **kwargs
+            )
 
     def reshape(self, shape, centercrop=False):
         for slide in self.slides:
