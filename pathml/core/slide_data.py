@@ -287,6 +287,10 @@ class SlideData:
                 for tile_key in self.tiles.keys:
                     self.tiles.remove(tile_key)
 
+        # TODO: be careful here since we are modifying h5 outside of h5manager
+        # look into whether we can push this into h5manager
+        self.h5manager.h5["tiles"].attrs["tile_stride"] = tile_stride
+
         if distributed:
             if client is None:
                 client = dask.distributed.Client()
