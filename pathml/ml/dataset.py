@@ -3,9 +3,9 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
+import h5py
 import numpy as np
 import torch
-import h5py
 
 
 class TileDataset(torch.utils.data.Dataset):
@@ -51,37 +51,21 @@ class TileDataset(torch.utils.data.Dataset):
             self.h5 = h5py.File(self.file_path, "r")
 
         k = self.tile_keys[ix]
-        coords = list(eval(k))
         ### this part copied from h5manager.get_tile()
-
-        # impute missing dimensions from self.h5["tiles"].attrs["tile_shape"]
-        if len(self.tile_shape) > len(coords):
-            shape = list(self.tile_shape)
-            coords = coords + [0] * len(shape[len(coords) - 1 :])
-        tiler = [
-            slice(coords[i], coords[i] + self.tile_shape[i])
-            for i in range(len(self.tile_shape))
-        ]
-        tile_image = self.h5["array"][tuple(tiler)][:]
+        tile_image = self.h5["tiles"][str(k)]["array"][:]
 
         # get corresponding masks if there are masks
-        if "masks" in self.h5.keys():
-            try:
-                masks = {
-                    mask: self.h5["masks"][mask][tuple(tiler)][:]
-                    for mask in self.h5["masks"]
-                }
-            except (ValueError, TypeError):
-                # mask may have fewer dimensions, e.g. a 2-d mask for a 3-d image.
-                masks = {}
-                for mask in self.h5["masks"]:
-                    n_dim_mask = self.h5["masks"][mask].ndim
-                    mask_tiler = tuple(tiler)[0:n_dim_mask]
-                    masks[mask] = self.h5["masks"][mask][mask_tiler][:]
+        if "masks" in self.h5["tiles"][str(k)].keys():
+            masks = {
+                mask: self.h5["tiles"][str(k)]["masks"][mask][:]
+                for mask in self.h5["tiles"][str(k)]["masks"]
+            }
         else:
             masks = None
 
-        labels = {key: val for key, val in self.h5["tiles"][k]["labels"].attrs.items()}
+        labels = {
+            key: val for key, val in self.h5["tiles"][str(k)]["labels"].attrs.items()
+        }
 
         # swap axes from HWC to CHW for pytorch
         im = tile_image.transpose(2, 0, 1)
