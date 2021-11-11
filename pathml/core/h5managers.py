@@ -40,7 +40,7 @@ class h5pathManager:
             ), f"h5path must conform to .h5path standard, see documentation"
             # copy h5path into self.h5
             for ds in h5path.keys():
-                if ds in ["fields", "array", "masks", "tiles"]:
+                if ds in ["fields", "masks", "tiles"]:
                     h5path.copy(ds, self.h5)
                 if ds in ["counts"]:
                     h5path.copy(ds, self.h5)
@@ -71,6 +71,8 @@ class h5pathManager:
             tilesgroup = self.h5.create_group("tiles")
             # initialize tile_shape with zeros
             tilesgroup.attrs["tile_shape"] = b"(0, 0)"
+            # initialize stride with 0
+            tilesgroup.attrs["tile_stride"] = b"(0, 0)"
             # masks
             masksgroup = self.h5.create_group("masks")
             # counts
@@ -153,7 +155,9 @@ class h5pathManager:
             # add tile-level masks
             for key, mask in tile.masks.items():
                 self.h5["tiles"][str(tile.coords)]["masks"].create_dataset(
-                    str(key), data=mask, dtype="f16",
+                    str(key),
+                    data=mask,
+                    dtype="f16",
                 )
 
         # add coords
@@ -209,7 +213,7 @@ class h5pathManager:
                 f"invalid item type: {type(item)}. must getitem by coord (type tuple[int]),"
                 f"index (type int), or name (type str)"
             )
-            tile = self.h5["tiles"][item]["array"][:]
+        tile = self.h5["tiles"][item]["array"][:]
 
         # add masks to tile if there are masks
         if "masks" in self.h5["tiles"][item].keys():
@@ -224,7 +228,7 @@ class h5pathManager:
             key: val for key, val in self.h5["tiles"][item]["labels"].attrs.items()
         }
         name = self.h5["tiles"][item].attrs["name"]
-        if name == "None":
+        if name == "None" or name == 0:
             name = None
         coords = eval(self.h5["tiles"][item].attrs["coords"])
 
@@ -356,8 +360,9 @@ def check_valid_h5path_format(h5path):
     Returns:
         bool: True if the input matches expected format
     """
-    assert set(h5path.keys()) == {"fields", "array", "masks", "counts", "tiles"}
+    assert set(h5path.keys()) == {"fields", "masks", "counts", "tiles"}
     assert set(h5path["fields"].keys()) == {"labels", "slide_type"}
     assert set(h5path["fields"].attrs.keys()) == {"name", "shape"}
+    assert set(h5path["tiles"].attrs.keys()) == {"tile_shape", "tile_stride"}
     # slide_type attributes are not enforced
     return True
