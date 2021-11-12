@@ -33,8 +33,8 @@ if __name__ == "__main__":
         ]
     )
 
-    cluster = LocalCluster(n_workers=10)
+    cluster = LocalCluster(n_workers=50)
     client = Client(cluster)
 
     # run cProfile for parallel pipeline
-    cProfile.run("wsi.run(pipeline, distributed=True, client=client)")
+    cProfile.run("wsi.run(pipeline, distributed=True, tile_size=256, client=client)")
