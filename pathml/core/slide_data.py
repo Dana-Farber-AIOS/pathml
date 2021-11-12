@@ -251,6 +251,7 @@ class SlideData:
         level=0,
         tile_pad=False,
         overwrite_existing_tiles=False,
+        write_dir=None,
     ):
         """
         Run a preprocessing pipeline on SlideData.
@@ -269,6 +270,9 @@ class SlideData:
                 Defaults to ``False``.
             overwrite_existing_tiles (bool): Whether to overwrite existing tiles. If ``False``, running a pipeline will
                 fail if ``tiles is not None``. Defaults to ``False``.
+            write_dir (str): Path to directory to write the processed slide to. The processed SlideData object
+                will be written to the directory immediately after the pipeline has completed running.
+                The filepath will default to "<write_dir>/<slide.name>.h5path. Defaults to ``None``.
         """
         assert isinstance(
             pipeline, pathml.preprocessing.pipeline.Pipeline
@@ -319,6 +323,9 @@ class SlideData:
                     tile.slide_type = self.slide_type
                 pipeline.apply(tile)
                 self.tiles.add(tile)
+
+        if write_dir:
+            self.write(Path(write_dir) / f"{self.name}.h5path")
 
     @property
     def shape(self):

@@ -3,7 +3,7 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-from dask.distributed import Client
+import pytest
 from pathlib import Path
 
 from pathml.core import SlideData, Tile
@@ -38,3 +38,22 @@ def test_run_pipeline_and_tile_dataset_and_reshape(slide_dataset):
     tile_after_reshape = slide_dataset[0].tiles[0]
     assert isinstance(tile_after_reshape, Tile)
     assert tile_after_reshape.image.shape == (25, 25, 3)
+
+
+@pytest.mark.parametrize("write", [True, False])
+def test_run_and_write_dataset(tmpdir, write, slide_dataset):
+    pipe = Pipeline()
+
+    if write:
+        write_dir_arg = tmpdir
+    else:
+        write_dir_arg = None
+
+    slide_dataset.run(pipe, tile_size=500, distributed=False, write_dir=write_dir_arg)
+
+    for s in slide_dataset:
+        written_path = tmpdir / f"{s.name}.h5path"
+        if write:
+            assert written_path.isfile()
+        else:
+            assert not written_path.isfile()
