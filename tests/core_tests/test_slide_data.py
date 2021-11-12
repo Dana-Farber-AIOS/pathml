@@ -170,3 +170,23 @@ def compare_dict_ignore_order(d1, d2):
         if d1[k1] != d2[k2]:
             return False
     return True
+
+
+@pytest.mark.parametrize("write", [True, False])
+def test_run_and_write(tmpdir, write):
+    wsi = HESlide("tests/testdata/small_HE.svs", backend="openslide", name="testwrite")
+    pipe = Pipeline()
+
+    if write:
+        write_dir_arg = tmpdir
+    else:
+        write_dir_arg = None
+
+    wsi.run(pipe, tile_size=500, distributed=False, write_dir=write_dir_arg)
+
+    written_path = tmpdir / "testwrite.h5path"
+
+    if write:
+        assert written_path.isfile()
+    else:
+        assert not written_path.isfile()
