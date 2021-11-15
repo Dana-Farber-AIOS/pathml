@@ -4,8 +4,9 @@ License: GNU GPL 2.0
 """
 
 import numpy as np
+import pytest
 
-from pathml.core import HESlide
+from pathml.core import SlideData
 from pathml.preprocessing import Pipeline
 from pathml.preprocessing.transforms import Transform
 from pathml.ml import TileDataset
@@ -19,7 +20,15 @@ class TestingTransform(Transform):
         tile.masks["test"] = np.ones(tile.image.shape[0:2]) * 5
 
 
-def test_dataset(tmp_path):
+@pytest.mark.parametrize(
+    "im_path",
+    [
+        "tests/testdata/small_HE.svs",
+        "tests/testdata/small_vectra.qptiff",
+        "tests/testdata/small_dicom.dcm",
+    ],
+)
+def test_dataset(tmp_path, im_path):
     # first create and run pipeline, and save h5path file
     labs = {
         "test_string_label": "testlabel",
@@ -28,10 +37,10 @@ def test_dataset(tmp_path):
         "test_float_label": 3.0,
         "test_bool_label": True,
     }
-    wsi = HESlide("tests/testdata/small_HE.svs", labels=labs)
+    wsi = SlideData(im_path, labels=labs)
     pipeline = Pipeline([TestingTransform()])
     wsi.run(pipeline, distributed=False, tile_size=500)
-    save_path = str(tmp_path) + str(np.round(np.random.rand(), 8)) + "HE_slide.h5"
+    save_path = str(tmp_path) + str(np.round(np.random.rand(), 8)) + "slide.h5"
     wsi.write(path=save_path)
     # load dataset from h5path, and compare to what we expect
     dataset = TileDataset(save_path)
@@ -44,7 +53,13 @@ def test_dataset(tmp_path):
             assert np.array_equal(v, labs[k])
         else:
             assert v == labs[k]
-    assert np.array_equal(im, wsi.tiles[0].image.transpose(2, 0, 1))
+
+    if wsi.name == "small_vectra":
+        # 5-dim images (XYZCT converted to TCZXY for batching)
+        assert np.array_equal(im, wsi.tiles[0].image.transpose(4, 3, 2, 1, 0))
+    else:
+        assert np.array_equal(im, wsi.tiles[0].image.transpose(2, 0, 1))
+
     assert list(lab_tile.keys()) == ["testing_coords_label"]
     assert np.array_equal(
         lab_tile["testing_coords_label"], np.array(wsi.tiles[0].coords)
