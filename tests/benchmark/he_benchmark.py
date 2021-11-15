@@ -42,4 +42,9 @@ if __name__ == "__main__":
     client = Client(cluster)
 
     # run cProfile for parallel pipeline
-    cProfile.run("wsi.run(pipeline, distributed=True, tile_size=256, client=client)")
+    cProfile.run(
+        "wsi.run(pipeline, distributed=True, tile_size=256, client=client)",
+        "benchmark_results",
+    )
+    p = pstats.Stats("benchmark_results")
+    p.strip_dirs().sort_stats(-1).print_stats()
