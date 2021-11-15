@@ -1,3 +1,8 @@
+"""
+Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
+License: GNU GPL 2.0
+"""
+
 # benchmark a simple H&E image pipeline with 10 workers on a local cluster
 
 import cProfile
@@ -33,7 +38,7 @@ if __name__ == "__main__":
         ]
     )
 
-    cluster = LocalCluster(n_workers=50)
+    cluster = LocalCluster(n_workers=10)
     client = Client(cluster)
 
     # run cProfile for parallel pipeline
