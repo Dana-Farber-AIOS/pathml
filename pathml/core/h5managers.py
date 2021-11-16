@@ -137,7 +137,7 @@ class h5pathManager:
             compression="gzip",
             compression_opts=5,
             shuffle=True,
-            dtype="f16",
+            dtype="float16",
         )
 
         # save tile_shape as an attribute to enforce consistency
@@ -157,7 +157,7 @@ class h5pathManager:
                 self.h5["tiles"][str(tile.coords)]["masks"].create_dataset(
                     str(key),
                     data=mask,
-                    dtype="f16",
+                    dtype="float16",
                 )
 
         # add coords
