@@ -68,7 +68,7 @@ def tilesnonconsecutive():
                 "test_int_label": 3,
                 "test_float_label": 3.0,
             }
-            image = np.random.random_sample(shape)
+            image = np.random.randint(low=0, high=255, size=shape, dtype=np.uint8)
             tile = Tile(
                 image=image,
                 name=name,
@@ -88,7 +88,7 @@ def tilesnonconsecutive():
 def test_init(tiles, tilesnonconsecutive, incorrect_input):
     # init from dict
     slidedata = HESlide("tests/testdata/small_HE.svs", tiles=tiles)
-    assert (slidedata.tiles[0].image == tiles[0].image).all()
+    assert (slidedata.tiles[0].image == tiles[0].image.astype(np.float16)).all()
     # init len
     assert len(slidedata.tiles) == 4
     # incorrect input
