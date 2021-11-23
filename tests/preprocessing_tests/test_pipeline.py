@@ -74,7 +74,8 @@ def test_pipeline_mif(tileVectra):
     """
     Run MIF pipeline
     """
-    SegmentMIF = pytest.importorskip("pathml.preprocessing.transforms.SegmentMIF")
+    preprocessing = pytest.importorskip("pathml.preprocessing")
+    SegmentMIF = preprocessing.transforms.SegmentMIF
     orig_tile = copy.copy(tileVectra)
     pipe = Pipeline(
         [
