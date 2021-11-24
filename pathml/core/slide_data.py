@@ -246,7 +246,7 @@ class SlideData:
         pipeline,
         distributed=True,
         client=None,
-        tile_size=3000,
+        tile_size=256,
         tile_stride=None,
         level=0,
         tile_pad=False,
@@ -261,7 +261,7 @@ class SlideData:
             pipeline (pathml.preprocessing.pipeline.Pipeline): Preprocessing pipeline.
             distributed (bool): Whether to distribute model using client. Defaults to True.
             client: dask.distributed client
-            tile_size (int, optional): Size of each tile. Defaults to 3000px
+            tile_size (int, optional): Size of each tile. Defaults to 256px
             tile_stride (int, optional): Stride between tiles. If ``None``, uses ``tile_stride = tile_size``
                 for non-overlapping tiles. Defaults to ``None``.
             level (int, optional): Level to extract tiles from. Defaults to ``None``.
@@ -351,7 +351,7 @@ class SlideData:
         else:
             return self.slide.get_image_shape()
 
-    def generate_tiles(self, shape=3000, stride=None, pad=False, **kwargs):
+    def generate_tiles(self, shape=256, stride=None, pad=False, **kwargs):
         """
         Generator over Tile objects containing regions of the image.
         Calls ``generate_tiles()`` method of the backend.
@@ -360,7 +360,7 @@ class SlideData:
 
         Args:
             shape (int or tuple(int)): Size of each tile. May be a tuple of (height, width) or a single integer,
-                in which case square tiles of that size are generated.
+                in which case square tiles of that size are generated. Defaults to 256px.
             stride (int): stride between chunks. If ``None``, uses ``stride = size`` for non-overlapping chunks.
                 Defaults to ``None``.
             pad (bool): How to handle tiles on the edges. If ``True``, these edge tiles will be zero-padded
@@ -537,6 +537,7 @@ pathmlext = {".h5", ".h5path"}
 openslideext = {
     ".svs",
     ".tif",
+    ".tiff",
     ".ndpi",
     ".vms",
     ".vmu",
