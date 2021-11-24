@@ -190,5 +190,5 @@ def test_pipeline_overlapping_tiles(tmp_path, stride, pad, tile_size):
             location=(1000, 1000), level=0, size=(tile_size, tile_size)
         )
     )
-    expected = AddMean().F(im)
-    assert np.array_equal(readslidedata.tiles[(1000, 1000)].image, expected)
+    expected = AddMean().F(im).astype(np.float16)
+    np.testing.assert_equal(readslidedata.tiles[(1000, 1000)].image, expected)
