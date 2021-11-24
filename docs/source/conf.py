@@ -21,7 +21,11 @@ project = 'PathML'
 copyright = '2021, Dana-Farber Cancer Institute and Weill Cornell Medicine'
 author = 'Jacob Rosenthal et al.'
 
-version = '1.0.3'
+about = {}
+with open('../../pathml/_version.py') as f:
+    exec(f.read(), about)
+version = about["__version__"]
+
 # The full version, including alpha/beta/rc tags
 release = version
 

@@ -3,9 +3,14 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+about = {}
+with open('pathml/_version.py') as f:
+    exec(f.read(), about)
+version = about["__version__"]
+
 setuptools.setup(
     name="pathml",
-    version="1.0.3",
+    version=version,
     author="Jacob Rosenthal, Ryan Carelli et al.",
     author_email="PathML@dfci.harvard.edu",
     description="Tools for computational pathology",
