@@ -85,6 +85,9 @@ class Tile:
                 f"All label values must be of type str or np.ndarray or a number (i.e. a subdtype of np.number) "
             )
 
+        assert (
+            name != "None" and name != 0
+        ), "Cannot use values of '0' or 'None' as tile names"
         assert name is None or isinstance(
             name, str
         ), f"name is of type {type(name)} but must be of type str or None"
