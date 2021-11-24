@@ -143,6 +143,7 @@ The slide-level masks are therefore not saved when calling :meth:`SlideData.writ
 
 We use ``float16`` as the data type for all Datasets.
 
+.. note:: Be aware that the ``h5path`` format specification may change between major versions
 
 Reading and Writing
 -------------------
