@@ -14,7 +14,7 @@ class TileDataset(torch.utils.data.Dataset):
 
     Each item is a tuple of (``tile_image``, ``tile_masks``, ``tile_labels``, ``slide_labels``) where:
 
-        - ``tile_image`` is a torch.Tensor of shape (n_channels, tile_height, tile_width)
+        - ``tile_image`` is a torch.Tensor of shape (C, H, W) or (T, Z, C, H, W)
         - ``tile_masks`` is a torch.Tensor of shape (n_masks, tile_height, tile_width)
         - ``tile_labels`` is a dict
         - ``slide_labels`` is a dict
@@ -83,8 +83,17 @@ class TileDataset(torch.utils.data.Dataset):
 
         labels = {key: val for key, val in self.h5["tiles"][k]["labels"].attrs.items()}
 
-        # swap axes from HWC to CHW for pytorch
-        im = tile_image.transpose(2, 0, 1)
+        if tile_image.ndim == 3:
+            # swap axes from HWC to CHW for pytorch
+            im = tile_image.transpose(2, 0, 1)
+        elif tile_image.ndim == 5:
+            # in this case, we assume that we have XYZCT channel order (OME-TIFF)
+            # so we swap axes to TCZYX for batching
+            im = tile_image.transpose(4, 3, 2, 1, 0)
+        else:
+            raise NotImplementedError(
+                f"tile image has shape {tile_image.shape}. Expecting an image with 3 dims (HWC) or 5 dims (XYZCT)"
+            )
 
         masks = np.stack(list(masks.values()), axis=0) if masks else None
 
