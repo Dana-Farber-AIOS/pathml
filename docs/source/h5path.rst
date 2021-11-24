@@ -17,7 +17,7 @@ must have sufficient storage. Performance will benefit from storage with fast re
 How it Works
 ------------
 
-Each :class:`~pathml.core.slide_data.SlideData` object is backed by an ``.h5path`` file on disk.
+Each :class:`~pathml.core.SlideData` object is backed by an ``.h5path`` file on disk.
 All interaction with the ``.h5path`` file is handled automatically by the :class:`~pathml.core.h5managers.h5pathManager`.
 For example, when a user calls ``slidedata.tiles[tile_key]``, the :class:`~pathml.core.h5managers.h5pathManager` will
 retrieve the tile from disk and return it, without the user needing to worry about accessing the HDF5 file themself.
@@ -67,8 +67,8 @@ HDF5 format consists of 3 types of elements:
 
    import h5py
    root = h5py.File('path/to/file.h5path', 'r')
-   im = root['array'][...]
-   im_slice = root['array'][0:100, 0:100, :]
+   im = root['tiles']['(0, 0)']['array'][...]
+   im_slice = root['tiles']['(0, 0)']['array'][0:100, 0:100, :]
 
 ``Attributes`` are stored in a ``.attrs`` object which can be queried like a dictionary:
 
@@ -81,15 +81,7 @@ HDF5 format consists of 3 types of elements:
 ``.h5path`` File Format
 -----------------------
 
-**h5path** utilizes a self-describing hierarchical file system similar to :class:`~pathml.core.slide_data`.
-
-The full-resolution whole-slide image is stored in the ``array`` Dataset.
-
-Whole-slide masks are stored in the ``masks/`` Group. All masks are enforced to be the same shape as the image array.
-
-Tile metadata is stored in the ``tiles/`` Group, but tile-level images and masks are not stored separately.
-Instead, to retrieve an individual tile, the coordinates and tile_shape attributes are used to slice the
-corresponding region from the whole-slide image and masks.
+**h5path** utilizes a self-describing hierarchical file system similar to :class:`~pathml.core.SlideData`.
 
 Here we examine the **h5path** file format in detail:
 
@@ -109,7 +101,6 @@ Here we examine the **h5path** file format in detail:
     │       ├── rgb                 (Attribute, bool)
     │       ├── volumetric          (Attribute, bool)
     │       └── time_series         (Attribute, bool)
-    ├── array                       (Dataset)
     ├── masks/                      (Group)
     │   ├── mask1                   (Dataset, array)
     │   ├── mask2                   (Dataset, array)
@@ -118,7 +109,13 @@ Here we examine the **h5path** file format in detail:
     │   └── `.h5ad` format
     └── tiles/                      (Group)
         ├── tile_shape              (Attribute, tuple)
+        ├── tile_stride             (Attribute, tuple)
         ├── tile_key1/              (Group)
+        │   ├── array               (Dataset, array)
+        │   ├── masks/              (Group)
+        │   │   ├── mask1           (Dataset, array)
+        │   │   ├── mask2           (Dataset, array)
+        │   │   └── etc...
         │   ├── coords              (Attribute, tuple)
         │   ├── name                (Attribute, str)
         │   └── labels/             (Group)
@@ -130,10 +127,28 @@ Here we examine the **h5path** file format in detail:
         └── etc...
 
 
+Slide-level metadata is stored in the ``fields/`` group.
+
+Slide-level counts matrix metadata is stored in the ``counts/`` group.
+
+The ``tiles/`` group stores tile-level data. Each tile occupies its own group, and tile coordinates are used as
+keys for indexing tiles within the ``tiles/`` group. Within each tile's group, the ``array`` dataset contains the
+tile image, the ``masks/`` group contains tile-level masks, and other metadata including name, labels, and coords
+are stored as attributes. Slide-level metadata about tiling, including tile shape and stride, are stored as attributes
+in the ``tiles/`` group.
+
+Whole-slide masks are stored in the ``masks/`` Group. All masks are enforced to be the same shape as the image array.
+However, when running a pipeline, these masks are moved to the tile-level and stored within the tile groups.
+The slide-level masks are therefore not saved when calling :meth:`SlideData.write() <pathml.core.SlideData.write>`.
+
+We use ``float16`` as the data type for all Datasets.
+
+.. note:: Be aware that the ``h5path`` format specification may change between major versions
+
 Reading and Writing
 -------------------
 
-:class:`~pathml.core.slide_data.SlideData` objects are easily written to **h5path** format
-by calling :meth:`SlideData.write() <pathml.core.slide_data.SlideData.write>`.
-All files with ``.h5`` or ``.h5path`` extensions are loaded to :class:`~pathml.core.slide_data.SlideData` objects
+:class:`~pathml.core.SlideData` objects are easily written to **h5path** format
+by calling :meth:`SlideData.write() <pathml.core.SlideData.write>`.
+All files with ``.h5`` or ``.h5path`` extensions are loaded to :class:`~pathml.core.SlideData` objects
 automatically.

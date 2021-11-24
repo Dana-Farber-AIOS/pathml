@@ -15,6 +15,9 @@ A toolkit for computational pathology and machine learning.
 
 **Please cite [our paper](https://www.biorxiv.org/content/10.1101/2021.10.21.465212)**
 
+:construction: the `dev` branch is under active development, with experimental features, bug fixes, and refactors that may happen at any time! 
+Stable versions are available as tagged commits on the `master` branch, or as versioned releases on PyPI
+
 # Installation
 
 There are several ways to install `PathML`:
