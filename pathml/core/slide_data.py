@@ -301,9 +301,12 @@ class SlideData:
 
         self.h5manager.h5["tiles"].attrs["tile_stride"] = tile_stride
 
+        shutdown_after = False
+
         if distributed:
             if client is None:
                 client = dask.distributed.Client()
+                shutdown_after = True
 
             # map pipeline application onto each tile
             processed_tile_futures = []
@@ -324,6 +327,9 @@ class SlideData:
                 processed_tile_futures, with_results=True
             ):
                 self.tiles.add(tile)
+
+            if shutdown_after:
+                client.shutdown()
 
         else:
             for tile in self.generate_tiles(
