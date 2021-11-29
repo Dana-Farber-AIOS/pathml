@@ -1,9 +1,6 @@
 name: Publish PathML distribution to PyPI and TestPyPI
 
 on:
-  push:
-    tags: ['v*']
-    branches: [master]
   release:
     types: [published]
 
