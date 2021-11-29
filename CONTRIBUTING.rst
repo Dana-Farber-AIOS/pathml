@@ -83,11 +83,15 @@ How to contribute code, documentation, etc.
 6. Commit your changes and submit a pull request referencing the corresponding issue
 7. Respond to discussion/feedback about the pull request, make changes as necessary
 
-Code Standards
---------------
+Versioning
+----------
+
+We use `semantic versioning`_. The version is tracked in ``pathml/_version.py`` and should be updated there as required.
+When new code is merged to the master branch on GitHub, the version should be incremented and the commit should
+be tagged in version format (e.g., "v1.0.0" for version 1.0.0).
 
 Code Quality
-^^^^^^^^^^^^
+------------
 
 We want PathML to be built on high-quality code. However, the idea of "code quality" is somewhat subjective.
 If the code works perfectly but cannot be read and understood by someone else, then it can't be maintained,
@@ -108,7 +112,7 @@ All code should be reviewed by someone else before merging.
 We use `Black`_ to enforce consistency of code style.
 
 Documentation Standards
-^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------
 
 All code should be documented, including docstrings for users AND inline comments for
 other developers whenever possible! Both are crucial for ensuring long-term usability and maintainability.
@@ -118,7 +122,7 @@ All documentation (including docstrings) is written in `reStructuredText`_ forma
 See this `docstring example`_ to get started.
 
 Testing Standards
-^^^^^^^^^^^^^^^^^^
+-----------------
 
 All code should be accompanied by tests, whenever possible, to ensure that everything is working as intended.
 
@@ -158,3 +162,4 @@ Thank you for helping make ``PathML`` better!
 .. _docstring example: https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
 .. _napoleon: https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html
 .. _Black: https://black.readthedocs.io/en/stable
+.. _semantic versioning: https://semver.org/
