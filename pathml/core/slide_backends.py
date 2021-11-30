@@ -96,6 +96,13 @@ class OpenSlideBackend(SlideBackend):
             assert (
                 level < self.slide.level_count
             ), f"input level {level} invalid for a slide with {self.slide.level_count} levels"
+
+        # openslide read_region() uses coords in the level 0 reference frame
+        # if we are reading tiles from a higher level, need to convert to level 0 frame by multiplying by scale factor
+        # see: https://github.com/Dana-Farber-AIOS/pathml/issues/240
+        coord_scale_factor = int(np.sqrt(self.slide.level_downsamples[level]))
+        location *= coord_scale_factor
+
         # openslide read_region expects (x, y) coords, so need to switch order for compatibility with pathml (i, j)
         i, j = location
         h, w = size
