@@ -66,6 +66,29 @@ def test_extract_region_openslide(example_slide_data, shape):
         assert tile.image.shape[0:2] == shape
 
 
+def test_extract_region_levels_openslide():
+    # testing bug when reading regions from levels above 0
+    # see: https://github.com/Dana-Farber-AIOS/pathml/issues/240
+    # this is caused because openslide.read_region expects coords in the level 0 reference coord system
+    # but in pathml, we use coords relative to each level
+    # so to convert, we need to stretch coords by the downsample factor to convert to level 0 system
+    #   before passing them to the openslide API
+    # this multilevel testing image is taken from the openslide test suite:
+    # https://github.com/openslide/openslide-python/blob/main/tests/boxes.tiff
+    wsi = OpenSlideBackend("tests/testdata/small_HE_levels2.tiff")
+    # at level zero, the tile at (100, 100) of size 100px is entirely blue, i.e. pixel values [0, 0, 255]
+    # so this should be true as well for the corresponding regions in lower levels
+    # level 0
+    im_level0 = wsi.extract_region(location=(100, 100), size=100, level=0)
+    assert np.array_equal(im_level0[:, :, 2], 255 * np.ones((100, 100)))
+    # level 1
+    im_level1 = wsi.extract_region(location=(50, 50), size=50, level=1)
+    assert np.array_equal(im_level1[:, :, 2], 255 * np.ones((50, 50)))
+    # level 2
+    im_level2 = wsi.extract_region(location=(25, 25), size=25, level=2)
+    assert np.array_equal(im_level2[:, :, 2], 255 * np.ones((25, 25)))
+
+
 # separate dicom tests because dicom frame requires 500x500 tiles while bioformats has dim <500
 @pytest.mark.parametrize("backend", [dicom_backend()])
 @pytest.mark.parametrize("location", [(0, 0), (500, 500)])
