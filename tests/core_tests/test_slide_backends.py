@@ -75,7 +75,7 @@ def test_extract_region_levels_openslide():
     #   before passing them to the openslide API
     # this multilevel testing image is taken from the openslide test suite:
     # https://github.com/openslide/openslide-python/blob/main/tests/boxes.tiff
-    wsi = OpenSlideBackend("tests/testdata/small_HE_levels2.tiff")
+    wsi = OpenSlideBackend("tests/testdata/small_HE_levels.tiff")
     # at level zero, the tile at (100, 100) of size 100px is entirely blue, i.e. pixel values [0, 0, 255]
     # so this should be true as well for the corresponding regions in lower levels
     # level 0
