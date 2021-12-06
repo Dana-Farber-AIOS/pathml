@@ -8,16 +8,11 @@
 #       For reference:
 #           https://docs.docker.com/develop/develop-images/build_enhancements/
 # This dockerfile creates an environment for using pathml
-FROM ubuntu:18.04
-
-ARG PYTHON_VERSION=3.8
-
-# use bash as default shell
-SHELL [ "/bin/bash", "--login", "-c" ]
+FROM python:3.8-slim
 
 # LABEL about the custom image
 LABEL maintainer="PathML@dfci.harvard.edu"
-LABEL description="This is custom Docker Image for running PathML."
+LABEL description="This is custom Docker Image for running PathML"
 
 # Disable Prompt During Packages Installation
 ARG DEBIAN_FRONTEND=noninteractive
@@ -25,59 +20,44 @@ ARG DEBIAN_FRONTEND=noninteractive
 #install packages on root
 USER root
 
-# Update Ubuntu Software repository
-RUN apt update
-
-#Path for java runtime
-ENV JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64/jre/"
-ARG JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64/jre/"
-
 # download and install external dependencies
-RUN apt-get install -y --no-install-recommends  openslide-tools \    
+# openjdk8 installed following instructions from:
+#   https://linuxize.com/post/install-java-on-debian-10/#installing-openjdk-8
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openslide-tools \
     g++ \     
     gcc \    
     libblas-dev \    
-    liblapack-dev \    
+    liblapack-dev \
+    apt-transport-https \
+    ca-certificates \
     wget \
-    curl \
-    openjdk-8-jre \    
-    openjdk-8-jdk \     
-    && rm -rf /var/lib/apt/lists/*
+    dirmngr \
+    gnupg \
+    python3-opencv \
+    libgl1 \
+    software-properties-common \
+    && wget -qO - https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public | apt-key add - \
+    && add-apt-repository --yes https://adoptopenjdk.jfrog.io/adoptopenjdk/deb/ \
+    && apt update \
+    && apt-get install -y adoptopenjdk-8-hotspot \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip3 install --upgrade pip
 
-# set up python and conda. based on PyTorch dockerfile:
-# https://github.com/pytorch/pytorch/blob/7342b654a1570a4685238f8699d2558040a39ece/Dockerfile#L29-L36
-ENV CONDA_DIR /opt/conda
-RUN curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
-    chmod +x ~/miniconda.sh && \
-    ~/miniconda.sh -b -p $CONDA_DIR && \
-    rm ~/miniconda.sh && \
-    /opt/conda/bin/conda install -y python=${PYTHON_VERSION} conda-build pyyaml numpy ipython&& \
-    /opt/conda/bin/conda clean -ya
-ENV PATH $CONDA_DIR/bin:$PATH
+#Path for java runtime
+ENV JAVA_HOME="/usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/jre"
+ARG JAVA_HOME="/usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/jre"
 
-# make conda activate command available from /bin/bash --login shells
-RUN echo ". $CONDA_DIR/etc/profile.d/conda.sh" >> ~/.profile
-# make conda activate command available from /bin/bash --interactive shells
-RUN conda init bash
+# copy pathml files into docker
+COPY setup.py README.md /opt/pathml/
+COPY pathml/ /opt/pathml/pathml
 
-# create a project directory inside user home
-# ENV PROJECT_DIR $HOME/pathml
-# RUN mkdir $PROJECT_DIR
-# WORKDIR $PROJECT_DIR
+# install pathml
+RUN pip3 install /opt/pathml/
 
-# copy environment file into docker
-COPY environment.yml environment.yml
+WORKDIR /home/pathml
 
-# set up environment
-# from: https://towardsdatascience.com/conda-pip-and-docker-ftw-d64fe638dc45
-# build the conda environment
-ENV ENV_PREFIX $PWD/env
-RUN conda update --name base --channel defaults conda && \
-    conda env create --prefix $ENV_PREFIX --file environment.yml --force && \
-    conda clean --all --yes
-
-#install pathml into the environment
-COPY pathml/ setup.py ./
-RUN conda activate $ENV_PREFIX && pip3 install . && conda deactivate
-
-ENTRYPOINT [ "/usr/local/bin/docker_entrypoint.sh" ]
+# set up jupyter lab
+RUN pip3 install jupyter -U && pip3 install jupyterlab
+EXPOSE 8888
+ENTRYPOINT ["jupyter", "lab", "--ip=0.0.0.0", "--allow-root", "--no-browser"]

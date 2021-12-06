@@ -21,6 +21,7 @@ There are several ways to install `PathML`:
 
 1. pip install (**recommended for users**)
 2. clone repo to local machine and install from source (recommended for developers/contributors)
+3. Use the PathML Docker container
 
 Options (1) and (2) require that you first install all external dependencies:
 * openslide
@@ -81,6 +82,26 @@ Install PathML:
 ````
 pip install -e .
 ````
+
+## Installation option 3: docker
+
+Build the PathML docker container:
+````
+docker build -t pathml-analysis .
+````
+
+Connect to the container:
+````
+docker run -it -p 8888:8888 pathml-analysis
+````
+
+The above command runs the container, which is configured to spin up a jupyter lab session and expose it on port 8888. 
+The terminal should display a URL to the jupyter lab session starting with http://127.0.0.1:8888/lab?token=<...>. 
+Navigate to that page and you should connect to the jupyter lab session running on the container with the pathml 
+environment fully configured.
+
+Note that the docker container requires extra configurations to use with GPU.  
+Note that these instructions assume that there are no other processes using port 8888.
 
 ## CUDA
 
