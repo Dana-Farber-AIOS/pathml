@@ -232,7 +232,7 @@ class BioFormatsBackend(SlideBackend):
     """
     Use BioFormats to interface with image files.
 
-    Does not support multi-level images.
+    Now support multi-level images.
     Depends on `python-bioformats <https://github.com/CellProfiler/python-bioformats>`_ which wraps ome bioformats
     java library, parses pixel and metadata of proprietary formats, and
     converts all formats to OME-TIFF. Please cite: https://pubmed.ncbi.nlm.nih.gov/20513764/
@@ -252,30 +252,43 @@ class BioFormatsBackend(SlideBackend):
         omeMeta = createOMEXMLMetadata()
         reader.setMetadataStore(omeMeta)
         reader.setId(str(self.filename))
-        sizex, sizey, sizez, sizec, sizet = (
-            reader.getSizeX(),
-            reader.getSizeY(),
-            reader.getSizeZ(),
-            reader.getSizeC(),
-            reader.getSizeT(),
-        )
-        self.shape = (sizex, sizey, sizez, sizec, sizet)
+        seriesCount = reader.getSeriesCount()
+
+        sizeSeries=[]
+        for s in range(seriesCount):
+            reader.setSeries(s)
+            sizex, sizey, sizez, sizec, sizet = (
+                reader.getSizeX(),
+                reader.getSizeY(),
+                reader.getSizeZ(),
+                reader.getSizeC(),
+                reader.getSizeT()
+            )
+            sizeSeries.append((sizex, sizey, sizez, sizec, sizet))
+
+        self.level_count = seriesCount-1
+        self.shape = sizeSeries
         self.imagecache = None
         self.metadata = bioformats.get_omexml_metadata(self.filename)
 
     def __repr__(self):
         return f"BioFormatsBackend('{self.filename}')"
 
-    def get_image_shape(self):
+    def get_image_shape(self, level=0):
         """
-        Get the shape of the image.
+        Get the shape of the image on specific level.
 
         Returns:
             Tuple[int, int]: Shape of image (H, W)
         """
-        return self.shape[:2]
+        assert isinstance(level, int), f"level {level} invalid. Must be an int."
+        assert (
+                level < self.level_count
+        ), f"input level {level} invalid for slide with {self.level_count} levels total"
 
-    def extract_region(self, location, size, level=None):
+        return self.shape[level][:2]
+
+    def extract_region(self, location, size, level=0):
         """
         Extract a region of the image. All bioformats images have 5 dimensions representing
         (x, y, z, channel, time). If a tuple with len < 5 is passed, missing dimensions will be
@@ -294,10 +307,12 @@ class BioFormatsBackend(SlideBackend):
             Extract 2000x2000 x,y region from upper left corner of 7 channel, 2d fluorescent image.
             data.slide.extract_region(location = (0,0), size = 2000)
         """
-        if level not in [None, 0]:
-            raise ValueError(
-                "BioFormatsBackend does not support levels, please pass a level in [None, 0]"
-            )
+
+        assert isinstance(level, int), f"level {level} invalid. Must be an int."
+        assert (
+                level < self.level_count
+        ), f"input level {level} invalid for slide with {self.level_count} levels total"
+
         # if a single int is passed for size, convert to a tuple to get a square region
         if type(size) is int:
             size = (size, size)
@@ -322,28 +337,30 @@ class BioFormatsBackend(SlideBackend):
             # expand size
             size = list(size)
             arrayshape = list(size)
-            for i in range(len(self.shape)):
+            for i in range(len(self.shape[level])):
                 if i > len(size) - 1:
-                    arrayshape.append(self.shape[i])
+                    arrayshape.append(self.shape[level][i])
             arrayshape = tuple(arrayshape)
             array = np.empty(arrayshape)
+
             sample = reader.read(
                 z=0,
                 t=0,
+                series=level,
                 rescale=False,
                 XYWH=(location[0], location[1], size[0], size[1]),
             )
-            # if series is set to read only one channel, explicitly read c
+
             if len(sample.shape) == 2:
-                for z in range(self.shape[2]):
-                    for c in range(self.shape[3]):
-                        for t in range(self.shape[4]):
+                for z in range(self.shape[level][2]):
+                    for c in range(self.shape[level][3]):
+                        for t in range(self.shape[level][4]):
                             slicearray = reader.read(
                                 z=z,
                                 t=t,
-                                series=c,
+                                series=level,
                                 rescale=False,
-                                XYWH=(location[0], location[1], size[0], size[1]),
+                                XYWH=(location[0], location[1], size[0], size[1])
                             )
                             slicearray = np.asarray(slicearray)
                             # some file formats read x, y out of order, transpose
@@ -352,11 +369,12 @@ class BioFormatsBackend(SlideBackend):
                             array[:, :, z, c, t] = slicearray
             # if series is set to read all channels, read all c simultaneously
             elif len(sample.shape) == 3:
-                for z in range(self.shape[2]):
-                    for t in range(self.shape[4]):
+                for z in range(self.shape[level][2]):
+                    for t in range(self.shape[level][4]):
                         slicearray = reader.read(
                             z=z,
                             t=t,
+                            series=level,
                             rescale=False,
                             XYWH=(location[0], location[1], size[0], size[1]),
                         )
@@ -368,10 +386,11 @@ class BioFormatsBackend(SlideBackend):
                         array[:, :, z, :, t] = slicearray
             else:
                 raise Exception("image format not supported")
+
         array = array.astype(np.uint8)
         return array
 
-    def get_thumbnail(self, size=None):
+    def get_thumbnail(self, size=None, level=0):
         """
         Get a thumbnail of the image. Since there is no default thumbnail for multiparametric, volumetric
         images, this function supports downsampling of all image dimensions.
@@ -390,14 +409,16 @@ class BioFormatsBackend(SlideBackend):
         assert isinstance(size, (tuple, type(None))), f"Size must be a tuple of ints."
         if size is not None:
             if len(size) != len(self.shape):
-                size = size + self.shape[len(size) :]
-        if self.shape[0] * self.shape[1] * self.shape[2] * self.shape[3] > 2147483647:
+                size = size + self.shape[level][len(size):]
+        if self.shape[level][0] * self.shape[level][1] * self.shape[level][2] * self.shape[level][3] > 2147483647:
             raise Exception(
-                f"Java arrays allocate maximum 32 bits (~2GB). Image size is {self.imsize}"
+                f"Java arrays allocate maximum 32 bits (~2GB)."
             )
-        array = self.extract_region(location=(0, 0), size=self.shape[:2])
+        array = self.extract_region(location=(0, 0), size=self.shape[level][:2], level=level)
+
+        image_array = None
         if size is not None:
-            ratio = tuple([x / y for x, y in zip(size, self.shape)])
+            ratio = tuple([x / y for x, y in zip(size, self.shape[level])])
             assert (
                 ratio[3] == 1
             ), f"cannot interpolate between fluor channels, resampling doesn't apply, fix size[3]"
@@ -429,7 +450,10 @@ class BioFormatsBackend(SlideBackend):
         Yields:
             pathml.core.tile.Tile: Extracted Tile object
         """
-        assert level == 0 or level is None, f"bioformats does not support levels"
+        assert isinstance(level, int), f"level {level} invalid. Must be an int."
+        assert (
+                level < self.level_count
+        ), f"input level {level} invalid for slide with {self.level_count} levels total"
         assert isinstance(shape, int) or (
             isinstance(shape, tuple) and len(shape) == 2
         ), f"input shape {shape} invalid. Must be a tuple of (H, W), or a single integer for square tiles"
@@ -446,7 +470,7 @@ class BioFormatsBackend(SlideBackend):
         elif isinstance(stride, int):
             stride = (stride, stride)
 
-        i, j = self.get_image_shape()
+        i, j = self.get_image_shape(level=level)
 
         stride_i, stride_j = stride
 
@@ -463,14 +487,14 @@ class BioFormatsBackend(SlideBackend):
                 coords = (int(ix_i * stride_i), int(ix_j * stride_j))
                 if coords[0] + shape[0] < i and coords[1] + shape[1] < j:
                     # get image for tile
-                    tile_im = self.extract_region(location=coords, size=shape)
+                    tile_im = self.extract_region(location=coords, size=shape, level=level)
                     yield pathml.core.tile.Tile(image=tile_im, coords=coords)
                 else:
                     unpaddedshape = (
                         i - coords[0] if coords[0] + shape[0] > i else shape[0],
                         j - coords[1] if coords[1] + shape[1] > j else shape[1],
                     )
-                    tile_im = self.extract_region(location=coords, size=unpaddedshape)
+                    tile_im = self.extract_region(location=coords, size=unpaddedshape, level=level)
                     zeroarrayshape = list(tile_im.shape)
                     zeroarrayshape[0], zeroarrayshape[1] = (
                         list(shape)[0],
