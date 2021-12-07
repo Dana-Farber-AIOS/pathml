@@ -53,7 +53,7 @@ class SlideDataset:
         if client is None and distributed:
             client = dask.distributed.Client()
             shutdown_after = True
-        for slide in self.slides:
+        for slide in tqdm(self.slides):
             slide.run(
                 pipeline=pipeline, client=client, distributed=distributed, **kwargs
             )
