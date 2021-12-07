@@ -103,6 +103,9 @@ environment fully configured.
 Note that the docker container requires extra configurations to use with GPU.  
 Note that these instructions assume that there are no other processes using port 8888.
 
+Please refer to the `Docker run` [documentation](https://docs.docker.com/engine/reference/run/) for further instructions
+on accessing the container, e.g. for mounting volumes to access files on a local machine from within the container.
+
 ## CUDA
 
 To use GPU acceleration for model training or other tasks, you must install CUDA. 
