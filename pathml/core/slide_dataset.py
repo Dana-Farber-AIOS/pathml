@@ -8,6 +8,7 @@ from pathlib import Path
 
 import dask.distributed
 from torch.utils.data import ConcatDataset
+from tqdm import tqdm
 
 
 class SlideDataset:
