@@ -265,9 +265,12 @@ class BioFormatsBackend(SlideBackend):
                 reader.getSizeT()
             )
             sizeSeries.append((sizex, sizey, sizez, sizec, sizet))
-
-        self.level_count = seriesCount-1
-        self.shape = sizeSeries
+        s = [s[0]*s[1] for s in sizeSeries]
+        size_max = sizeSeries[s.index(max(s))][:2]   
+         
+        self.level_count = seriesCount #count of levels
+        self.shape = size_max #larges shape
+        self.shape_list = sizeSeries #shape on all levels
         self.imagecache = None
         self.metadata = bioformats.get_omexml_metadata(self.filename)
 
@@ -286,7 +289,7 @@ class BioFormatsBackend(SlideBackend):
                 level < self.level_count
         ), f"input level {level} invalid for slide with {self.level_count} levels total"
 
-        return self.shape[level][:2]
+        return self.shape_list[level][:2]
 
     def extract_region(self, location, size, level=0):
         """
@@ -337,9 +340,9 @@ class BioFormatsBackend(SlideBackend):
             # expand size
             size = list(size)
             arrayshape = list(size)
-            for i in range(len(self.shape[level])):
+            for i in range(len(self.shape_list[level])):
                 if i > len(size) - 1:
-                    arrayshape.append(self.shape[level][i])
+                    arrayshape.append(self.shape_list[level][i])
             arrayshape = tuple(arrayshape)
             array = np.empty(arrayshape)
 
@@ -352,9 +355,9 @@ class BioFormatsBackend(SlideBackend):
             )
 
             if len(sample.shape) == 2:
-                for z in range(self.shape[level][2]):
-                    for c in range(self.shape[level][3]):
-                        for t in range(self.shape[level][4]):
+                for z in range(self.shape_list[level][2]):
+                    for c in range(self.shape_list[level][3]):
+                        for t in range(self.shape_list[level][4]):
                             slicearray = reader.read(
                                 z=z,
                                 t=t,
@@ -369,8 +372,8 @@ class BioFormatsBackend(SlideBackend):
                             array[:, :, z, c, t] = slicearray
             # if series is set to read all channels, read all c simultaneously
             elif len(sample.shape) == 3:
-                for z in range(self.shape[level][2]):
-                    for t in range(self.shape[level][4]):
+                for z in range(self.shape_list[level][2]):
+                    for t in range(self.shape_list[level][4]):
                         slicearray = reader.read(
                             z=z,
                             t=t,
@@ -409,16 +412,16 @@ class BioFormatsBackend(SlideBackend):
         assert isinstance(size, (tuple, type(None))), f"Size must be a tuple of ints."
         if size is not None:
             if len(size) != len(self.shape):
-                size = size + self.shape[level][len(size):]
-        if self.shape[level][0] * self.shape[level][1] * self.shape[level][2] * self.shape[level][3] > 2147483647:
+                size = size + self.shape_list[level][len(size):]
+        if self.shape_list[level][0] * self.shape_list[level][1] * self.shape_list[level][2] * self.shape_list[level][3] > 2147483647:
             raise Exception(
                 f"Java arrays allocate maximum 32 bits (~2GB)."
             )
-        array = self.extract_region(location=(0, 0), size=self.shape[level][:2], level=level)
+        array = self.extract_region(location=(0, 0), size=self.shape_list[level][:2], level=level)
 
         image_array = None
         if size is not None:
-            ratio = tuple([x / y for x, y in zip(size, self.shape[level])])
+            ratio = tuple([x / y for x, y in zip(size, self.shape_list[level])])
             assert (
                 ratio[3] == 1
             ), f"cannot interpolate between fluor channels, resampling doesn't apply, fix size[3]"
