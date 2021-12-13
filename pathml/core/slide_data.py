@@ -222,6 +222,11 @@ class SlideData:
         if self.backend:
             out.append(f"backend={repr(self.backend)}")
         out.append(f"image shape: {self.shape}")
+        try:
+            nlevels = self.slide.level_count
+        except:
+            nlevels = 1
+        out.append(f"number of levels: {nlevels}")
         out.append(repr(self.tiles))
         out.append(repr(self.masks))
         if self.tiles:
@@ -340,6 +345,24 @@ class SlideData:
             return tuple(self.h5manager.h5["fields"].attrs["shape"])
         else:
             return self.slide.get_image_shape()
+
+    def extract_region(self, location, size, *args, **kwargs):
+        """
+        Extract a region of the image.
+        This is a convenience method which passes arguments through to the ``extract_region()`` method of whichever
+        backend is in use. Refer to documentation for each backend.
+
+        Args:
+            location (Tuple[int, int]): Location of top-left corner of tile (i, j)
+            size (Union[int, Tuple[int, int]]): Size of each tile. May be a tuple of (height, width) or a
+                single integer, in which case square tiles of that size are generated.
+            *args: positional arguments passed through
+            **kwargs: keyword arguments passed through
+
+        Returns:
+            np.ndarray: image at the specified region
+        """
+        return self.slide.extract_region(location, size, *args, **kwargs)
 
     def generate_tiles(self, shape=3000, stride=None, pad=False, **kwargs):
         """
