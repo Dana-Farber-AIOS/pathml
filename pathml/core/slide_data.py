@@ -251,7 +251,7 @@ class SlideData:
         pipeline,
         distributed=True,
         client=None,
-        tile_size=3000,
+        tile_size=256,
         tile_stride=None,
         level=0,
         tile_pad=False,
@@ -266,7 +266,7 @@ class SlideData:
             pipeline (pathml.preprocessing.pipeline.Pipeline): Preprocessing pipeline.
             distributed (bool): Whether to distribute model using client. Defaults to True.
             client: dask.distributed client
-            tile_size (int, optional): Size of each tile. Defaults to 3000px
+            tile_size (int, optional): Size of each tile. Defaults to 256px
             tile_stride (int, optional): Stride between tiles. If ``None``, uses ``tile_stride = tile_size``
                 for non-overlapping tiles. Defaults to ``None``.
             level (int, optional): Level to extract tiles from. Defaults to ``None``.
@@ -296,9 +296,22 @@ class SlideData:
                 for tile_key in self.tiles.keys:
                     self.tiles.remove(tile_key)
 
+        # TODO: be careful here since we are modifying h5 outside of h5manager
+        # look into whether we can push this into h5manager
+
+        if tile_stride is None:
+            tile_stride = tile_size
+        elif isinstance(tile_stride, int):
+            tile_stride = (tile_stride, tile_stride)
+
+        self.h5manager.h5["tiles"].attrs["tile_stride"] = tile_stride
+
+        shutdown_after = False
+
         if distributed:
             if client is None:
                 client = dask.distributed.Client()
+                shutdown_after = True
 
             # map pipeline application onto each tile
             processed_tile_futures = []
@@ -319,6 +332,9 @@ class SlideData:
                 processed_tile_futures, with_results=True
             ):
                 self.tiles.add(tile)
+
+            if shutdown_after:
+                client.shutdown()
 
         else:
             for tile in self.generate_tiles(
@@ -373,7 +389,7 @@ class SlideData:
 
         Args:
             shape (int or tuple(int)): Size of each tile. May be a tuple of (height, width) or a single integer,
-                in which case square tiles of that size are generated.
+                in which case square tiles of that size are generated. Defaults to 256px.
             stride (int): stride between chunks. If ``None``, uses ``stride = size`` for non-overlapping chunks.
                 Defaults to ``None``.
             pad (bool): How to handle tiles on the edges. If ``True``, these edge tiles will be zero-padded
@@ -550,6 +566,7 @@ pathmlext = {".h5", ".h5path"}
 openslideext = {
     ".svs",
     ".tif",
+    ".tiff",
     ".ndpi",
     ".vms",
     ".vmu",

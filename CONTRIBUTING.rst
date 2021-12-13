@@ -10,7 +10,6 @@ There are many ways to contribute to PathML, including:
 * Writing documentation
 * Fixing bugs
 * Writing code for new features
-* Sharing workflows [coming soon]
 * Sharing trained model parameters [coming soon]
 * Sharing ``PathML`` with colleagues, students, etc.
 
@@ -21,9 +20,11 @@ Report bugs or errors by filing an issue on GitHub. Make sure to include the fol
 
 * Short description of the bug
 * Minimum working example to reproduce the bug
-* Expected result
-* Actual result
+* Expected result vs. actual result
 * Any other useful information
+
+If a bug cannot be reproduced by someone else on a different machine, it will usually be hard to identify
+what is causing it.
 
 Requesting a new feature
 =========================
@@ -48,17 +49,27 @@ Setting up a local development environment
 Running tests
 -------------
 
+To run the full testing suite:
+
 .. code-block::
 
     python -m pytest
+
+Some tests are known to be very slow. To skip them, run instead:
+
+.. code-block::
+
+    python -m pytest -m "not slow"
+
 
 Building documentation locally
 ------------------------------
 
 .. code-block::
 
-    cd docs         # enter docs directory
-    make html       # build docs in html format
+    cd docs                                     # enter docs directory
+    pip install -r readthedocs-requirements     # install packages to build docs
+    make html                                   # build docs in html format
 
 Then use your favorite web browser to open ``pathml/docs/build/html/index.html``
 
@@ -77,10 +88,10 @@ How to contribute code, documentation, etc.
 
 1. Create a new GitHub issue for what you will be working on, if one does not already exist
 2. Create a local development environment (see above)
-3. Implement your changes
+3. Create a new branch from the dev branch and implement your changes
 4. Write new tests as needed to maintain code coverage
 5. Ensure that all tests pass
-6. Commit your changes and submit a pull request referencing the corresponding issue
+6. Push your changes and open a pull request on GitHub referencing the corresponding issue
 7. Respond to discussion/feedback about the pull request, make changes as necessary
 
 Versioning

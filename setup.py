@@ -40,6 +40,7 @@ setuptools.setup(
         "torch",
         "opencv-contrib-python",
         "python-bioformats",
+        "tqdm",
     ],
     classifiers=[
         "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",

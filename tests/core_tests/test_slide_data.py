@@ -63,10 +63,12 @@ def test_run_existing_tiles(slide_dataset_with_tiles, overwrite_tiles):
     dataset = slide_dataset_with_tiles
     pipeline = Pipeline([BoxBlur(kernel_size=15)])
     if overwrite_tiles:
-        dataset.run(pipeline, overwrite_existing_tiles=overwrite_tiles)
+        dataset.run(pipeline, overwrite_existing_tiles=overwrite_tiles, tile_size=500)
     else:
         with pytest.raises(Exception):
-            dataset.run(pipeline, overwrite_existing_tiles=overwrite_tiles)
+            dataset.run(
+                pipeline, overwrite_existing_tiles=overwrite_tiles, tile_size=500
+            )
 
 
 @pytest.fixture

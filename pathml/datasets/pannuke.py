@@ -3,23 +3,21 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-import zipfile
 import os
+import re
+import shutil
+import zipfile
+from pathlib import Path
+from warnings import warn
+
+import cv2
 import numpy as np
 import torch
 import torch.utils.data as data
-from warnings import warn
-from pathlib import Path
-import re
-import cv2
-import shutil
-
 from pathml.datasets.base_data_module import BaseDataModule
-from pathml.datasets.utils import (
-    download_from_url,
-    pannuke_multiclass_mask_to_nucleus_mask,
-)
+from pathml.datasets.utils import pannuke_multiclass_mask_to_nucleus_mask
 from pathml.ml.hovernet import compute_hv_map
+from pathml.utils import download_from_url
 
 
 class PanNukeDataset(data.Dataset):
