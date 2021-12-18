@@ -8,7 +8,7 @@
 #       For reference:
 #           https://docs.docker.com/develop/develop-images/build_enhancements/
 # This dockerfile creates an environment for using pathml
-FROM python:3.8-slim
+FROM quay.io/biocontainers/python-bioformats:4.0.5--pyh5e36f6f_0
 
 # LABEL about the custom image
 LABEL maintainer="PathML@dfci.harvard.edu"
@@ -36,11 +36,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gnupg \
     python3-opencv \
     libgl1 \
-    software-properties-common \
-    && wget -qO - https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public | apt-key add - \
-    && add-apt-repository --yes https://adoptopenjdk.jfrog.io/adoptopenjdk/deb/ \
-    && apt update \
-    && apt-get install -y adoptopenjdk-8-hotspot \
     && rm -rf /var/lib/apt/lists/* \
     && pip3 install --upgrade pip
 
