@@ -82,7 +82,7 @@ conda activate pathml
 
 Optionally install CUDA (instructions [here](#CUDA))
 
-Install PathML: 
+Install `PathML`: 
 ````
 pip install -e .
 ````
@@ -110,12 +110,12 @@ python -c "import torch; print(torch.cuda.is_available())"
 
 # Using with Jupyter
 
-Jupyter notebooks are a convenient way to work interactively. To use PathML in Jupyter notebooks: 
+Jupyter notebooks are a convenient way to work interactively. To use `PathML` in Jupyter notebooks: 
 
 ## Set JAVA_HOME environment variable
 
 PathML relies on Java to enable support for reading a wide range of file formats.
-Before using PathML in Jupyter, you may need to manually set the `JAVA_HOME` environment variable 
+Before using `PathML` in Jupyter, you may need to manually set the `JAVA_HOME` environment variable 
 specifying the path to Java. To do so:
 
 1. Get the path to Java by running `echo $JAVA_HOME` in the terminal in your pathml conda environment (outside of Jupyter)
@@ -125,20 +125,20 @@ specifying the path to Java. To do so:
     os.environ["JAVA_HOME"] = "/opt/conda/envs/pathml" # change path as needed
     ````
 
-## Register PathML as an IPython kernel
+## Register environment as an IPython kernel
 ````
 conda activate pathml
 conda install ipykernel
 python -m ipykernel install --user --name=pathml
 ````
-This makes PathML available as a kernel in jupyter lab or notebook.
+This makes the pathml environment available as a kernel in jupyter lab or notebook.
 
 
 # Contributing
 
 ``PathML`` is an open source project. Consider contributing to benefit the entire community!
 
-There are many ways to contribute to PathML, including:
+There are many ways to contribute to `PathML`, including:
 
 * Submitting bug reports
 * Submitting feature requests
