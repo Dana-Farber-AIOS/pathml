@@ -7,3 +7,4 @@ from .core import *
 from . import datasets as ds
 from . import ml
 from . import preprocessing as pp
+from ._version import __version__
