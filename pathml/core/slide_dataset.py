@@ -48,13 +48,17 @@ class SlideDataset:
             distributed (bool): Whether to distribute model using client. Defaults to True.
             kwargs (dict): keyword arguments passed to :meth:`~pathml.core.slide_data.SlideData.run` for each slide
         """
+        shutdown_after = False
         # run preprocessing
         if client is None and distributed:
             client = dask.distributed.Client()
+            shutdown_after = True
         for slide in self.slides:
             slide.run(
                 pipeline=pipeline, client=client, distributed=distributed, **kwargs
             )
+        if shutdown_after:
+            client.shutdown()
 
     def reshape(self, shape, centercrop=False):
         for slide in self.slides:

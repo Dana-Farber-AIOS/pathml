@@ -2,18 +2,23 @@
 
 <img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/overview.png width="750">
 
-![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg?branch=dev)
 [![Documentation Status](https://readthedocs.org/projects/pathml/badge/?version=latest)](https://pathml.readthedocs.io/en/latest/?badge=latest)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![PyPI version](https://img.shields.io/pypi/v/pathml)](https://pypi.org/project/pathml/)
 [![Downloads](https://pepy.tech/badge/pathml)](https://pepy.tech/project/pathml)
 [![codecov](https://codecov.io/gh/Dana-Farber-AIOS/pathml/branch/master/graph/badge.svg?token=UHSQPTM28Y)](https://codecov.io/gh/Dana-Farber-AIOS/pathml)
 
+| Branch | Test status   |
+| ------ | ------------- |
+| master | ![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg?branch=master) |
+| dev    | ![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg?branch=dev) |
+
 A toolkit for computational pathology and machine learning.
 
 **View [documentation](https://pathml.readthedocs.io/en/latest/)**
 
-**Please cite [our paper](https://www.biorxiv.org/content/10.1101/2021.10.21.465212)**
+:construction: the `dev` branch is under active development, with experimental features, bug fixes, and refactors that may happen at any time! 
+Stable versions are available as tagged commits on the `master` branch, or as versioned releases on PyPI
 
 # Installation
 
@@ -77,7 +82,7 @@ conda activate pathml
 
 Optionally install CUDA (instructions [here](#CUDA))
 
-Install PathML: 
+Install `PathML`: 
 ````
 pip install -e .
 ````
@@ -105,12 +110,12 @@ python -c "import torch; print(torch.cuda.is_available())"
 
 # Using with Jupyter
 
-Jupyter notebooks are a convenient way to work interactively. To use PathML in Jupyter notebooks: 
+Jupyter notebooks are a convenient way to work interactively. To use `PathML` in Jupyter notebooks: 
 
 ## Set JAVA_HOME environment variable
 
 PathML relies on Java to enable support for reading a wide range of file formats.
-Before using PathML in Jupyter, you may need to manually set the `JAVA_HOME` environment variable 
+Before using `PathML` in Jupyter, you may need to manually set the `JAVA_HOME` environment variable 
 specifying the path to Java. To do so:
 
 1. Get the path to Java by running `echo $JAVA_HOME` in the terminal in your pathml conda environment (outside of Jupyter)
@@ -120,20 +125,20 @@ specifying the path to Java. To do so:
     os.environ["JAVA_HOME"] = "/opt/conda/envs/pathml" # change path as needed
     ````
 
-## Register PathML as an IPython kernel
+## Register environment as an IPython kernel
 ````
 conda activate pathml
 conda install ipykernel
 python -m ipykernel install --user --name=pathml
 ````
-This makes PathML available as a kernel in jupyter lab or notebook.
+This makes the pathml environment available as a kernel in jupyter lab or notebook.
 
 
 # Contributing
 
 ``PathML`` is an open source project. Consider contributing to benefit the entire community!
 
-There are many ways to contribute to PathML, including:
+There are many ways to contribute to `PathML`, including:
 
 * Submitting bug reports
 * Submitting feature requests
@@ -145,6 +150,15 @@ There are many ways to contribute to PathML, including:
 * Sharing ``PathML`` with colleagues, students, etc.
 
 See [contributing](https://github.com/Dana-Farber-AIOS/pathml/blob/master/CONTRIBUTING.rst) for more details.
+
+# Citing
+
+If you use `PathML` in your work, please cite our paper:
+
+Rosenthal J, Carelli R, Omar M, Brundage D, Halbert E, Nyman J, Hari SN, Van Allen EM, Marchionni L, Umeton R, Loda M. 
+Building tools for machine learning and artificial intelligence in cancer research: best practices and a case study 
+with the PathML toolkit for computational pathology. *Molecular Cancer Research*, 2021. 
+DOI: [10.1158/1541-7786.MCR-21-0665](https://doi.org/10.1158/1541-7786.MCR-21-0665)
 
 # License
 

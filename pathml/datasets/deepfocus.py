@@ -3,14 +3,14 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-import os
-import h5py
-from pathlib import Path
 import hashlib
-from torch.utils.data import Dataset, DataLoader
+import os
+from pathlib import Path
 
+import h5py
 from pathml.datasets.base_data_module import BaseDataModule
-from pathml.datasets.utils import download_from_url
+from pathml.utils import download_from_url
+from torch.utils.data import DataLoader, Dataset
 
 
 class DeepFocusDataModule(BaseDataModule):
