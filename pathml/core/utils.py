@@ -110,8 +110,10 @@ def readcounts(h5):
     # create and save temp h5py file
     # read using anndata from temp file
     # anndata does not support reading directly from h5
-    path = tempfile.NamedTemporaryFile()
-    f = h5py.File(path, "w")
-    for ds in h5.keys():
-        h5.copy(ds, f)
-    return anndata.read_h5ad(path.name)
+    with tempfile.NamedTemporaryFile() as path:
+        with h5py.File(path, "w") as f:
+            for ds in h5.keys():
+                h5.copy(ds, f)
+        print(path)
+        print(path.name)
+        return anndata.read_h5ad(path.name)
