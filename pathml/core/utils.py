@@ -114,6 +114,4 @@ def readcounts(h5):
         with h5py.File(path, "w") as f:
             for ds in h5.keys():
                 h5.copy(ds, f)
-        print(path)
-        print(path.name)
         return anndata.read_h5ad(path.name)
