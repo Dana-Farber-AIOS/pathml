@@ -155,9 +155,7 @@ class h5pathManager:
             # add tile-level masks
             for key, mask in tile.masks.items():
                 self.h5["tiles"][str(tile.coords)]["masks"].create_dataset(
-                    str(key),
-                    data=mask,
-                    dtype="float16",
+                    str(key), data=mask, dtype="float16",
                 )
 
         # add coords
@@ -177,6 +175,7 @@ class h5pathManager:
             if self.counts:
                 self.counts = self.counts.to_memory()
                 self.counts = self.counts.concatenate(tile.counts, join="outer")
+                del self.counts.obs["batch"]
                 self.counts.filename = os.path.join(
                     self.countspath.name + "/tmpfile.h5ad"
                 )
