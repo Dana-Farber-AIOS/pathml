@@ -1,15 +1,6 @@
-# syntax = docker/dockerfile:experimental
-#
-# NOTE: To build this you will need a docker version > 18.06 with
-#       experimental enabled and DOCKER_BUILDKIT=1
-#
-#       If you do not use buildkit you are not going to have a good time
-#
-#       For reference:
-#           https://docs.docker.com/develop/develop-images/build_enhancements/
-# This dockerfile creates an environment for using pathml
-FROM quay.io/biocontainers/python-bioformats:4.0.5--pyh5e36f6f_0
+# syntax=docker/dockerfile:1
 
+FROM ubuntu:20.04
 # LABEL about the custom image
 LABEL maintainer="PathML@dfci.harvard.edu"
 LABEL description="This is custom Docker Image for running PathML"
@@ -17,38 +8,42 @@ LABEL description="This is custom Docker Image for running PathML"
 # Disable Prompt During Packages Installation
 ARG DEBIAN_FRONTEND=noninteractive
 
+#Set miniconda path
+ENV PATH="/root/miniconda3/bin:${PATH}"
+ARG PATH="/root/miniconda3/bin:${PATH}"
+
+ENV JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64/jre/"
+ARG JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64/jre/"
+
+ENV SHELL="/bin/bash"
+
 #install packages on root
 USER root
 
-# download and install external dependencies
-# openjdk8 installed following instructions from:
-#   https://linuxize.com/post/install-java-on-debian-10/#installing-openjdk-8
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    openslide-tools \
-    g++ \     
-    gcc \    
-    libblas-dev \    
+#download and install miniconda and external dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends  openslide-tools \
+    g++ \
+    gcc \
+    libpixman-1-0 \
+    libblas-dev \
     liblapack-dev \
-    apt-transport-https \
-    ca-certificates \
     wget \
-    dirmngr \
-    gnupg \
-    python3-opencv \
-    libgl1 \
-    && rm -rf /var/lib/apt/lists/* \
-    && pip3 install --upgrade pip
-
-#Path for java runtime
-ENV JAVA_HOME="/usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/jre"
-ARG JAVA_HOME="/usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/jre"
+    openjdk-8-jre \
+    openjdk-8-jdk \
+    && wget \
+    https://repo.anaconda.com/miniconda/Miniconda3-py38_4.10.3-Linux-x86_64.sh \
+    && mkdir /root/.conda \
+    && bash Miniconda3-py38_4.10.3-Linux-x86_64.sh -b \
+    && rm -f Miniconda3-py38_4.10.3-Linux-x86_64.sh \
+    && rm -rf /var/lib/apt/lists/*
 
 # copy pathml files into docker
 COPY setup.py README.md /opt/pathml/
 COPY pathml/ /opt/pathml/pathml
+COPY tests/ /opt/pathml/tests
 
-# install pathml
-RUN pip3 install /opt/pathml/
+# install pathml and deepcell
+RUN pip3 install --upgrade pip && pip3 install numpy==1.19.5 && pip3 install python-bioformats==4.0.0 deepcell /opt/pathml/
 
 WORKDIR /home/pathml
 
