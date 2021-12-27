@@ -4,14 +4,14 @@ License: GNU GPL 2.0
 """
 
 import os
-from pathlib import Path
-from collections import OrderedDict
-import h5py
 import reprlib
+from collections import OrderedDict
+from pathlib import Path
 
+import h5py
 import pathml.core.h5managers
-import pathml.core.tile
 import pathml.core.masks
+import pathml.core.tile
 
 
 class Tiles:
@@ -64,8 +64,7 @@ class Tiles:
         return len(self.h5manager.h5["tiles"].keys())
 
     def __getitem__(self, item):
-        tile = self.h5manager.get_tile(item)
-        return tile
+        return self.h5manager.get_tile(item)
 
     def add(self, tile):
         """
@@ -79,36 +78,15 @@ class Tiles:
                 f"can not add {type(tile)}, tile must be of type pathml.core.tiles.Tile"
             )
         self.h5manager.add_tile(tile)
-        del tile
 
-    def update(self, key, val, target="all"):
+    def update(self, tile):
         """
         Update a tile.
 
         Args:
-            key(str): key of tile to be updated
-            val(str): element that will replace target at key
-            target(str): element of {all, image, labels} indicating field to be updated
+            tile(pathml.core.tile.Tiles): key of tile to be updated
         """
-        self.h5manager.update_tile(key, val, target)
-
-    def slice(self, slicer):
-        """
-        Generator slicing all tiles, extending numpy array slicing.
-
-        Args:
-            slicer: List where each element is an object of type slice https://docs.python.org/3/c-api/slice.html
-                    indicating how the corresponding dimension should be sliced. The list length should correspond to the
-                    dimension of the tile. For 2D H&E images, pass a length 2 list of slice objects.
-
-        Yields:
-            key(str): tile coordinates
-            val(pathml.core.tile.Tile): tile
-        """
-        if not (isinstance(slicer, list) and (isinstance(a, slice) for a in slicer)):
-            raise KeyError(f"slices must of of type list[slice]")
-        sliced = [tile for tile in self.h5manager.slice_tiles(slicer)]
-        return sliced
+        self.h5manager.add_tile(tile)
 
     def remove(self, key):
         """
@@ -118,17 +96,3 @@ class Tiles:
             key(str): key (coords) indicating tile to be removed
         """
         self.h5manager.remove_tile(key)
-
-    def reshape(self, shape, centercrop=False):
-        """
-        Resample tiles to shape.
-        If shape does not evenly divide current tile shape, this method deletes tile labels and names.
-        This method not mutate h5['tiles']['array'].
-
-        Args:
-            shape(tuple): new shape of tile.
-            centercrop(bool): if shape does not evenly divide slide shape, take center crop
-        """
-        assert isinstance(shape, tuple) and all(isinstance(n, int) for n in shape)
-        assert isinstance(centercrop, bool)
-        self.h5manager.reshape_tiles(shape, centercrop)

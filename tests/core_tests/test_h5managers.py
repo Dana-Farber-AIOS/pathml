@@ -41,3 +41,20 @@ def test_h5manager2(tileHE):
 
     for tile1, tile2 in zip(tiles1, tiles2):
         np.testing.assert_array_equal(tile1.image, tile2.image)
+
+
+def test_tile_dtype_HE(tileHE):
+    """make sure that retrieved tiles and corresponding masks are float16"""
+    slidedata = HESlide("tests/testdata/small_HE.svs")
+    slidedata.tiles.add(tileHE)
+    tile_retrieved = slidedata.tiles[tileHE.coords]
+    assert tile_retrieved.image.dtype == np.float16
+    assert tile_retrieved.masks["testmask"].dtype == np.float16
+
+
+def test_tile_dtype_IF(tileVectra, vectra_slide):
+    """make sure that retrieved tiles and corresponding masks are float16"""
+    vectra_slide.tiles.add(tileVectra)
+    tile_retrieved = vectra_slide.tiles[tileVectra.coords]
+    assert tile_retrieved.image.dtype == np.float16
+    assert tile_retrieved.masks["testmask"].dtype == np.float16

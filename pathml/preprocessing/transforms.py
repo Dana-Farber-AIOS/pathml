@@ -13,11 +13,15 @@ import pandas as pd
 import pathml.core
 import pathml.core.slide_data
 import spams
-from pathml.utils import (RGB_to_GREY, RGB_to_HSI, RGB_to_HSV, RGB_to_OD,
-                          normalize_matrix_cols)
+from pathml.utils import (
+    RGB_to_GREY,
+    RGB_to_HSI,
+    RGB_to_HSV,
+    RGB_to_OD,
+    normalize_matrix_cols,
+)
 from skimage import restoration
-from skimage.exposure import (equalize_adapthist, equalize_hist,
-                              rescale_intensity)
+from skimage.exposure import equalize_adapthist, equalize_hist, rescale_intensity
 from skimage.measure import regionprops_table
 
 
@@ -1274,9 +1278,9 @@ class SegmentMIF(Transform):
         gpu(bool): flag indicating whether gpu will be used for inference
 
     References:
-        Greenwald, N.F., Miller, G., Moen, E., Kong, A., Kagel, A., Fullaway, C.C., McIntosh, B.J., Leow, K., Schwartz,
-        M.S., Dougherty, T. and Pavelchek, C., 2021. Whole-cell segmentation of tissue images with human-level
-        performance using large-scale data annotation and deep learning. bioRxiv.
+        Greenwald, N.F., Miller, G., Moen, E. et al. Whole-cell segmentation of tissue images with human-level
+        performance using large-scale data annotation and deep learning. Nat Biotechnol (2021).
+        https://doi.org/10.1038/s41587-021-01094-0
 
         Stringer, C., Wang, T., Michaelos, M. and Pachitariu, M., 2021. Cellpose: a generalist algorithm for cellular
         segmentation. Nature Methods, 18(1), pp.100-106.
