@@ -43,7 +43,13 @@ COPY pathml/ /opt/pathml/pathml
 COPY tests/ /opt/pathml/tests
 
 # install pathml and deepcell
-RUN pip3 install --upgrade pip && pip3 install numpy==1.19.5 && pip3 install python-bioformats==4.0.0 deepcell /opt/pathml/
+RUN pip3 install --upgrade pip \
+    && pip3 install numpy==1.19.5 \
+    && pip3 install python-bioformats==4.0.0 deepcell /opt/pathml/ pytest
+
+# run tests to verify container
+WORKDIR /opt/pathml
+RUN python3 -m pytest /opt/pathml/tests/ -m "not slow"
 
 WORKDIR /home/pathml
 
