@@ -7,13 +7,31 @@
 [![Downloads](https://pepy.tech/badge/pathml)](https://pepy.tech/project/pathml)
 [![codecov](https://codecov.io/github/Dana-Farber-AIOS/pathml/branch/master/graph/badge.svg?token=UHSQPTM28Y)](https://codecov.io/github/Dana-Farber-AIOS/pathml)
 
-A toolkit for computational pathology and machine learning.
+
+A toolkit for computational pathology and machine learning.  
+
+* Create modular, fully-customizable preprocessing pipelines for gigapixel-scale images
+* Unified API for H&E, IHC, fluorescence, and spatial omics images
+* Support for 160+ file formats
+* Fast dataloaders for integrating with the broader ML ecosystem (PyTorch, Tensorflow, Jax, etc.)
+* Integration with broader single-cell analysis ecosystem (Scanpy, Squidpy, etc.) via AnnData standard
 
 # **View [documentation](https://pathml.readthedocs.io/en/latest/)**
 
+Tutorials, example vignettes, technical notes, and a complete API reference can be found at http://docs.pathml.org
+
+## **Installing**
+
+Please refer to installation instructions on the [PathML GitHub repository](https://github.com/Dana-Farber-AIOS/pathml)
+
 ## **Citing**
 
-If using PathML, please cite [our paper](https://www.biorxiv.org/content/10.1101/2021.10.21.465212)
+If you use `PathML` in your work, please cite our paper:
+
+Rosenthal J, Carelli R, Omar M, Brundage D, Halbert E, Nyman J, Hari SN, Van Allen EM, Marchionni L, Umeton R, Loda M. 
+Building tools for machine learning and artificial intelligence in cancer research: best practices and a case study 
+with the PathML toolkit for computational pathology. *Molecular Cancer Research*, 2021. 
+DOI: [10.1158/1541-7786.MCR-21-0665](https://doi.org/10.1158/1541-7786.MCR-21-0665)
 
 ## **License**
 
