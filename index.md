@@ -10,7 +10,7 @@
 
 A toolkit for computational pathology and machine learning.  
 
-* Create modular, fully-customizable preprocessing pipelines for gigapixel-scale images
+* Build modular, fully-customizable preprocessing pipelines for gigapixel-scale images
 * Unified API for H&E, IHC, fluorescence, and spatial omics images
 * Support for 160+ file formats
 * Fast dataloaders for integrating with the broader ML ecosystem (PyTorch, Tensorflow, Jax, etc.)
@@ -18,7 +18,7 @@ A toolkit for computational pathology and machine learning.
 
 # **View [documentation](https://pathml.readthedocs.io/en/latest/)**
 
-Tutorials, example vignettes, technical notes, and a complete API reference can be found at http://docs.pathml.org
+Tutorials, example vignettes, technical notes, and a complete API reference can be found at [docs.pathml.org](http://docs.pathml.org)
 
 ## **Installing**
 
