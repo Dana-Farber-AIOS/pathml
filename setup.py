@@ -32,7 +32,6 @@ setuptools.setup(
         "openslide-python",
         "pydicom",
         "h5py",
-        "spams",
         "scikit-learn",
         "dask[distributed]",
         "anndata>=0.7.6",
