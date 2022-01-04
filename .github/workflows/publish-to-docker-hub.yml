@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Set version number variable
         run: |
-          VER=$(cat pathml/_version.py | grep -o  '"[^"]\+"' | tr '"' ' ')
+          VER=$(cat pathml/_version.py | grep -o  '"[^"]\+"' | tr -d '"')
           echo "VERSION=$VER" >> $GITHUB_ENV
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1.2.0
