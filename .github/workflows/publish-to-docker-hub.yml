@@ -26,6 +26,6 @@ jobs:
         uses: docker/build-push-action@v2.7.0
         with:
           push: true
-          tags:
+          tags: |
             pathml/pathml:latest
             pathml/pathml:${{ env.VERSION }}
