@@ -1,0 +1,41 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+# Unit test / coverage reports
+.pytest_cache/
+coverage_report_html/
+.coverage
+
+# Sphinx documentation
+docs/build/
+
+# data
+data/
+
+# files created by matplotlib testing suite
+result_images/
+
+# distribution / packaging
+*.egg-info
+*.egg
+build/
+dist/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# scratch notebook
+scratch.ipynb
+
+# Mac files
+.DS_Store
+
+# Pycharm
+.idea/
+
+# dask
+dask-worker-space/
+
+# git
+.git
+.gitigore

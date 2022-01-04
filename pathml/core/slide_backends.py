@@ -5,12 +5,8 @@ License: GNU GPL 2.0
 
 from io import BytesIO
 from typing import Tuple
-
 import numpy as np
 import openslide
-import pathml.core
-import pathml.core.tile
-from pathml.utils import pil_to_rgb
 from PIL import Image
 from pydicom.dataset import Dataset
 from pydicom.encaps import get_frame_offsets
@@ -19,6 +15,11 @@ from pydicom.filereader import data_element_offset_to_value, dcmread
 from pydicom.tag import SequenceDelimiterTag, TupleTag
 from pydicom.uid import UID
 from scipy.ndimage import zoom
+from javabridge.jutil import JavaException
+
+import pathml.core
+import pathml.core.tile
+from pathml.utils import pil_to_rgb
 
 try:
     import bioformats
@@ -255,7 +256,11 @@ class BioFormatsBackend(SlideBackend):
         self.filename = filename
         # init java virtual machine
         javabridge.start_vm(class_path=bioformats.JARS, max_heap_size="50G")
-        _init_logger()
+        # disable verbose JVM logging if possible
+        try:
+            _init_logger()
+        except JavaException:
+            pass
         # java maximum array size of 2GB constrains image size
         ImageReader = bioformats.formatreader.make_image_reader_class()
         reader = ImageReader()
