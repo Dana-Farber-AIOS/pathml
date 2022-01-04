@@ -1450,9 +1450,7 @@ class QuantifyMIF(Transform):
             ],
         )
         counts.obs = counts.obs.rename(columns={0: "x", 1: "y"})
-        counts.obs["coords"] = str(countsdataframe["coords"])
         counts.obs["filled_area"] = countsdataframe["filled_area"]
-        counts.obs["slice"] = str(countsdataframe["slice"])
         counts.obs["euler_number"] = countsdataframe["euler_number"]
         min_intensities = pd.DataFrame()
         for i in range(img.shape[-1]):
@@ -1465,8 +1463,7 @@ class QuantifyMIF(Transform):
         try:
             counts.obsm["spatial"] = np.array(counts.obs[["x", "y"]])
         except:
-            pass
-        counts.obs["tile"] = str(tile.coords)
+            print("warning: did not log coordinates in obsm")
         return counts
 
     def apply(self, tile):
