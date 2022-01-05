@@ -22,6 +22,13 @@ def bioformats_backend_qptiff():
     return BioFormatsBackend("tests/testdata/small_vectra.qptiff")
 
 
+def bioformats_backend_5d():
+    """Using a multi-channel multi-z-stack time-series file
+    https://docs.openmicroscopy.org/ome-model/5.6.3/ome-tiff/data.html#d-datasets
+    """
+    return BioFormatsBackend("tests/testdata/multi-channel-4D-series.ome.tif")
+
+
 def dicom_backend():
     return DICOMBackend("tests/testdata/small_dicom.dcm")
 
@@ -30,15 +37,37 @@ def dicom_backend():
 
 
 @pytest.mark.parametrize(
-    "backend", [openslide_backend(), bioformats_backend(), bioformats_backend_qptiff()]
+    "backend",
+    [
+        openslide_backend(),
+        bioformats_backend(),
+        bioformats_backend_qptiff(),
+        bioformats_backend_5d(),
+    ],
 )
-@pytest.mark.parametrize("location", [(0, 0), (50, 100)])
+@pytest.mark.parametrize("location", [(0, 0), (50, 60)])
 @pytest.mark.parametrize("size", [50, (50, 100)])
 @pytest.mark.parametrize("level", [None, 0])
 def test_extract_region(backend, location, size, level):
     region = backend.extract_region(location=location, size=size, level=level)
     assert isinstance(region, np.ndarray)
     assert region.dtype == np.uint8
+
+
+def test_extract_region_bioformats_multichannel():
+    """
+    Tests that multi-channel images are being read properly
+    https://github.com/Dana-Farber-AIOS/pathml/issues/261
+    """
+    backend = bioformats_backend_5d()
+    region = backend.extract_region(location=(0, 0), size=50)
+    c = region.shape[3]
+    assert not all(
+        [
+            np.array_equal(region[:, :, :, 0, :], region[:, :, :, i, :])
+            for i in range(1, c)
+        ]
+    )
 
 
 @pytest.mark.parametrize("shape", [500, (500, 250)])
