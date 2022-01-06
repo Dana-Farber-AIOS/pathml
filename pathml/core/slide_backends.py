@@ -5,8 +5,13 @@ License: GNU GPL 2.0
 
 from io import BytesIO
 from typing import Tuple
+
 import numpy as np
 import openslide
+import pathml.core
+import pathml.core.tile
+from javabridge.jutil import JavaException
+from pathml.utils import pil_to_rgb
 from PIL import Image
 from pydicom.dataset import Dataset
 from pydicom.encaps import get_frame_offsets
@@ -15,11 +20,6 @@ from pydicom.filereader import data_element_offset_to_value, dcmread
 from pydicom.tag import SequenceDelimiterTag, TupleTag
 from pydicom.uid import UID
 from scipy.ndimage import zoom
-from javabridge.jutil import JavaException
-
-import pathml.core
-import pathml.core.tile
-from pathml.utils import pil_to_rgb
 
 try:
     import bioformats
@@ -415,8 +415,13 @@ class BioFormatsBackend(SlideBackend):
                         # some file formats read x, y out of order, transpose
                         if slicearray.shape[:2] != array.shape[:2]:
                             slicearray = np.transpose(slicearray)
-                            slicearray = np.moveaxis(slicearray, 0, -1)
-                        array[:, :, z, :, t] = slicearray
+                            # in 2d undoes transpose
+                            if len(sample.shape) == 3:
+                                slicearray = np.moveaxis(slicearray, 0, -1)
+                        if len(sample.shape) == 3:
+                            array[:, :, z, :, t] = slicearray
+                        else:
+                            array[:, :, z, level, t] = slicearray
 
         array = array.astype(np.uint8)
         return array
