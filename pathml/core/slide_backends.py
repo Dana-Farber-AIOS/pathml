@@ -397,8 +397,7 @@ class BioFormatsBackend(SlideBackend):
                             )
                             slicearray = np.asarray(slicearray)
                             # some file formats read x, y out of order, transpose
-                            if slicearray.shape[:2] != array.shape[:2]:
-                                slicearray = np.transpose(slicearray)
+                            slicearray = np.transpose(slicearray)
                             array[:, :, z, c, t] = slicearray
 
             # in this case, channels are correctly stored as channels, and we can support multi-level images as series
