@@ -20,8 +20,7 @@ from pathml.utils import (
     normalize_matrix_cols,
 )
 from skimage import restoration
-from skimage.exposure import (equalize_adapthist, equalize_hist,
-                              rescale_intensity)
+from skimage.exposure import equalize_adapthist, equalize_hist, rescale_intensity
 from skimage.measure import regionprops_table
 
 
@@ -275,7 +274,10 @@ class BinaryThreshold(Transform):
             image.ndim == 2
         ), f"input image has shape {image.shape}. Must convert to 1-channel image (H, W)."
         _, out = cv2.threshold(
-            src=image, thresh=self.threshold, maxval=self.max_value, type=self.type,
+            src=image,
+            thresh=self.threshold,
+            maxval=self.max_value,
+            type=self.type,
         )
         return out.astype(np.uint8)
 

@@ -12,7 +12,7 @@ import urllib.request
     [
         "https://www.pathml.org",
         # Vignettes
-        # "https://github.com/Dana-Farber-AIOS/pathml/tree/master/examples/vignettes/",
+        "https://github.com/Dana-Farber-AIOS/pathml/tree/master/examples/vignettes/",
         # docs
         "https://pathml.readthedocs.io/en/latest/",
     ],
