@@ -12,12 +12,15 @@ import numpy as np
 import pandas as pd
 import pathml.core
 import pathml.core.slide_data
-import spams
-from pathml.utils import (RGB_to_GREY, RGB_to_HSI, RGB_to_HSV, RGB_to_OD,
-                          normalize_matrix_cols)
+from pathml.utils import (
+    RGB_to_GREY,
+    RGB_to_HSI,
+    RGB_to_HSV,
+    RGB_to_OD,
+    normalize_matrix_cols,
+)
 from skimage import restoration
-from skimage.exposure import (equalize_adapthist, equalize_hist,
-                              rescale_intensity)
+from skimage.exposure import equalize_adapthist, equalize_hist, rescale_intensity
 from skimage.measure import regionprops_table
 
 
@@ -271,7 +274,10 @@ class BinaryThreshold(Transform):
             image.ndim == 2
         ), f"input image has shape {image.shape}. Must convert to 1-channel image (H, W)."
         _, out = cv2.threshold(
-            src=image, thresh=self.threshold, maxval=self.max_value, type=self.type,
+            src=image,
+            thresh=self.threshold,
+            maxval=self.max_value,
+            type=self.type,
         )
         return out.astype(np.uint8)
 
@@ -597,6 +603,10 @@ class StainNormalizationHE(Transform):
             Default can be used, or you can also fit to a reference slide of your choosing by calling
             :meth:`~pathml.preprocessing.transforms.StainNormalizationHE.fit_to_reference`.
 
+    Note:
+        If using ``stain_estimation_method = "Vahadane"``, `spams <http://thoth.inrialpes.fr/people/mairal/spams/>`_
+        must be installed, along with all of its dependencies (i.e. libblas & liblapack).
+
     References:
         Macenko, M., Niethammer, M., Marron, J.S., Borland, D., Woosley, J.T., Guan, X., Schmitt, C. and Thomas, N.E.,
         2009, June. A method for normalizing histology slides for quantitative analysis. In 2009 IEEE International
@@ -634,6 +644,14 @@ class StainNormalizationHE(Transform):
         assert (
             0 <= background_intensity <= 255
         ), f"Error: input background intensity {background_intensity} must be an integer between 0 and 255"
+
+        if stain_estimation_method.lower() == "vahadane":
+            try:
+                import spams
+            except (ImportError, ModuleNotFoundError):
+                raise Exception(
+                    "Vahadane method requires `spams` package to be installed"
+                )
 
         self.target = target.lower()
         self.stain_estimation_method = stain_estimation_method.lower()
@@ -723,6 +741,10 @@ class StainNormalizationHE(Transform):
         Args:
             image (np.ndarray): RGB image
         """
+        try:
+            import spams
+        except (ImportError, ModuleNotFoundError):
+            raise Exception("Vahadane method requires `spams` package to be installed")
         # convert to Optical Density (OD) space
         image_OD = RGB_to_OD(image)
         # reshape to (M*N)x3
@@ -823,6 +845,10 @@ class StainNormalizationHE(Transform):
             stain_matrix (np.ndarray): matrix of H and E stain vectors in optical density (OD) space.
                 Stain_matrix is (3, 2) and first column corresponds to hematoxylin by convention.
         """
+        try:
+            import spams
+        except (ImportError, ModuleNotFoundError):
+            raise Exception("Vahadane method requires `spams` package to be installed")
         image_OD = RGB_to_OD(image).reshape(-1, 3)
 
         # Get concentrations of each stain at each pixel

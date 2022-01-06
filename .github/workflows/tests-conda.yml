@@ -74,4 +74,5 @@ jobs:
       shell: bash -l {0}
       run: |
         cd docs
+        pip install -r readthedocs-requirements.txt
         make html

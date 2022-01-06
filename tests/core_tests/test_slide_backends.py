@@ -30,9 +30,14 @@ def dicom_backend():
 
 
 @pytest.mark.parametrize(
-    "backend", [openslide_backend(), bioformats_backend(), bioformats_backend_qptiff()]
+    "backend",
+    [
+        openslide_backend(),
+        bioformats_backend(),
+        bioformats_backend_qptiff(),
+    ],
 )
-@pytest.mark.parametrize("location", [(0, 0), (50, 100)])
+@pytest.mark.parametrize("location", [(0, 0), (50, 60)])
 @pytest.mark.parametrize("size", [50, (50, 100)])
 @pytest.mark.parametrize("level", [None, 0])
 def test_extract_region(backend, location, size, level):

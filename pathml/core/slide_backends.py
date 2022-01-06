@@ -5,8 +5,13 @@ License: GNU GPL 2.0
 
 from io import BytesIO
 from typing import Tuple
+
 import numpy as np
 import openslide
+import pathml.core
+import pathml.core.tile
+from javabridge.jutil import JavaException
+from pathml.utils import pil_to_rgb
 from PIL import Image
 from pydicom.dataset import Dataset
 from pydicom.encaps import get_frame_offsets
@@ -15,11 +20,6 @@ from pydicom.filereader import data_element_offset_to_value, dcmread
 from pydicom.tag import SequenceDelimiterTag, TupleTag
 from pydicom.uid import UID
 from scipy.ndimage import zoom
-from javabridge.jutil import JavaException
-
-import pathml.core
-import pathml.core.tile
-from pathml.utils import pil_to_rgb
 
 try:
     import bioformats
@@ -310,7 +310,7 @@ class BioFormatsBackend(SlideBackend):
             ), f"input level {level} invalid for slide with {self.level_count} levels total"
             return self.shape_list[level][:2]
 
-    def extract_region(self, location, size, level=0):
+    def extract_region(self, location, size, level=0, series_as_channels=False):
         """
         Extract a region of the image. All bioformats images have 5 dimensions representing
         (x, y, z, channel, time). Even if an image does not have multiple z-series or time-series,
@@ -323,14 +323,12 @@ class BioFormatsBackend(SlideBackend):
             size (Tuple[int, int, ...]): (X,Y) size of each region. If an integer is passed, will convert to a
             tuple of (H, W) and extract a square region. If a tuple with len < 5 is passed, missing
                 dimensions will be retrieved in full.
-            level (int): level from which to extract chunks. Level 0 is highest resolution.
+            level (int): level from which to extract chunks. Level 0 is highest resolution. Defaults to 0.
+            series_as_channels (bool): Whether to treat image series as channels. If ``True``, multi-level images
+                are not supported. Defaults to ``False``.
 
         Returns:
-            np.ndarray: image at the specified region
-
-        Example:
-            Extract 2000x2000 x,y region from upper left corner of 7 channel, 2d fluorescent image.
-            data.slide.extract_region(location = (0,0), size = 2000)
+            np.ndarray: image at the specified region. 5-D array of (x, y, z, c, t)
         """
         if level is None:
             level = 0
@@ -359,6 +357,11 @@ class BioFormatsBackend(SlideBackend):
             raise ValueError(
                 f"input size {size} invalid. Must be a tuple of integer coordinates of len<2"
             )
+        if series_as_channels:
+            assert (
+                level == 0
+            ), f"Multi-level images not supported with series_as_channels=True. Input 'level={level}' invalid. Use 'level=0'."
+
         javabridge.start_vm(class_path=bioformats.JARS, max_heap_size="100G")
         with bioformats.ImageReader(str(self.filename), perform_init=True) as reader:
             # expand size
@@ -370,32 +373,35 @@ class BioFormatsBackend(SlideBackend):
             arrayshape = tuple(arrayshape)
             array = np.empty(arrayshape)
 
+            # read a very small region to check whether the image has channels incorrectly stored as series
             sample = reader.read(
                 z=0,
                 t=0,
                 series=level,
                 rescale=False,
-                XYWH=(location[0], location[1], size[0], size[1]),
+                XYWH=(location[0], location[1], 2, 2),
             )
 
-            if len(sample.shape) == 2:
+            # need this part because some facilities output images where the channels are incorrectly stored as series
+            # in this case we pull the image for each series, then stack them together as channels
+            if series_as_channels:
                 for z in range(self.shape_list[level][2]):
                     for c in range(self.shape_list[level][3]):
                         for t in range(self.shape_list[level][4]):
                             slicearray = reader.read(
                                 z=z,
                                 t=t,
-                                series=level,
+                                series=c,
                                 rescale=False,
                                 XYWH=(location[0], location[1], size[0], size[1]),
                             )
                             slicearray = np.asarray(slicearray)
                             # some file formats read x, y out of order, transpose
-                            if slicearray.shape[:2] != array.shape[:2]:
-                                slicearray = np.transpose(slicearray)
+                            slicearray = np.transpose(slicearray)
                             array[:, :, z, c, t] = slicearray
-            # if series is set to read all channels, read all c simultaneously
-            elif len(sample.shape) == 3:
+
+            # in this case, channels are correctly stored as channels, and we can support multi-level images as series
+            else:
                 for z in range(self.shape_list[level][2]):
                     for t in range(self.shape_list[level][4]):
                         slicearray = reader.read(
@@ -409,10 +415,13 @@ class BioFormatsBackend(SlideBackend):
                         # some file formats read x, y out of order, transpose
                         if slicearray.shape[:2] != array.shape[:2]:
                             slicearray = np.transpose(slicearray)
-                            slicearray = np.moveaxis(slicearray, 0, -1)
-                        array[:, :, z, :, t] = slicearray
-            else:
-                raise Exception("image format not supported")
+                            # in 2d undoes transpose
+                            if len(sample.shape) == 3:
+                                slicearray = np.moveaxis(slicearray, 0, -1)
+                        if len(sample.shape) == 3:
+                            array[:, :, z, :, t] = slicearray
+                        else:
+                            array[:, :, z, level, t] = slicearray
 
         array = array.astype(np.uint8)
         return array
@@ -448,7 +457,7 @@ class BioFormatsBackend(SlideBackend):
             image_array = zoom(array, ratio)
         return image_array
 
-    def generate_tiles(self, shape=3000, stride=None, pad=False, level=0):
+    def generate_tiles(self, shape=3000, stride=None, pad=False, level=0, **kwargs):
         """
         Generator over tiles.
 
@@ -511,7 +520,7 @@ class BioFormatsBackend(SlideBackend):
                 if coords[0] + shape[0] < i and coords[1] + shape[1] < j:
                     # get image for tile
                     tile_im = self.extract_region(
-                        location=coords, size=shape, level=level
+                        location=coords, size=shape, level=level, **kwargs
                     )
                     yield pathml.core.tile.Tile(image=tile_im, coords=coords)
                 else:
@@ -520,7 +529,7 @@ class BioFormatsBackend(SlideBackend):
                         j - coords[1] if coords[1] + shape[1] > j else shape[1],
                     )
                     tile_im = self.extract_region(
-                        location=coords, size=unpaddedshape, level=level
+                        location=coords, size=unpaddedshape, level=level, **kwargs
                     )
                     zeroarrayshape = list(tile_im.shape)
                     zeroarrayshape[0], zeroarrayshape[1] = (
