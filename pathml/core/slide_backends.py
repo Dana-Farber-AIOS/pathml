@@ -398,9 +398,6 @@ class BioFormatsBackend(SlideBackend):
 
             # in this case, channels are correctly stored as channels, and we can support multi-level images as series
             else:
-                assert (
-                    len(sample.shape) == 3
-                ), f"sample shape is {sample.shape}. Expecting 3 dimensions. Do you need series_as_channels=True?"
                 for z in range(self.shape_list[level][2]):
                     for t in range(self.shape_list[level][4]):
                         slicearray = reader.read(
@@ -451,7 +448,7 @@ class BioFormatsBackend(SlideBackend):
             image_array = zoom(array, ratio)
         return image_array
 
-    def generate_tiles(self, shape=3000, stride=None, pad=False, level=0):
+    def generate_tiles(self, shape=3000, stride=None, pad=False, level=0, **kwargs):
         """
         Generator over tiles.
 
@@ -514,7 +511,7 @@ class BioFormatsBackend(SlideBackend):
                 if coords[0] + shape[0] < i and coords[1] + shape[1] < j:
                     # get image for tile
                     tile_im = self.extract_region(
-                        location=coords, size=shape, level=level
+                        location=coords, size=shape, level=level, **kwargs
                     )
                     yield pathml.core.tile.Tile(image=tile_im, coords=coords)
                 else:
@@ -523,7 +520,7 @@ class BioFormatsBackend(SlideBackend):
                         j - coords[1] if coords[1] + shape[1] > j else shape[1],
                     )
                     tile_im = self.extract_region(
-                        location=coords, size=unpaddedshape, level=level
+                        location=coords, size=unpaddedshape, level=level, **kwargs
                     )
                     zeroarrayshape = list(tile_im.shape)
                     zeroarrayshape[0], zeroarrayshape[1] = (
