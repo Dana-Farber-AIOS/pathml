@@ -20,7 +20,8 @@ from pathml.utils import (
     normalize_matrix_cols,
 )
 from skimage import restoration
-from skimage.exposure import equalize_adapthist, equalize_hist, rescale_intensity
+from skimage.exposure import (equalize_adapthist, equalize_hist,
+                              rescale_intensity)
 from skimage.measure import regionprops_table
 
 
@@ -274,10 +275,7 @@ class BinaryThreshold(Transform):
             image.ndim == 2
         ), f"input image has shape {image.shape}. Must convert to 1-channel image (H, W)."
         _, out = cv2.threshold(
-            src=image,
-            thresh=self.threshold,
-            maxval=self.max_value,
-            type=self.type,
+            src=image, thresh=self.threshold, maxval=self.max_value, type=self.type,
         )
         return out.astype(np.uint8)
 
@@ -1450,9 +1448,7 @@ class QuantifyMIF(Transform):
             ],
         )
         counts.obs = counts.obs.rename(columns={0: "x", 1: "y"})
-        counts.obs["coords"] = str(countsdataframe["coords"])
         counts.obs["filled_area"] = countsdataframe["filled_area"]
-        counts.obs["slice"] = str(countsdataframe["slice"])
         counts.obs["euler_number"] = countsdataframe["euler_number"]
         min_intensities = pd.DataFrame()
         for i in range(img.shape[-1]):
@@ -1465,8 +1461,7 @@ class QuantifyMIF(Transform):
         try:
             counts.obsm["spatial"] = np.array(counts.obs[["x", "y"]])
         except:
-            pass
-        counts.obs["tile"] = str(tile.coords)
+            print("warning: did not log coordinates in obsm")
         return counts
 
     def apply(self, tile):

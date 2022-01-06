@@ -257,6 +257,7 @@ class SlideData:
         tile_pad=False,
         overwrite_existing_tiles=False,
         write_dir=None,
+        **kwargs,
     ):
         """
         Run a preprocessing pipeline on SlideData.
@@ -317,7 +318,11 @@ class SlideData:
             processed_tile_futures = []
 
             for tile in self.generate_tiles(
-                level=level, shape=tile_size, stride=tile_stride, pad=tile_pad
+                level=level,
+                shape=tile_size,
+                stride=tile_stride,
+                pad=tile_pad,
+                **kwargs,
             ):
                 if not tile.slide_type:
                     tile.slide_type = self.slide_type
@@ -338,7 +343,11 @@ class SlideData:
 
         else:
             for tile in self.generate_tiles(
-                level=level, shape=tile_size, stride=tile_stride, pad=tile_pad
+                level=level,
+                shape=tile_size,
+                stride=tile_stride,
+                pad=tile_pad,
+                **kwargs,
             ):
                 if not tile.slide_type:
                     tile.slide_type = self.slide_type
