@@ -287,6 +287,28 @@ class BioFormatsBackend(SlideBackend):
         self.shape_list = sizeSeries  # shape on all levels
         self.metadata = bioformats.get_omexml_metadata(self.filename)
 
+        # map from ome pixel datatypes to numpy types. Based on:
+        # https://github.com/CellProfiler/python-bioformats/blob/c03fb0988caf686251707adc4332d0aff9f02941/bioformats/omexml.py#L77-L87
+        # but specifying that float = float32 (np.float defaults to float62)
+        pixel_dtype_map = {
+            bioformats.omexml.PT_INT8: np.dtype("int8"),
+            bioformats.omexml.PT_INT16: np.dtype("int16"),
+            bioformats.omexml.PT_INT32: np.dtype("int32"),
+            bioformats.omexml.PT_UINT8: np.dtype("uint8"),
+            bioformats.omexml.PT_UINT16: np.dtype("uint16"),
+            bioformats.omexml.PT_UINT32: np.dtype("uint32"),
+            bioformats.omexml.PT_FLOAT: np.dtype("float32"),
+            bioformats.omexml.PT_BIT: np.dtype("bool"),
+            bioformats.omexml.PT_DOUBLE: np.dtype("float64"),
+        }
+        ome_pixeltype = bioformats.OMEXML(self.metadata).image().Pixels.get_PixelType()
+        try:
+            self.pixel_dtype = pixel_dtype_map[ome_pixeltype]
+        except:
+            raise Exception(
+                f"pixel type '{ome_pixeltype}' detected from OME metadata not recognized."
+            )
+
     def __repr__(self):
         return f"BioFormatsBackend('{self.filename}')"
 
@@ -423,8 +445,12 @@ class BioFormatsBackend(SlideBackend):
                         else:
                             array[:, :, z, level, t] = slicearray
 
-        array = array.astype(np.uint8)
-        return array
+        # scale array before converting: https://github.com/Dana-Farber-AIOS/pathml/issues/271
+        # first scale to [0-1]
+        array_scaled = array / (2 ** (8 * self.pixel_dtype.itemsize))
+        # then scale to [0-255] and convert to 8 bit
+        array_scaled = array_scaled * 2 ** 8
+        return array_scaled.astype(np.uint8)
 
     def get_thumbnail(self, size=None):
         """
