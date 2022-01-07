@@ -289,7 +289,7 @@ class BioFormatsBackend(SlideBackend):
 
         # map from ome pixel datatypes to numpy types. Based on:
         # https://github.com/CellProfiler/python-bioformats/blob/c03fb0988caf686251707adc4332d0aff9f02941/bioformats/omexml.py#L77-L87
-        # but specifying that float = float32 (np.float defaults to float62)
+        # but specifying that float = float32 (np.float defaults to float64)
         pixel_dtype_map = {
             bioformats.omexml.PT_INT8: np.dtype("int8"),
             bioformats.omexml.PT_INT16: np.dtype("int16"),
