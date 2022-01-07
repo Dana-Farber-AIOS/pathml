@@ -250,9 +250,11 @@ class BioFormatsBackend(SlideBackend):
 
     Args:
         filename (str): path to image file on disk
+        dtype (numpy.dtype): data type of image. If ``None``, will use BioFormats to infer the data type from the
+            image's OME metadata. Defaults to ``None``.
     """
 
-    def __init__(self, filename):
+    def __init__(self, filename, dtype=None):
         self.filename = filename
         # init java virtual machine
         javabridge.start_vm(class_path=bioformats.JARS, max_heap_size="50G")
@@ -287,27 +289,36 @@ class BioFormatsBackend(SlideBackend):
         self.shape_list = sizeSeries  # shape on all levels
         self.metadata = bioformats.get_omexml_metadata(self.filename)
 
-        # map from ome pixel datatypes to numpy types. Based on:
-        # https://github.com/CellProfiler/python-bioformats/blob/c03fb0988caf686251707adc4332d0aff9f02941/bioformats/omexml.py#L77-L87
-        # but specifying that float = float32 (np.float defaults to float64)
-        pixel_dtype_map = {
-            bioformats.omexml.PT_INT8: np.dtype("int8"),
-            bioformats.omexml.PT_INT16: np.dtype("int16"),
-            bioformats.omexml.PT_INT32: np.dtype("int32"),
-            bioformats.omexml.PT_UINT8: np.dtype("uint8"),
-            bioformats.omexml.PT_UINT16: np.dtype("uint16"),
-            bioformats.omexml.PT_UINT32: np.dtype("uint32"),
-            bioformats.omexml.PT_FLOAT: np.dtype("float32"),
-            bioformats.omexml.PT_BIT: np.dtype("bool"),
-            bioformats.omexml.PT_DOUBLE: np.dtype("float64"),
-        }
-        ome_pixeltype = bioformats.OMEXML(self.metadata).image().Pixels.get_PixelType()
-        try:
-            self.pixel_dtype = pixel_dtype_map[ome_pixeltype]
-        except:
-            raise Exception(
-                f"pixel type '{ome_pixeltype}' detected from OME metadata not recognized."
+        if dtype:
+            assert isinstance(
+                dtype, np.dtype
+            ), f"dtype is of type {type(dtype)}. Must be a np.dtype"
+            self.pixel_dtype = dtype
+        else:
+            # infer pixel data type from metadata
+            # map from ome pixel datatypes to numpy types. Based on:
+            # https://github.com/CellProfiler/python-bioformats/blob/c03fb0988caf686251707adc4332d0aff9f02941/bioformats/omexml.py#L77-L87
+            # but specifying that float = float32 (np.float defaults to float64)
+            pixel_dtype_map = {
+                bioformats.omexml.PT_INT8: np.dtype("int8"),
+                bioformats.omexml.PT_INT16: np.dtype("int16"),
+                bioformats.omexml.PT_INT32: np.dtype("int32"),
+                bioformats.omexml.PT_UINT8: np.dtype("uint8"),
+                bioformats.omexml.PT_UINT16: np.dtype("uint16"),
+                bioformats.omexml.PT_UINT32: np.dtype("uint32"),
+                bioformats.omexml.PT_FLOAT: np.dtype("float32"),
+                bioformats.omexml.PT_BIT: np.dtype("bool"),
+                bioformats.omexml.PT_DOUBLE: np.dtype("float64"),
+            }
+            ome_pixeltype = (
+                bioformats.OMEXML(self.metadata).image().Pixels.get_PixelType()
             )
+            try:
+                self.pixel_dtype = pixel_dtype_map[ome_pixeltype]
+            except:
+                raise Exception(
+                    f"pixel type '{ome_pixeltype}' detected from OME metadata not recognized."
+                )
 
     def __repr__(self):
         return f"BioFormatsBackend('{self.filename}')"
