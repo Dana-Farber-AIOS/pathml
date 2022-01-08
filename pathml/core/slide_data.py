@@ -73,6 +73,7 @@ class SlideData:
         time_series (bool, optional): Flag indicating whether the image is a time series.
             Defaults to ``None``. Ignored if ``slide_type`` is specified.
         counts (anndata.AnnData): object containing counts matrix associated with image quantification
+        dtype (np.dtype, optional): datatype of array in numpy format i.e. np.uint8, np.float32
     """
 
     def __init__(
@@ -91,6 +92,7 @@ class SlideData:
         volumetric=None,
         time_series=None,
         counts=None,
+        dtype=None,
     ):
         # check inputs
         assert masks is None or isinstance(
@@ -173,7 +175,7 @@ class SlideData:
         if backend.lower() == "openslide":
             backend_obj = pathml.core.OpenSlideBackend(filepath)
         elif backend.lower() == "bioformats":
-            backend_obj = pathml.core.BioFormatsBackend(filepath)
+            backend_obj = pathml.core.BioFormatsBackend(filepath, dtype)
         elif backend.lower() == "dicom":
             backend_obj = pathml.core.DICOMBackend(filepath)
         elif backend.lower() == "h5path":

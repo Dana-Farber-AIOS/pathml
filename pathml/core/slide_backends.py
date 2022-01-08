@@ -290,6 +290,7 @@ class BioFormatsBackend(SlideBackend):
         self.metadata = bioformats.get_omexml_metadata(self.filename)
 
         if dtype:
+            pass
             assert isinstance(
                 dtype, np.dtype
             ), f"dtype is of type {type(dtype)}. Must be a np.dtype"
@@ -343,7 +344,9 @@ class BioFormatsBackend(SlideBackend):
             ), f"input level {level} invalid for slide with {self.level_count} levels total"
             return self.shape_list[level][:2]
 
-    def extract_region(self, location, size, level=0, series_as_channels=False):
+    def extract_region(
+        self, location, size, level=0, series_as_channels=False, 
+    ):
         """
         Extract a region of the image. All bioformats images have 5 dimensions representing
         (x, y, z, channel, time). Even if an image does not have multiple z-series or time-series,
@@ -461,7 +464,8 @@ class BioFormatsBackend(SlideBackend):
         array_scaled = array / (2 ** (8 * self.pixel_dtype.itemsize))
         # then scale to [0-255] and convert to 8 bit
         array_scaled = array_scaled * 2 ** 8
-        return array_scaled.astype(np.uint8)
+        array_scaled = array_scaled.astype(np.uint8)
+        return array_scaled
 
     def get_thumbnail(self, size=None):
         """
