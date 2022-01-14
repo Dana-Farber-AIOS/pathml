@@ -73,7 +73,7 @@ class SlideData:
         time_series (bool, optional): Flag indicating whether the image is a time series.
             Defaults to ``None``. Ignored if ``slide_type`` is specified.
         counts (anndata.AnnData): object containing counts matrix associated with image quantification
-        dtype (np.dtype, optional): datatype of array in numpy format i.e. np.uint8, np.float32
+        dtype (np.dtype, optional): datatype of array in numpy format i.e. np.uint8, np.float32. Ignored unless ``backend=="bioformats"``.
     """
 
     def __init__(
