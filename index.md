@@ -7,8 +7,7 @@
 [![Downloads](https://pepy.tech/badge/pathml)](https://pepy.tech/project/pathml)
 [![codecov](https://codecov.io/github/Dana-Farber-AIOS/pathml/branch/master/graph/badge.svg?token=UHSQPTM28Y)](https://codecov.io/github/Dana-Farber-AIOS/pathml)
 
-
-A toolkit for computational pathology and machine learning.  
+An open-source toolkit for computational pathology and machine learning.
 
 * Build modular, fully-customizable preprocessing pipelines for gigapixel-scale images
 * Unified API for H&E, IHC, fluorescence, and spatial omics images
