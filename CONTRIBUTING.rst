@@ -42,9 +42,10 @@ Coordinate system conventions
 
 With multiple tools for interacting with matrices/images, conflicting coordinate systems has been a common source of
 bugs. This is typically caused when mixing up (X, Y) coordinate systems and (i, j) coordinate systems. **To avoid these
-issues, we have adopted the (i, j) coordinate convention throughout PathML.** Developers should be careful
-about coordinate systems and make the necessary adjustments when using third-party tools so that users of PathML
-can rely on a consistent coordinate system when using our tools.
+issues, we have adopted the (i, j) coordinate convention throughout PathML.** This follows the convention used by
+NumPy and many others, where ``A[i, j]`` refers to the element of matrix A in the ith row, jth column.
+Developers should be careful about coordinate systems and make the necessary adjustments when using third-party tools
+so that users of PathML can rely on a consistent coordinate system when using our tools.
 
 Setting up a local development environment
 -------------------------------------------
