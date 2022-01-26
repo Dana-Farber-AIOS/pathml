@@ -252,6 +252,10 @@ class BioFormatsBackend(SlideBackend):
         filename (str): path to image file on disk
         dtype (numpy.dtype): data type of image. If ``None``, will use BioFormats to infer the data type from the
             image's OME metadata. Defaults to ``None``.
+
+    Note:
+        While the Bio-Formats convention uses XYZCT channel order, we use YXZCT for compatibility with the rest of
+        PathML which is based on (i, j) coordinate system.
     """
 
     def __init__(self, filename, dtype=None):
@@ -281,7 +285,8 @@ class BioFormatsBackend(SlideBackend):
                 reader.getSizeC(),
                 reader.getSizeT(),
             )
-            sizeSeries.append((sizex, sizey, sizez, sizec, sizet))
+            # use yxzct for compatibility with the rest of PathML which uses i,j coords (not x, y)
+            sizeSeries.append((sizey, sizex, sizez, sizec, sizet))
         s = [s[0] * s[1] for s in sizeSeries]
 
         self.level_count = seriesCount  # count of levels
@@ -332,7 +337,7 @@ class BioFormatsBackend(SlideBackend):
                 Defaults to ``None``.
 
         Returns:
-            Tuple[int, int]: Shape of image (H, W)
+            Tuple[int, int]: Shape of image (i, j) at target level
         """
         if level is None:
             return self.shape[:2]
@@ -346,22 +351,22 @@ class BioFormatsBackend(SlideBackend):
     def extract_region(self, location, size, level=0, series_as_channels=False):
         """
         Extract a region of the image. All bioformats images have 5 dimensions representing
-        (x, y, z, channel, time). Even if an image does not have multiple z-series or time-series,
-        those dimensions will still be kept. For example, a standard RGB image will be of shape (x, y, 1, 3, 1).
+        (i, j, z, channel, time). Even if an image does not have multiple z-series or time-series,
+        those dimensions will still be kept. For example, a standard RGB image will be of shape (i, j, 1, 3, 1).
         If a tuple with len < 5 is passed, missing dimensions will be
         retrieved in full.
 
         Args:
-            location (Tuple[int, int]): (X,Y) location of corner of extracted region closest to the origin.
-            size (Tuple[int, int, ...]): (X,Y) size of each region. If an integer is passed, will convert to a
-            tuple of (H, W) and extract a square region. If a tuple with len < 5 is passed, missing
+            location (Tuple[int, int]): (i, j) location of corner of extracted region closest to the origin.
+            size (Tuple[int, int, ...]): (i, j) size of each region. If an integer is passed, will convert to a
+            tuple of (i, j) and extract a square region. If a tuple with len < 5 is passed, missing
                 dimensions will be retrieved in full.
             level (int): level from which to extract chunks. Level 0 is highest resolution. Defaults to 0.
             series_as_channels (bool): Whether to treat image series as channels. If ``True``, multi-level images
                 are not supported. Defaults to ``False``.
 
         Returns:
-            np.ndarray: image at the specified region. 5-D array of (x, y, z, c, t)
+            np.ndarray: image at the specified region. 5-D array of (i, j, z, c, t)
         """
         if level is None:
             level = 0
@@ -412,7 +417,7 @@ class BioFormatsBackend(SlideBackend):
                 t=0,
                 series=level,
                 rescale=False,
-                XYWH=(location[0], location[1], 2, 2),
+                XYWH=(location[1], location[0], 2, 2),
             )
 
             # need this part because some facilities output images where the channels are incorrectly stored as series
@@ -426,7 +431,7 @@ class BioFormatsBackend(SlideBackend):
                                 t=t,
                                 series=c,
                                 rescale=False,
-                                XYWH=(location[0], location[1], size[0], size[1]),
+                                XYWH=(location[1], location[0], size[1], size[0]),
                             )
                             slicearray = np.asarray(slicearray)
                             # some file formats read x, y out of order, transpose
@@ -442,7 +447,7 @@ class BioFormatsBackend(SlideBackend):
                             t=t,
                             series=level,
                             rescale=False,
-                            XYWH=(location[0], location[1], size[0], size[1]),
+                            XYWH=(location[1], location[0], size[1], size[0]),
                         )
                         slicearray = np.asarray(slicearray)
                         # some file formats read x, y out of order, transpose
