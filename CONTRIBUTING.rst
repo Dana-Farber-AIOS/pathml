@@ -37,6 +37,15 @@ Request a new feature by filing an issue on GitHub. Make sure to include the fol
 For developers
 ==============
 
+Coordinate system conventions
+-----------------------------
+
+With multiple tools for interacting with matrices/images, conflicting coordinate systems has been a common source of
+bugs. This is typically caused when mixing up (X, Y) coordinate systems and (i, j) coordinate systems. **To avoid these
+issues, we have adopted the (i, j) coordinate convention throughout PathML.** Developers should be careful
+about coordinate systems and make the necessary adjustments when using third-party tools so that users of PathML
+can rely on a consistent coordinate system when using our tools.
+
 Setting up a local development environment
 -------------------------------------------
 
@@ -94,12 +103,15 @@ How to contribute code, documentation, etc.
 6. Push your changes and open a pull request on GitHub referencing the corresponding issue
 7. Respond to discussion/feedback about the pull request, make changes as necessary
 
-Versioning
-----------
+Versioning and Distributing
+---------------------------
 
 We use `semantic versioning`_. The version is tracked in ``pathml/_version.py`` and should be updated there as required.
-When new code is merged to the master branch on GitHub, the version should be incremented and the commit should
-be tagged in version format (e.g., "v1.0.0" for version 1.0.0).
+When new code is merged to the master branch on GitHub, the version should be incremented and a new release should be
+pushed. Releases can be created using the GitHub website interface, and should be tagged in version format
+(e.g., "v1.0.0" for version 1.0.0) and include release notes indicating what has changed.
+Once a new release is created, GitHub Actions workflows will automatically build and publish the updated package on
+PyPI and TestPyPI, as well as build and publish the Docker image to Docker Hub.
 
 Code Quality
 ------------
