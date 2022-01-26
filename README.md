@@ -13,7 +13,7 @@
 | master | ![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg?branch=master) |
 | dev    | ![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg?branch=dev) |
 
-A toolkit for computational pathology and machine learning.
+An open-source toolkit for computational pathology and machine learning.
 
 **View [documentation](https://pathml.readthedocs.io/en/latest/)**
 
