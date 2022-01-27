@@ -348,7 +348,9 @@ class BioFormatsBackend(SlideBackend):
             ), f"input level {level} invalid for slide with {self.level_count} levels total"
             return self.shape_list[level][:2]
 
-    def extract_region(self, location, size, level=0, series_as_channels=False):
+    def extract_region(
+        self, location, size, level=0, series_as_channels=False, normalize=True
+    ):
         """
         Extract a region of the image. All bioformats images have 5 dimensions representing
         (i, j, z, channel, time). Even if an image does not have multiple z-series or time-series,
@@ -364,6 +366,7 @@ class BioFormatsBackend(SlideBackend):
             level (int): level from which to extract chunks. Level 0 is highest resolution. Defaults to 0.
             series_as_channels (bool): Whether to treat image series as channels. If ``True``, multi-level images
                 are not supported. Defaults to ``False``.
+            normalize (bool, optional): Whether to normalize the image to int8 before returning. Defaults to True.
 
         Returns:
             np.ndarray: image at the specified region. 5-D array of (i, j, z, c, t)
@@ -461,12 +464,15 @@ class BioFormatsBackend(SlideBackend):
                         else:
                             array[:, :, z, level, t] = slicearray
 
-        # scale array before converting: https://github.com/Dana-Farber-AIOS/pathml/issues/271
-        # first scale to [0-1]
-        array_scaled = array / (2 ** (8 * self.pixel_dtype.itemsize))
-        # then scale to [0-255] and convert to 8 bit
-        array_scaled = array_scaled * 2 ** 8
-        return array_scaled.astype(np.uint8)
+        if not normalize:
+            return array
+        else:
+            # scale array before converting: https://github.com/Dana-Farber-AIOS/pathml/issues/271
+            # first scale to [0-1]
+            array_scaled = array / (2 ** (8 * self.pixel_dtype.itemsize))
+            # then scale to [0-255] and convert to 8 bit
+            array_scaled = array_scaled * 2 ** 8
+            return array_scaled.astype(np.uint8)
 
     def get_thumbnail(self, size=None):
         """
@@ -520,6 +526,7 @@ class BioFormatsBackend(SlideBackend):
             pad (bool): How to handle tiles on the edges. If ``True``, these edge tiles will be zero-padded
                 and yielded with the other chunks. If ``False``, incomplete edge chunks will be ignored.
                 Defaults to ``False``.
+            **kwargs: Other arguments passed through to ``extract_region()`` method.
 
         Yields:
             pathml.core.tile.Tile: Extracted Tile object
