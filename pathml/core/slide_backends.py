@@ -367,6 +367,7 @@ class BioFormatsBackend(SlideBackend):
             series_as_channels (bool): Whether to treat image series as channels. If ``True``, multi-level images
                 are not supported. Defaults to ``False``.
             normalize (bool, optional): Whether to normalize the image to int8 before returning. Defaults to True.
+                If False, image will be returned as-is immediately after reading, typically in float64.
 
         Returns:
             np.ndarray: image at the specified region. 5-D array of (i, j, z, c, t)
