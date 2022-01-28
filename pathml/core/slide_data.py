@@ -15,33 +15,29 @@ import numpy as np
 import pathml.core
 import pathml.preprocessing.pipeline
 from pathml.core.slide_types import SlideType
-from torch.utils.data import Dataset
 
 
-def get_file_ext(path):
+def infer_backend(path):
     """
-    Return the file extension of an input path.
-    If zipped with 'gz' or 'bz2' extension, will instead return the second to last extension.
-    If multiple extensions, will return the last two.
+    Checks file extensions to try to infer correct backend to use.
+    Uses the file extensions from the sets contained in this file (pathml/core/slide_data.py)
+    For file formats which are supported by both openslide and bioformats, will return "bioformats".
 
     Args:
         path: path to file
 
     Returns:
-        str: file extension
+        str: one of "bioformats", "openslide", "dicom", "h5path"
     """
-    p = Path(path)
-    ext = p.suffixes
-    if not ext:
-        raise Exception(f"invalid path has no file extension: {path}")
-    elif len(ext) == 1:
-        ext = ext[0]
-    elif len(ext) >= 2:
-        if ext[-1] in {".gz", ".bz2"}:
-            ext = ext[-2]
-        else:
-            ext = "".join(ext[-2:])
-    return ext
+    path = str(path)
+    for extension_set, name in zip(
+        [pathmlext, bioformatsext, openslideext, dicomext],
+        ["h5path", "bioformats", "openslide", "dicom"],
+    ):
+        for ext in extension_set:
+            if path[-len(ext) :] == ext:
+                return name
+    raise ValueError(f"input path {path} doesn't match any supported file extensions")
 
 
 class SlideData:
@@ -154,21 +150,9 @@ class SlideData:
             backend = backend.lower()
         else:
             # try to infer the correct backend
-            ext = get_file_ext(filepath)
-            if ext in openslideext:
-                backend = "openslide"
-            elif ext in bioformatsext:
-                backend = "bioformats"
-            elif ext in dicomext:
-                backend = "dicom"
-            elif ext in pathmlext:
-                backend = "h5path"
-                # load SlideData from h5 or h5path
+            backend = infer_backend(filepath)
+            if backend == "h5path":
                 _load_from_h5path = True
-            else:
-                raise ValueError(
-                    f"Backend not specified, but cannot infer correct backend from input path {filepath}"
-                )
 
         if backend.lower() == "openslide":
             backend_obj = pathml.core.OpenSlideBackend(filepath)
