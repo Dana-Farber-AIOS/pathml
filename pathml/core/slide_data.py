@@ -51,7 +51,7 @@ class SlideData:
         tiles (pathml.core.Tiles, optional): object containing {coordinates, tile} pairs
         labels (collections.OrderedDict, optional): dictionary containing {key, label} pairs
         backend (str, optional): backend to use for interfacing with slide on disk.
-            Must be one of {"OpenSlide", "BioFormats", "DICOM"} (case-insensitive).
+            Must be one of {"OpenSlide", "BioFormats", "DICOM", "h5path"} (case-insensitive).
             If ``None``, and a ``filepath`` is provided, tries to infer the correct backend from the file extension.
         slide_type (pathml.core.SlideType, optional): slide type specification. Must be a
             :class:`~pathml.core.SlideType` object. Alternatively, slide type can be specified by using the
@@ -116,8 +116,8 @@ class SlideData:
         ), f"slide_type is of type {type(slide_type)} but must be of type pathml.core.types.SlideType"
         assert backend is None or (
             isinstance(backend, str)
-            and backend.lower() in {"openslide", "bioformats", "dicom"}
-        ), f"backend {backend} must be one of ['OpenSlide', 'BioFormats', 'DICOM'] (case-insensitive)."
+            and backend.lower() in {"openslide", "bioformats", "dicom", "h5path"}
+        ), f"backend {backend} must be one of ['OpenSlide', 'BioFormats', 'DICOM', 'h5path'] (case-insensitive)."
         assert counts is None or isinstance(
             counts, anndata.AnnData
         ), f"counts is if type {type(counts)} but must be of type anndata.AnnData"
