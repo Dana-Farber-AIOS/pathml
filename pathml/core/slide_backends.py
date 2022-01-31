@@ -450,12 +450,6 @@ class BioFormatsBackend(SlideBackend):
                             XYWH=(location[1], location[0], size[1], size[0]),
                         )
                         slicearray = np.asarray(slicearray)
-                        # some file formats read x, y out of order, transpose
-                        if slicearray.shape[:2] != array.shape[:2]:
-                            slicearray = np.transpose(slicearray)
-                            # in 2d undoes transpose
-                            if len(sample.shape) == 3:
-                                slicearray = np.moveaxis(slicearray, 0, -1)
                         if len(sample.shape) == 3:
                             array[:, :, z, :, t] = slicearray
                         else:
