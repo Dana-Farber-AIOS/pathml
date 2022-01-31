@@ -1401,7 +1401,9 @@ class SegmentMIF(Transform):
 
 class QuantifyMIF(Transform):
     """
-    Convert segmented image into anndata.AnnData counts object.
+    Convert segmented image into anndata.AnnData counts object `AnnData <https://anndata.readthedocs.io/en/latest/>`_.
+    Counts objects are used to interface with the Python single cell analysis ecosystem `Scanpy <https://scanpy.readthedocs.io/en/stable/>`_.
+    The counts object contains a summary of protein expression statistics in each cell along with its coordinate.
 
     Args:
         segmentation_mask (str): key indicating which mask to use as label image
