@@ -1,8 +1,10 @@
 name: Publish PathML Docker image on Docker Hub
 
 on:
+  workflow_dispatch:
   release:
-    types: [published]
+    types: 
+      - published
 
 jobs:
   docker:
