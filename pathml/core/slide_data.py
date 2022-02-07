@@ -280,6 +280,7 @@ class SlideData:
             write_dir (str): Path to directory to write the processed slide to. The processed SlideData object
                 will be written to the directory immediately after the pipeline has completed running.
                 The filepath will default to "<write_dir>/<slide.name>.h5path. Defaults to ``None``.
+            **kwargs: Other arguments passed through to ``generate_tiles()`` method of the backend.
         """
         assert isinstance(
             pipeline, pathml.preprocessing.pipeline.Pipeline
@@ -382,8 +383,8 @@ class SlideData:
             location (Tuple[int, int]): Location of top-left corner of tile (i, j)
             size (Union[int, Tuple[int, int]]): Size of each tile. May be a tuple of (height, width) or a
                 single integer, in which case square tiles of that size are generated.
-            *args: positional arguments passed through
-            **kwargs: keyword arguments passed through
+            *args: positional arguments passed through to ``extract_region()`` method of the backend.
+            **kwargs: keyword arguments passed through to ``extract_region()`` method of the backend.
 
         Returns:
             np.ndarray: image at the specified region

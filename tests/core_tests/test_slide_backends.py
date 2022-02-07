@@ -46,6 +46,16 @@ def test_extract_region(backend, location, size, level):
     assert region.dtype == np.uint8
 
 
+@pytest.mark.parametrize("backend", [bioformats_backend(), bioformats_backend_qptiff()])
+@pytest.mark.parametrize("normalize", [True, False])
+def test_extract_region_bioformats_no_normalize(backend, normalize):
+    reg = backend.extract_region(location=(0, 0), size=10, normalize=normalize)
+    if normalize:
+        assert reg.dtype == np.dtype("uint8")
+    else:
+        assert reg.dtype == np.dtype("float64")
+
+
 @pytest.mark.parametrize("shape", [500, (500, 250)])
 def test_extract_region_openslide(example_slide_data, shape):
     """
@@ -147,6 +157,17 @@ def test_tile_generator_with_level(backend, shape, tile_shape, pad, level):
             [1 + (shape[i] // tile_shape[i]) for i in range(len(shape))]
         )
     assert all([isinstance(tile, Tile) for tile in tiles])
+
+
+@pytest.mark.parametrize("backend", [bioformats_backend(), bioformats_backend_qptiff()])
+@pytest.mark.parametrize("normalize", [True, False])
+def test_generate_tiles_bioformats_no_normalize(backend, normalize):
+    gen = backend.generate_tiles(shape=10, normalize=normalize)
+    tile1 = next(gen)
+    if normalize:
+        assert tile1.image.dtype == np.dtype("uint8")
+    else:
+        assert tile1.image.dtype == np.dtype("float64")
 
 
 @pytest.mark.parametrize(
