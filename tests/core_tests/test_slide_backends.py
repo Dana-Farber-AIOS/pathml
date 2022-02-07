@@ -46,6 +46,16 @@ def test_extract_region(backend, location, size, level):
     assert region.dtype == np.uint8
 
 
+@pytest.mark.parametrize("backend", [bioformats_backend(), bioformats_backend_qptiff()])
+@pytest.mark.parametrize("normalize", [True, False])
+def test_extract_region_bioformats_no_normalize(backend, normalize):
+    reg = backend.extract_region(location=(0, 0), size=10, normalize=normalize)
+    if normalize:
+        assert reg.dtype == np.dtype("uint8")
+    else:
+        assert reg.dtype == np.dtype("float64")
+
+
 @pytest.mark.parametrize("shape", [500, (500, 250)])
 def test_extract_region_openslide(example_slide_data, shape):
     """
@@ -108,9 +118,9 @@ def test_extract_region_dicom(backend, location, size, level):
 @pytest.mark.parametrize(
     "backend,shape",
     [
-        (bioformats_backend(), (640, 480)),
+        (bioformats_backend(), (480, 640)),
         (dicom_backend(), (2638, 3236)),
-        (bioformats_backend_qptiff(), (1920, 1440)),
+        (bioformats_backend_qptiff(), (1440, 1920)),
     ],
 )
 @pytest.mark.parametrize("pad", [True, False])
@@ -149,12 +159,23 @@ def test_tile_generator_with_level(backend, shape, tile_shape, pad, level):
     assert all([isinstance(tile, Tile) for tile in tiles])
 
 
+@pytest.mark.parametrize("backend", [bioformats_backend(), bioformats_backend_qptiff()])
+@pytest.mark.parametrize("normalize", [True, False])
+def test_generate_tiles_bioformats_no_normalize(backend, normalize):
+    gen = backend.generate_tiles(shape=10, normalize=normalize)
+    tile1 = next(gen)
+    if normalize:
+        assert tile1.image.dtype == np.dtype("uint8")
+    else:
+        assert tile1.image.dtype == np.dtype("float64")
+
+
 @pytest.mark.parametrize(
     "backend,shape",
     [
         (openslide_backend(), (2967, 2220)),
-        (bioformats_backend(), (640, 480)),
-        (bioformats_backend_qptiff(), (1920, 1440)),
+        (bioformats_backend(), (480, 640)),
+        (bioformats_backend_qptiff(), (1440, 1920)),
         (dicom_backend(), (2638, 3236)),
     ],
 )

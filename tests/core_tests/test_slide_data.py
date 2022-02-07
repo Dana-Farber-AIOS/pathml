@@ -18,7 +18,7 @@ from pathml.core import (
     BioFormatsBackend,
     Tile,
 )
-from pathml.core.slide_data import get_file_ext
+from pathml.core.slide_data import infer_backend
 from pathml.preprocessing import Pipeline, BoxBlur
 
 
@@ -29,18 +29,16 @@ def test_repr(slide):
 
 
 @pytest.mark.parametrize(
-    "path,ext",
+    "path,backend",
     [
-        ("/test/testing/test.txt", ".txt"),
-        ("/test/testing/test.txt.gz", ".txt"),
-        ("/test/testing/test.txt.bz2", ".txt"),
-        ("/test/testing/test.qptiff", ".qptiff"),
-        ("/test/testing/test.ext1.ext2", ".ext1.ext2"),
+        ("/test/testing/test.qptiff", "bioformats"),
+        ("/test/dot.dot/space space space/File with.spaces and.dots.h5path", "h5path"),
+        ("test.dcm", "dicom"),
+        ("test.file.multiple.exts.jpg.qptiff.tiff.ome.tiff", "bioformats"),
     ],
 )
-def test_get_file_ext(path, ext):
-    result = get_file_ext(path)
-    assert result == ext
+def test_infer_backend(path, backend):
+    assert infer_backend(path) == backend
 
 
 def test_write_with_array_labels(tmp_path, example_slide_data):
@@ -125,7 +123,7 @@ def test_generate_tiles_padding(he_slide, pad):
 
 def test_read_write_heslide(tmp_path, example_slide_data_with_tiles):
     slidedata = example_slide_data_with_tiles
-    path = tmp_path / "testhe.h5"
+    path = tmp_path / "testhe.test.test.dots space dots.h5"
     slidedata.write(path)
     readslidedata = SlideData(path)
     repr(readslidedata)
