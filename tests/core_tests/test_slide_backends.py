@@ -108,9 +108,9 @@ def test_extract_region_dicom(backend, location, size, level):
 @pytest.mark.parametrize(
     "backend,shape",
     [
-        (bioformats_backend(), (640, 480)),
+        (bioformats_backend(), (480, 640)),
         (dicom_backend(), (2638, 3236)),
-        (bioformats_backend_qptiff(), (1920, 1440)),
+        (bioformats_backend_qptiff(), (1440, 1920)),
     ],
 )
 @pytest.mark.parametrize("pad", [True, False])
@@ -153,8 +153,8 @@ def test_tile_generator_with_level(backend, shape, tile_shape, pad, level):
     "backend,shape",
     [
         (openslide_backend(), (2967, 2220)),
-        (bioformats_backend(), (640, 480)),
-        (bioformats_backend_qptiff(), (1920, 1440)),
+        (bioformats_backend(), (480, 640)),
+        (bioformats_backend_qptiff(), (1440, 1920)),
         (dicom_backend(), (2638, 3236)),
     ],
 )

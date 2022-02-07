@@ -91,6 +91,7 @@ class SlideData:
         volumetric=None,
         time_series=None,
         counts=None,
+        dtype=None,
     ):
         # check inputs
         assert masks is None or isinstance(
@@ -173,7 +174,7 @@ class SlideData:
         if backend.lower() == "openslide":
             backend_obj = pathml.core.OpenSlideBackend(filepath)
         elif backend.lower() == "bioformats":
-            backend_obj = pathml.core.BioFormatsBackend(filepath)
+            backend_obj = pathml.core.BioFormatsBackend(filepath, dtype)
         elif backend.lower() == "dicom":
             backend_obj = pathml.core.DICOMBackend(filepath)
         elif backend.lower() == "h5path":

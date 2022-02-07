@@ -12,15 +12,11 @@ import numpy as np
 import pandas as pd
 import pathml.core
 import pathml.core.slide_data
-from pathml.utils import (
-    RGB_to_GREY,
-    RGB_to_HSI,
-    RGB_to_HSV,
-    RGB_to_OD,
-    normalize_matrix_cols,
-)
+from pathml.utils import (RGB_to_GREY, RGB_to_HSI, RGB_to_HSV, RGB_to_OD,
+                          normalize_matrix_cols)
 from skimage import restoration
-from skimage.exposure import equalize_adapthist, equalize_hist, rescale_intensity
+from skimage.exposure import (equalize_adapthist, equalize_hist,
+                              rescale_intensity)
 from skimage.measure import regionprops_table
 
 
@@ -1405,7 +1401,9 @@ class SegmentMIF(Transform):
 
 class QuantifyMIF(Transform):
     """
-    Convert segmented image into anndata.AnnData counts object.
+    Convert segmented image into anndata.AnnData counts object `AnnData <https://anndata.readthedocs.io/en/latest/>`_.
+    Counts objects are used to interface with the Python single cell analysis ecosystem `Scanpy <https://scanpy.readthedocs.io/en/stable/>`_.
+    The counts object contains a summary of protein expression statistics in each cell along with its coordinate.
 
     Args:
         segmentation_mask (str): key indicating which mask to use as label image
@@ -1443,13 +1441,13 @@ class QuantifyMIF(Transform):
         counts = anndata.AnnData(
             X=X,
             obs=[
-                tuple([x + tile.coords[0], y + tile.coords[1]])
-                for x, y in zip(
+                tuple([i + tile.coords[0], j + tile.coords[1]])
+                for i, j in zip(
                     countsdataframe["centroid-0"], countsdataframe["centroid-1"]
                 )
             ],
         )
-        counts.obs = counts.obs.rename(columns={0: "x", 1: "y"})
+        counts.obs = counts.obs.rename(columns={0: "y", 1: "x"})
         counts.obs["filled_area"] = countsdataframe["filled_area"]
         counts.obs["euler_number"] = countsdataframe["euler_number"]
         min_intensities = pd.DataFrame()

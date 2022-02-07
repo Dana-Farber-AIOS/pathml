@@ -108,7 +108,7 @@ class Tile:
             # remove any Nones
             stain_type_dict = {key: val for key, val in stain_type_dict.items() if val}
             if stain_type_dict:
-                slide_type = pathml.core.types.SlideType(**stain_type_dict)
+                slide_type = pathml.core.slide_types.SlideType(**stain_type_dict)
 
         assert counts is None or isinstance(
             counts, anndata.AnnData
