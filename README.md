@@ -13,19 +13,19 @@
 | master | ![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg?branch=master) |
 | dev    | ![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg?branch=dev) |
 
-A toolkit for computational pathology and machine learning.
+An open-source toolkit for computational pathology and machine learning.
 
 **View [documentation](https://pathml.readthedocs.io/en/latest/)**
 
 :construction: the `dev` branch is under active development, with experimental features, bug fixes, and refactors that may happen at any time! 
-Stable versions are available as tagged commits on the `master` branch, or as versioned releases on PyPI
+Stable versions are available as tagged releases on GitHub, or as versioned releases on PyPI
 
 # Installation
 
 There are several ways to install `PathML`:
 
-1. pip install (**recommended for users**)
-2. clone repo to local machine and install from source (recommended for developers/contributors)
+1. `pip install` from PyPI (**recommended for users**)
+2. Clone repo to local machine and install from source (recommended for developers/contributors)
 3. Use the PathML Docker container
 
 Options (1) and (2) require that you first install all external dependencies:
@@ -39,43 +39,43 @@ Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
 
 ## Installation option 1: pip install
 
-Create conda environment
+Create conda environment:
 ````
 conda create --name pathml python=3.8
 conda activate pathml
 ````
 
-Install external dependencies (Linux) with [Apt](https://ubuntu.com/server/docs/package-management)
+Install external dependencies (Linux) with [Apt](https://ubuntu.com/server/docs/package-management):
 ````
 sudo apt-get install openslide-tools g++ gcc libblas-dev liblapack-dev
 ````
 
-Install external dependencies (MacOS) with [Brew](www.brew.sh)
+Install external dependencies (MacOS) with [Brew](www.brew.sh):
 ````
 brew install openslide
 ````
 
-Install [OpenJDK 8](https://openjdk.java.net/)
+Install [OpenJDK 8](https://openjdk.java.net/):
 ````
 conda install openjdk==8.0.152
 ````
 
 Optionally install CUDA (instructions [here](#CUDA))
 
-Install `PathML`
+Install `PathML` from PyPI:
 ````
 pip install pathml
 ````
 
 ## Installation option 2: clone repo and install from source
 
-Clone repo
+Clone repo:
 ````
 git clone https://github.com/Dana-Farber-AIOS/pathml.git
 cd pathml
 ````
 
-Create conda environment
+Create conda environment:
 ````
 conda env create -f environment.yml
 conda activate pathml
@@ -83,27 +83,39 @@ conda activate pathml
 
 Optionally install CUDA (instructions [here](#CUDA))
 
-Install `PathML`: 
+Install `PathML` from source: 
 ````
 pip install -e .
 ````
 
-## Installation option 3: docker
+## Installation option 3: Docker
 
-Build the PathML docker container:
-````
-docker build -t pathml-analysis .
-````
+First, download or build the PathML Docker container:
 
-Connect to the container:
+- Option A: download PathML container from Docker Hub
+   ````
+   docker pull pathml/pathml:latest
+   ````
+  Optionally specify a tag for a particular version, e.g. `docker pull pathml/pathml:2.0.2`. To view possible tags, 
+  please refer to the [PathML DockerHub page](https://hub.docker.com/r/pathml/pathml).
+  
+- Option B: build docker container from source
+   ````
+   git clone https://github.com/Dana-Farber-AIOS/pathml.git
+   cd pathml
+   docker build -t pathml/pathml .
+   ````
+
+Then connect to the container:
 ````
-docker run -it -p 8888:8888 pathml-analysis
+docker run -it -p 8888:8888 pathml/pathml
 ````
 
 The above command runs the container, which is configured to spin up a jupyter lab session and expose it on port 8888. 
-The terminal should display a URL to the jupyter lab session starting with http://127.0.0.1:8888/lab?token=<...>. 
+The terminal should display a URL to the jupyter lab session starting with `http://127.0.0.1:8888/lab?token=<.....>`. 
 Navigate to that page and you should connect to the jupyter lab session running on the container with the pathml 
-environment fully configured.
+environment fully configured. If a password is requested, copy the string of characters following the `token=` in the 
+url.
 
 Note that the docker container requires extra configurations to use with GPU.  
 Note that these instructions assume that there are no other processes using port 8888.

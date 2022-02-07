@@ -249,7 +249,7 @@ class PanNukeDataModule(BaseDataModule):
             # don't download if the directory already exists
             if not os.path.isdir(p):
                 print(f"Downloading fold {fold_ix}")
-                url = f"https://warwick.ac.uk/fac/sci/dcs/research/tia/data/pannuke/fold_{fold_ix}.zip"
+                url = f"https://warwick.ac.uk/fac/cross_fac/tia/data/pannuke/fold_{fold_ix}.zip"
                 name = os.path.basename(url)
                 download_from_url(url=url, download_dir=download_dir, name=name)
                 path = os.path.join(download_dir, name)
