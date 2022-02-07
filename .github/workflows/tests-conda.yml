@@ -40,6 +40,7 @@ jobs:
       # uses: conda-incubator/setup-miniconda@f4c00b0ec69bdc87b1ab4972613558dd9f4f36f3
       uses: conda-incubator/setup-miniconda@v2.0.0
       with:
+        add_pip_as_python_dependency: false
         environment-file: environment.yml
         activate-environment: pathml
         python-version: ${{ matrix.python-version }}
