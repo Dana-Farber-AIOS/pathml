@@ -54,7 +54,7 @@ def test_dataset(tmp_path, im_path):
         else:
             assert v == labs[k]
 
-    if wsi.name == "small_vectra":
+    if wsi.name == "small_vectra.qptiff":
         # 5-dim images (XYZCT converted to TCZXY for batching)
         assert np.array_equal(im, wsi.tiles[0].image.transpose(4, 3, 2, 1, 0))
     else:
