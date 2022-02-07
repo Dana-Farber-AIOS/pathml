@@ -144,7 +144,7 @@ class SlideData:
 
         # get name from filepath if no name is provided
         if name is None and filepath is not None:
-            name = Path(filepath).stem
+            name = Path(filepath).name
 
         _load_from_h5path = False
 
