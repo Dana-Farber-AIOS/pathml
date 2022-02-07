@@ -52,7 +52,10 @@ class SlideData:
         labels (collections.OrderedDict, optional): dictionary containing {key, label} pairs
         backend (str, optional): backend to use for interfacing with slide on disk.
             Must be one of {"OpenSlide", "BioFormats", "DICOM", "h5path"} (case-insensitive).
+            Note that for supported image formats, OpenSlide performance can be significantly better than BioFormats.
+            Consider specifying ``backend = "openslide"`` when possible.
             If ``None``, and a ``filepath`` is provided, tries to infer the correct backend from the file extension.
+            Defaults to ``None``.
         slide_type (pathml.core.SlideType, optional): slide type specification. Must be a
             :class:`~pathml.core.SlideType` object. Alternatively, slide type can be specified by using the
             parameters ``stain``, ``tma``, ``rgb``, ``volumetric``, and ``time_series``.
