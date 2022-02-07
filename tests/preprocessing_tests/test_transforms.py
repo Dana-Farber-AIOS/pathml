@@ -27,6 +27,7 @@ from pathml.preprocessing import (
     RescaleIntensity,
 )
 from pathml.utils import RGB_to_GREY
+from pathml.core import Tile
 
 
 @pytest.mark.parametrize("ksize", [3, 7, 21])
@@ -185,6 +186,20 @@ def test_quantify_mif(tileVectra):
     t2.apply(tileVectra)
     t.apply(tileVectra)
     assert tileVectra.counts
+
+
+def test_quantify_mif_coords():
+    # make sure that QuantifyMIF uses i,j coordinates
+    # make fake im with a single region
+    im = np.zeros(shape=(50, 50, 3))
+    seg = np.zeros(shape=(50, 50, 1), dtype=np.uint8)
+    # add a region with known centroid at (i=27, j=7) == (x=7, y=27)
+    seg[25:30, 5:10] = 1
+    tile = Tile(image=im, coords=(0, 0), masks={"seg": seg}, stain="Fluor")
+    quantifymif = QuantifyMIF(segmentation_mask="seg")
+    quantifymif.apply(tile)
+    assert tile.counts.obs.x[0] == 7
+    assert tile.counts.obs.y[0] == 27
 
 
 def test_collapse_runs_vectra(tileVectra):
