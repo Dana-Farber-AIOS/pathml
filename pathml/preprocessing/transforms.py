@@ -1289,7 +1289,7 @@ class SegmentMIF(Transform):
         model(str): string indicating which segmentation model to use. Currently only 'mesmer' is supported.
         nuclear_channel(int): channel that defines cell nucleus
         cytoplasm_channel(int): channel that defines cell membrane or cytoplasm
-        image_resolution(float): resolution of image in microns
+        image_resolution(float): pixel resolution of image in microns
         gpu(bool): flag indicating whether gpu will be used for inference
 
     References:
@@ -1371,10 +1371,10 @@ class SegmentMIF(Transform):
 
             model = Mesmer()
             cell_segmentation_predictions = model.predict(
-                nuc_cytoplasm, compartment="whole-cell"
+                nuc_cytoplasm, image_mpp=self.image_resolution, compartment="whole-cell"
             )
             nuclear_segmentation_predictions = model.predict(
-                nuc_cytoplasm, compartment="nuclear"
+                nuc_cytoplasm, image_mpp=self.image_resolution, compartment="nuclear"
             )
             cell_segmentation_predictions = np.squeeze(
                 cell_segmentation_predictions, axis=0
