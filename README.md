@@ -24,8 +24,8 @@ Stable versions are available as tagged releases on GitHub, or as versioned rele
 
 There are several ways to install `PathML`:
 
-1. `pip install` from PyPI (**recommended for most users**)
-2. Clone repo to local machine and install from source (recommended for users wanting to  developers/contributors)
+1. `pip install` from PyPI
+2. Clone repo to local machine and install from source
 3. Use the PathML Docker container
 
 Option (1) is recommended for most users. It will install the latest versions of most packages. 
