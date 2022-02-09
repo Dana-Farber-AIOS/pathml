@@ -1307,9 +1307,8 @@ class SegmentMIF(Transform):
         nuclear_channel=None,
         cytoplasm_channel=None,
         image_resolution=0.5,
-        gpu=True,
-        postprocess_kwargs_whole_cell=None,
-        postprocess_kwrags_nuclear=None,
+        preprocess_kwargs=None,
+        postprocess_kwargs=None,
     ):
         assert isinstance(
             nuclear_channel, int
@@ -1320,7 +1319,8 @@ class SegmentMIF(Transform):
         self.nuclear_channel = nuclear_channel
         self.cytoplasm_channel = cytoplasm_channel
         self.image_resolution = image_resolution
-        self.gpu = gpu
+        self.preprocess_kwargs = preprocess_kwargs if preprocess_kwargs else {}
+        self.postprocess_kwargs = postprocess_kwargs if postprocess_kwargs else {}
 
         if model.lower() == "mesmer":
             try:
@@ -1346,8 +1346,7 @@ class SegmentMIF(Transform):
 
     def __repr__(self):
         return (
-            f"SegmentMIF(model={self.model}, image_resolution={self.image_resolution}, "
-            f"gpu={self.gpu})"
+            f"SegmentMIF(model={self.model}, image_resolution={self.image_resolution})"
         )
 
     def F(self, image):
@@ -1371,10 +1370,18 @@ class SegmentMIF(Transform):
 
             model = Mesmer()
             cell_segmentation_predictions = model.predict(
-                nuc_cytoplasm, image_mpp=self.image_resolution, compartment="whole-cell"
+                nuc_cytoplasm,
+                image_mpp=self.image_resolution,
+                compartment="whole-cell",
+                preprocess_kwargs=self.preprocess_kwargs,
+                postprocess_kwargs=self.postprocess_kwargs,
             )
             nuclear_segmentation_predictions = model.predict(
-                nuc_cytoplasm, image_mpp=self.image_resolution, compartment="nuclear"
+                nuc_cytoplasm,
+                image_mpp=self.image_resolution,
+                compartment="nuclear",
+                preprocess_kwargs=self.preprocess_kwargs,
+                postprocess_kwargs=self.postprocess_kwargs,
             )
             cell_segmentation_predictions = np.squeeze(
                 cell_segmentation_predictions, axis=0
