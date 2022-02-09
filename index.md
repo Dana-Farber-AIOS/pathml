@@ -21,7 +21,124 @@ Tutorials, example vignettes, technical notes, and a complete API reference can 
 
 ## **Installing**
 
-Please refer to installation instructions on the [PathML GitHub repository](https://github.com/Dana-Farber-AIOS/pathml)
+There are several ways to install `PathML`:
+
+1. `pip install` from PyPI (**recommended for users**)
+2. Clone repo to local machine and install from source (recommended for developers/contributors)
+3. Use the PathML Docker container
+
+Options (1) and (2) require that you first install all external dependencies:
+* openslide
+* JDK 8
+
+We recommend using conda for environment management. 
+Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
+
+*Note: these instructions are for Linux. Commands may be different for other platforms.*
+
+### Installation option 1: pip install
+
+Create conda environment:
+````
+conda create --name pathml python=3.8
+conda activate pathml
+````
+
+Install external dependencies (Linux) with [Apt](https://ubuntu.com/server/docs/package-management):
+````
+sudo apt-get install openslide-tools g++ gcc libblas-dev liblapack-dev
+````
+
+Install external dependencies (MacOS) with [Brew](www.brew.sh):
+````
+brew install openslide
+````
+
+Install [OpenJDK 8](https://openjdk.java.net/):
+````
+conda install openjdk==8.0.152
+````
+
+Install `PathML` from PyPI:
+````
+pip install pathml
+````
+
+### Installation option 2: clone repo and install from source
+
+Clone repo:
+````
+git clone https://github.com/Dana-Farber-AIOS/pathml.git
+cd pathml
+````
+
+Create conda environment:
+````
+conda env create -f environment.yml
+conda activate pathml
+````
+
+Install `PathML` from source: 
+````
+pip install -e .
+````
+
+### Installation option 3: Docker
+
+First, download or build the PathML Docker container:
+
+- Option A: download PathML container from Docker Hub
+   ````
+   docker pull pathml/pathml:latest
+   ````
+  Optionally specify a tag for a particular version, e.g. `docker pull pathml/pathml:2.0.2`. To view possible tags, 
+  please refer to the [PathML DockerHub page](https://hub.docker.com/r/pathml/pathml).
+  
+- Option B: build docker container from source
+   ````
+   git clone https://github.com/Dana-Farber-AIOS/pathml.git
+   cd pathml
+   docker build -t pathml/pathml .
+   ````
+
+Then connect to the container:
+````
+docker run -it -p 8888:8888 pathml/pathml
+````
+
+The above command runs the container, which is configured to spin up a jupyter lab session and expose it on port 8888. 
+The terminal should display a URL to the jupyter lab session starting with `http://127.0.0.1:8888/lab?token=<.....>`. 
+Navigate to that page and you should connect to the jupyter lab session running on the container with the pathml 
+environment fully configured. If a password is requested, copy the string of characters following the `token=` in the 
+url.
+
+Note that the docker container requires extra configurations to use with GPU.  
+Note that these instructions assume that there are no other processes using port 8888.
+
+Please refer to the `Docker run` [documentation](https://docs.docker.com/engine/reference/run/) for further instructions
+on accessing the container, e.g. for mounting volumes to access files on a local machine from within the container.
+
+For more information, please refer to the installation instructions on the [PathML GitHub repository](https://github.com/Dana-Farber-AIOS/pathml)
+
+### CUDA
+
+CUDA must be installed to use GPU acceleration for model training or other tasks. For the most up-to-date instructions, refer to the [official PyTorch installation instructions](https://pytorch.org/get-started/locally/).
+
+Check the version of CUDA:
+````
+nvidia-smi
+````
+
+Install correct version of `cudatoolkit`:
+````
+# update this command with your CUDA version number
+conda install cudatoolkit=11.0
+````
+
+After installing PyTorch, optionally verify successful PyTorch installation with CUDA support: 
+````
+python -c "import torch; print(torch.cuda.is_available())"
+````
 
 ## **Citing**
 
