@@ -62,9 +62,14 @@ conda install openjdk==8.0.152
 
 Optionally install CUDA (instructions [here](#CUDA))
 
-Install `PathML` from PyPI:
+Install `numpy` from PyPI:
 ````
-pip install pathml
+pip install numpy
+````
+
+Install `PathML` from PyPI (use --no-cache-dir to prevent using files from previously failed installations):
+````
+pip install --no-cache-dir pathml
 ````
 
 ## Installation option 2: clone repo and install from source
