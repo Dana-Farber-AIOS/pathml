@@ -1291,8 +1291,8 @@ class SegmentMIF(Transform):
         cytoplasm_channel(int): channel that defines cell membrane or cytoplasm
         image_resolution(float): pixel resolution of image in microns
         preprocess_kwargs(dict): keyword arguemnts to pass to pre-processing function
-        postprocess_kwargs_nuclear(dict): keyword arguemnts to pass to post-processing function
-        postprocess_kwargs_whole_cell(dict): keyword arguemnts to pass to post-processing function
+        postprocess_kwargs_nuclear(dict): keyword arguments to pass to post-processing function
+        postprocess_kwargs_whole_cell(dict): keyword arguments to pass to post-processing function
 
     References:
         Greenwald, N.F., Miller, G., Moen, E. et al. Whole-cell segmentation of tissue images with human-level
@@ -1323,8 +1323,12 @@ class SegmentMIF(Transform):
         self.cytoplasm_channel = cytoplasm_channel
         self.image_resolution = image_resolution
         self.preprocess_kwargs = preprocess_kwargs if preprocess_kwargs else {}
-        self.postprocess_kwargs_nuclear = postprocess_kwargs_nuclear if postprocess_kwargs_nuclear else {}
-        self.postprocess_kwargs_whole_cell = postprocess_kwargs_whole_cell if postprocess_kwargs_whole_cell else {}
+        self.postprocess_kwargs_nuclear = (
+            postprocess_kwargs_nuclear if postprocess_kwargs_nuclear else {}
+        )
+        self.postprocess_kwargs_whole_cell = (
+            postprocess_kwargs_whole_cell if postprocess_kwargs_whole_cell else {}
+        )
 
         if model.lower() == "mesmer":
             try:
