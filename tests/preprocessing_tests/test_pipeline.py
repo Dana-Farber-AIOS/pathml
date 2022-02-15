@@ -100,7 +100,9 @@ def test_pipeline_mif(tileVectra):
     ).F(collapsed_im)
     orig_tile.image = collapsed_im
     orig_tile.masks["segmentation_mask"] = cell_segmentation
-    adata = QuantifyMIF(segmentation_mask="segmentation_mask").F(orig_tile)
+    adata = QuantifyMIF(segmentation_mask="segmentation_mask").F(
+        orig_tile.image, orig_tile.masks["segmentation_mask"], orig_tile.coords
+    )
 
     assert np.array_equal(tileVectra.masks["cell_segmentation"], cell_segmentation)
     pd.testing.assert_frame_equal(adata.obs, tileVectra.counts.obs)
