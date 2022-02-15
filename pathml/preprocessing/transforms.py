@@ -12,11 +12,15 @@ import numpy as np
 import pandas as pd
 import pathml.core
 import pathml.core.slide_data
-from pathml.utils import (RGB_to_GREY, RGB_to_HSI, RGB_to_HSV, RGB_to_OD,
-                          normalize_matrix_cols)
+from pathml.utils import (
+    RGB_to_GREY,
+    RGB_to_HSI,
+    RGB_to_HSV,
+    RGB_to_OD,
+    normalize_matrix_cols,
+)
 from skimage import restoration
-from skimage.exposure import (equalize_adapthist, equalize_hist,
-                              rescale_intensity)
+from skimage.exposure import equalize_adapthist, equalize_hist, rescale_intensity
 from skimage.measure import regionprops_table
 
 
@@ -1415,10 +1419,25 @@ class QuantifyMIF(Transform):
     def __repr__(self):
         return f"QuantifyMIF(segmentation_mask={self.segmentation_mask})"
 
-    def F(self, tile):
-        # pass (x, y, channel) image and (x, y) segmentation
-        img = tile.image.copy()
-        segmentation = tile.masks[self.segmentation_mask][:, :, 0]
+    def F(self, img, segmentation, coords_offset=(0, 0)):
+        """
+        Functional implementation
+
+        Args:
+            img (np.ndarray): Input image of shape (i, j, n_channels)
+            segmentation (np.ndarray): Segmentation map of shape (i, j) or (i, j, 1). Zeros are background. Regions should be
+                labelled with unique integers.
+            coords_offset (tuple, optional): Coordinates (i, j) used to convert tile-level coordinates to slide-level.
+                Defaults to (0, 0) for no offset.
+
+        Returns:
+            Counts matrix
+        """
+        if segmentation.ndim != 2:
+            assert (
+                segmentation.shape[2] == 1
+            ), f"input segmentation is of shape {segmentation.shape}. must be (x, y) or (x, y, 1)"
+            segmentation = segmentation.squeeze(2)
         countsdataframe = regionprops_table(
             label_image=segmentation,
             intensity_image=img,
@@ -1441,7 +1460,7 @@ class QuantifyMIF(Transform):
         counts = anndata.AnnData(
             X=X,
             obs=[
-                tuple([i + tile.coords[0], j + tile.coords[1]])
+                tuple([i + coords_offset[0], j + coords_offset[1]])
                 for i, j in zip(
                     countsdataframe["centroid-0"], countsdataframe["centroid-1"]
                 )
@@ -1474,7 +1493,11 @@ class QuantifyMIF(Transform):
         assert (
             tile.slide_type.stain == "Fluor"
         ), f"Tile has slide_type.stain='{tile.slide_type.stain}', but must be 'Fluor'"
-        tile.counts = self.F(tile)
+        tile.counts = self.F(
+            img=tile.image,
+            segmentation=tile.masks[self.segmentation_mask],
+            coords_offset=tile.coords,
+        )
 
 
 class CollapseRunsVectra(Transform):
