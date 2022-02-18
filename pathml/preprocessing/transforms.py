@@ -1458,6 +1458,7 @@ class QuantifyMIF(Transform):
         for i in range(img.shape[-1]):
             X[i] = countsdataframe[f"mean_intensity-{i}"]
         # populate anndata object
+        # i,j are relative to the input image (0 to img.shape). Adding offset converts to slide-level coordinates
         counts = anndata.AnnData(
             X=X,
             obs=[
