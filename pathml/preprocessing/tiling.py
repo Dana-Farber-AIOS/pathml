@@ -5,7 +5,7 @@ License: GNU GPL 2.0
 
 import numpy as np
 
-
+@logger_wraps()
 def extract_tiles(arr, tile_size, stride=None):
     """
     Extract tiles from an array. Allows user to specify stride between tiles.
@@ -46,7 +46,7 @@ def extract_tiles(arr, tile_size, stride=None):
     tiles = tiles.reshape(-1, *tiles.shape[2:])
     return tiles
 
-
+@logger_wraps()
 def extract_tiles_with_mask(arr, mask, tile_size, stride=None, threshold=0.5):
     """
     Generate tiles and only keep tiles that overlap with the

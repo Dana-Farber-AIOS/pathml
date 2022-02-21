@@ -36,7 +36,8 @@ class Pipeline(Transform):
                 out += f"\t{repr(t)},\n"
             out += "])"
             return out
-
+    
+    @logger_wraps()
     def apply(self, tile):
         # this function has side effects
         # modifies the tile in place, but also returns the modified tile
@@ -49,6 +50,7 @@ class Pipeline(Transform):
                 t.apply(tile)
         return tile
 
+    @logger_wraps()
     def save(self, filename):
         """
         save pipeline to disk

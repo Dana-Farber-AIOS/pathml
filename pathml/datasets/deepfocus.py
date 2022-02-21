@@ -85,7 +85,7 @@ class DeepFocusDataModule(BaseDataModule):
 
     def _download_deepfocus(self, root):
         if self._check_integrity():
-            print("File already downloaded with correct hash.")
+            logger.info("File already downloaded with correct hash.")
             return
         self.data_dir.mkdir(parents=True, exist_ok=True)
         download_from_url(

@@ -87,6 +87,7 @@ class h5pathManager:
         rep = f"h5pathManager object, backing a SlideData object named '{self.h5['fields'].attrs['name']}'"
         return rep
 
+    @logger_wraps()
     def add_tile(self, tile):
         """
         Add a tile to h5path.
@@ -95,7 +96,7 @@ class h5pathManager:
             tile(pathml.core.tile.Tile): Tile object
         """
         if str(tile.coords) in self.h5["tiles"].keys():
-            print(f"Tile is already in tiles. Overwriting {tile.coords} inplace.")
+            logger.info(f"Tile is already in tiles. Overwriting {tile.coords} inplace.")
             # remove old cells from self.counts so they do not duplicate
             if tile.counts:
                 if "tile" in self.counts.obs.keys():
@@ -127,7 +128,7 @@ class h5pathManager:
 
         # create a group for tile and write tile
         if str(tile.coords) in self.h5["tiles"]:
-            print(f"overwriting tile at {str(tile.coords)}")
+            logger.info(f"overwriting tile at {str(tile.coords)}")
             del self.h5["tiles"][str(tile.coords)]
         self.h5["tiles"].create_group(str(tile.coords))
         self.h5["tiles"][str(tile.coords)].create_dataset(
@@ -185,6 +186,7 @@ class h5pathManager:
                 self.counts = tile.counts
                 self.counts.filename = str(self.countspath.name) + "/tmpfile.h5ad"
 
+    @logger_wraps()
     def get_tile(self, item):
         """
         Retrieve tile from h5manager by key or index.
@@ -240,6 +242,7 @@ class h5pathManager:
             slide_type=self.slide_type,
         )
 
+    @logger_wraps()
     def remove_tile(self, key):
         """
         Remove tile from self.h5 by key.
@@ -250,6 +253,7 @@ class h5pathManager:
             raise KeyError(f"key {key} is not in Tiles")
         del self.h5["tiles"][str(key)]
 
+    @logger_wraps()
     def add_mask(self, key, mask):
         """
         Add mask to h5.
@@ -271,6 +275,7 @@ class h5pathManager:
             )
         newmask = self.h5["masks"].create_dataset(key, data=mask)
 
+    @logger_wraps()
     def update_mask(self, key, mask):
         """
         Update a mask.
@@ -287,6 +292,7 @@ class h5pathManager:
         )
         self.h5["masks"][key][...] = mask
 
+    @logger_wraps()
     def slice_masks(self, slicer):
         """
         Generator slicing all tiles, extending numpy array slicing.
@@ -302,6 +308,7 @@ class h5pathManager:
         for key in self.h5["masks"].keys():
             yield key, self.get_mask(key, slicer=slicer)
 
+    @logger_wraps()
     def get_mask(self, item, slicer=None):
         # must check bool separately, since isinstance(True, int) --> True
         if isinstance(item, bool) or not (
@@ -327,6 +334,7 @@ class h5pathManager:
                 return self.h5["masks"][mask_key][:]
             return self.h5["masks"][mask_key][:][tuple(slicer)]
 
+    @logger_wraps()
     def remove_mask(self, key):
         """
         Remove mask by key.
@@ -342,13 +350,14 @@ class h5pathManager:
             raise KeyError("key is not in Masks")
         del self.h5["masks"][key]
 
+    @logger_wraps()
     def get_slidetype(self):
         slide_type_dict = {
             key: val for key, val in self.h5["fields/slide_type"].items()
         }
         return pathml.core.slide_types.SlideType(**slide_type_dict)
 
-
+@logger_wraps()
 def check_valid_h5path_format(h5path):
     """
     Assert that the input h5path matches the expected h5path file format.

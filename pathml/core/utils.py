@@ -16,6 +16,7 @@ import pathml.core.slide_data
 
 
 # TODO: Fletcher32 checksum?
+@logger_wraps()
 def writedataframeh5(h5, name, df):
     """
     Write dataframe as h5 dataset.
@@ -34,7 +35,7 @@ def writedataframeh5(h5, name, df):
         shuffle=True,
     )
 
-
+@logger_wraps()
 def writestringh5(h5, name, st):
     """
     Write string as h5 attribute.
@@ -47,7 +48,7 @@ def writestringh5(h5, name, st):
     stringasarray = np.string_(str(st))
     h5.attrs[str(name)] = stringasarray
 
-
+@logger_wraps()
 def writedicth5(h5, name, dic):
     """
     Write dict as attributes of h5py.Group.
@@ -61,7 +62,7 @@ def writedicth5(h5, name, dic):
     for key, val in dic.items():
         h5[name].attrs.create(str(key), data=val)
 
-
+@logger_wraps()
 def writetupleh5(h5, name, tup):
     """
     Write tuple as h5 attribute.
@@ -74,7 +75,7 @@ def writetupleh5(h5, name, tup):
     tupleasarray = np.string_(str(tup))
     h5.attrs[str(name)] = tupleasarray
 
-
+@logger_wraps()
 def readtupleh5(h5, key):
     """
     Read tuple from h5.
@@ -85,7 +86,7 @@ def readtupleh5(h5, key):
     """
     return eval(h5.attrs[key]) if key in h5.attrs.keys() else None
 
-
+@logger_wraps()
 def writecounts(h5, counts):
     """
     Write counts using anndata h5py.
@@ -99,7 +100,7 @@ def writecounts(h5, counts):
     for ds in countsh5.keys():
         countsh5.copy(ds, h5)
 
-
+@logger_wraps()
 def readcounts(h5):
     """
     Read counts using anndata h5py.
