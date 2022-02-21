@@ -9,6 +9,7 @@ from pathlib import Path
 from collections import OrderedDict
 import h5py
 import reprlib
+from loguru import logger
 
 import pathml.core.h5managers
 

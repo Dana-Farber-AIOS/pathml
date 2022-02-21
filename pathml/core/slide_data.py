@@ -8,6 +8,7 @@ import reprlib
 from pathlib import Path
 
 import anndata
+from loguru import logger
 import dask.distributed
 import h5py
 import matplotlib.pyplot as plt

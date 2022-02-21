@@ -6,6 +6,7 @@ License: GNU GPL 2.0
 import os
 from warnings import warn
 
+from loguru import logger
 import anndata
 import cv2
 import numpy as np

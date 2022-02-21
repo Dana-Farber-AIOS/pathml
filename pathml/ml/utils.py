@@ -7,6 +7,7 @@ License: GNU GPL 2.0
 import torch
 from torch.nn import functional as F
 import numpy as np
+from loguru import logger
 
 @logger_wraps()
 def center_crop_im_batch(batch, dims, batch_order="BCHW"):

@@ -4,6 +4,7 @@ License: GNU GPL 2.0
 """
 
 import numpy as np
+from loguru import logger
 
 @logger_wraps()
 def extract_tiles(arr, tile_size, stride=None):
