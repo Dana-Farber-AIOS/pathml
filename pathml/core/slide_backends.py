@@ -28,11 +28,7 @@ try:
     from bioformats.metadatatools import createOMEXMLMetadata
 except ImportError:
     raise Exception(
-        """Installation of PathML not complete. Please install openjdk8, bioformats, and javabridge:
-            conda install openjdk==8.0.152
-            pip install javabridge==1.0.19 python-bioformats==4.0.0
-
-            For detailed installation instructions, please see https://github.com/Dana-Farber-AIOS/pathml/"""
+            logger.exception(f"Installation of PathML not complete. Please install openjdk8, bioformats, and javabridge:\nconda install openjdk==8.0.152\npip install javabridge==1.0.19 python-bioformats==4.0.0\nFor detailed installation instructions, please see https://github.com/Dana-Farber-AIOS/pathml/")
     )
 
 
@@ -323,7 +319,7 @@ class BioFormatsBackend(SlideBackend):
                 self.pixel_dtype = pixel_dtype_map[ome_pixeltype]
             except:
                 raise Exception(
-                    f"pixel type '{ome_pixeltype}' detected from OME metadata not recognized."
+                        logger.exception(f"pixel type '{ome_pixeltype}' detected from OME metadata not recognized.")
                 )
 
     def __repr__(self):
@@ -390,7 +386,7 @@ class BioFormatsBackend(SlideBackend):
             and all([isinstance(x, int) for x in location])
         ):
             raise ValueError(
-                f"input location {location} invalid. Must be a tuple of integer coordinates of len<2"
+                    logger.exception(f"input location {location} invalid. Must be a tuple of integer coordinates of len<2")
             )
         if not (
             isinstance(size, tuple)
@@ -398,7 +394,7 @@ class BioFormatsBackend(SlideBackend):
             and all([isinstance(x, int) for x in size])
         ):
             raise ValueError(
-                f"input size {size} invalid. Must be a tuple of integer coordinates of len<2"
+                    logger.exception(f"input size {size} invalid. Must be a tuple of integer coordinates of len<2")
             )
         if series_as_channels:
             assert (
@@ -489,7 +485,7 @@ class BioFormatsBackend(SlideBackend):
                 size = size + self.shape[len(size) :]
         if self.shape[0] * self.shape[1] * self.shape[2] * self.shape[3] > 2147483647:
             raise Exception(
-                f"Java arrays allocate maximum 32 bits (~2GB). Image size is {self.imsize}"
+                logger.exception(f"Java arrays allocate maximum 32 bits (~2GB). Image size is {self.imsize}"))
             )
         array = self.extract_region(location=(0, 0), size=self.shape[:2])
         if size is not None:
@@ -667,7 +663,7 @@ class DICOMBackend(SlideBackend):
         return self.shape
 
     def get_thumbnail(self, size, **kwargs):
-        raise NotImplementedError("DICOMBackend does not support thumbnail")
+        raise NotImplementedError(logger.exception(f"DICOMBackend does not support thumbnail"))
 
     def _index_to_coords(self, index):
         """
@@ -710,8 +706,7 @@ class DICOMBackend(SlideBackend):
         # frame size must evenly divide coords, otherwise we aren't on a frame corner
         if i % frame_i or j % frame_j:
             raise ValueError(
-                f"coords {coords} are not evenly divided by frame size {(frame_i, frame_j)}. "
-                f"Must provide coords at upper left corner of Frame."
+                logger.exception(f"coords {coords} are not evenly divided by frame size {(frame_i, frame_j)}. Must provide coords at upper left corner of Frame.")
             )
 
         row_ix = i / frame_i
@@ -743,11 +738,11 @@ class DICOMBackend(SlideBackend):
             frame_ix = location
         else:
             raise ValueError(
-                f"Invalid location: {location}. Must be an int frame index or tuple of (i, j) coordinates"
+                    logger.exception(f"Invalid location: {location}. Must be an int frame index or tuple of (i, j) coordinates")
             )
         if frame_ix > self.n_frames:
             raise ValueError(
-                f"location {location} invalid. Exceeds total number of frames ({self.n_frames})"
+                logger.exception(f"location {location} invalid. Exceeds total number of frames ({self.n_frames})")
             )
         # check size
         if size:
@@ -755,7 +750,7 @@ class DICOMBackend(SlideBackend):
                 size = (size, size)
             if size != self.frame_shape:
                 raise ValueError(
-                    f"Input size {size} must equal frame shape in DICOM image {self.frame_shape}"
+                        logger.exception(f"Input size {size} must equal frame shape in DICOM image {self.frame_shape}")
                 )
 
         return self._read_frame(frame_ix)

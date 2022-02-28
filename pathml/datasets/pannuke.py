@@ -258,7 +258,7 @@ class PanNukeDataModule(BaseDataModule):
                 with zipfile.ZipFile(path, "r") as zip_ref:
                     zip_ref.extractall(download_dir)
             else:
-                warn(
+                logger.warn(
                     f"Skipping download of fold {fold_ix}, using local data found at {p}"
                 )
 

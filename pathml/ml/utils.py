@@ -48,7 +48,7 @@ def center_crop_im_batch(batch, dims, batch_order="BCHW"):
         elif batch_order == "BCHW":
             batch_cropped = batch[:, :, crop_t:-crop_b, crop_l:-crop_r]
         else:
-            raise Exception("Input batch order not valid")
+            raise Exception(logger.exception(f"Input batch order not valid"))
 
     return batch_cropped
 

@@ -97,7 +97,7 @@ class h5pathManager:
             tile(pathml.core.tile.Tile): Tile object
         """
         if str(tile.coords) in self.h5["tiles"].keys():
-            logger.info(f"Tile is already in tiles. Overwriting {tile.coords} inplace.")
+            logger.bind(core_specific=core_bind).info(f"Tile is already in tiles. Overwriting {tile.coords} inplace.")
             # remove old cells from self.counts so they do not duplicate
             if tile.counts:
                 if "tile" in self.counts.obs.keys():
@@ -114,22 +114,21 @@ class h5pathManager:
             [s1 != s2 for s1, s2 in zip(tile.image.shape[0:2], existing_shape[0:2])]
         ):
             raise ValueError(
-                f"cannot add tile of shape {tile.image.shape}. Must match shape of existing tiles: {existing_shape}"
-            )
-
+                    logger.exception(f"cannot add tile of shape {tile.image.shape}. Must match shape of existing tiles: {existing_shape}")
+                    )
         if self.slide_type and tile.slide_type:
             # check that slide types match
             if tile.slide_type != self.slide_type:
                 raise ValueError(
-                    f"tile slide_type {tile.slide_type} does not match existing slide_type {self.slide_type}"
-                )
+                        logger.exception(f"tile slide_type {tile.slide_type} does not match existing slide_type {self.slide_type}")
+                        )
         elif not self.slide_type:
             if tile.slide_type:
                 self.slide_type = tile.slide_type
 
         # create a group for tile and write tile
         if str(tile.coords) in self.h5["tiles"]:
-            logger.info(f"overwriting tile at {str(tile.coords)}")
+            logger.bind(core_specific=core_bind).info(f"overwriting tile at {str(tile.coords)}")
             del self.h5["tiles"][str(tile.coords)]
         self.h5["tiles"].create_group(str(tile.coords))
         self.h5["tiles"][str(tile.coords)].create_dataset(
@@ -199,22 +198,17 @@ class h5pathManager:
             Tile(pathml.core.tile.Tile)
         """
         if isinstance(item, bool):
-            raise KeyError(f"invalid key, pass str or tuple")
+            raise KeyError(logger.exception(f"invalid key, pass str or tuple"))
         if isinstance(item, (str, tuple)):
             item = str(item)
             if item not in self.h5["tiles"].keys():
-                raise KeyError(f"key {item} does not exist")
+                raise KeyError(logger.exception(f"key {item} does not exist"))
         elif isinstance(item, int):
             if item > len(self.h5["tiles"].keys()) - 1:
-                raise IndexError(
-                    f'index {item} out of range for total number of tiles: {len(self.h5["tiles"].keys())}'
-                )
+                raise IndexError(logger.exception(f'index {item} out of range for total number of tiles: {len(self.h5["tiles"].keys())}'))
             item = list(self.h5["tiles"].keys())[item]
         else:
-            raise KeyError(
-                f"invalid item type: {type(item)}. must getitem by coord (type tuple[int]),"
-                f"index (type int), or name (type str)"
-            )
+            raise KeyError(logger.exception(f"invalid item type: {type(item)}. must getitem by coord (type tuple[int]), index (type int), or name (type str)"))
         tile = self.h5["tiles"][item]["array"][:]
 
         # add masks to tile if there are masks
@@ -249,9 +243,9 @@ class h5pathManager:
         Remove tile from self.h5 by key.
         """
         if not isinstance(key, (str, tuple)):
-            raise KeyError(f"key must be str or tuple, check valid keys in repr")
+            raise KeyError(logger.exception(f"key must be str or tuple, check valid keys in repr"))
         if str(key) not in self.h5["tiles"].keys():
-            raise KeyError(f"key {key} is not in Tiles")
+            raise KeyError(logger.exception(f"key {key} is not in Tiles"))
         del self.h5["tiles"][str(key)]
 
     @logger_wraps()
@@ -265,15 +259,11 @@ class h5pathManager:
             mask(np.ndarray): mask array
         """
         if not isinstance(mask, np.ndarray):
-            raise ValueError(
-                f"can not add {type(mask)}, mask must be of type np.ndarray"
-            )
+            raise ValueError(logger.exception(f"can not add {type(mask)}, mask must be of type np.ndarray"))
         if not isinstance(key, str):
-            raise ValueError(f"invalid type {type(key)}, key must be of type str")
+            raise ValueError(logger.exception(f"invalid type {type(key)}, key must be of type str"))
         if key in self.h5["masks"].keys():
-            raise ValueError(
-                f"key {key} already exists in 'masks'. Cannot add. Must update to modify existing mask."
-            )
+            raise ValueError(logger.exception(f"key {key} already exists in 'masks'. Cannot add. Must update to modify existing mask."))
         newmask = self.h5["masks"].create_dataset(key, data=mask)
 
     @logger_wraps()
@@ -286,7 +276,7 @@ class h5pathManager:
             mask(np.ndarray): mask
         """
         if key not in self.h5["masks"].keys():
-            raise ValueError(f"key {key} does not exist. Must use add.")
+            raise ValueError(logger.exception(f"key {key} does not exist. Must use add."))
         assert self.h5["masks"][key].shape == mask.shape, (
             f"Cannot update a mask of shape {self.h5['masks'][key].shape}"
             f" with a mask of shape {mask.shape}. Shapes must match."
@@ -315,11 +305,11 @@ class h5pathManager:
         if isinstance(item, bool) or not (
             isinstance(item, str) or isinstance(item, int)
         ):
-            raise KeyError(f"key of type {type(item)} must be of type str or int")
+            raise KeyError(logger.exception(f"key of type {type(item)} must be of type str or int"))
 
         if isinstance(item, str):
             if item not in self.h5["masks"].keys():
-                raise KeyError(f"key {item} does not exist")
+                raise KeyError(logger.exception(f"key {item} does not exist"))
             if slicer is None:
                 return self.h5["masks"][item][:]
             return self.h5["masks"][item][:][tuple(slicer)]
@@ -328,9 +318,7 @@ class h5pathManager:
             try:
                 mask_key = list(self.h5.keys())[item]
             except IndexError:
-                raise ValueError(
-                    f"index out of range, valid indices are ints in [0,{len(self.h5['masks'].keys())}]"
-                )
+                raise ValueError(logger.exception(f"index out of range, valid indices are ints in [0,{len(self.h5['masks'].keys())}]"))
             if slicer is None:
                 return self.h5["masks"][mask_key][:]
             return self.h5["masks"][mask_key][:][tuple(slicer)]
@@ -344,11 +332,9 @@ class h5pathManager:
             key(str): key indicating mask to be removed
         """
         if not isinstance(key, str):
-            raise KeyError(
-                f"masks keys must be of type(str) but key was passed of type {type(key)}"
-            )
+            raise KeyError(logger.exception(f"masks keys must be of type(str) but key was passed of type {type(key)}"))
         if key not in self.h5["masks"].keys():
-            raise KeyError("key is not in Masks")
+            raise KeyError(logger.exception(f"key is not in Masks"))
         del self.h5["masks"][key]
 
     @logger_wraps()

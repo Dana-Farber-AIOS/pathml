@@ -82,8 +82,7 @@ class SlideDataset:
         if filenames:
             if len(filenames) != self.__len__():
                 raise ValueError(
-                    f"input list of filenames has {len(filenames)} elements "
-                    f"but must be same length as number of slides in dataset ({self.__len__()})"
+                    logger.exception(f"input list of filenames has {len(filenames)} elements but must be same length as number of slides in dataset ({self.__len__()})")
                 )
 
         for i, slide in enumerate(self.slides):
@@ -93,6 +92,6 @@ class SlideDataset:
                 slide_path = d / (slide.name + ".h5path")
             else:
                 raise ValueError(
-                    "slide does not have a .name attribute. Must supply a 'filenames' argument."
+                    logger.exception(f"slide does not have a .name attribute. Must supply a 'filenames' argument.")
                 )
             slide.write(slide_path)

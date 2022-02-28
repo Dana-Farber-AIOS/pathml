@@ -16,7 +16,9 @@ import pathml.core.slide_data
 
 try:
     core_bool = os.environ['core_specific']
+    logger.trace("core_specific logs have been enabled")
 except KeyError as e:
+    logger.exception(f"core_specific logs are currently disabled")
     pass
 
 # TODO: Fletcher32 checksum?

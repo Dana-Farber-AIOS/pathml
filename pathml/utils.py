@@ -14,11 +14,11 @@ from loguru import logger
 from matplotlib.colors import TABLEAU_COLORS
 
 os.environ['ENABLE_PATHML_LOGS'] = True
-os.environ['enter_exit'] = True
-os.environ['core_specific'] = True
-os.environ['dataset_specific'] = True
-os.environ['ml_specific'] = True
-os.environ['preprocessing_specific'] = True
+os.environ['enter_exit_bind'] = True
+os.environ['core_bind'] = True
+os.environ['dataset_bind'] = True
+os.environ['ml_bind'] = True
+os.environ['preprocessing_bind'] = True
 
 @logger_wraps()
 def download_from_url(url, download_dir, name=None):

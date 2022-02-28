@@ -117,9 +117,7 @@ class Tile:
         if masks:
             for val in masks.values():
                 if val.shape[:2] != image.shape[:2]:
-                    raise ValueError(
-                        f"mask is of shape {val.shape} but must match tile shape {image.shape}"
-                    )
+                    raise ValueError(logger.exception(f"mask is of shape {val.shape} but must match tile shape {image.shape}"))
             self.masks = masks
         else:
             self.masks = OrderedDict()
@@ -167,7 +165,7 @@ class Tile:
         """
         if self.image.shape[2] != 3 or self.image.ndim != 3:
             raise NotImplementedError(
-                f"Plotting not supported for tile with image of shape {self.image.shape}"
+                    logger.exception(f"Plotting not supported for tile with image of shape {self.image.shape}")
             )
 
         if ax is None:
