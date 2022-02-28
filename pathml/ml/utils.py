@@ -9,6 +9,11 @@ from torch.nn import functional as F
 import numpy as np
 from loguru import logger
 
+try:
+    ml_bool = os.environ['ml_specific']
+except KeyError as e:
+    pass
+
 @logger_wraps()
 def center_crop_im_batch(batch, dims, batch_order="BCHW"):
     """

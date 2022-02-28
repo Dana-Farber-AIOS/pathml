@@ -6,6 +6,11 @@ License: GNU GPL 2.0
 import numpy as np
 from loguru import logger
 
+try:
+    dataset_bool = os.environ['dataset_specific']
+except KeyError as e:
+    pass
+
 def pannuke_multiclass_mask_to_nucleus_mask(multiclass_mask):
     """
     Convert multiclass mask from PanNuke to a single channel nucleus mask.

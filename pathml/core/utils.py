@@ -14,6 +14,10 @@ import numpy as np
 import pathml.core.slide_backends
 import pathml.core.slide_data
 
+try:
+    core_bool = os.environ['core_specific']
+except KeyError as e:
+    pass
 
 # TODO: Fletcher32 checksum?
 @logger_wraps()
