@@ -10,6 +10,7 @@ from collections import OrderedDict
 import h5py
 import reprlib
 from loguru import logger
+from pathml.logging.utils import *
 
 import pathml.core.h5managers
 
@@ -64,7 +65,6 @@ class Masks:
     def __setitem__(self, key, mask):
         self.h5manager.update_mask(key, mask)
     
-    @logger_wraps()
     @property
     def keys(self):
         return list(self.h5manager.h5["masks"].keys())

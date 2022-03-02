@@ -10,6 +10,7 @@ from collections import OrderedDict
 
 import anndata
 from loguru import logger
+from pathml.logging.utils import *
 import h5py
 import numpy as np
 import pathml.core

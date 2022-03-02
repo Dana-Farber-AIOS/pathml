@@ -8,9 +8,10 @@ import torch
 from torch.nn import functional as F
 import numpy as np
 from loguru import logger
+from pathml.logging.utils import *
 
 try:
-    ml_bool = os.environ['ml_specific']
+    ml_bool = os.getenv("ml_bind", 'False').lower() in ('true', '1', 't')
 except KeyError as e:
     pass
 

@@ -9,6 +9,8 @@ from collections import OrderedDict
 import matplotlib.pyplot as plt
 import h5py
 import reprlib
+from loguru import logger
+from pathml.logging.utils import *
 
 import pathml.core.masks
 

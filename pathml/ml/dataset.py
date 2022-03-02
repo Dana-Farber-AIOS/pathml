@@ -4,6 +4,7 @@ License: GNU GPL 2.0
 """
 
 from loguru import logger
+from pathml.logging.utils import *
 import h5py
 import numpy as np
 import torch

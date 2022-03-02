@@ -8,6 +8,7 @@ import reprlib
 from collections import OrderedDict
 from pathlib import Path
 from loguru import logger
+from pathml.logging.utils import *
 
 import h5py
 import pathml.core.h5managers

@@ -5,6 +5,12 @@ License: GNU GPL 2.0
 
 import numpy as np
 from loguru import logger
+from pathml.logging.utils import *
+
+try:
+    preprocessing_bind = os.getenv("preprocessing_bind", 'False').lower() in ('true', '1', 't')
+except KeyError as e:
+    pass
 
 @logger_wraps()
 def extract_tiles(arr, tile_size, stride=None):

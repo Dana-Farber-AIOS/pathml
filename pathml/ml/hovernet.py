@@ -9,6 +9,7 @@ from torch.nn import functional as F
 import numpy as np
 import cv2
 from loguru import logger
+from pathml.logging.utils import *
 from skimage.segmentation import watershed
 from scipy.ndimage.morphology import binary_fill_holes
 import matplotlib.pyplot as plt

@@ -9,6 +9,7 @@ from typing import Tuple
 import numpy as np
 import openslide
 from loguru import logger
+from pathml.logging.utils import *
 import pathml.core
 import pathml.core.tile
 from javabridge.jutil import JavaException
@@ -485,7 +486,7 @@ class BioFormatsBackend(SlideBackend):
                 size = size + self.shape[len(size) :]
         if self.shape[0] * self.shape[1] * self.shape[2] * self.shape[3] > 2147483647:
             raise Exception(
-                logger.exception(f"Java arrays allocate maximum 32 bits (~2GB). Image size is {self.imsize}"))
+                logger.exception(f"Java arrays allocate maximum 32 bits (~2GB). Image size is {self.imsize}")
             )
         array = self.extract_region(location=(0, 0), size=self.shape[:2])
         if size is not None:

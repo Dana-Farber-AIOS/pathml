@@ -10,13 +10,14 @@ from pathlib import Path
 import typing
 import functools
 
-global log_activation = logger.disable("pathml")
+log_activation = logger.disable("pathml")
 
 # check to see if user has enabled pathml logs 
 try:
-    enable_logging = os.environ['ENABLE_PATHML_LOGS']
-    if enable_logging:
-        global log_activation = logger.enable("pathml")
+    if os.getenv("ENABLE_PATHML_LOGS", 'False').lower() in ('true', '1', 't'):
+        print("Enabling pathml logs")
+        log_activation = logger.enable("pathml")
+        enter_exit_bind = os.getenv("enter_exit_bind", 'False').lower() in ('true', '1', 't')
 except KeyError as e:
     pass
 
@@ -24,19 +25,19 @@ except KeyError as e:
 fmt = "{time:HH:mm:ss} | {level:<8} | {module} | {function: ^15} | {line: >3} | {message}"
 config = {
     "handlers": [
-        #dict(sink=sys.stderr, colorize=True, format=fmt, level="DEBUG", diagnose=True),
-        dict(sink="./pathml_logs/trace.log", format=fmt, level="TRACE", diagnose=True),
-        dict(sink="./pathml_logs/debug.log", format=fmt, level="DEBUG", diagnose=True),
-        dict(sink="./pathml_logs/info.log", format=fmt, level="INFO", diagnose=True),
-        dict(sink="./pathml_logs/success.log", format=fmt, level="SUCCESS", diagnose=True),
-        dict(sink="./pathml_logs/warning.log", format=fmt, level="WARNING", diagnose=True, backtrace=True),
-        dict(sink="./pathml_logs/error.log", format=fmt, level="ERROR", diagnose=True, backtrace=True),
-        dict(sink="./pathml_logs/critical.log", format=fmt, level="CRITICAL", diagnose=True, backtrace=True),
-        dict(sink="./pathml_logs/enter_exit.log", filter=lambda record: "enter_exit" in record["extra"], format=fmt),
-        dict(sink="./pathml_logs/CORE.log", filter=lambda record: "core_specific" in record["extra"], format=fmt),
-        dict(sink="./pathml_logs/DATASET.log", filter=lambda record: "dataset_specific" in record["extra"], format=fmt),
-        dict(sink="./pathml_logs/ML.log", filter=lambda record: "ml_specific" in record["extra"], format=fmt),
-        dict(sink="./pathml_logs/PREPROCESSING.log", filter=lambda record: "preprocessing_specific" in record["extra"], format=fmt),
+        dict(sink=sys.stderr, colorize=True, format=fmt, level="DEBUG", diagnose=True),
+        dict(sink="./pathml/logging/pathml_logs/trace.log", format=fmt, level="TRACE", diagnose=True),
+        dict(sink="./pathml/logging/pathml_logs/debug.log", format=fmt, level="DEBUG", diagnose=True),
+        dict(sink="./pathml/logging/pathml_logs/info.log", format=fmt, level="INFO", diagnose=True),
+        dict(sink="./pathml/logging/pathml_logs/success.log", format=fmt, level="SUCCESS", diagnose=True),
+        dict(sink="./pathml/logging/pathml_logs/warning.log", format=fmt, level="WARNING", diagnose=True, backtrace=True),
+        dict(sink="./pathml/logging/pathml_logs/error.log", format=fmt, level="ERROR", diagnose=True, backtrace=True),
+        dict(sink="./pathml/logging/pathml_logs/critical.log", format=fmt, level="CRITICAL", diagnose=True, backtrace=True),
+        dict(sink="./pathml/logging/pathml_logs/enter_exit.log", filter=lambda record: "enter_exit" in record["extra"], format=fmt),
+        dict(sink="./pathml/logging/pathml_logs/CORE.log", filter=lambda record: "core_specific" in record["extra"], format=fmt),
+        dict(sink="./pathml/logging/pathml_logs/DATASET.log", filter=lambda record: "dataset_specific" in record["extra"], format=fmt),
+        dict(sink="./pathml/logging/pathml_logs/ML.log", filter=lambda record: "ml_specific" in record["extra"], format=fmt),
+        dict(sink="./pathml/logging/pathml_logs/PREPROCESSING.log", filter=lambda record: "preprocessing_specific" in record["extra"], format=fmt),
         ]}
 
 logger.configure(**config)

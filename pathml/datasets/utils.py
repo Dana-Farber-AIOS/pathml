@@ -5,9 +5,10 @@ License: GNU GPL 2.0
 
 import numpy as np
 from loguru import logger
+from pathml.logging.utils import *
 
 try:
-    dataset_bool = os.environ['dataset_specific']
+    dataset_bool = os.getenv("dataset_bind", 'False').lower() in ('true', '1', 't')
 except KeyError as e:
     pass
 

@@ -6,6 +6,7 @@ License: GNU GPL 2.0
 import hashlib
 import os
 from loguru import logger
+from pathml.logging.utils import *
 from pathlib import Path
 
 import h5py
