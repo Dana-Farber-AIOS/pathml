@@ -12,15 +12,23 @@ import functools
 
 log_activation = logger.disable("pathml")
 
-global enter_exit_bool = False
-global core_bool = False
-global dataset_bool = False
-global ml_bool = False
-global preprocessing_bool = False 
+enter_exit_bool = False
+core_bool = False
+dataset_bool = False
+ml_bool = False
+preprocessing_bool = False
 
-# check to see if user has enabled pathml logs 
-def enable_logging(log_bool=True)
-    if log_bool: # leaving this in the event where env variables are to be used os.getenv("ENABLE_PATHML_LOGS", 'False').lower() in ('true', '1', 't'):
+# check to see if user has enabled pathml logs
+def enable_logging(enabled=True):
+    """
+    Turn on or off logging for PathML
+
+    Args:
+        enabled (bool): Whether to save logs. Defaults to True.
+    """
+    if (
+        enabled
+    ):  # leaving this in the event where env variables are to be used os.getenv("ENABLE_PATHML_LOGS", 'False').lower() in ('true', '1', 't'):
         print("Enabling pathml logs")
         log_activation = logger.enable("pathml")
         global enter_exit_bool
@@ -33,13 +41,12 @@ def enable_logging(log_bool=True)
         core_bool = True
         dataset_bool = True
         ml_bool = True
-        preprocessing_bool = True 
-
-except KeyError as e:
-    pass
+        preprocessing_bool = True
 
 
-fmt = "{time:HH:mm:ss} | {level:<8} | {module} | {function: ^15} | {line: >3} | {message}"
+fmt = (
+    "{time:HH:mm:ss} | {level:<8} | {module} | {function: ^15} | {line: >3} | {message}"
+)
 config = {
     "handlers": [
         dict(sink=sys.stderr, colorize=True, format=fmt, level="DEBUG", diagnose=True),
@@ -56,14 +63,14 @@ config = {
         # dict(sink="./pathml/logging/pathml_logs/DATASET.log", filter=lambda record: "dataset_specific" in record["extra"], format=fmt),
         # dict(sink="./pathml/logging/pathml_logs/ML.log", filter=lambda record: "ml_specific" in record["extra"], format=fmt),
         # dict(sink="./pathml/logging/pathml_logs/PREPROCESSING.log", filter=lambda record: "preprocessing_specific" in record["extra"], format=fmt),
-        ]}
+    ]
+}
 
 logger.configure(**config)
 
 # courtesy of the people at loguru
 # https://loguru.readthedocs.io/en/stable/resources/recipes.html#:~:text=or%20fallback%20policy.-,Logging%20entry%20and%20exit%20of%20functions%20with%20a%20decorator,-%EF%83%81
 def logger_wraps(*, entry=True, exit=True, level="DEBUG"):
-
     def wrapper(func):
         name = func.__name__
 
@@ -71,13 +78,16 @@ def logger_wraps(*, entry=True, exit=True, level="DEBUG"):
         def wrapped(*args, **kwargs):
             logger_ = logger.opt(depth=1)
             if entry:
-                logger_.bind(enter_exit=True).log(level, "Entering '{}' (args={}, kwargs={})", name, args, kwargs)
+                logger_.bind(enter_exit=True).log(
+                    level, "Entering '{}' (args={}, kwargs={})", name, args, kwargs
+                )
             result = func(*args, **kwargs)
             if exit:
-                logger_.bind(enter_exit=True).log(level, "Exiting '{}' (result={})", name, result)
+                logger_.bind(enter_exit=True).log(
+                    level, "Exiting '{}' (result={})", name, result
+                )
             return result
 
         return wrapped
 
     return wrapper
-
