@@ -8,19 +8,13 @@ import tempfile
 from collections import OrderedDict
 from dataclasses import asdict
 from loguru import logger
-from pathml.logging.utils import *
+from pathml._logging import *
 import anndata
 import h5py
 import numpy as np
 import pathml.core.slide_backends
 import pathml.core.slide_data
 
-try:
-    core_bool = os.getenv("core_bind", 'False').lower() in ('true', '1', 't')
-    logger.trace("core_specific logs have been enabled")
-except KeyError as e:
-    logger.exception(f"core_specific logs are currently disabled")
-    pass
 
 # TODO: Fletcher32 checksum?
 @logger_wraps()

@@ -5,15 +5,10 @@ License: GNU GPL 2.0
 
 import pickle
 from loguru import logger
-from pathml.logging.utils import *
+from pathml._logging import *
 
 import pathml.core.tile
-from pathml.preprocessing.transforms import Transform
-
-try:
-    preprocessing_bind = os.getenv("preprocessing_bind", 'False').lower() in ('true', '1', 't')
-except KeyError as e:
-    pass
+from pathml.preprocessing.transforms import Transform 
 
 class Pipeline(Transform):
     """

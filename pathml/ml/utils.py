@@ -8,12 +8,8 @@ import torch
 from torch.nn import functional as F
 import numpy as np
 from loguru import logger
-from pathml.logging.utils import *
+from pathml._logging import *
 
-try:
-    ml_bool = os.getenv("ml_bind", 'False').lower() in ('true', '1', 't')
-except KeyError as e:
-    pass
 
 @logger_wraps()
 def center_crop_im_batch(batch, dims, batch_order="BCHW"):

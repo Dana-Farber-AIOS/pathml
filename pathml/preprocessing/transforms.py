@@ -7,7 +7,7 @@ import os
 from warnings import warn
 
 from loguru import logger
-from pathml.logging.utils import *
+from pathml._logging import *
 import anndata
 import cv2
 import numpy as np
@@ -20,11 +20,6 @@ from skimage import restoration
 from skimage.exposure import (equalize_adapthist, equalize_hist,
                               rescale_intensity)
 from skimage.measure import regionprops_table
-
-try:
-    preprocessing_bind = os.getenv("preprocessing_bind", 'False').lower() in ('true', '1', 't')
-except KeyError as e:
-    pass
 
 # Base class
 class Transform:
