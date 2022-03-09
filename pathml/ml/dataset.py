@@ -22,7 +22,7 @@ class TileDataset(torch.utils.data.Dataset):
         - ``slide_labels`` is a dict
 
     This is designed to be wrapped in a PyTorch DataLoader for feeding tiles into ML models.
- 
+
     Note that label dictionaries are not standardized, as users are free to store whatever labels they want.
     For that reason, PyTorch cannot automatically stack labels into batches.
     When creating a DataLoader from a TileDataset, it may therefore be necessary to create a custom ``collate_fn`` to
@@ -78,7 +78,9 @@ class TileDataset(torch.utils.data.Dataset):
             im = tile_image.transpose(4, 3, 2, 1, 0)
         else:
             raise NotImplementedError(
-                logger.exception(f"tile image has shape {tile_image.shape}. Expecting an image with 3 dims (HWC) or 5 dims (XYZCT)")
+                logger.exception(
+                    f"tile image has shape {tile_image.shape}. Expecting an image with 3 dims (HWC) or 5 dims (XYZCT)"
+                )
             )
 
         masks = np.stack(list(masks.values()), axis=0) if masks else None

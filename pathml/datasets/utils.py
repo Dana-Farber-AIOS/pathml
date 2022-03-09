@@ -7,6 +7,7 @@ import numpy as np
 from loguru import logger
 from pathml._logging import *
 
+
 def pannuke_multiclass_mask_to_nucleus_mask(multiclass_mask):
     """
     Convert multiclass mask from PanNuke to a single channel nucleus mask.

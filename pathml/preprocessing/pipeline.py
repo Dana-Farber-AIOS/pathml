@@ -8,7 +8,8 @@ from loguru import logger
 from pathml._logging import *
 
 import pathml.core.tile
-from pathml.preprocessing.transforms import Transform 
+from pathml.preprocessing.transforms import Transform
+
 
 class Pipeline(Transform):
     """
@@ -37,7 +38,7 @@ class Pipeline(Transform):
                 out += f"\t{repr(t)},\n"
             out += "])"
             return out
-    
+
     @logger_wraps()
     def apply(self, tile):
         # this function has side effects

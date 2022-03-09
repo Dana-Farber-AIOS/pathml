@@ -30,6 +30,7 @@ def enable_logging(enabled=True):
         enabled
     ):  # leaving this in the event where env variables are to be used os.getenv("ENABLE_PATHML_LOGS", 'False').lower() in ('true', '1', 't'):
         print("Enabling pathml logs")
+        global log_activation
         log_activation = logger.enable("pathml")
         global enter_exit_bool
         global core_bool

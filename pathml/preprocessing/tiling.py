@@ -7,6 +7,7 @@ import numpy as np
 from loguru import logger
 from pathml._logging import *
 
+
 @logger_wraps()
 def extract_tiles(arr, tile_size, stride=None):
     """
@@ -29,7 +30,9 @@ def extract_tiles(arr, tile_size, stride=None):
     i, j, n_channels = arr.shape
     if (i - tile_size) % stride != 0 or (j - tile_size) % stride != 0:
         raise NotImplementedError(
-                logger.exception(f"Array of shape {arr.shape} is not perfectly tiled by tiles of size {tile_size} and stride {stride}.")
+            logger.exception(
+                f"Array of shape {arr.shape} is not perfectly tiled by tiles of size {tile_size} and stride {stride}."
+            )
         )
     patch_strides = arr.strides
     patch_shape = (tile_size, tile_size, n_channels)
@@ -46,6 +49,7 @@ def extract_tiles(arr, tile_size, stride=None):
     tiles = tiles.squeeze(axis=2)
     tiles = tiles.reshape(-1, *tiles.shape[2:])
     return tiles
+
 
 @logger_wraps()
 def extract_tiles_with_mask(arr, mask, tile_size, stride=None, threshold=0.5):

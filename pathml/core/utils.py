@@ -36,6 +36,7 @@ def writedataframeh5(h5, name, df):
         shuffle=True,
     )
 
+
 @logger_wraps()
 def writestringh5(h5, name, st):
     """
@@ -48,6 +49,7 @@ def writestringh5(h5, name, st):
     """
     stringasarray = np.string_(str(st))
     h5.attrs[str(name)] = stringasarray
+
 
 @logger_wraps()
 def writedicth5(h5, name, dic):
@@ -63,6 +65,7 @@ def writedicth5(h5, name, dic):
     for key, val in dic.items():
         h5[name].attrs.create(str(key), data=val)
 
+
 @logger_wraps()
 def writetupleh5(h5, name, tup):
     """
@@ -76,6 +79,7 @@ def writetupleh5(h5, name, tup):
     tupleasarray = np.string_(str(tup))
     h5.attrs[str(name)] = tupleasarray
 
+
 @logger_wraps()
 def readtupleh5(h5, key):
     """
@@ -86,6 +90,7 @@ def readtupleh5(h5, key):
         key(str): key where data to read is stored
     """
     return eval(h5.attrs[key]) if key in h5.attrs.keys() else None
+
 
 @logger_wraps()
 def writecounts(h5, counts):
@@ -100,6 +105,7 @@ def writecounts(h5, counts):
     countsh5 = h5py.File(counts.filename, "r")
     for ds in countsh5.keys():
         countsh5.copy(ds, h5)
+
 
 @logger_wraps()
 def readcounts(h5):

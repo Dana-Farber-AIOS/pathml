@@ -379,6 +379,7 @@ def _dice_loss_nc_head(nc_out, true_mask, epsilon=1e-3):
     loss = dice_loss(logits=nc_out, true=truth, eps=epsilon)
     return loss
 
+
 @logger_wraps()
 def _ce_loss_nc_head(nc_out, true_mask):
     """
@@ -391,6 +392,7 @@ def _ce_loss_nc_head(nc_out, true_mask):
     ce = nn.CrossEntropyLoss()
     loss = ce(nc_out, truth)
     return loss
+
 
 @logger_wraps()
 def _ce_loss_np_head(np_out, true_mask):
@@ -406,6 +408,7 @@ def _ce_loss_np_head(np_out, true_mask):
     ce = nn.CrossEntropyLoss()
     loss = ce(np_out, truth)
     return loss
+
 
 @logger_wraps()
 def compute_hv_map(mask):
@@ -487,6 +490,7 @@ def compute_hv_map(mask):
         out[1, :, :] += inst_y
     return out
 
+
 @logger_wraps()
 def _get_gradient_hv(hv_batch, kernel_size=5):
     """
@@ -529,6 +533,7 @@ def _get_gradient_hv(hv_batch, kernel_size=5):
 
     return h_grad, v_grad
 
+
 @logger_wraps()
 def _loss_hv_grad(hv_out, true_hv, nucleus_pixel_mask):
     """
@@ -555,6 +560,7 @@ def _loss_hv_grad(hv_out, true_hv, nucleus_pixel_mask):
     loss = loss_h + loss_v
     return loss
 
+
 @logger_wraps()
 def _loss_hv_mse(hv_out, true_hv):
     """
@@ -566,6 +572,7 @@ def _loss_hv_mse(hv_out, true_hv):
     """
     loss = F.mse_loss(hv_out, true_hv)
     return loss
+
 
 @logger_wraps()
 def loss_hovernet(outputs, ground_truth, n_classes=None):
@@ -634,6 +641,7 @@ def loss_hovernet(outputs, ground_truth, n_classes=None):
 
 
 # Post-processing of HoVer-Net outputs
+
 
 @logger_wraps()
 def remove_small_objs(array_in, min_size):
@@ -745,6 +753,7 @@ def _post_process_single_hovernet(
 
     return out
 
+
 @logger_wraps()
 def post_process_batch_hovernet(
     outputs, n_classes, small_obj_size_thresh=10, kernel_size=21, h=0.5, k=0.5
@@ -843,6 +852,7 @@ def post_process_batch_hovernet(
 
 
 # plotting hovernet outputs
+
 
 @logger_wraps()
 def _vis_outputs_single(

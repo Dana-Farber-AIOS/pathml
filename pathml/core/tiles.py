@@ -36,9 +36,15 @@ class Tiles:
             tiledictionary = {}
             for tile in tiles:
                 if not isinstance(tile, pathml.core.Tile):
-                    raise ValueError(logger.exception(f"Tiles expects a list of type Tile but was given {type(tile)}"))
+                    raise ValueError(
+                        logger.exception(
+                            f"Tiles expects a list of type Tile but was given {type(tile)}"
+                        )
+                    )
                 if tile.coords is None:
-                    raise ValueError(logger.exception(f"tiles must contain valid coords"))
+                    raise ValueError(
+                        logger.exception(f"tiles must contain valid coords")
+                    )
                 coords = tile.coords
                 tiledictionary[coords] = tile
             self._tiles = OrderedDict(tiledictionary)
@@ -75,7 +81,9 @@ class Tiles:
         """
         if not isinstance(tile, pathml.core.tile.Tile):
             raise ValueError(
-                logger.exception(f"can not add {type(tile)}, tile must be of type pathml.core.tiles.Tile")
+                logger.exception(
+                    f"can not add {type(tile)}, tile must be of type pathml.core.tiles.Tile"
+                )
             )
         self.h5manager.add_tile(tile)
 

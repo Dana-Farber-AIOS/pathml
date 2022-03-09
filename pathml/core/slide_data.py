@@ -18,6 +18,7 @@ import pathml.core
 import pathml.preprocessing.pipeline
 from pathml.core.slide_types import SlideType
 
+
 @logger_wraps()
 def infer_backend(path):
     """
@@ -39,7 +40,11 @@ def infer_backend(path):
         for ext in extension_set:
             if path[-len(ext) :] == ext:
                 return name
-    raise ValueError(logger.exception(f"input path {path} doesn't match any supported file extensions"))
+    raise ValueError(
+        logger.exception(
+            f"input path {path} doesn't match any supported file extensions"
+        )
+    )
 
 
 class SlideData:
@@ -283,7 +288,7 @@ class SlideData:
                 raise Exception(
                     logger.exception(
                         f"Slide already has tiles. Running the pipeline will overwrite the existing tiles. Use overwrite_existing_tiles=True to force overwriting existing tiles."
-                        )
+                    )
                 )
             else:
                 # delete all existing tiles
@@ -448,11 +453,15 @@ class SlideData:
         except:
             if not self.slide:
                 raise NotImplementedError(
-                        logger.exception(f"Plotting only supported via backend, but SlideData has no backend.")
+                    logger.exception(
+                        f"Plotting only supported via backend, but SlideData has no backend."
+                    )
                 )
             else:
                 raise NotImplementedError(
-                        logger.exception(f"plotting not supported for slide_backend={self.slide.__class__.__name__}")
+                    logger.exception(
+                        f"plotting not supported for slide_backend={self.slide.__class__.__name__}"
+                    )
                 )
         if ax is None:
             ax = plt.gca()
@@ -464,7 +473,7 @@ class SlideData:
     @property
     def counts(self):
         return self.tiles.h5manager.counts if self.tiles.h5manager else None
-    
+
     @counts.setter
     def counts(self, value):
         if self.tiles.h5manager:
@@ -474,7 +483,9 @@ class SlideData:
             self.tiles.h5manager.counts = value
         else:
             raise AttributeError(
-                logger.exception(f"cannot assign counts slidedata contains no tiles, first generate tiles")
+                logger.exception(
+                    f"cannot assign counts slidedata contains no tiles, first generate tiles"
+                )
             )
 
     @logger_wraps()

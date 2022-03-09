@@ -49,6 +49,7 @@ def center_crop_im_batch(batch, dims, batch_order="BCHW"):
 
     return batch_cropped
 
+
 @logger_wraps()
 def dice_loss(true, logits, eps=1e-3):
     """
@@ -92,6 +93,7 @@ def dice_loss(true, logits, eps=1e-3):
     loss = 1 - loss
     return loss
 
+
 @logger_wraps()
 def dice_score(pred, truth, eps=1e-3):
     """
@@ -120,6 +122,7 @@ def dice_score(pred, truth, eps=1e-3):
     denom = np.sum(pred) + np.sum(truth) + eps
     return float(num / denom)
 
+
 @logger_wraps()
 def get_sobel_kernels(size, dt=torch.float32):
     """
@@ -140,6 +143,7 @@ def get_sobel_kernels(size, dt=torch.float32):
     kernel_v = kernel_v.type(dt)
 
     return kernel_h, kernel_v
+
 
 @logger_wraps()
 def wrap_transform_multichannel(transform):

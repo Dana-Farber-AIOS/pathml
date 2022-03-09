@@ -145,6 +145,7 @@ def contour_centroid(contour):
     i, j = (mu["m10"] / (mu["m00"] + 1e-5), mu["m01"] / (mu["m00"] + 1e-5))
     return i, j
 
+
 @logger_wraps()
 def sort_points_clockwise(points):
     """
@@ -167,6 +168,7 @@ def sort_points_clockwise(points):
     angles = [np.arctan2(d[0], d[1]) for d in diffs]
     # sort by angle to order points around the circle
     return points[np.argsort(angles)]
+
 
 @logger_wraps()
 def _pad_or_crop_1d(array, axis, target_dim):
@@ -198,6 +200,7 @@ def _pad_or_crop_1d(array, axis, target_dim):
         slc[axis] = slice(offset[0], -offset[1])
         array = array[tuple(slc)]
         return array
+
 
 @logger_wraps()
 def pad_or_crop(array, target_shape):

@@ -14,11 +14,15 @@ import numpy as np
 import pandas as pd
 import pathml.core
 import pathml.core.slide_data
-from pathml.utils import (RGB_to_GREY, RGB_to_HSI, RGB_to_HSV, RGB_to_OD,
-                          normalize_matrix_cols)
+from pathml.utils import (
+    RGB_to_GREY,
+    RGB_to_HSI,
+    RGB_to_HSV,
+    RGB_to_OD,
+    normalize_matrix_cols,
+)
 from skimage import restoration
-from skimage.exposure import (equalize_adapthist, equalize_hist,
-                              rescale_intensity)
+from skimage.exposure import equalize_adapthist, equalize_hist, rescale_intensity
 from skimage.measure import regionprops_table
 
 # Base class
@@ -97,7 +101,7 @@ class GaussianBlur(Transform):
             sigmaY=self.sigma,
         )
         return out
-    
+
     @logger_wraps()
     def apply(self, tile):
         assert isinstance(
@@ -377,7 +381,7 @@ class MorphClose(Transform):
             f"MorphClose(kernel_size={self.kernel_size}, n_iterations={self.n_iterations}, "
             f"mask_name={self.mask_name})"
         )
-    
+
     @logger_wraps()
     def F(self, mask):
         assert mask.dtype == np.uint8, f"mask type {mask.dtype} must be np.uint8"
@@ -669,7 +673,9 @@ class StainNormalizationHE(Transform):
                 import spams
             except (ImportError, ModuleNotFoundError):
                 raise Exception(
-                        logger.exception(f"Vahadane method requires `spams` package to be installed")
+                    logger.exception(
+                        f"Vahadane method requires `spams` package to be installed"
+                    )
                 )
 
         self.target = target.lower()
@@ -690,7 +696,7 @@ class StainNormalizationHE(Transform):
             f"regularizer_lasso={self.regularizer_lasso}, background_intensity={self.background_intensity}, "
             f"stain_matrix_target_od={self.stain_matrix_target_od}, max_c_target={self.max_c_target})"
         )
-    
+
     @logger_wraps()
     def fit_to_reference(self, image_ref):
         """
@@ -733,7 +739,9 @@ class StainNormalizationHE(Transform):
             stain_matrix = self._estimate_stain_vectors_vahadane(image)
         else:
             raise Exception(
-                logger.exception(f"Error: input stain estimation method {self.stain_estimation_method} must be one of 'macenko' or 'vahadane'")
+                logger.exception(
+                    f"Error: input stain estimation method {self.stain_estimation_method} must be one of 'macenko' or 'vahadane'"
+                )
             )
         return stain_matrix
 
@@ -766,7 +774,11 @@ class StainNormalizationHE(Transform):
         try:
             import spams
         except (ImportError, ModuleNotFoundError):
-            raise Exception(logger.exception(f"Vahadane method requires `spams` package to be installed"))
+            raise Exception(
+                logger.exception(
+                    f"Vahadane method requires `spams` package to be installed"
+                )
+            )
         # convert to Optical Density (OD) space
         image_OD = RGB_to_OD(image)
         # reshape to (M*N)x3
@@ -814,7 +826,7 @@ class StainNormalizationHE(Transform):
         try:
             _, v = np.linalg.eigh(np.cov(OD.T))
         except np.linalg.LinAlgError as err:
-            logger.exception(f"Error in computing eigenvectors: {err}")  
+            logger.exception(f"Error in computing eigenvectors: {err}")
             raise
         pcs = v[:, 1:3]
         # project OD pixels onto plane of first 2 PCs
@@ -873,7 +885,11 @@ class StainNormalizationHE(Transform):
         try:
             import spams
         except (ImportError, ModuleNotFoundError):
-            raise Exception(logger.exception(f"Vahadane method requires `spams` package to be installed"))
+            raise Exception(
+                logger.exception(
+                    f"Vahadane method requires `spams` package to be installed"
+                )
+            )
         image_OD = RGB_to_OD(image).reshape(-1, 3)
 
         # Get concentrations of each stain at each pixel
@@ -920,7 +936,9 @@ class StainNormalizationHE(Transform):
             )
         else:
             raise Exception(
-                    logger.exception(f"Error: input target {self.target} is invalid. Must be one of 'normalize', 'eosin', 'hematoxylin'")
+                logger.exception(
+                    f"Error: input target {self.target} is invalid. Must be one of 'normalize', 'eosin', 'hematoxylin'"
+                )
             )
 
         im = im * self.background_intensity
@@ -1147,7 +1165,7 @@ class LabelWhiteSpaceHE(Transform):
             f"LabelWhiteSpaceHE(label_name={self.label_name}, greyscale_threshold={self.greyscale_threshold}, "
             f"proportion_threshold={self.proportion_threshold})"
         )
-    
+
     @logger_wraps()
     def F(self, image):
         grey = RGB_to_GREY(image)
@@ -1368,15 +1386,21 @@ class SegmentMIF(Transform):
             try:
                 from deepcell.applications import Mesmer
             except ImportError:
-                logger.warn("The Mesmer model in SegmentMIF requires extra libraries to be installed.\nYou can install these via pip using:\npip install deepcell")
+                logger.warn(
+                    "The Mesmer model in SegmentMIF requires extra libraries to be installed.\nYou can install these via pip using:\npip install deepcell"
+                )
                 raise ImportError(
-                        logger.exception(f"The Mesmer model in SegmentMIF requires deepcell to be installed")
+                    logger.exception(
+                        f"The Mesmer model in SegmentMIF requires deepcell to be installed"
+                    )
                 ) from None
             self.model = model.lower()
         elif model.lower() == "cellpose":
             """from cellpose import models
             self.model = models.Cellpose(gpu=self.gpu, model_type='cyto')"""
-            raise NotImplementedError(logger.exception(f"Cellpose model not currently supported"))
+            raise NotImplementedError(
+                logger.exception(f"Cellpose model not currently supported")
+            )
         else:
             raise ValueError(logger.exception(f"currently only support mesmer model"))
 
@@ -1391,7 +1415,9 @@ class SegmentMIF(Transform):
         img = image.copy()
         if len(img.shape) not in [3, 4]:
             raise ValueError(
-                logger.exception(f"input image has shape {img.shape}. supported image shapes are x,y,c or batch,x,y,c. Did you forget to apply 'CollapseRuns*()' transform?")
+                logger.exception(
+                    f"input image has shape {img.shape}. supported image shapes are x,y,c or batch,x,y,c. Did you forget to apply 'CollapseRuns*()' transform?"
+                )
             )
         if len(img.shape) == 3:
             img = np.expand_dims(img, axis=0)
@@ -1421,7 +1447,9 @@ class SegmentMIF(Transform):
             del model
             return cell_segmentation_predictions, nuclear_segmentation_predictions
         else:
-            raise NotImplementedError(logger.exception(f"model={self.model} currently not supported."))
+            raise NotImplementedError(
+                logger.exception(f"model={self.model} currently not supported.")
+            )
 
     @logger_wraps()
     def apply(self, tile):
