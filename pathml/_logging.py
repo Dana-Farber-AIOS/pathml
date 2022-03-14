@@ -19,16 +19,33 @@ ml_bool = False
 preprocessing_bool = False
 
 # check to see if user has enabled pathml logs
-def enable_logging(enabled=True):
+def enable_logging(
+        enabled=True, 
+        sink='~/Documents/pathml_logs/log.log', 
+        level='DEBUG',  
+        fmt="{time:HH:mm:ss} | {level:<8} | {module} | {function: ^15} | {line: >3} | {message}",
+        **kwargs
+ ):
     """
     Turn on or off logging for PathML
 
     Args:
-        enabled (bool): Whether to save logs. Defaults to True.
+        enabled(bool):
+            Whether to save logs. Defaults to True.
+        sink(str, <class '_io.TextIOWrapper'>): 
+            where the sink goes
+        level(str):
+            level of logs to capture
+        format(str):  
+            formatting for the log message. default: '{time:HH:mm:ss} | {level:<8} | {module} | {function: ^15} | {line: >3} | {message}'
+        **kwargs(dict, optional):
+            additional options passed to configure logger. See: :_Example: 'https://loguru.readthedocs.io/en/stable/api/logger.html#loguru._logger.Logger.configure' 
+
+    Returns:
+        logger(<class 'loguru._logger.Logger'>):
+            The updated logger with the applicable user settings applied. 
     """
-    if (
-        enabled
-    ):  # leaving this in the event where env variables are to be used os.getenv("ENABLE_PATHML_LOGS", 'False').lower() in ('true', '1', 't'):
+    if (enabled):  # leaving this in the event where env variables are to be used os.getenv("ENABLE_PATHML_LOGS", 'False').lower() in ('true', '1', 't'):
         print("Enabling pathml logs")
         global log_activation
         log_activation = logger.enable("pathml")
@@ -43,32 +60,9 @@ def enable_logging(enabled=True):
         core_bool = True
         dataset_bool = True
         ml_bool = True
-        preprocessing_bool = True
+        preprocessing_bool = True 
+        return logger.configure([dict(sink=sink, level=level, format=fmt, **kwargs)])
 
-
-fmt = (
-    "{time:HH:mm:ss} | {level:<8} | {module} | {function: ^15} | {line: >3} | {message}"
-)
-config = {
-    "handlers": [
-        dict(sink=sys.stderr, colorize=True, format=fmt, level="DEBUG", diagnose=True),
-        dict(sink="c:$HOME/Documents/pathml_logs/log.log", format=fmt),
-        # dict(sink="./pathml/logging/pathml_logs/trace.log", format=fmt, level="TRACE", diagnose=True),
-        # dict(sink="./pathml/logging/pathml_logs/debug.log", format=fmt, level="DEBUG", diagnose=True),
-        # dict(sink="./pathml/logging/pathml_logs/info.log", format=fmt, level="INFO", diagnose=True),
-        # dict(sink="./pathml/logging/pathml_logs/success.log", format=fmt, level="SUCCESS", diagnose=True),
-        # dict(sink="./pathml/logging/pathml_logs/warning.log", format=fmt, level="WARNING", diagnose=True, backtrace=True),
-        # dict(sink="./pathml/logging/pathml_logs/error.log", format=fmt, level="ERROR", diagnose=True, backtrace=True),
-        # dict(sink="./pathml/logging/pathml_logs/critical.log", format=fmt, level="CRITICAL", diagnose=True, backtrace=True),
-        # dict(sink="./pathml/logging/pathml_logs/enter_exit.log", filter=lambda record: "enter_exit" in record["extra"], format=fmt),
-        # dict(sink="./pathml/logging/pathml_logs/CORE.log", filter=lambda record: "core_specific" in record["extra"], format=fmt),
-        # dict(sink="./pathml/logging/pathml_logs/DATASET.log", filter=lambda record: "dataset_specific" in record["extra"], format=fmt),
-        # dict(sink="./pathml/logging/pathml_logs/ML.log", filter=lambda record: "ml_specific" in record["extra"], format=fmt),
-        # dict(sink="./pathml/logging/pathml_logs/PREPROCESSING.log", filter=lambda record: "preprocessing_specific" in record["extra"], format=fmt),
-    ]
-}
-
-logger.configure(**config)
 
 # courtesy of the people at loguru
 # https://loguru.readthedocs.io/en/stable/resources/recipes.html#:~:text=or%20fallback%20policy.-,Logging%20entry%20and%20exit%20of%20functions%20with%20a%20decorator,-%EF%83%81
