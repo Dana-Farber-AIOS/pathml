@@ -83,7 +83,6 @@ class _HoVerNetResidualUnit(nn.Module):
         return out
 
 
-@logger_wraps()
 def _make_HoVerNet_residual_block(input_channels, output_channels, stride, n_units):
     """
     Stack multiple residual units into a block.
@@ -175,7 +174,6 @@ class _HoVerNetDenseUnit(nn.Module):
         return out
 
 
-@logger_wraps()
 def _make_HoVerNet_dense_block(input_channels, n_units):
     """
     Stack multiple dense units into a block.
@@ -329,7 +327,6 @@ class HoVerNet(nn.Module):
 # loss functions and associated utils
 
 
-@logger_wraps()
 def _convert_multiclass_mask_to_binary(mask):
     """
     Input mask of shape (B, n_classes, H, W) is converted to a mask of shape (B, 1, H, W).
@@ -340,7 +337,6 @@ def _convert_multiclass_mask_to_binary(mask):
     return m
 
 
-@logger_wraps()
 def _dice_loss_np_head(np_out, true_mask, epsilon=1e-3):
     """
     Dice loss term for nuclear pixel branch.
@@ -362,7 +358,6 @@ def _dice_loss_np_head(np_out, true_mask, epsilon=1e-3):
     return loss
 
 
-@logger_wraps()
 def _dice_loss_nc_head(nc_out, true_mask, epsilon=1e-3):
     """
     Dice loss term for nuclear classification branch.
@@ -380,7 +375,6 @@ def _dice_loss_nc_head(nc_out, true_mask, epsilon=1e-3):
     return loss
 
 
-@logger_wraps()
 def _ce_loss_nc_head(nc_out, true_mask):
     """
     Cross-entropy loss term for nc branch.
@@ -394,7 +388,6 @@ def _ce_loss_nc_head(nc_out, true_mask):
     return loss
 
 
-@logger_wraps()
 def _ce_loss_np_head(np_out, true_mask):
     """
     Cross-entropy loss term for np branch.
@@ -410,7 +403,6 @@ def _ce_loss_np_head(np_out, true_mask):
     return loss
 
 
-@logger_wraps()
 def compute_hv_map(mask):
     """
     Preprocessing step for HoVer-Net architecture.
@@ -491,7 +483,6 @@ def compute_hv_map(mask):
     return out
 
 
-@logger_wraps()
 def _get_gradient_hv(hv_batch, kernel_size=5):
     """
     Calculate the horizontal partial differentiation for horizontal channel
@@ -534,7 +525,6 @@ def _get_gradient_hv(hv_batch, kernel_size=5):
     return h_grad, v_grad
 
 
-@logger_wraps()
 def _loss_hv_grad(hv_out, true_hv, nucleus_pixel_mask):
     """
     Equation 3 from HoVer-Net paper for calculating loss for HV predictions.
@@ -561,7 +551,6 @@ def _loss_hv_grad(hv_out, true_hv, nucleus_pixel_mask):
     return loss
 
 
-@logger_wraps()
 def _loss_hv_mse(hv_out, true_hv):
     """
     Equation 2 from HoVer-Net paper for calculating loss for HV predictions.
@@ -574,7 +563,6 @@ def _loss_hv_mse(hv_out, true_hv):
     return loss
 
 
-@logger_wraps()
 def loss_hovernet(outputs, ground_truth, n_classes=None):
     """
     Compute loss for HoVer-Net.
@@ -643,7 +631,6 @@ def loss_hovernet(outputs, ground_truth, n_classes=None):
 # Post-processing of HoVer-Net outputs
 
 
-@logger_wraps()
 def remove_small_objs(array_in, min_size):
     """
     Removes small foreground regions from binary array, leaving only the contiguous regions which are above
@@ -672,7 +659,6 @@ def remove_small_objs(array_in, min_size):
     return labels
 
 
-@logger_wraps()
 def _post_process_single_hovernet(
     np_out, hv_out, small_obj_size_thresh=10, kernel_size=21, h=0.5, k=0.5
 ):
@@ -754,7 +740,6 @@ def _post_process_single_hovernet(
     return out
 
 
-@logger_wraps()
 def post_process_batch_hovernet(
     outputs, n_classes, small_obj_size_thresh=10, kernel_size=21, h=0.5, k=0.5
 ):
@@ -854,7 +839,6 @@ def post_process_batch_hovernet(
 # plotting hovernet outputs
 
 
-@logger_wraps()
 def _vis_outputs_single(
     images, preds, n_classes, index=0, ax=None, markersize=5, palette=None
 ):

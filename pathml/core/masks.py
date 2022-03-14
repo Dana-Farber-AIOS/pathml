@@ -75,7 +75,6 @@ class Masks:
     def keys(self):
         return list(self.h5manager.h5["masks"].keys())
 
-    @logger_wraps()
     def add(self, key, mask):
         """
         Add mask indexed by key to self.h5manager.
@@ -86,7 +85,6 @@ class Masks:
         """
         self.h5manager.add_mask(key, mask)
 
-    @logger_wraps()
     def slice(self, slicer):
         """
         Slice all masks in self.h5manager extending of numpy array slicing.
@@ -106,7 +104,6 @@ class Masks:
         sliced = {key: mask for key, mask in self.h5manager.slice_masks(slicer)}
         return sliced
 
-    @logger_wraps()
     def remove(self, key):
         """
         Remove mask.

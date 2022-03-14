@@ -8,7 +8,6 @@ from loguru import logger
 from pathml._logging import *
 
 
-@logger_wraps()
 def extract_tiles(arr, tile_size, stride=None):
     """
     Extract tiles from an array. Allows user to specify stride between tiles.
@@ -51,7 +50,6 @@ def extract_tiles(arr, tile_size, stride=None):
     return tiles
 
 
-@logger_wraps()
 def extract_tiles_with_mask(arr, mask, tile_size, stride=None, threshold=0.5):
     """
     Generate tiles and only keep tiles that overlap with the

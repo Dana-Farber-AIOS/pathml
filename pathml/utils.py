@@ -15,7 +15,6 @@ from pathml._logging import *
 from matplotlib.colors import TABLEAU_COLORS
 
 
-@logger_wraps()
 def download_from_url(url, download_dir, name=None):
     """
     Download a file from a url to destination directory.
@@ -43,7 +42,6 @@ def download_from_url(url, download_dir, name=None):
             shutil.copyfileobj(response, out_file)
 
 
-@logger_wraps()
 def parse_file_size(fs):
     """
     Parse a file size string into bytes.
@@ -53,7 +51,6 @@ def parse_file_size(fs):
     return int(float(number) * units[unit.upper()])
 
 
-@logger_wraps()
 def upsample_array(arr, factor):
     """
     Upsample array by a factor. Each element in input array will become a CxC block in the upsampled array, where
@@ -73,7 +70,6 @@ def upsample_array(arr, factor):
     return x.reshape(r * factor, c * factor)  # create new 2D array
 
 
-@logger_wraps()
 def pil_to_rgb(image_array_pil):
     """
     Convert PIL RGBA Image to numpy RGB array
@@ -83,7 +79,6 @@ def pil_to_rgb(image_array_pil):
     return image_array
 
 
-@logger_wraps()
 def segmentation_lines(mask_in):
     """
     Generate coords of points bordering segmentations from a given mask.
@@ -99,7 +94,6 @@ def segmentation_lines(mask_in):
     return x, y
 
 
-@logger_wraps()
 def plot_mask(im, mask_in, ax=None, color="red", downsample_factor=None):
     """
     plot results of segmentation, overlaying on original image_ref
@@ -125,7 +119,6 @@ def plot_mask(im, mask_in, ax=None, color="red", downsample_factor=None):
     return ax
 
 
-@logger_wraps()
 def contour_centroid(contour):
     """
     Return the centroid of a contour, calculated using moments.
@@ -146,7 +139,6 @@ def contour_centroid(contour):
     return i, j
 
 
-@logger_wraps()
 def sort_points_clockwise(points):
     """
     Sort a list of points into clockwise order around centroid, ordering by angle with centroid and x-axis.
@@ -170,7 +162,6 @@ def sort_points_clockwise(points):
     return points[np.argsort(angles)]
 
 
-@logger_wraps()
 def _pad_or_crop_1d(array, axis, target_dim):
     """
     Modify shape of input array at target axis by zero-padding or cropping.
@@ -202,7 +193,6 @@ def _pad_or_crop_1d(array, axis, target_dim):
         return array
 
 
-@logger_wraps()
 def pad_or_crop(array, target_shape):
     """
     Make dimensions of input array match target shape by either zero-padding or cropping each axis.
@@ -223,7 +213,6 @@ def pad_or_crop(array, target_shape):
     return array
 
 
-@logger_wraps()
 def RGB_to_HSI(imarr):
     """
     Convert imarr from RGB to HSI colorspace.
@@ -264,7 +253,6 @@ def RGB_to_HSI(imarr):
     return out
 
 
-@logger_wraps()
 def RGB_to_OD(imarr):
     """
     Convert input image from RGB space to optical density (OD) space.
@@ -281,7 +269,6 @@ def RGB_to_OD(imarr):
     return OD
 
 
-@logger_wraps()
 def RGB_to_HSV(imarr):
     """convert image from RGB to HSV"""
     assert imarr.dtype == np.uint8, f"Input image dtype {imarr.dtype} must be np.uint8"
@@ -289,7 +276,6 @@ def RGB_to_HSV(imarr):
     return hsv
 
 
-@logger_wraps()
 def RGB_to_LAB(imarr):
     """convert image from RGB to LAB color space"""
     assert imarr.dtype == np.uint8, f"Input image dtype {imarr.dtype} must be np.uint8"
@@ -298,7 +284,6 @@ def RGB_to_LAB(imarr):
     return lab
 
 
-@logger_wraps()
 def RGB_to_GREY(imarr):
     """convert image_ref from RGB to HSV"""
     assert imarr.dtype == np.uint8, f"Input image dtype {imarr.dtype} must be np.uint8"
@@ -306,7 +291,6 @@ def RGB_to_GREY(imarr):
     return grey
 
 
-@logger_wraps()
 def normalize_matrix_rows(A):
     """
     Normalize the rows of an array.
@@ -319,7 +303,6 @@ def normalize_matrix_rows(A):
     return A / np.linalg.norm(A, axis=1)[:, None]
 
 
-@logger_wraps()
 def normalize_matrix_cols(A):
     """
     Normalize the columns of an array.
@@ -332,7 +315,6 @@ def normalize_matrix_cols(A):
     return A / np.linalg.norm(A, axis=0)[None, :]
 
 
-@logger_wraps()
 def plot_segmentation(ax, masks, palette=None, markersize=5):
     """
     Plot segmentation contours. Supports multi-class masks.

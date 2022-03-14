@@ -40,7 +40,6 @@ class SlideDataset:
         out += ")"
         return out
 
-    @logger_wraps()
     def run(self, pipeline, client=None, distributed=True, **kwargs):
         """
         Runs a preprocessing pipeline on all slides in the dataset
@@ -63,12 +62,10 @@ class SlideDataset:
         if shutdown_after:
             client.shutdown()
 
-    @logger_wraps()
     def reshape(self, shape, centercrop=False):
         for slide in self.slides:
             slide.tiles.reshape(shape=shape, centercrop=centercrop)
 
-    @logger_wraps()
     def write(self, dir, filenames=None):
         """
         Write all SlideData objects to the specified directory.

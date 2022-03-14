@@ -19,7 +19,6 @@ import pathml.preprocessing.pipeline
 from pathml.core.slide_types import SlideType
 
 
-@logger_wraps()
 def infer_backend(path):
     """
     Checks file extensions to try to infer correct backend to use.
@@ -241,7 +240,6 @@ class SlideData:
         out += ")"
         return out
 
-    @logger_wraps()
     def run(
         self,
         pipeline,
@@ -369,7 +367,6 @@ class SlideData:
         else:
             return self.slide.get_image_shape()
 
-    @logger_wraps()
     def extract_region(self, location, size, *args, **kwargs):
         """
         Extract a region of the image.
@@ -388,7 +385,6 @@ class SlideData:
         """
         return self.slide.extract_region(location, size, *args, **kwargs)
 
-    @logger_wraps()
     def generate_tiles(self, shape=3000, stride=None, pad=False, **kwargs):
         """
         Generator over Tile objects containing regions of the image.
@@ -488,7 +484,6 @@ class SlideData:
                 )
             )
 
-    @logger_wraps()
     def write(self, path):
         """
         Write contents to disk in h5path format.

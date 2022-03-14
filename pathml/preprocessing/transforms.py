@@ -62,12 +62,10 @@ class MedianBlur(Transform):
     def __repr__(self):
         return f"MedianBlur(kernel_size={self.kernel_size})"
 
-    @logger_wraps()
     def F(self, image):
         assert image.dtype == np.uint8, f"image dtype {image.dtype} must be np.uint8"
         return cv2.medianBlur(image, ksize=self.kernel_size)
 
-    @logger_wraps()
     def apply(self, tile):
         assert isinstance(
             tile, pathml.core.tile.Tile
@@ -91,7 +89,6 @@ class GaussianBlur(Transform):
     def __repr__(self):
         return f"GaussianBlur(kernel_size={self.k_size}, sigma={self.sigma})"
 
-    @logger_wraps()
     def F(self, image):
         assert image.dtype == np.uint8, f"image dtype {image.dtype} must be np.uint8"
         out = cv2.GaussianBlur(
@@ -102,7 +99,6 @@ class GaussianBlur(Transform):
         )
         return out
 
-    @logger_wraps()
     def apply(self, tile):
         assert isinstance(
             tile, pathml.core.tile.Tile
@@ -124,14 +120,12 @@ class BoxBlur(Transform):
     def __repr__(self):
         return f"BoxBlur(kernel_size={self.kernel_size})"
 
-    @logger_wraps()
     def F(self, image):
         assert image.dtype == np.uint8, f"image dtype {image.dtype} must be np.uint8"
         return cv2.boxFilter(
             image, ksize=(self.kernel_size, self.kernel_size), ddepth=-1
         )
 
-    @logger_wraps()
     def apply(self, tile):
         assert isinstance(
             tile, pathml.core.tile.Tile
@@ -165,14 +159,12 @@ class RescaleIntensity(Transform):
     def __repr__(self):
         return f"RescaleIntensity(in_range={self.in_range}, out_range={self.out_range})"
 
-    @logger_wraps()
     def F(self, image):
         image = rescale_intensity(
             image, in_range=self.in_range, out_range=self.out_range
         )
         return image
 
-    @logger_wraps()
     def apply(self, tile):
         assert isinstance(
             tile, pathml.core.tile.Tile
@@ -197,12 +189,10 @@ class HistogramEqualization(Transform):
     def __repr__(self):
         return f"HistogramEqualization(nbins={self.nbins}, mask = {self.mask})"
 
-    @logger_wraps()
     def F(self, image):
         image = equalize_hist(image, nbins=self.nbins, mask=self.mask)
         return image
 
-    @logger_wraps()
     def apply(self, tile):
         assert isinstance(
             tile, pathml.core.tile.Tile
@@ -230,7 +220,6 @@ class AdaptiveHistogramEqualization(Transform):
     def __repr__(self):
         return f"AdaptiveHistogramEqualization(kernel_size={self.kernel_size}, clip_limit={self.clip_limit}, nbins={self.nbins})"
 
-    @logger_wraps()
     def F(self, image):
         image = equalize_adapthist(
             image,
@@ -240,7 +229,6 @@ class AdaptiveHistogramEqualization(Transform):
         )
         return image
 
-    @logger_wraps()
     def apply(self, tile):
         assert isinstance(
             tile, pathml.core.tile.Tile
@@ -281,7 +269,6 @@ class BinaryThreshold(Transform):
             f"mask_name={self.mask_name}, inverse={self.inverse})"
         )
 
-    @logger_wraps()
     def F(self, image):
         assert image.dtype == np.uint8, f"image dtype {image.dtype} must be np.uint8"
         assert (
@@ -295,7 +282,6 @@ class BinaryThreshold(Transform):
         )
         return out.astype(np.uint8)
 
-    @logger_wraps()
     def apply(self, tile):
         assert isinstance(
             tile, pathml.core.tile.Tile
@@ -336,7 +322,6 @@ class MorphOpen(Transform):
             f"mask_name={self.mask_name})"
         )
 
-    @logger_wraps()
     def F(self, mask):
         assert mask.dtype == np.uint8, f"mask type {mask.dtype} must be np.uint8"
         k = np.ones((self.kernel_size, self.kernel_size), dtype=np.uint8)
@@ -345,7 +330,6 @@ class MorphOpen(Transform):
         )
         return out
 
-    @logger_wraps()
     def apply(self, tile):
         assert isinstance(
             tile, pathml.core.tile.Tile
@@ -382,7 +366,6 @@ class MorphClose(Transform):
             f"mask_name={self.mask_name})"
         )
 
-    @logger_wraps()
     def F(self, mask):
         assert mask.dtype == np.uint8, f"mask type {mask.dtype} must be np.uint8"
         k = np.ones((self.kernel_size, self.kernel_size), dtype=np.uint8)
@@ -391,7 +374,6 @@ class MorphClose(Transform):
         )
         return out
 
-    @logger_wraps()
     def apply(self, tile):
         assert isinstance(
             tile, pathml.core.tile.Tile
@@ -440,7 +422,6 @@ class ForegroundDetection(Transform):
             f"outer_contours_only={self.outer_contours_only}, mask_name={self.mask_name})"
         )
 
-    @logger_wraps()
     def F(self, mask):
         assert mask.dtype == np.uint8, f"mask type {mask.dtype} must be np.uint8"
         mode = cv2.RETR_EXTERNAL if self.outer_contours_only else cv2.RETR_CCOMP
@@ -516,7 +497,6 @@ class ForegroundDetection(Transform):
 
         return mask_out.astype(np.uint8)
 
-    @logger_wraps()
     def apply(self, tile):
         assert isinstance(
             tile, pathml.core.tile.Tile
@@ -551,7 +531,6 @@ class SuperpixelInterpolation(Transform):
     def __repr__(self):
         return f"SuperpixelInterpolation(region_size={self.region_size}, n_iter={self.n_iter})"
 
-    @logger_wraps()
     def F(self, image):
         assert (
             image.dtype == np.uint8
@@ -572,7 +551,6 @@ class SuperpixelInterpolation(Transform):
                 out[:, :, c][mask] = av
         return out
 
-    @logger_wraps()
     def apply(self, tile):
         assert isinstance(
             tile, pathml.core.tile.Tile
@@ -697,7 +675,6 @@ class StainNormalizationHE(Transform):
             f"stain_matrix_target_od={self.stain_matrix_target_od}, max_c_target={self.max_c_target})"
         )
 
-    @logger_wraps()
     def fit_to_reference(self, image_ref):
         """
         Fit ``stain_matrix`` and ``max_c`` to a reference slide. This allows you to use a specific slide as the
@@ -724,7 +701,6 @@ class StainNormalizationHE(Transform):
         self.stain_matrix_target_od = stain_matrix
         self.max_c_target = max_C
 
-    @logger_wraps()
     def _estimate_stain_vectors(self, image):
         """
         Estimate stain vectors using appropriate method
@@ -745,7 +721,6 @@ class StainNormalizationHE(Transform):
             )
         return stain_matrix
 
-    @logger_wraps()
     def _estimate_pixel_concentrations(self, image, stain_matrix):
         """
         Estimate pixel concentrations from a given stain matrix using appropriate method
@@ -763,7 +738,6 @@ class StainNormalizationHE(Transform):
             raise Exception(logger.exception(f"Provided target {self.target} invalid"))
         return C
 
-    @logger_wraps()
     def _estimate_stain_vectors_vahadane(self, image, random_seed=0):
         """
         Estimate stain vectors using dictionary learning method from Vahadane et al.
@@ -807,7 +781,6 @@ class StainNormalizationHE(Transform):
             dictionary = dictionary[:, [1, 0]]
         return dictionary
 
-    @logger_wraps()
     def _estimate_stain_vectors_macenko(self, image):
         """
         Estimate stain vectors using Macenko method. Returns a (3, 2) matrix with first column corresponding to
@@ -851,7 +824,6 @@ class StainNormalizationHE(Transform):
             HE = np.array((stain1, stain2)).T
         return HE
 
-    @logger_wraps()
     def _estimate_pixel_concentrations_lstsq(self, image, stain_matrix):
         """
         estimate concentrations of each stain at each pixel using least squares
@@ -872,7 +844,6 @@ class StainNormalizationHE(Transform):
         C = np.linalg.lstsq(stain_matrix, image_OD.T, rcond=None)[0].T
         return C
 
-    @logger_wraps()
     def _estimate_pixel_concentrations_lasso(self, image, stain_matrix):
         """
         estimate concentrations of each stain at each pixel using lasso
@@ -906,7 +877,6 @@ class StainNormalizationHE(Transform):
         )
         return C
 
-    @logger_wraps()
     def _reconstruct_image(self, pixel_intensities):
         """
         Reconstruct an image from pixel intensities. Uses reference stain matrix and max_c
@@ -946,7 +916,6 @@ class StainNormalizationHE(Transform):
         im = im.T.astype(np.uint8)
         return im
 
-    @logger_wraps()
     def F(self, image):
         # first estimate stain matrix for reference image_ref
         stain_matrix = self._estimate_stain_vectors(image=image)
@@ -960,7 +929,6 @@ class StainNormalizationHE(Transform):
         im_reconstructed = im_reconstructed.reshape(image.shape)
         return im_reconstructed
 
-    @logger_wraps()
     def apply(self, tile):
         assert isinstance(
             tile, pathml.core.tile.Tile
@@ -1012,7 +980,6 @@ class NucleusDetectionHE(Transform):
             f"stain_kwargs={self.stain_kwargs})"
         )
 
-    @logger_wraps()
     def F(self, image):
         assert (
             image.dtype == np.uint8
@@ -1031,7 +998,6 @@ class NucleusDetectionHE(Transform):
         thresholded = ~thresholded
         return thresholded
 
-    @logger_wraps()
     def apply(self, tile):
         assert isinstance(
             tile, pathml.core.tile.Tile
@@ -1096,7 +1062,6 @@ class TissueDetectionHE(Transform):
             f"max_hole_size={self.max_hole_size}, outer_contours_only={self.outer_contours_only})"
         )
 
-    @logger_wraps()
     def F(self, image):
         assert (
             image.dtype == np.uint8
@@ -1128,7 +1093,6 @@ class TissueDetectionHE(Transform):
         ).F(closed)
         return tissue
 
-    @logger_wraps()
     def apply(self, tile):
         assert isinstance(
             tile, pathml.core.tile.Tile
@@ -1166,13 +1130,11 @@ class LabelWhiteSpaceHE(Transform):
             f"proportion_threshold={self.proportion_threshold})"
         )
 
-    @logger_wraps()
     def F(self, image):
         grey = RGB_to_GREY(image)
         pixel_thresh = np.mean(grey > self.greyscale_threshold)
         return pixel_thresh > self.proportion_threshold
 
-    @logger_wraps()
     def apply(self, tile):
         assert isinstance(
             tile, pathml.core.tile.Tile
@@ -1210,7 +1172,6 @@ class LabelArtifactTileHE(Transform):
     def __repr__(self):
         return f"LabelArtifactTileHE(label_name={self.label_name})"
 
-    @logger_wraps()
     def F(self, image):
         image_hsi = RGB_to_HSI(image)
         h = image_hsi[:, :, 0]
@@ -1229,7 +1190,6 @@ class LabelArtifactTileHE(Transform):
         else:
             return False
 
-    @logger_wraps()
     def apply(self, tile):
         assert isinstance(
             tile, pathml.core.tile.Tile
@@ -1295,7 +1255,6 @@ class DeconvolveMIF(Transform):
             f"gpu={self.gpu})"
         )
 
-    @logger_wraps()
     def F(self, image, slidetype):
         # TODO: get image in skimage format
         if self.slidetype == pathml.core.slide_data.VectraSlide:
@@ -1320,7 +1279,6 @@ class DeconvolveMIF(Transform):
         )
         return deconvolved
 
-    @logger_wraps()
     def apply(self, tile):
         assert isinstance(
             tile, pathml.core.tile.Tile
@@ -1410,7 +1368,6 @@ class SegmentMIF(Transform):
             f"gpu={self.gpu})"
         )
 
-    @logger_wraps()
     def F(self, image):
         img = image.copy()
         if len(img.shape) not in [3, 4]:
@@ -1451,7 +1408,6 @@ class SegmentMIF(Transform):
                 logger.exception(f"model={self.model} currently not supported.")
             )
 
-    @logger_wraps()
     def apply(self, tile):
         assert isinstance(
             tile, pathml.core.tile.Tile
@@ -1480,7 +1436,6 @@ class QuantifyMIF(Transform):
     def __repr__(self):
         return f"QuantifyMIF(segmentation_mask={self.segmentation_mask})"
 
-    @logger_wraps()
     def F(self, tile):
         # pass (x, y, channel) image and (x, y) segmentation
         img = tile.image.copy()
@@ -1530,7 +1485,6 @@ class QuantifyMIF(Transform):
             logger.warn("did not log coordinates in obsm")
         return counts
 
-    @logger_wraps()
     def apply(self, tile):
         assert isinstance(
             tile, pathml.core.tile.Tile
@@ -1556,12 +1510,10 @@ class CollapseRunsVectra(Transform):
     def __repr__(self):
         return f"CollapseRunsVectra()"
 
-    @logger_wraps()
     def F(self, image):
         image = np.squeeze(image)
         return image
 
-    @logger_wraps()
     def apply(self, tile):
         assert isinstance(
             tile, pathml.core.tile.Tile
@@ -1588,7 +1540,6 @@ class CollapseRunsCODEX(Transform):
     def __repr__(self):
         return f"CollapseRunsCODEX(z={self.z})"
 
-    @logger_wraps()
     def F(self, image):
         # collapse channels
         import functools
@@ -1603,7 +1554,6 @@ class CollapseRunsCODEX(Transform):
         image = image[:, :, self.z, :]
         return image
 
-    @logger_wraps()
     def apply(self, tile):
         assert isinstance(
             tile, pathml.core.tile.Tile

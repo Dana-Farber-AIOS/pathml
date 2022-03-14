@@ -32,6 +32,7 @@ def enable_logging(enabled=True):
         print("Enabling pathml logs")
         global log_activation
         log_activation = logger.enable("pathml")
+        logger.info("Enabled Logging For PathML!")
         global enter_exit_bool
         global core_bool
         global dataset_bool
@@ -51,7 +52,7 @@ fmt = (
 config = {
     "handlers": [
         dict(sink=sys.stderr, colorize=True, format=fmt, level="DEBUG", diagnose=True),
-        dict(sink="./pathml_logs/log.log", format=fmt),
+        dict(sink="c:$HOME/Documents/pathml_logs/log.log", format=fmt),
         # dict(sink="./pathml/logging/pathml_logs/trace.log", format=fmt, level="TRACE", diagnose=True),
         # dict(sink="./pathml/logging/pathml_logs/debug.log", format=fmt, level="DEBUG", diagnose=True),
         # dict(sink="./pathml/logging/pathml_logs/info.log", format=fmt, level="INFO", diagnose=True),

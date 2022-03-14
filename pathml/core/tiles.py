@@ -87,7 +87,6 @@ class Tiles:
             )
         self.h5manager.add_tile(tile)
 
-    @logger_wraps()
     def update(self, tile):
         """
         Update a tile.
@@ -97,7 +96,6 @@ class Tiles:
         """
         self.h5manager.add_tile(tile)
 
-    @logger_wraps()
     def remove(self, key):
         """
         Remove tile from tiles.
