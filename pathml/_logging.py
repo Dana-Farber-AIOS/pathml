@@ -12,7 +12,6 @@ import functools
 
 log_activation = logger.disable("pathml")
 
-
 # check to see if user has enabled pathml logs
 def enable_logging(
     enabled=True,
@@ -43,23 +42,27 @@ def enable_logging(
     if (
         enabled
     ):  # leaving this in the event where env variables are to be used os.getenv("ENABLE_PATHML_LOGS", 'False').lower() in ('true', '1', 't'):
-        print("Enabling pathml logs")
         global log_activation
         log_activation = logger.enable("pathml")
         logger.configure(
             handlers=[
-                dict(sink=sink, level=level, format=fmt, **kwargs),
-                dict(
-                    sink=sys.stderr,
-                    colorize=True,
-                    format=fmt,
-                    level="DEBUG",
-                    diagnose=True,
+                dict(sink=sink, 
+                     level=level, 
+                     format="{message}", 
+                     **kwargs
+                ),
+                dict(sink=sys.stderr,
+                     colorize=True,
+                     format="{message}",
+                     level="DEBUG",
+                     diagnose=True,
                 ),
             ]
         )
         logger.info("Enabled Logging For PathML!")
         return logger
+
+
 
 
 # courtesy of the people at loguru

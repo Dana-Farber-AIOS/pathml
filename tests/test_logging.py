@@ -7,12 +7,13 @@ from pathml._logging import enable_logging, logger
 
 
 def test_logging_enables(caplog):
+    global logger
     logger = enable_logging()
-    logger.info("testing that logging works")
-    assert "testing that logging works" in caplog.text
+    assert "Enabled Logging For PathML!" in caplog.text
 
 
 def test_logging_trace(caplog):
+    global logger
     logger = enable_logging()
     logger.trace("trace log goes here")
 
