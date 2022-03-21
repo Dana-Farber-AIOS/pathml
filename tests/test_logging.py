@@ -2,19 +2,23 @@
 Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
-
-from pathml._logging import enable_logging, logger
+import os
+from loguru import logger
+from pathml._logging import enable_logging
 
 
 def test_logging_enables(caplog):
-    global logger
-    logger = enable_logging()
+    toggle_logging()
+    # os.environ['ENABLE_PATHML_LOGS'] = 'True'
     assert "Enabled Logging For PathML!" in caplog.text
 
+def test_logging_disables(caplog):
+    toggle_logging(enabled=False)
+    # os.environ['ENABLE_PATHML_LOGS'] = 'False'
+    assert "Disabled Logging For PathML!" not in caplog.text
 
 def test_logging_trace(caplog):
-    global logger
-    logger = enable_logging()
+
     logger.trace("trace log goes here")
 
     # due to handler that is set within pathml._logging to only collect logs that are above level DEBUG
