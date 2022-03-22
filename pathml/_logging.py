@@ -10,113 +10,62 @@ from pathlib import Path
 import typing
 import functools
 
-log_activation = logger.disable("pathml")
 
-# check to see if user has enabled pathml logs
-def enable_logging1(
-    enabled=True,
-    sink="~/Documents/pathml_logs/log.log",
-    level="DEBUG",
-    fmt="{time:HH:mm:ss} | {level:<8} | {module} | {function: ^15} | {line: >3} | {message}",
-    **kwargs
-):
-    """
-    Turn on or off logging for PathML
+class path_ml_logger:
 
-    Args:
-        enabled(bool):
-            Whether to save logs. Defaults to True.
-        sink(str, <class '_io.TextIOWrapper'>):
-            where the sink goes
-        level(str):
-            level of logs to capture
-        format(str):
-            formatting for the log message. default: '{time:HH:mm:ss} | {level:<8} | {module} | {function: ^15} | {line: >3} | {message}'
-        **kwargs(dict, optional):
-            additional options passed to configure logger. See: :_Example: 'https://loguru.readthedocs.io/en/stable/api/logger.html#loguru._logger.Logger.configure'
+    pathml_log_activation = logger.disable("pathml")
+    log_activation = logger.disable(__name__)
 
-    Returns:
-        logger(<class 'loguru._logger.Logger'>):
-            The updated logger with the applicable user settings applied.
-    """
-    if (
-        enabled
-    ):  # leaving this in the event where env variables are to be used os.getenv("ENABLE_PATHML_LOGS", 'False').lower() in ('true', '1', 't'):
-        global log_activation
-        log_activation = logger.enable("pathml")
-        handlers=[
-            dict(sink=sink, 
-                level=level, 
-                format="{message}", 
-                **kwargs
-            ),
-            dict(sink=sys.stderr,
-                colorize=True,
-                format="{message}",
-                level="DEBUG",
-                diagnose=True,
-            ),
-        ]
+    @staticmethod
+    def toggle_logging(
+        enabled=True,
+        sink="~/Documents/pathml_logs/log.log",
+        level="DEBUG",
+        fmt="{time:HH:mm:ss} | {level:<8} | {module} | {function: ^15} | {line: >3} | {message}",
+        **kwargs
+    ):
+        """
+        Turn on or off logging for PathML
+
+        Args:
+            enabled(bool):
+                Whether to save logs. Defaults to True.
+            sink(str, <class '_io.TextIOWrapper'>):
+                where the sink goes
+            level(str):
+                level of logs to capture
+            fmt(str):
+                formatting for the log message. default: '{time:HH:mm:ss} | {level:<8} | {module} | {function: ^15} | {line: >3} | {message}'
+            **kwargs(dict, optional):
+                additional options passed to configure logger. See: :_Example: 'https://loguru.readthedocs.io/en/stable/api/logger.html#loguru._logger.Logger.configure'
+
+        Returns:
+            logger(<class 'loguru._logger.Logger'>):
+                The updated logger with the applicable user settings applied.
+        """
+        handler_id = None
+        if (
+            enabled
+        ):  # leaving this in the event where env variables are to be used os.getenv("ENABLE_PATHML_LOGS", 'False').lower() in ('true', '1', 't'):
+            path_ml_logger.pathml_log_activation = logger.enable("pathml")
+            path_ml_logger.log_activation = logger.enable(__name__)
+            handler_id = logger.add(
+                sink=sink, level=level, format="{message}", **kwargs
+            )
+
+        else:
+            pathml_log_activation = logger.disable("pathml")
+            log_activation = logger.disable(__name__)
+
+            logger.info("Disabled Logging For PathML!")
+
         logger.info("Enabled Logging For PathML!")
 
-        return handlers
-    
-def toggle_logging(
-    enabled=True,
-    sink="~/Documents/pathml_logs/log.log",
-    level="DEBUG",
-    fmt="{time:HH:mm:ss} | {level:<8} | {module} | {function: ^15} | {line: >3} | {message}",
-    **kwargs
-):
-    """
-    Turn on or off logging for PathML
-
-    Args:
-        enabled(bool):
-            Whether to save logs. Defaults to True.
-        sink(str, <class '_io.TextIOWrapper'>):
-            where the sink goes
-        level(str):
-            level of logs to capture
-        format(str):
-            formatting for the log message. default: '{time:HH:mm:ss} | {level:<8} | {module} | {function: ^15} | {line: >3} | {message}'
-        **kwargs(dict, optional):
-            additional options passed to configure logger. See: :_Example: 'https://loguru.readthedocs.io/en/stable/api/logger.html#loguru._logger.Logger.configure'
-
-    Returns:
-        logger(<class 'loguru._logger.Logger'>):
-            The updated logger with the applicable user settings applied.
-    """
-    if (enabled):  # leaving this in the event where env variables are to be used os.getenv("ENABLE_PATHML_LOGS", 'False').lower() in ('true', '1', 't'):
-        global log_activation
-        log_activation = logger.enable("pathml")
-        logger.configure(handlers=[
-                dict(sink=sink, 
-                    level=level, 
-                    format="{message}", 
-                    **kwargs
-                ),
-                dict(sink=sys.stderr,
-                    colorize=True,
-                    format="{message}",
-                    level="DEBUG",
-                    diagnose=True,
-                ),
-            ]
-        )
-        logger.info("Enabled Logging For PathML!")
-
-# try:
-#     if os.getenv("ENABLE_PATHML_LOGS", 'False').lower() in ('true', '1', 't'):
-#         handlers = enable_logging(sink=sys.stderr, colorize=True)
-#         logger.configure(handlers)
-#     else:
-#         log_activation = logger.disable("pathml")
-#         logger.info("Disabled Logging For PathML!")
-# except Exception as e:
-#     pass 
+        return handler_id
 
 
+def logging_example():
+    logger.info("PathML Logging Example")
 
 
 # courtesy of the people at loguru
