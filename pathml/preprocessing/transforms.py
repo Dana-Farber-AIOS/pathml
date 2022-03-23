@@ -1344,7 +1344,7 @@ class SegmentMIF(Transform):
             try:
                 from deepcell.applications import Mesmer
             except ImportError:
-                logger.warn(
+                logger.warning(
                     "The Mesmer model in SegmentMIF requires extra libraries to be installed.\nYou can install these via pip using:\npip install deepcell"
                 )
                 raise ImportError(
@@ -1482,7 +1482,7 @@ class QuantifyMIF(Transform):
         try:
             counts.obsm["spatial"] = np.array(counts.obs[["x", "y"]])
         except:
-            logger.warn("did not log coordinates in obsm")
+            logger.warning("did not log coordinates in obsm")
         return counts
 
     def apply(self, tile):

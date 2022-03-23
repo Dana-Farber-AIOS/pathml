@@ -433,7 +433,7 @@ def compute_hv_map(mask):
     try:
         inst_list.remove(0)  # 0 is background
     except:
-        logger.warn(
+        logger.warning(
             "No pixels with 0 label. This means that there are no background pixels. This may indicate a problem. Ignore this warning if this is expected/intended."
         )
 
