@@ -97,7 +97,7 @@ class h5pathManager:
             tile(pathml.core.tile.Tile): Tile object
         """
         if str(tile.coords) in self.h5["tiles"].keys():
-            logger.bind(core_specific=core_bind).info(
+            logger.info(
                 f"Tile is already in tiles. Overwriting {tile.coords} inplace."
             )
             # remove old cells from self.counts so they do not duplicate
@@ -134,7 +134,7 @@ class h5pathManager:
 
         # create a group for tile and write tile
         if str(tile.coords) in self.h5["tiles"]:
-            logger.bind(core_specific=core_bind).info(
+            logger.info(
                 f"overwriting tile at {str(tile.coords)}"
             )
             del self.h5["tiles"][str(tile.coords)]
