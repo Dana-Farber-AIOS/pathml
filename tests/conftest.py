@@ -108,7 +108,7 @@ def anndata():
 # inspiration from: https://loguru.readthedocs.io/en/stable/resources/migration.html#making-things-work-with-pytest-and-caplog
 @pytest.fixture
 def caplog_enable(caplog: LogCaptureFixture):
-    handler_id = path_ml_logger.toggle_logging(True, caplog.handler)
+    handler_id = path_ml_logger.toggle_logging(True, caplog.handler, format="{message}")
     yield caplog
     logger.remove(handler_id)
 
