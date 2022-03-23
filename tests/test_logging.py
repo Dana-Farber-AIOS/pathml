@@ -5,7 +5,7 @@ License: GNU GPL 2.0
 import os
 import sys
 from loguru import logger
-from pathml._logging import path_ml_logger, logging_example
+from pathml._logging import path_ml_logger as pml 
 
 
 def test_logging_enables(caplog_enable):
@@ -15,12 +15,7 @@ def test_logging_enables(caplog_enable):
 
 def test_logging_disables(caplog_disable):
     logger.info("Disabled Logging For PathML!")
-    assert "Disabled Logging For PathML!" not in caplog_disable.text
-
-
-def test_logging_example(caplog_enable):
-    logging_example()
-    assert "PathML Logging Example" in caplog_enable.text
+    assert "Disabled Logging For PathML!" not in caplog_disable.text 
 
 
 def test_logging_trace(caplog_enable):

@@ -40,11 +40,11 @@ class path_ml_logger:
             logger(<class 'loguru._logger.Logger'>):
                 The updated logger with the applicable user settings applied.
         """
+        handler_id = None
         if enabled:
-            logger.remove()
-            handler_id = logger.add(sink=sink, level=level, format=fmt, **kwargs)
             logger.enable("pathml")
             logger.enable(__name__)
+            handler_id = logger.add(sink=sink, level=level, format=fmt, **kwargs)
             logger.info("Enabled Logging For PathML!")
             return handler_id
 
@@ -56,6 +56,7 @@ class path_ml_logger:
             )
 
         logger.info("If you are seeing this, there is a problem")
+        return handler_id
 
 
 # courtesy of the people at loguru
