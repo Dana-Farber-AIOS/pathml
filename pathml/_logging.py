@@ -3,23 +3,20 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-import os
-import sys
 from loguru import logger
-from pathlib import Path
-import typing
 import functools
+import sys
 
 
 class path_ml_logger:
 
-    pathml_log_activation = logger.disable("pathml")
-    log_activation = logger.disable(__name__)
+    logger.disable("pathml")
+    logger.disable(__name__)
 
     @staticmethod
     def toggle_logging(
         enabled=True,
-        sink="~/Documents/pathml_logs/log.log",
+        sink=sys.stderr,
         level="DEBUG",
         fmt="{time:HH:mm:ss} | {level:<8} | {module} | {function: ^15} | {line: >3} | {message}",
         **kwargs
@@ -43,29 +40,22 @@ class path_ml_logger:
             logger(<class 'loguru._logger.Logger'>):
                 The updated logger with the applicable user settings applied.
         """
-        handler_id = None
-        if (
-            enabled
-        ):  # leaving this in the event where env variables are to be used os.getenv("ENABLE_PATHML_LOGS", 'False').lower() in ('true', '1', 't'):
-            path_ml_logger.pathml_log_activation = logger.enable("pathml")
-            path_ml_logger.log_activation = logger.enable(__name__)
-            handler_id = logger.add(
-                sink=sink, level=level, format="{message}", **kwargs
-            )
+        if enabled:
+            logger.remove()
+            handler_id = logger.add(sink=sink, level=level, format=fmt, **kwargs)
+            logger.enable("pathml")
+            logger.enable(__name__)
+            logger.info("Enabled Logging For PathML!")
+            return handler_id
 
         else:
-            pathml_log_activation = logger.disable("pathml")
-            log_activation = logger.disable(__name__)
+            logger.disable("pathml")
+            logger.disable(__name__)
+            logger.info(
+                "Disabled Logging For PathML! If you are seeing this, there is a problem"
+            )
 
-            logger.info("Disabled Logging For PathML!")
-
-        logger.info("Enabled Logging For PathML!")
-
-        return handler_id
-
-
-def logging_example():
-    logger.info("PathML Logging Example")
+        logger.info("If you are seeing this, there is a problem")
 
 
 # courtesy of the people at loguru
