@@ -5,8 +5,6 @@ License: GNU GPL 2.0
 
 import numpy as np
 from loguru import logger
-from pathml._logging import *
-
 
 def extract_tiles(arr, tile_size, stride=None):
     """

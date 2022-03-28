@@ -9,7 +9,6 @@ from typing import Tuple
 import numpy as np
 import openslide
 from loguru import logger
-from pathml._logging import *
 import pathml.core
 import pathml.core.tile
 from javabridge.jutil import JavaException

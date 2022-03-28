@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 import h5py
 import reprlib
 from loguru import logger
-from pathml._logging import *
 
 import pathml.core.masks
 

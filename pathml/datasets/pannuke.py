@@ -13,7 +13,6 @@ from warnings import warn
 import cv2
 import numpy as np
 from loguru import logger
-from pathml._logging import *
 import torch
 import torch.utils.data as data
 from pathml.datasets.base_data_module import BaseDataModule

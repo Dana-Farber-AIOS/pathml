@@ -8,7 +8,6 @@ import tempfile
 from collections import OrderedDict
 from dataclasses import asdict
 from loguru import logger
-from pathml._logging import *
 import anndata
 import h5py
 import numpy as np
