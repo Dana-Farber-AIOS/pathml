@@ -6,7 +6,7 @@ Documentation for various utilities from all modules.
 Logging Utils
 -------------
 
-.. autoapifunction:: pathml._logging.enable_logging
+.. autoapiclass:: pathml.PathMLLogger
 
 Core Utils
 ----------
