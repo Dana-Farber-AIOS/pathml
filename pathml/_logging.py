@@ -9,25 +9,49 @@ import sys
 
 
 class PathMLLogger:
+    """
+    Convenience methods for turning on or off and configuring logging for PathML.
+    Note that this can also be achieved by interfacing with loguru directly
+
+    Example::
+
+        from pathml import PathMLLogger as pml
+
+        # turn on logging for PathML
+        pml.enable()
+
+        # turn off logging for PathML
+        pml.disable()
+
+        # turn on logging and output logs to a file named 'logs.txt' in home directory, with colorization enabled
+        pml.enable(sink="~/logs.txt", colorize=True)
+    """
 
     logger.disable("pathml")
     logger.disable(__name__)
 
     @staticmethod
-    def toggle_logging(
-        enabled=True,
+    def disable():
+        """
+        Turn off logging for PathML
+        """
+        logger.disable("pathml")
+        logger.disable(__name__)
+        logger.info(
+            "Disabled Logging For PathML! If you are seeing this, there is a problem"
+        )
+
+    @staticmethod
+    def enable(
         sink=sys.stderr,
         level="DEBUG",
         fmt="{time:HH:mm:ss} | {level:<8} | {module} | {function: ^15} | {line: >3} | {message}",
         **kwargs
     ):
         """
-        Convenience method for turning on or off logging for PathML.
-        Note that this can also be achieved by interfacing with loguru directly
+        Turn on and configure logging for PathML
 
         Args:
-            enabled (bool):
-                Whether to save logs. Defaults to ``True``.
             sink (str or io._io.TextIOWrapper, optional):
                 Destination sink for log messages. Defaults to ``sys.stderr``.
             level (str):
@@ -37,37 +61,11 @@ class PathMLLogger:
             **kwargs (dict, optional):
                 additional options passed to configure logger. See:
                 `loguru documentation <https://loguru.readthedocs.io/en/stable/api/logger.html#loguru._logger.Logger.add>`_
-
-        Example::
-
-            from pathml import PathMLLogger
-
-            # turn on logging for PathML
-            PathMLLogger.toggle_logging(enabled=True)
-
-            # turn off logging for PathML
-            PathMLLogger.toggle_logging(enabled=False)
-
-            # turn on logging and output logs to a file named 'logs.txt' in home directory, with colorization enabled
-            PathMLLogger.toggle_logging(enabled=True, sink="~/logs.txt", colorize=True)
-
         """
-        handler_id = None
-        if enabled:
-            logger.enable("pathml")
-            logger.enable(__name__)
-            handler_id = logger.add(sink=sink, level=level, format=fmt, **kwargs)
-            logger.info("Enabled Logging For PathML!")
-            return handler_id
-
-        else:
-            logger.disable("pathml")
-            logger.disable(__name__)
-            logger.info(
-                "Disabled Logging For PathML! If you are seeing this, there is a problem"
-            )
-
-        logger.info("If you are seeing this, there is a problem")
+        logger.enable("pathml")
+        logger.enable(__name__)
+        handler_id = logger.add(sink=sink, level=level, format=fmt, **kwargs)
+        logger.info("Enabled Logging For PathML!")
         return handler_id
 
 
