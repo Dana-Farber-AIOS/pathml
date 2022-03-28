@@ -9,7 +9,6 @@ from pathlib import Path
 
 import anndata
 from loguru import logger
-from pathml._logging import *
 import dask.distributed
 import h5py
 import matplotlib.pyplot as plt

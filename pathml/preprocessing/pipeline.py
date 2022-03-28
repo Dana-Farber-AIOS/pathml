@@ -5,7 +5,6 @@ License: GNU GPL 2.0
 
 import pickle
 from loguru import logger
-from pathml._logging import *
 
 import pathml.core.tile
 from pathml.preprocessing.transforms import Transform

@@ -10,7 +10,6 @@ from collections import OrderedDict
 import h5py
 import reprlib
 from loguru import logger
-from pathml._logging import *
 
 import pathml.core.h5managers
 

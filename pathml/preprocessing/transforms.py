@@ -7,7 +7,6 @@ import os
 from warnings import warn
 
 from loguru import logger
-from pathml._logging import *
 import anndata
 import cv2
 import numpy as np
