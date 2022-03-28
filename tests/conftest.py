@@ -9,10 +9,6 @@ import cv2
 import openslide
 import javabridge
 import scanpy as sc
-from loguru import logger
-from pathml._logging import PathMLLogger as pml
-import sys
-from _pytest.logging import LogCaptureFixture
 
 from pathml.core import HESlide, VectraSlide, Tile, Masks, types
 
@@ -104,18 +100,3 @@ def anndata():
     """
     adata = sc.datasets.pbmc3k_processed()
     return adata
-
-
-# inspiration from: https://loguru.readthedocs.io/en/stable/resources/migration.html#making-things-work-with-pytest-and-caplog
-@pytest.fixture
-def caplog_enable(caplog: LogCaptureFixture):
-    handler_id = pml.toggle_logging("{message}", caplog.handler)
-    yield caplog
-    logger.remove(handler_id)
-
-
-@pytest.fixture
-def caplog_disable(caplog: LogCaptureFixture):
-    handler_id = pml.toggle_logging(False, caplog.handler)
-    yield caplog
-    logger.remove(handler_id)

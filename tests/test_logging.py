@@ -5,6 +5,24 @@ License: GNU GPL 2.0
 import os
 import sys
 from loguru import logger
+import pytest
+from pathml._logging import PathMLLogger as pml
+from _pytest.logging import LogCaptureFixture
+
+
+# inspiration from: https://loguru.readthedocs.io/en/stable/resources/migration.html#making-things-work-with-pytest-and-caplog
+@pytest.fixture
+def caplog_enable(caplog: LogCaptureFixture):
+    handler_id = pml.toggle_logging(fmt="{message}", sink=caplog.handler)
+    yield caplog
+    logger.remove(handler_id)
+
+
+@pytest.fixture
+def caplog_disable(caplog: LogCaptureFixture):
+    handler_id = pml.toggle_logging(enabled=False, sink=caplog.handler)
+    yield caplog
+    logger.remove(handler_id)
 
 
 def test_logging_enables(caplog_enable):
