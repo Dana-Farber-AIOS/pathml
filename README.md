@@ -24,24 +24,13 @@ Stable versions are available as tagged releases on GitHub, or as versioned rele
 
 There are several ways to install `PathML`:
 
-1. `pip install` from PyPI
-2. Clone repo to local machine and install from source
+1. `pip install` from PyPI (**recommended for users**)
+2. Clone repo to local machine and install from source (recommended for developers/contributors)
 3. Use the PathML Docker container
 
-Option (1) is recommended for most users. It will install the latest versions of most packages. 
-Option (2) is a deterministic environment setup, meaning that all package versions are pinned and it will install the
-pinned version of a package even if it is not the newest. The automated testing suite is run in this environment. This
-is the suggested installation method for users wanting to interface with the Mesmer model for IF workflows, and for
-contributors/developers. Option (3) uses the same environment from (2), but in a Docker 
-container.
-
-Options (1) and (2) require that you first install all external dependencies (namelt, JDK-8 and system libraries used
-by OpenSlide and OpenCV):
-
-* Install external dependencies (Linux) with [Apt](https://ubuntu.com/server/docs/package-management):
-    ````
-    sudo apt-get update && sudo apt-get install openslide-tools g++ gcc libblas-dev liblapack-dev python3-opencv
-    ````
+Options (1) and (2) require that you first install all external dependencies:
+* openslide
+* JDK 8
 
 We recommend using conda for environment management. 
 Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
@@ -50,10 +39,25 @@ Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
 
 ## Installation option 1: pip install
 
-Create conda environment with dependencies:
+Create conda environment:
 ````
-conda create --name pathml python=3.8 numpy=1.19.5 openjdk==8.0.152 -c conda-forge
+conda create --name pathml python=3.8
 conda activate pathml
+````
+
+Install external dependencies (Linux) with [Apt](https://ubuntu.com/server/docs/package-management):
+````
+sudo apt-get install openslide-tools g++ gcc libblas-dev liblapack-dev
+````
+
+Install external dependencies (MacOS) with [Brew](www.brew.sh):
+````
+brew install openslide
+````
+
+Install [OpenJDK 8](https://openjdk.java.net/):
+````
+conda install openjdk==8.0.152
 ````
 
 Optionally install CUDA (instructions [here](#CUDA))
@@ -139,17 +143,6 @@ After installing PyTorch, optionally verify successful PyTorch installation with
 ````
 python -c "import torch; print(torch.cuda.is_available())"
 ````
-
-## Troubleshooting installation
-
-Installation can be fragile at times due to external dependencies. 
-If having difficulty installing, try the following:
-
-* Look through the GitHub issues to see if someone else has run into the same problem before
-* Ensure that the correct versions of all dependencies are installed
-* Make sure to use a fresh conda environment  
-* Use pip's `--no-cache-dir` to prevent using cached files
-* Use deterministic environment specifications such as those used in installation options (2) and (3)
 
 # Using with Jupyter
 

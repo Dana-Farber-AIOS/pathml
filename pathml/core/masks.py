@@ -9,6 +9,7 @@ from pathlib import Path
 from collections import OrderedDict
 import h5py
 import reprlib
+from loguru import logger
 
 import pathml.core.h5managers
 
@@ -31,17 +32,23 @@ class Masks:
         if masks:
             if not isinstance(masks, dict):
                 raise ValueError(
-                    f"masks must be passed as dicts of the form key1:mask1,key2:mask2,..."
+                    logger.exception(
+                        f"masks must be passed as dicts of the form key1:mask1,key2:mask2,..."
+                    )
                 )
             for val in masks.values():
                 if not isinstance(val, np.ndarray):
                     raise ValueError(
-                        f"can not add {type(val)}, mask must be of type np.ndarray"
+                        logger.exception(
+                            f"can not add {type(val)}, mask must be of type np.ndarray"
+                        )
                     )
             for key in masks.keys():
                 if not isinstance(key, str):
                     raise ValueError(
-                        f"can not add {type(key)}, key must be of type str"
+                        logger.exception(
+                            f"can not add {type(key)}, key must be of type str"
+                        )
                     )
             self._masks = OrderedDict(masks)
         else:
@@ -89,7 +96,9 @@ class Masks:
             isinstance(slicer, list) and all([isinstance(a, slice) for a in slicer])
         ):
             raise KeyError(
-                f"slices must of of type list[slice] but is {type(slicer)} with elements {type(slicer[0])}"
+                logger.exception(
+                    f"slices must of of type list[slice] but is {type(slicer)} with elements {type(slicer[0])}"
+                )
             )
         sliced = {key: mask for key, mask in self.h5manager.slice_masks(slicer)}
         return sliced

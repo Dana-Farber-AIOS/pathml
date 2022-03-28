@@ -10,6 +10,7 @@ import urllib
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+from loguru import logger
 from matplotlib.colors import TABLEAU_COLORS
 
 

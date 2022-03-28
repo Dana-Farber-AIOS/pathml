@@ -12,6 +12,7 @@ from warnings import warn
 
 import cv2
 import numpy as np
+from loguru import logger
 import torch
 import torch.utils.data as data
 from pathml.datasets.base_data_module import BaseDataModule
@@ -248,7 +249,7 @@ class PanNukeDataModule(BaseDataModule):
             p = os.path.join(download_dir, "Fold " + str(fold_ix))
             # don't download if the directory already exists
             if not os.path.isdir(p):
-                print(f"Downloading fold {fold_ix}")
+                logger.info(f"Downloading fold {fold_ix}")
                 url = f"https://warwick.ac.uk/fac/cross_fac/tia/data/pannuke/fold_{fold_ix}.zip"
                 name = os.path.basename(url)
                 download_from_url(url=url, download_dir=download_dir, name=name)
@@ -257,7 +258,7 @@ class PanNukeDataModule(BaseDataModule):
                 with zipfile.ZipFile(path, "r") as zip_ref:
                     zip_ref.extractall(download_dir)
             else:
-                warn(
+                logger.warning(
                     f"Skipping download of fold {fold_ix}, using local data found at {p}"
                 )
 

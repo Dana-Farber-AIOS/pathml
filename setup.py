@@ -38,7 +38,8 @@ setuptools.setup(
         "scanpy",
         "torch",
         "opencv-contrib-python",
-        "python-bioformats>=4.0.0"
+        "python-bioformats>=4.0.0",
+        "loguru"
     ],
     classifiers=[
         "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",

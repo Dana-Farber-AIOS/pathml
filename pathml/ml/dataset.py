@@ -3,6 +3,7 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
+from loguru import logger
 import h5py
 import numpy as np
 import torch
@@ -76,7 +77,9 @@ class TileDataset(torch.utils.data.Dataset):
             im = tile_image.transpose(4, 3, 2, 1, 0)
         else:
             raise NotImplementedError(
-                f"tile image has shape {tile_image.shape}. Expecting an image with 3 dims (HWC) or 5 dims (XYZCT)"
+                logger.exception(
+                    f"tile image has shape {tile_image.shape}. Expecting an image with 3 dims (HWC) or 5 dims (XYZCT)"
+                )
             )
 
         masks = np.stack(list(masks.values()), axis=0) if masks else None
