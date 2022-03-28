@@ -10,7 +10,7 @@ import openslide
 import javabridge
 import scanpy as sc
 from loguru import logger
-from pathml._logging import path_ml_logger as pml
+from pathml._logging import PathMLLogger as pml
 import sys
 from _pytest.logging import LogCaptureFixture
 
