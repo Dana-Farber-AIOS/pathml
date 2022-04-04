@@ -27,6 +27,7 @@ try:
     import javabridge
     from bioformats.metadatatools import createOMEXMLMetadata
 except ImportError:
+    logger.exception("Unable to import bioformats, javabridge")
     raise Exception(
         logger.exception(
             f"Installation of PathML not complete. Please install openjdk8, bioformats, and javabridge:\nconda install openjdk==8.0.152\npip install javabridge==1.0.19 python-bioformats==4.0.0\nFor detailed installation instructions, please see https://github.com/Dana-Farber-AIOS/pathml/"
@@ -61,6 +62,7 @@ class OpenSlideBackend(SlideBackend):
     """
 
     def __init__(self, filename):
+        logger.info(f"OpenSlideBackend loading file at: {filename}")
         self.filename = filename
         self.slide = openslide.open_slide(filename=filename)
         self.level_count = self.slide.level_count
@@ -236,6 +238,7 @@ def _init_logger():
     javabridge.call(
         rootLogger, "setLevel", "(Lch/qos/logback/classic/Level;)V", logLevel
     )
+    logger.info("silenced javabridge logging")
 
 
 class BioFormatsBackend(SlideBackend):
@@ -259,6 +262,7 @@ class BioFormatsBackend(SlideBackend):
 
     def __init__(self, filename, dtype=None):
         self.filename = filename
+        logger.info(f"BioFormatsBackend loading file at: {filename}")
         # init java virtual machine
         javabridge.start_vm(class_path=bioformats.JARS, max_heap_size="50G")
         # disable verbose JVM logging if possible
@@ -273,6 +277,7 @@ class BioFormatsBackend(SlideBackend):
         reader.setMetadataStore(omeMeta)
         reader.setId(str(self.filename))
         seriesCount = reader.getSeriesCount()
+        logger.info(f"Found n={seriesCount} series in image")
 
         sizeSeries = []
         for s in range(seriesCount):
@@ -293,11 +298,14 @@ class BioFormatsBackend(SlideBackend):
         self.shape_list = sizeSeries  # shape on all levels
         self.metadata = bioformats.get_omexml_metadata(self.filename)
 
+        logger.info(f"Bioformats OMEXML metadata: {self.metadata}")
+
         if dtype:
             assert isinstance(
                 dtype, np.dtype
             ), f"dtype is of type {type(dtype)}. Must be a np.dtype"
             self.pixel_dtype = dtype
+            logger.info(f"Using specified dtype: {dtype}")
         else:
             # infer pixel data type from metadata
             # map from ome pixel datatypes to numpy types. Based on:
@@ -317,13 +325,14 @@ class BioFormatsBackend(SlideBackend):
             ome_pixeltype = (
                 bioformats.OMEXML(self.metadata).image().Pixels.get_PixelType()
             )
+            logger.info(f"Using pixel dtype found in OME metadata: {ome_pixeltype}")
             try:
                 self.pixel_dtype = pixel_dtype_map[ome_pixeltype]
+                logger.info(f"Found corresponding dtype: {self.pixel_dtype}")
             except:
+                logger.exception("datatype from metadata not found in pixel_dtype_map")
                 raise Exception(
-                    logger.exception(
-                        f"pixel type '{ome_pixeltype}' detected from OME metadata not recognized."
-                    )
+                    f"pixel type '{ome_pixeltype}' detected from OME metadata not recognized."
                 )
 
     def __repr__(self):
@@ -390,9 +399,7 @@ class BioFormatsBackend(SlideBackend):
             and all([isinstance(x, int) for x in location])
         ):
             raise ValueError(
-                logger.exception(
-                    f"input location {location} invalid. Must be a tuple of integer coordinates of len<2"
-                )
+                f"input location {location} invalid. Must be a tuple of integer coordinates of len<2"
             )
         if not (
             isinstance(size, tuple)
@@ -400,24 +407,29 @@ class BioFormatsBackend(SlideBackend):
             and all([isinstance(x, int) for x in size])
         ):
             raise ValueError(
-                logger.exception(
-                    f"input size {size} invalid. Must be a tuple of integer coordinates of len<2"
-                )
+                f"input size {size} invalid. Must be a tuple of integer coordinates of len<2"
             )
         if series_as_channels:
-            assert (
-                level == 0
-            ), f"Multi-level images not supported with series_as_channels=True. Input 'level={level}' invalid. Use 'level=0'."
+            logger.info(f"using series_as_channels=True")
+            if level != 0:
+                logger.exception(
+                    f"When series_as_channels=True, must use level=0. Input 'level={level}' invalid."
+                )
+                raise ValueError(
+                    f"Multi-level images not supported with series_as_channels=True. Input 'level={level}' invalid. Use 'level=0'."
+                )
 
         javabridge.start_vm(class_path=bioformats.JARS, max_heap_size="100G")
         with bioformats.ImageReader(str(self.filename), perform_init=True) as reader:
             # expand size
+            logger.info(f"extracting region with input size = {size}")
             size = list(size)
             arrayshape = list(size)
             for i in range(len(self.shape_list[level])):
                 if i > len(size) - 1:
                     arrayshape.append(self.shape_list[level][i])
             arrayshape = tuple(arrayshape)
+            logger.info(f"input size converted to {arrayshape}")
             array = np.empty(arrayshape)
 
             # read a very small region to check whether the image has channels incorrectly stored as series
@@ -432,6 +444,7 @@ class BioFormatsBackend(SlideBackend):
             # need this part because some facilities output images where the channels are incorrectly stored as series
             # in this case we pull the image for each series, then stack them together as channels
             if series_as_channels:
+                logger.info("reading series as channels")
                 for z in range(self.shape_list[level][2]):
                     for c in range(self.shape_list[level][3]):
                         for t in range(self.shape_list[level][4]):
@@ -448,6 +461,7 @@ class BioFormatsBackend(SlideBackend):
 
             # in this case, channels are correctly stored as channels, and we can support multi-level images as series
             else:
+                logger.info("reading image")
                 for z in range(self.shape_list[level][2]):
                     for t in range(self.shape_list[level][4]):
                         slicearray = reader.read(
@@ -464,11 +478,16 @@ class BioFormatsBackend(SlideBackend):
                             array[:, :, z, level, t] = slicearray
 
         if not normalize:
+            logger.info("returning extracted region without normalizing dtype")
             return array
         else:
+            logger.info("normalizing extracted region to uint8")
             # scale array before converting: https://github.com/Dana-Farber-AIOS/pathml/issues/271
             # first scale to [0-1]
             array_scaled = array / (2 ** (8 * self.pixel_dtype.itemsize))
+            logger.info(
+                f"Scaling image to [0, 1] by dividing by {(2 ** (8 * self.pixel_dtype.itemsize))}"
+            )
             # then scale to [0-255] and convert to 8 bit
             array_scaled = array_scaled * 2 ** 8
             return array_scaled.astype(np.uint8)
@@ -493,9 +512,7 @@ class BioFormatsBackend(SlideBackend):
                 size = size + self.shape[len(size) :]
         if self.shape[0] * self.shape[1] * self.shape[2] * self.shape[3] > 2147483647:
             raise Exception(
-                logger.exception(
-                    f"Java arrays allocate maximum 32 bits (~2GB). Image size is {self.imsize}"
-                )
+                f"Java arrays allocate maximum 32 bits (~2GB). Image size is {self.imsize}"
             )
         array = self.extract_region(location=(0, 0), size=self.shape[:2])
         if size is not None:
@@ -548,6 +565,7 @@ class BioFormatsBackend(SlideBackend):
         ), f"input stride {stride} invalid. Must be a tuple of (stride_H, stride_W), or a single int"
 
         if stride is None:
+            logger.info(f"stride not specified, using stride=shape ({shape})")
             stride = shape
         elif isinstance(stride, int):
             stride = (stride, stride)
@@ -563,6 +581,8 @@ class BioFormatsBackend(SlideBackend):
         else:
             n_chunk_i = (i - shape[0]) // stride_i + 1
             n_chunk_j = (j - shape[1]) // stride_j + 1
+
+        logger.info(f"expected number of tiles: {n_chunk_i} x {n_chunk_j}")
 
         for ix_i in range(n_chunk_i):
             for ix_j in range(n_chunk_j):
@@ -604,6 +624,7 @@ class DICOMBackend(SlideBackend):
 
     def __init__(self, filename):
         self.filename = str(filename)
+        logger.info(f"DICOMBackend loading file at: {filename}")
         # read metadata fields of interest from DICOM, without reading the entire PixelArray
         tags = [
             "NumberOfFrames",
@@ -623,6 +644,9 @@ class DICOMBackend(SlideBackend):
         self.n_rows = -(-self.shape[0] // self.frame_shape[0])
         self.n_cols = -(-self.shape[1] // self.frame_shape[1])
         self.transfer_syntax_uid = UID(metadata.file_meta.TransferSyntaxUID)
+        logger.info(
+            f"DICOM metadata: frame_shape={self.frame_shape}, nrows = {self.n_rows}, ncols = {self.n_cols}"
+        )
 
         # actual file
         self.fp = DicomFile(self.filename, mode="rb")
@@ -673,9 +697,7 @@ class DICOMBackend(SlideBackend):
         return self.shape
 
     def get_thumbnail(self, size, **kwargs):
-        raise NotImplementedError(
-            logger.exception(f"DICOMBackend does not support thumbnail")
-        )
+        raise NotImplementedError("DICOMBackend does not support thumbnail")
 
     def _index_to_coords(self, index):
         """
@@ -717,10 +739,9 @@ class DICOMBackend(SlideBackend):
         frame_i, frame_j = self.frame_shape
         # frame size must evenly divide coords, otherwise we aren't on a frame corner
         if i % frame_i or j % frame_j:
+            logger.exception(f"i={i}, j={j}, frame shape = {self.frame_shape}")
             raise ValueError(
-                logger.exception(
-                    f"coords {coords} are not evenly divided by frame size {(frame_i, frame_j)}. Must provide coords at upper left corner of Frame."
-                )
+                f"coords {coords} are not evenly divided by frame size {(frame_i, frame_j)}. Must provide coords at upper left corner of Frame."
             )
 
         row_ix = i / frame_i
@@ -752,15 +773,11 @@ class DICOMBackend(SlideBackend):
             frame_ix = location
         else:
             raise ValueError(
-                logger.exception(
-                    f"Invalid location: {location}. Must be an int frame index or tuple of (i, j) coordinates"
-                )
+                f"Invalid location: {location}. Must be an int frame index or tuple of (i, j) coordinates"
             )
         if frame_ix > self.n_frames:
             raise ValueError(
-                logger.exception(
-                    f"location {location} invalid. Exceeds total number of frames ({self.n_frames})"
-                )
+                f"location {location} invalid. Exceeds total number of frames ({self.n_frames})"
             )
         # check size
         if size:
@@ -768,9 +785,7 @@ class DICOMBackend(SlideBackend):
                 size = (size, size)
             if size != self.frame_shape:
                 raise ValueError(
-                    logger.exception(
-                        f"Input size {size} must equal frame shape in DICOM image {self.frame_shape}"
-                    )
+                    f"Input size {size} must equal frame shape in DICOM image {self.frame_shape}"
                 )
 
         return self._read_frame(frame_ix)
