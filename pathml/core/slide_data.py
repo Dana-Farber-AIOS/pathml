@@ -8,6 +8,7 @@ import reprlib
 from pathlib import Path
 
 import anndata
+from loguru import logger
 import dask.distributed
 import h5py
 import matplotlib.pyplot as plt
@@ -278,8 +279,7 @@ class SlideData:
             # in this case, tiles already exist
             if not overwrite_existing_tiles:
                 raise Exception(
-                    "Slide already has tiles. Running the pipeline will overwrite the existing tiles."
-                    "use overwrite_existing_tiles=True to force overwriting existing tiles."
+                    f"Slide already has tiles. Running the pipeline will overwrite the existing tiles. Use overwrite_existing_tiles=True to force overwriting existing tiles."
                 )
             else:
                 # delete all existing tiles
@@ -302,6 +302,9 @@ class SlideData:
             if client is None:
                 client = dask.distributed.Client()
                 shutdown_after = True
+                logger.info(
+                    f"creating a default distributed.Client(): {client.scheduler_info()}"
+                )
 
             # map pipeline application onto each tile
             processed_tile_futures = []
@@ -442,7 +445,7 @@ class SlideData:
         except:
             if not self.slide:
                 raise NotImplementedError(
-                    "Plotting only supported via backend, but SlideData has no backend."
+                    f"Plotting only supported via backend, but SlideData has no backend."
                 )
             else:
                 raise NotImplementedError(
@@ -468,7 +471,7 @@ class SlideData:
             self.tiles.h5manager.counts = value
         else:
             raise AttributeError(
-                "cannot assign counts slidedata contains no tiles, first generate tiles"
+                f"cannot assign counts slidedata contains no tiles, first generate tiles"
             )
 
     def write(self, path):

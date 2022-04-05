@@ -4,6 +4,7 @@ License: GNU GPL 2.0
 """
 
 import numpy as np
+from loguru import logger
 
 
 def extract_tiles(arr, tile_size, stride=None):
@@ -27,8 +28,7 @@ def extract_tiles(arr, tile_size, stride=None):
     i, j, n_channels = arr.shape
     if (i - tile_size) % stride != 0 or (j - tile_size) % stride != 0:
         raise NotImplementedError(
-            f"Array of shape {arr.shape} is not perfectly tiled by tiles of size "
-            f"{tile_size} and stride {stride}."
+            f"Array of shape {arr.shape} is not perfectly tiled by tiles of size {tile_size} and stride {stride}."
         )
     patch_strides = arr.strides
     patch_shape = (tile_size, tile_size, n_channels)

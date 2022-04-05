@@ -3,6 +3,11 @@ Utilities API
 
 Documentation for various utilities from all modules.
 
+Logging Utils
+-------------
+
+.. autoapiclass:: pathml.PathMLLogger
+
 Core Utils
 ----------
 

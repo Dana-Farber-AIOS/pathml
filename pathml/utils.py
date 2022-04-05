@@ -10,6 +10,7 @@ import urllib
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+from loguru import logger
 from matplotlib.colors import TABLEAU_COLORS
 
 
@@ -338,3 +339,9 @@ def plot_segmentation(ax, masks, palette=None, markersize=5):
             nuclei_mask = masks[i, ...] == label
             x, y = segmentation_lines(nuclei_mask.astype(np.uint8))
             ax.scatter(x, y, color=palette[i], marker=".", s=markersize)
+
+
+def _test_log(msg):
+    # passes thru message to pathml logger
+    # used for testing logging
+    logger.info(msg)

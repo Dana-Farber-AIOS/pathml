@@ -9,6 +9,7 @@ from pathlib import Path
 from collections import OrderedDict
 import h5py
 import reprlib
+from loguru import logger
 
 import pathml.core.h5managers
 
@@ -31,7 +32,7 @@ class Masks:
         if masks:
             if not isinstance(masks, dict):
                 raise ValueError(
-                    f"masks must be passed as dicts of the form key1:mask1,key2:mask2,..."
+                    "masks must be passed as dicts of the form {key1:mask1, key2:mask2, ...}"
                 )
             for val in masks.values():
                 if not isinstance(val, np.ndarray):
