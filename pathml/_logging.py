@@ -23,8 +23,8 @@ class PathMLLogger:
         # turn off logging for PathML
         pml.disable()
 
-        # turn on logging and output logs to a file named 'logs.txt' in home directory, with colorization enabled
-        pml.enable(sink="~/logs.txt", colorize=True)
+        # turn on logging and output logs to a file named 'logs.txt', with colorization enabled
+        pml.enable(sink="logs.txt", colorize=True)
     """
 
     logger.disable("pathml")
@@ -45,7 +45,7 @@ class PathMLLogger:
     def enable(
         sink=sys.stderr,
         level="DEBUG",
-        fmt="{time:HH:mm:ss} | {level:<8} | {module} | {function: ^15} | {line: >3} | {message}",
+        fmt="PathML:{level}:{time:HH:mm:ss} | {module}:{function}:{line} | {message}",
         **kwargs
     ):
         """
@@ -57,13 +57,15 @@ class PathMLLogger:
             level (str):
                 level of logs to capture. Defaults to 'DEBUG'.
             fmt (str):
-                Formatting for the log message. Defaults to: '{time:HH:mm:ss} | {level:<8} | {module} | {function: ^15} | {line: >3} | {message}'
+                Formatting for the log message. Defaults to: 'PathML:{level}:{time:HH:mm:ss} | {module}:{function}:{line} | {message}'
             **kwargs (dict, optional):
                 additional options passed to configure logger. See:
                 `loguru documentation <https://loguru.readthedocs.io/en/stable/api/logger.html#loguru._logger.Logger.add>`_
         """
         logger.enable("pathml")
         logger.enable(__name__)
+        # remove pre-configured logger (https://github.com/Delgan/loguru/issues/208#issuecomment-581002215)
+        logger.remove(0)
         handler_id = logger.add(sink=sink, level=level, format=fmt, **kwargs)
         logger.info("Enabled Logging For PathML!")
         return handler_id
