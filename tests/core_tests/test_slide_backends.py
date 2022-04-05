@@ -139,6 +139,17 @@ def test_tile_generator(backend, shape, tile_shape, pad):
     assert all([isinstance(tile, Tile) for tile in tiles])
 
 
+@pytest.mark.parametrize("backend", [BioFormatsBackend, OpenSlideBackend])
+@pytest.mark.parametrize("pad", [True, False])
+def test_tile_generator_with_pad_evenly_divide(backend, pad):
+    """When tile shape evenly divides slide shape, padding should make no difference"""
+    slide = backend("tests/testdata/smalltif.tif")
+    tile_shape = 160
+    shape = (480, 640)
+    tiles = list(slide.generate_tiles(shape=tile_shape, pad=pad))
+    assert len(tiles) == np.prod([shape_i / tile_shape for shape_i in shape])
+
+
 @pytest.mark.parametrize("backend,shape", [(openslide_backend(), (2967, 2220))])
 @pytest.mark.parametrize("pad", [True, False])
 @pytest.mark.parametrize("tile_shape", [500, (500, 500)])
