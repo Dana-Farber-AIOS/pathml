@@ -199,16 +199,19 @@ class OpenSlideBackend(SlideBackend):
 
         stride_i, stride_j = stride
 
-        if pad:
-            n_chunk_i = i // stride_i + 1
-            n_chunk_j = j // stride_j + 1
-
+        # calculate number of expected tiles
+        # check for tile shape evenly dividing slide shape to fix https://github.com/Dana-Farber-AIOS/pathml/issues/305
+        if pad and i % stride_i != 0:
+            n_tiles_i = i // stride_i + 1
         else:
-            n_chunk_i = (i - shape[0]) // stride_i + 1
-            n_chunk_j = (j - shape[1]) // stride_j + 1
+            n_tiles_i = (i - shape[0]) // stride_i + 1
+        if pad and j % stride_j != 0:
+            n_tiles_j = j // stride_j + 1
+        else:
+            n_tiles_j = (j - shape[1]) // stride_j + 1
 
-        for ix_i in range(n_chunk_i):
-            for ix_j in range(n_chunk_j):
+        for ix_i in range(n_tiles_i):
+            for ix_j in range(n_tiles_j):
                 coords = (int(ix_i * stride_i), int(ix_j * stride_j))
                 # get image for tile
                 tile_im = self.extract_region(location=coords, size=shape, level=level)
@@ -574,18 +577,21 @@ class BioFormatsBackend(SlideBackend):
 
         stride_i, stride_j = stride
 
-        if pad:
-            n_chunk_i = i // stride_i + 1
-            n_chunk_j = j // stride_j + 1
-
+        # calculate number of expected tiles
+        # check for tile shape evenly dividing slide shape to fix https://github.com/Dana-Farber-AIOS/pathml/issues/305
+        if pad and i % stride_i != 0:
+            n_tiles_i = i // stride_i + 1
         else:
-            n_chunk_i = (i - shape[0]) // stride_i + 1
-            n_chunk_j = (j - shape[1]) // stride_j + 1
+            n_tiles_i = (i - shape[0]) // stride_i + 1
+        if pad and j % stride_j != 0:
+            n_tiles_j = j // stride_j + 1
+        else:
+            n_tiles_j = (j - shape[1]) // stride_j + 1
 
-        logger.info(f"expected number of tiles: {n_chunk_i} x {n_chunk_j}")
+        logger.info(f"expected number of tiles: {n_tiles_i} x {n_tiles_j}")
 
-        for ix_i in range(n_chunk_i):
-            for ix_j in range(n_chunk_j):
+        for ix_i in range(n_tiles_i):
+            for ix_j in range(n_tiles_j):
                 coords = (int(ix_i * stride_i), int(ix_j * stride_j))
                 if coords[0] + shape[0] < i and coords[1] + shape[1] < j:
                     # get image for tile
