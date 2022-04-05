@@ -308,6 +308,9 @@ class SlideData:
             if client is None:
                 client = dask.distributed.Client()
                 shutdown_after = True
+                logger.info(
+                    f"creating a default distributed.Client(): {client.scheduler_info()}"
+                )
 
             # map pipeline application onto each tile
             processed_tile_futures = []

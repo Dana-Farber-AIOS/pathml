@@ -54,6 +54,9 @@ class SlideDataset:
         if client is None and distributed:
             client = dask.distributed.Client()
             shutdown_after = True
+            logger.info(
+                f"creating a default distributed.Client(): {client.scheduler_info()}"
+            )
         for slide in self.slides:
             slide.run(
                 pipeline=pipeline, client=client, distributed=distributed, **kwargs
