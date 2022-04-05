@@ -38,11 +38,7 @@ def infer_backend(path):
         for ext in extension_set:
             if path[-len(ext) :] == ext:
                 return name
-    raise ValueError(
-        logger.exception(
-            f"input path {path} doesn't match any supported file extensions"
-        )
-    )
+    raise ValueError(f"input path {path} doesn't match any supported file extensions")
 
 
 class SlideData:
@@ -172,7 +168,7 @@ class SlideData:
         elif backend.lower() == "h5path":
             backend_obj = None
         else:
-            raise ValueError(logger.exception(f"invalid backend: {repr(backend)}."))
+            raise ValueError(f"invalid backend: {repr(backend)}.")
 
         self._filepath = filepath if filepath else None
         self.backend = backend
@@ -283,9 +279,7 @@ class SlideData:
             # in this case, tiles already exist
             if not overwrite_existing_tiles:
                 raise Exception(
-                    logger.exception(
-                        f"Slide already has tiles. Running the pipeline will overwrite the existing tiles. Use overwrite_existing_tiles=True to force overwriting existing tiles."
-                    )
+                    f"Slide already has tiles. Running the pipeline will overwrite the existing tiles. Use overwrite_existing_tiles=True to force overwriting existing tiles."
                 )
             else:
                 # delete all existing tiles
@@ -451,15 +445,11 @@ class SlideData:
         except:
             if not self.slide:
                 raise NotImplementedError(
-                    logger.exception(
-                        f"Plotting only supported via backend, but SlideData has no backend."
-                    )
+                    f"Plotting only supported via backend, but SlideData has no backend."
                 )
             else:
                 raise NotImplementedError(
-                    logger.exception(
-                        f"plotting not supported for slide_backend={self.slide.__class__.__name__}"
-                    )
+                    f"plotting not supported for slide_backend={self.slide.__class__.__name__}"
                 )
         if ax is None:
             ax = plt.gca()
@@ -481,9 +471,7 @@ class SlideData:
             self.tiles.h5manager.counts = value
         else:
             raise AttributeError(
-                logger.exception(
-                    f"cannot assign counts slidedata contains no tiles, first generate tiles"
-                )
+                f"cannot assign counts slidedata contains no tiles, first generate tiles"
             )
 
     def write(self, path):

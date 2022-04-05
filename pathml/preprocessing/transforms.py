@@ -650,9 +650,7 @@ class StainNormalizationHE(Transform):
                 import spams
             except (ImportError, ModuleNotFoundError):
                 raise Exception(
-                    logger.exception(
-                        f"Vahadane method requires `spams` package to be installed"
-                    )
+                    f"Vahadane method requires `spams` package to be installed"
                 )
 
         self.target = target.lower()
@@ -714,9 +712,7 @@ class StainNormalizationHE(Transform):
             stain_matrix = self._estimate_stain_vectors_vahadane(image)
         else:
             raise Exception(
-                logger.exception(
-                    f"Error: input stain estimation method {self.stain_estimation_method} must be one of 'macenko' or 'vahadane'"
-                )
+                f"Error: input stain estimation method {self.stain_estimation_method} must be one of 'macenko' or 'vahadane'"
             )
         return stain_matrix
 
@@ -734,7 +730,7 @@ class StainNormalizationHE(Transform):
         elif self.stain_estimation_method == "vahadane":
             C = self._estimate_pixel_concentrations_lasso(image, stain_matrix)
         else:
-            raise Exception(logger.exception(f"Provided target {self.target} invalid"))
+            raise Exception(f"Provided target {self.target} invalid")
         return C
 
     def _estimate_stain_vectors_vahadane(self, image, random_seed=0):
@@ -747,11 +743,7 @@ class StainNormalizationHE(Transform):
         try:
             import spams
         except (ImportError, ModuleNotFoundError):
-            raise Exception(
-                logger.exception(
-                    f"Vahadane method requires `spams` package to be installed"
-                )
-            )
+            raise Exception(f"Vahadane method requires `spams` package to be installed")
         # convert to Optical Density (OD) space
         image_OD = RGB_to_OD(image)
         # reshape to (M*N)x3
@@ -855,11 +847,7 @@ class StainNormalizationHE(Transform):
         try:
             import spams
         except (ImportError, ModuleNotFoundError):
-            raise Exception(
-                logger.exception(
-                    f"Vahadane method requires `spams` package to be installed"
-                )
-            )
+            raise Exception(f"Vahadane method requires `spams` package to be installed")
         image_OD = RGB_to_OD(image).reshape(-1, 3)
 
         # Get concentrations of each stain at each pixel
@@ -905,9 +893,7 @@ class StainNormalizationHE(Transform):
             )
         else:
             raise Exception(
-                logger.exception(
-                    f"Error: input target {self.target} is invalid. Must be one of 'normalize', 'eosin', 'hematoxylin'"
-                )
+                f"Error: input target {self.target} is invalid. Must be one of 'normalize', 'eosin', 'hematoxylin'"
             )
 
         im = im * self.background_intensity
@@ -1355,19 +1341,15 @@ class SegmentMIF(Transform):
                     "The Mesmer model in SegmentMIF requires extra libraries to be installed.\nYou can install these via pip using:\npip install deepcell"
                 )
                 raise ImportError(
-                    logger.exception(
-                        f"The Mesmer model in SegmentMIF requires deepcell to be installed"
-                    )
+                    f"The Mesmer model in SegmentMIF requires deepcell to be installed"
                 ) from None
             self.model = model.lower()
         elif model.lower() == "cellpose":
             """from cellpose import models
             self.model = models.Cellpose(gpu=self.gpu, model_type='cyto')"""
-            raise NotImplementedError(
-                logger.exception(f"Cellpose model not currently supported")
-            )
+            raise NotImplementedError(f"Cellpose model not currently supported")
         else:
-            raise ValueError(logger.exception(f"currently only support mesmer model"))
+            raise ValueError(f"currently only supports mesmer model")
 
     def __repr__(self):
         return (
@@ -1378,9 +1360,7 @@ class SegmentMIF(Transform):
         img = image.copy()
         if len(img.shape) not in [3, 4]:
             raise ValueError(
-                logger.exception(
-                    f"input image has shape {img.shape}. supported image shapes are x,y,c or batch,x,y,c. Did you forget to apply 'CollapseRuns*()' transform?"
-                )
+                f"input image has shape {img.shape}. supported image shapes are x,y,c or batch,x,y,c. Did you forget to apply 'CollapseRuns*()' transform?"
             )
         if len(img.shape) == 3:
             img = np.expand_dims(img, axis=0)
@@ -1418,9 +1398,7 @@ class SegmentMIF(Transform):
             del model
             return cell_segmentation_predictions, nuclear_segmentation_predictions
         else:
-            raise NotImplementedError(
-                logger.exception(f"model={self.model} currently not supported.")
-            )
+            raise NotImplementedError(f"model={self.model} currently not supported.")
 
     def apply(self, tile):
         assert isinstance(

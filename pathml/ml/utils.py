@@ -9,6 +9,7 @@ from torch.nn import functional as F
 import numpy as np
 from loguru import logger
 
+
 def center_crop_im_batch(batch, dims, batch_order="BCHW"):
     """
     Center crop images in a batch.
@@ -42,7 +43,7 @@ def center_crop_im_batch(batch, dims, batch_order="BCHW"):
         elif batch_order == "BCHW":
             batch_cropped = batch[:, :, crop_t:-crop_b, crop_l:-crop_r]
         else:
-            raise Exception(logger.exception(f"Input batch order not valid"))
+            raise Exception(f"Input batch order not valid")
 
     return batch_cropped
 

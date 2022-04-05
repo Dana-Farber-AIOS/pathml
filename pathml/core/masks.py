@@ -32,23 +32,17 @@ class Masks:
         if masks:
             if not isinstance(masks, dict):
                 raise ValueError(
-                    logger.exception(
-                        f"masks must be passed as dicts of the form key1:mask1,key2:mask2,..."
-                    )
+                    "masks must be passed as dicts of the form {key1:mask1, key2:mask2, ...}"
                 )
             for val in masks.values():
                 if not isinstance(val, np.ndarray):
                     raise ValueError(
-                        logger.exception(
-                            f"can not add {type(val)}, mask must be of type np.ndarray"
-                        )
+                        f"can not add {type(val)}, mask must be of type np.ndarray"
                     )
             for key in masks.keys():
                 if not isinstance(key, str):
                     raise ValueError(
-                        logger.exception(
-                            f"can not add {type(key)}, key must be of type str"
-                        )
+                        f"can not add {type(key)}, key must be of type str"
                     )
             self._masks = OrderedDict(masks)
         else:
@@ -96,9 +90,7 @@ class Masks:
             isinstance(slicer, list) and all([isinstance(a, slice) for a in slicer])
         ):
             raise KeyError(
-                logger.exception(
-                    f"slices must of of type list[slice] but is {type(slicer)} with elements {type(slicer[0])}"
-                )
+                f"slices must of of type list[slice] but is {type(slicer)} with elements {type(slicer[0])}"
             )
         sliced = {key: mask for key, mask in self.h5manager.slice_masks(slicer)}
         return sliced

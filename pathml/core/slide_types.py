@@ -4,6 +4,7 @@ License: GNU GPL 2.0
 """
 from loguru import logger
 
+
 class SlideType:
     """
     SlideType objects define types based on a set of image parameters.
@@ -36,16 +37,12 @@ class SlideType:
         valid_stains = {"HE", "IHC", "Fluor"}
         if stain and stain not in valid_stains:
             raise ValueError(
-                logger.exception(
-                    f"Input stain {stain} not valid. Must be one of {valid_stains}"
-                )
+                f"Input stain {stain} not valid. Must be one of {valid_stains}"
             )
         valid_platforms = {"CODEX", "Vectra", "Visium"}
         if platform and platform not in valid_platforms:
             raise ValueError(
-                logger.exception(
-                    f"Input stain {platform} not valid. Must be one of {valid_platforms}"
-                )
+                f"Input stain {platform} not valid. Must be one of {valid_platforms}"
             )
 
         # h5py can't write None as attributes, so we need to save them as zeros or empty str and interpret as None
