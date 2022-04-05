@@ -64,10 +64,6 @@ class SlideDataset:
         if shutdown_after:
             client.shutdown()
 
-    def reshape(self, shape, centercrop=False):
-        for slide in self.slides:
-            slide.tiles.reshape(shape=shape, centercrop=centercrop)
-
     def write(self, dir, filenames=None):
         """
         Write all SlideData objects to the specified directory.
