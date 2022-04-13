@@ -234,11 +234,15 @@ class PanNukeDataModule(BaseDataModule):
         self.batch_size = batch_size
         self.hovernet_preprocess = hovernet_preprocess
 
-    def _get_dataset(self, fold_ix):
+    def _get_dataset(self, fold_ix, augment=True):
+        if augment:
+            transforms = self.transforms
+        else:
+            transforms = None
         return PanNukeDataset(
             data_dir=self.data_dir,
             fold_ix=fold_ix,
-            transforms=self.transforms,
+            transforms=transforms,
             nucleus_type_labels=self.nucleus_type_labels,
             hovernet_preprocess=self.hovernet_preprocess,
         )
@@ -363,7 +367,7 @@ class PanNukeDataModule(BaseDataModule):
         Yields (image, mask, tissue_type), or (image, mask, hv, tissue_type) for HoVer-Net
         """
         return data.DataLoader(
-            dataset=self._get_dataset(fold_ix=self.split),
+            dataset=self._get_dataset(fold_ix=self.split, augment=True),
             batch_size=self.batch_size,
             shuffle=self.shuffle,
             pin_memory=True,
@@ -380,7 +384,7 @@ class PanNukeDataModule(BaseDataModule):
         else:
             fold_ix = 1
         return data.DataLoader(
-            self._get_dataset(fold_ix=fold_ix),
+            self._get_dataset(fold_ix=fold_ix, augment=False),
             batch_size=self.batch_size,
             shuffle=self.shuffle,
             pin_memory=True,
@@ -397,7 +401,7 @@ class PanNukeDataModule(BaseDataModule):
         else:
             fold_ix = 1
         return data.DataLoader(
-            self._get_dataset(fold_ix=fold_ix),
+            self._get_dataset(fold_ix=fold_ix, augment=False),
             batch_size=self.batch_size,
             shuffle=self.shuffle,
             pin_memory=True,
