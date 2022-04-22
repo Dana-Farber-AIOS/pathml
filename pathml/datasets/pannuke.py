@@ -12,6 +12,7 @@ from warnings import warn
 
 import cv2
 import numpy as np
+from loguru import logger
 import torch
 import torch.utils.data as data
 from pathml.datasets.base_data_module import BaseDataModule
@@ -233,11 +234,15 @@ class PanNukeDataModule(BaseDataModule):
         self.batch_size = batch_size
         self.hovernet_preprocess = hovernet_preprocess
 
-    def _get_dataset(self, fold_ix):
+    def _get_dataset(self, fold_ix, augment=True):
+        if augment:
+            transforms = self.transforms
+        else:
+            transforms = None
         return PanNukeDataset(
             data_dir=self.data_dir,
             fold_ix=fold_ix,
-            transforms=self.transforms,
+            transforms=transforms,
             nucleus_type_labels=self.nucleus_type_labels,
             hovernet_preprocess=self.hovernet_preprocess,
         )
@@ -248,7 +253,7 @@ class PanNukeDataModule(BaseDataModule):
             p = os.path.join(download_dir, "Fold " + str(fold_ix))
             # don't download if the directory already exists
             if not os.path.isdir(p):
-                print(f"Downloading fold {fold_ix}")
+                logger.info(f"Downloading fold {fold_ix}")
                 url = f"https://warwick.ac.uk/fac/cross_fac/tia/data/pannuke/fold_{fold_ix}.zip"
                 name = os.path.basename(url)
                 download_from_url(url=url, download_dir=download_dir, name=name)
@@ -257,7 +262,7 @@ class PanNukeDataModule(BaseDataModule):
                 with zipfile.ZipFile(path, "r") as zip_ref:
                     zip_ref.extractall(download_dir)
             else:
-                warn(
+                logger.warning(
                     f"Skipping download of fold {fold_ix}, using local data found at {p}"
                 )
 
@@ -362,7 +367,7 @@ class PanNukeDataModule(BaseDataModule):
         Yields (image, mask, tissue_type), or (image, mask, hv, tissue_type) for HoVer-Net
         """
         return data.DataLoader(
-            dataset=self._get_dataset(fold_ix=self.split),
+            dataset=self._get_dataset(fold_ix=self.split, augment=True),
             batch_size=self.batch_size,
             shuffle=self.shuffle,
             pin_memory=True,
@@ -379,7 +384,7 @@ class PanNukeDataModule(BaseDataModule):
         else:
             fold_ix = 1
         return data.DataLoader(
-            self._get_dataset(fold_ix=fold_ix),
+            self._get_dataset(fold_ix=fold_ix, augment=False),
             batch_size=self.batch_size,
             shuffle=self.shuffle,
             pin_memory=True,
@@ -396,7 +401,7 @@ class PanNukeDataModule(BaseDataModule):
         else:
             fold_ix = 1
         return data.DataLoader(
-            self._get_dataset(fold_ix=fold_ix),
+            self._get_dataset(fold_ix=fold_ix, augment=False),
             batch_size=self.batch_size,
             shuffle=self.shuffle,
             pin_memory=True,

@@ -24,8 +24,9 @@ from pathml.utils import (
     normalize_matrix_cols,
     normalize_matrix_rows,
     parse_file_size,
-    download_from_url
+    download_from_url,
 )
+
 
 @pytest.mark.parametrize(
     "test_input,expected", [("10 gb", 10 ** 10), ("1.17 mB", 1.17e6), ("0.89 KB", 890)]

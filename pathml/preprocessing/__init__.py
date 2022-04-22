@@ -24,5 +24,5 @@ from .transforms import (
     CollapseRunsCODEX,
     RescaleIntensity,
     HistogramEqualization,
-    AdaptiveHistogramEqualization
+    AdaptiveHistogramEqualization,
 )

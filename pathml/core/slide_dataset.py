@@ -5,6 +5,7 @@ License: GNU GPL 2.0
 
 import reprlib
 from pathlib import Path
+from loguru import logger
 
 import dask.distributed
 from torch.utils.data import ConcatDataset
@@ -53,16 +54,15 @@ class SlideDataset:
         if client is None and distributed:
             client = dask.distributed.Client()
             shutdown_after = True
+            logger.info(
+                f"creating a default distributed.Client(): {client.scheduler_info()}"
+            )
         for slide in self.slides:
             slide.run(
                 pipeline=pipeline, client=client, distributed=distributed, **kwargs
             )
         if shutdown_after:
             client.shutdown()
-
-    def reshape(self, shape, centercrop=False):
-        for slide in self.slides:
-            slide.tiles.reshape(shape=shape, centercrop=centercrop)
 
     def write(self, dir, filenames=None):
         """
@@ -78,8 +78,7 @@ class SlideDataset:
         if filenames:
             if len(filenames) != self.__len__():
                 raise ValueError(
-                    f"input list of filenames has {len(filenames)} elements "
-                    f"but must be same length as number of slides in dataset ({self.__len__()})"
+                    f"input list of filenames has {len(filenames)} elements but must be same length as number of slides in dataset ({self.__len__()})"
                 )
 
         for i, slide in enumerate(self.slides):
@@ -89,6 +88,6 @@ class SlideDataset:
                 slide_path = d / (slide.name + ".h5path")
             else:
                 raise ValueError(
-                    "slide does not have a .name attribute. Must supply a 'filenames' argument."
+                    f"slide does not have a .name attribute. Must supply a 'filenames' argument."
                 )
             slide.write(slide_path)

@@ -9,6 +9,7 @@ import tempfile
 from collections import OrderedDict
 
 import anndata
+from loguru import logger
 import h5py
 import numpy as np
 import pathml.core
@@ -95,7 +96,7 @@ class h5pathManager:
             tile(pathml.core.tile.Tile): Tile object
         """
         if str(tile.coords) in self.h5["tiles"].keys():
-            print(f"Tile is already in tiles. Overwriting {tile.coords} inplace.")
+            logger.info(f"Tile is already in tiles. Overwriting {tile.coords} inplace.")
             # remove old cells from self.counts so they do not duplicate
             if tile.counts:
                 if "tile" in self.counts.obs.keys():
@@ -114,7 +115,6 @@ class h5pathManager:
             raise ValueError(
                 f"cannot add tile of shape {tile.image.shape}. Must match shape of existing tiles: {existing_shape}"
             )
-
         if self.slide_type and tile.slide_type:
             # check that slide types match
             if tile.slide_type != self.slide_type:
@@ -127,7 +127,7 @@ class h5pathManager:
 
         # create a group for tile and write tile
         if str(tile.coords) in self.h5["tiles"]:
-            print(f"overwriting tile at {str(tile.coords)}")
+            logger.info(f"overwriting tile at {str(tile.coords)}")
             del self.h5["tiles"][str(tile.coords)]
         self.h5["tiles"].create_group(str(tile.coords))
         self.h5["tiles"][str(tile.coords)].create_dataset(
@@ -155,7 +155,9 @@ class h5pathManager:
             # add tile-level masks
             for key, mask in tile.masks.items():
                 self.h5["tiles"][str(tile.coords)]["masks"].create_dataset(
-                    str(key), data=mask, dtype="float16",
+                    str(key),
+                    data=mask,
+                    dtype="float16",
                 )
 
         # add coords
@@ -209,8 +211,7 @@ class h5pathManager:
             item = list(self.h5["tiles"].keys())[item]
         else:
             raise KeyError(
-                f"invalid item type: {type(item)}. must getitem by coord (type tuple[int]),"
-                f"index (type int), or name (type str)"
+                f"invalid item type: {type(item)}. must getitem by coord (type tuple[int]), index (type int), or name (type str)"
             )
         tile = self.h5["tiles"][item]["array"][:]
 
@@ -339,7 +340,7 @@ class h5pathManager:
                 f"masks keys must be of type(str) but key was passed of type {type(key)}"
             )
         if key not in self.h5["masks"].keys():
-            raise KeyError("key is not in Masks")
+            raise KeyError(f"key is not in Masks")
         del self.h5["masks"][key]
 
     def get_slidetype(self):

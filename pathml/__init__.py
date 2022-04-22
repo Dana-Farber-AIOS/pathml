@@ -7,4 +7,5 @@ from .core import *
 from . import datasets as ds
 from . import ml
 from . import preprocessing as pp
+from ._logging import PathMLLogger
 from ._version import __version__

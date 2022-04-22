@@ -6,19 +6,23 @@ License: GNU GPL 2.0
 import os
 from warnings import warn
 
+from loguru import logger
 import anndata
 import cv2
 import numpy as np
 import pandas as pd
 import pathml.core
 import pathml.core.slide_data
-from pathml.utils import (RGB_to_GREY, RGB_to_HSI, RGB_to_HSV, RGB_to_OD,
-                          normalize_matrix_cols)
+from pathml.utils import (
+    RGB_to_GREY,
+    RGB_to_HSI,
+    RGB_to_HSV,
+    RGB_to_OD,
+    normalize_matrix_cols,
+)
 from skimage import restoration
-from skimage.exposure import (equalize_adapthist, equalize_hist,
-                              rescale_intensity)
+from skimage.exposure import equalize_adapthist, equalize_hist, rescale_intensity
 from skimage.measure import regionprops_table
-
 
 # Base class
 class Transform:
@@ -646,7 +650,7 @@ class StainNormalizationHE(Transform):
                 import spams
             except (ImportError, ModuleNotFoundError):
                 raise Exception(
-                    "Vahadane method requires `spams` package to be installed"
+                    f"Vahadane method requires `spams` package to be installed"
                 )
 
         self.target = target.lower()
@@ -708,8 +712,7 @@ class StainNormalizationHE(Transform):
             stain_matrix = self._estimate_stain_vectors_vahadane(image)
         else:
             raise Exception(
-                f"Error: input stain estimation method {self.stain_estimation_method} must be one of "
-                f"'macenko' or 'vahadane'"
+                f"Error: input stain estimation method {self.stain_estimation_method} must be one of 'macenko' or 'vahadane'"
             )
         return stain_matrix
 
@@ -740,7 +743,7 @@ class StainNormalizationHE(Transform):
         try:
             import spams
         except (ImportError, ModuleNotFoundError):
-            raise Exception("Vahadane method requires `spams` package to be installed")
+            raise Exception(f"Vahadane method requires `spams` package to be installed")
         # convert to Optical Density (OD) space
         image_OD = RGB_to_OD(image)
         # reshape to (M*N)x3
@@ -787,7 +790,7 @@ class StainNormalizationHE(Transform):
         try:
             _, v = np.linalg.eigh(np.cov(OD.T))
         except np.linalg.LinAlgError as err:
-            print(f"Error in computing eigenvectors: {err}")
+            logger.exception(f"Error in computing eigenvectors: {err}")
             raise
         pcs = v[:, 1:3]
         # project OD pixels onto plane of first 2 PCs
@@ -844,7 +847,7 @@ class StainNormalizationHE(Transform):
         try:
             import spams
         except (ImportError, ModuleNotFoundError):
-            raise Exception("Vahadane method requires `spams` package to be installed")
+            raise Exception(f"Vahadane method requires `spams` package to be installed")
         image_OD = RGB_to_OD(image).reshape(-1, 3)
 
         # Get concentrations of each stain at each pixel
@@ -1290,7 +1293,9 @@ class SegmentMIF(Transform):
         nuclear_channel(int): channel that defines cell nucleus
         cytoplasm_channel(int): channel that defines cell membrane or cytoplasm
         image_resolution(float): pixel resolution of image in microns
-        gpu(bool): flag indicating whether gpu will be used for inference
+        preprocess_kwargs(dict): keyword arguemnts to pass to pre-processing function
+        postprocess_kwargs_nuclear(dict): keyword arguments to pass to post-processing function
+        postprocess_kwargs_whole_cell(dict): keyword arguments to pass to post-processing function
 
     References:
         Greenwald, N.F., Miller, G., Moen, E. et al. Whole-cell segmentation of tissue images with human-level
@@ -1307,9 +1312,9 @@ class SegmentMIF(Transform):
         nuclear_channel=None,
         cytoplasm_channel=None,
         image_resolution=0.5,
-        gpu=True,
+        preprocess_kwargs=None,
+        postprocess_kwargs_nuclear=None,
         postprocess_kwargs_whole_cell=None,
-        postprocess_kwrags_nuclear=None,
     ):
         assert isinstance(
             nuclear_channel, int
@@ -1320,42 +1325,42 @@ class SegmentMIF(Transform):
         self.nuclear_channel = nuclear_channel
         self.cytoplasm_channel = cytoplasm_channel
         self.image_resolution = image_resolution
-        self.gpu = gpu
+        self.preprocess_kwargs = preprocess_kwargs if preprocess_kwargs else {}
+        self.postprocess_kwargs_nuclear = (
+            postprocess_kwargs_nuclear if postprocess_kwargs_nuclear else {}
+        )
+        self.postprocess_kwargs_whole_cell = (
+            postprocess_kwargs_whole_cell if postprocess_kwargs_whole_cell else {}
+        )
 
         if model.lower() == "mesmer":
             try:
                 from deepcell.applications import Mesmer
             except ImportError:
-                warn(
-                    """The Mesmer model in SegmentMIF requires extra libraries to be installed.
-                You can install these via pip using:
-
-                pip install deepcell
-                """
+                logger.warning(
+                    "The Mesmer model in SegmentMIF requires extra libraries to be installed.\nYou can install these via pip using:\npip install deepcell"
                 )
                 raise ImportError(
-                    "The Mesmer model in SegmentMIF requires deepcell to be installed"
+                    f"The Mesmer model in SegmentMIF requires deepcell to be installed"
                 ) from None
             self.model = model.lower()
         elif model.lower() == "cellpose":
             """from cellpose import models
             self.model = models.Cellpose(gpu=self.gpu, model_type='cyto')"""
-            raise NotImplementedError("Cellpose model not currently supported")
+            raise NotImplementedError(f"Cellpose model not currently supported")
         else:
-            raise ValueError(f"currently only support mesmer model")
+            raise ValueError(f"currently only supports mesmer model")
 
     def __repr__(self):
         return (
-            f"SegmentMIF(model={self.model}, image_resolution={self.image_resolution}, "
-            f"gpu={self.gpu})"
+            f"SegmentMIF(model={self.model}, image_resolution={self.image_resolution})"
         )
 
     def F(self, image):
         img = image.copy()
         if len(img.shape) not in [3, 4]:
             raise ValueError(
-                f"input image has shape {img.shape}. supported image shapes are x,y,c or batch,x,y,c."
-                "did you forget to apply 'CollapseRuns*()' transform?"
+                f"input image has shape {img.shape}. supported image shapes are x,y,c or batch,x,y,c. Did you forget to apply 'CollapseRuns*()' transform?"
             )
         if len(img.shape) == 3:
             img = np.expand_dims(img, axis=0)
@@ -1371,10 +1376,18 @@ class SegmentMIF(Transform):
 
             model = Mesmer()
             cell_segmentation_predictions = model.predict(
-                nuc_cytoplasm, image_mpp=self.image_resolution, compartment="whole-cell"
+                nuc_cytoplasm,
+                image_mpp=self.image_resolution,
+                compartment="whole-cell",
+                preprocess_kwargs=self.preprocess_kwargs,
+                postprocess_kwargs_whole_cell=self.postprocess_kwargs_whole_cell,
             )
             nuclear_segmentation_predictions = model.predict(
-                nuc_cytoplasm, image_mpp=self.image_resolution, compartment="nuclear"
+                nuc_cytoplasm,
+                image_mpp=self.image_resolution,
+                compartment="nuclear",
+                preprocess_kwargs=self.preprocess_kwargs,
+                postprocess_kwargs_nuclear=self.postprocess_kwargs_nuclear,
             )
             cell_segmentation_predictions = np.squeeze(
                 cell_segmentation_predictions, axis=0
@@ -1403,7 +1416,7 @@ class QuantifyMIF(Transform):
     """
     Convert segmented image into anndata.AnnData counts object `AnnData <https://anndata.readthedocs.io/en/latest/>`_.
     Counts objects are used to interface with the Python single cell analysis ecosystem `Scanpy <https://scanpy.readthedocs.io/en/stable/>`_.
-    The counts object contains a summary of protein expression statistics in each cell along with its coordinate.
+    The counts object contains a summary of channel statistics in each cell along with its coordinate.
 
     Args:
         segmentation_mask (str): key indicating which mask to use as label image
@@ -1415,14 +1428,30 @@ class QuantifyMIF(Transform):
     def __repr__(self):
         return f"QuantifyMIF(segmentation_mask={self.segmentation_mask})"
 
-    def F(self, tile):
-        # pass (x, y, channel) image and (x, y) segmentation
-        img = tile.image.copy()
-        segmentation = tile.masks[self.segmentation_mask][:, :, 0]
+    def F(self, img, segmentation, coords_offset=(0, 0)):
+        """
+        Functional implementation
+
+        Args:
+            img (np.ndarray): Input image of shape (i, j, n_channels)
+            segmentation (np.ndarray): Segmentation map of shape (i, j) or (i, j, 1). Zeros are background. Regions should be
+                labelled with unique integers.
+            coords_offset (tuple, optional): Coordinates (i, j) used to convert tile-level coordinates to slide-level.
+                Defaults to (0, 0) for no offset.
+
+        Returns:
+            Counts matrix
+        """
+        if segmentation.ndim != 2:
+            assert (
+                segmentation.shape[2] == 1
+            ), f"input segmentation is of shape {segmentation.shape}. must be (x, y) or (x, y, 1)"
+            segmentation = segmentation.squeeze(2)
         countsdataframe = regionprops_table(
             label_image=segmentation,
             intensity_image=img,
             properties=[
+                "label",
                 "coords",
                 "max_intensity",
                 "mean_intensity",
@@ -1438,15 +1467,17 @@ class QuantifyMIF(Transform):
         for i in range(img.shape[-1]):
             X[i] = countsdataframe[f"mean_intensity-{i}"]
         # populate anndata object
+        # i,j are relative to the input image (0 to img.shape). Adding offset converts to slide-level coordinates
         counts = anndata.AnnData(
             X=X,
             obs=[
-                tuple([i + tile.coords[0], j + tile.coords[1]])
+                tuple([i + coords_offset[0], j + coords_offset[1]])
                 for i, j in zip(
                     countsdataframe["centroid-0"], countsdataframe["centroid-1"]
                 )
             ],
         )
+        counts.obs["label"] = countsdataframe["label"]
         counts.obs = counts.obs.rename(columns={0: "y", 1: "x"})
         counts.obs["filled_area"] = countsdataframe["filled_area"]
         counts.obs["euler_number"] = countsdataframe["euler_number"]
@@ -1461,7 +1492,7 @@ class QuantifyMIF(Transform):
         try:
             counts.obsm["spatial"] = np.array(counts.obs[["x", "y"]])
         except:
-            print("warning: did not log coordinates in obsm")
+            logger.warning("did not log coordinates in obsm")
         return counts
 
     def apply(self, tile):
@@ -1474,7 +1505,11 @@ class QuantifyMIF(Transform):
         assert (
             tile.slide_type.stain == "Fluor"
         ), f"Tile has slide_type.stain='{tile.slide_type.stain}', but must be 'Fluor'"
-        tile.counts = self.F(tile)
+        tile.counts = self.F(
+            img=tile.image,
+            segmentation=tile.masks[self.segmentation_mask],
+            coords_offset=tile.coords,
+        )
 
 
 class CollapseRunsVectra(Transform):
