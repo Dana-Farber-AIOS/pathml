@@ -1,0 +1,64 @@
+cff-version: 1.2.0
+message: "Citation for this repository"
+authors:
+  - family-names: Rosenthal
+    given-names: Jacob
+  - family-names: Carelli
+    given-names: Ryan
+  - family-names: Mohammed
+    given-names: Omar
+  - family-names: Brundage
+    given-names: David
+  - family-names: Halbert
+    given-names: Ella
+  - family-names: Nyman
+    given-names: Jackson
+  - family-names: Hari
+    given-names: Surya
+  - family-names: Van Allen
+    given-names: Eliezer
+  - family-names: Marchionni
+    given-names: Luigi
+  - family-names: Umeton
+    given-names: Renato
+  - family-names: Loda
+    given-names: Massimo
+title: "Building Tools for Machine Learning and Artificial Intelligence in Cancer Research: Best Practices and a Case Study with the PathML Toolkit for Computational Pathology"
+date-released: 2022-02-03
+doi: 10.1158/1541-7786.MCR-21-0665
+url: https://github.com/Dana-Farber-AIOS/pathml
+preferred-citation:
+  type: article
+  authors:
+      - family-names: Rosenthal
+        given-names: Jacob
+      - family-names: Carelli
+        given-names: Ryan
+      - family-names: Mohammed
+        given-names: Omar
+      - family-names: Brundage
+        given-names: David
+      - family-names: Halbert
+        given-names: Ella
+      - family-names: Nyman
+        given-names: Jackson
+      - family-names: Hari
+        given-names: Surya
+      - family-names: Van Allen
+        given-names: Eliezer
+      - family-names: Marchionni
+        given-names: Luigi
+      - family-names: Umeton
+        given-names: Renato
+      - family-names: Loda
+        given-names: Massimo
+  doi: 10.21105/joss.01979
+  journal: "Molecular Cancer Research"
+  publisher: American Academy of Cancer Research
+  month: 2
+  year: 2022
+  issue: 2
+  volume: 20
+  start: 202
+  title: "Building Tools for Machine Learning and Artificial Intelligence in Cancer Research: Best Practices and a Case Study with the PathML Toolkit for Computational Pathology"
+  url: https://doi.org/10.1158/1541-7786.MCR-21-0665
