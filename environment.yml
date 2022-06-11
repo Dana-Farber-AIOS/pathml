@@ -23,6 +23,7 @@ dependencies:
     - pip:
         - python-bioformats==4.0.0
         - python-javabridge==4.0.0
+        - protobuf==3.20.1
         - deepcell==0.11.0
         - opencv-contrib-python==4.5.3.56
         - openslide-python==1.1.2
