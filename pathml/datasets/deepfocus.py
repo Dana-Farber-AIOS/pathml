@@ -5,13 +5,14 @@ License: GNU GPL 2.0
 
 import hashlib
 import os
-from loguru import logger
 from pathlib import Path
 
 import h5py
+from loguru import logger
+from torch.utils.data import DataLoader, Dataset
+
 from pathml.datasets.base_data_module import BaseDataModule
 from pathml.utils import download_from_url
-from torch.utils.data import DataLoader, Dataset
 
 
 class DeepFocusDataModule(BaseDataModule):

@@ -8,11 +8,12 @@ import reprlib
 from pathlib import Path
 
 import anndata
-from loguru import logger
 import dask.distributed
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
+from loguru import logger
+
 import pathml.core
 import pathml.preprocessing.pipeline
 from pathml.core.slide_types import SlideType

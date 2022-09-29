@@ -3,15 +3,16 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-import pytest
+import shutil
 import urllib
 from pathlib import Path
-import numpy as np
-import h5py
-import shutil
 
-from pathml.datasets import DeepFocusDataModule
+import h5py
+import numpy as np
+import pytest
+
 from pathml.core.utils import writedataframeh5
+from pathml.datasets import DeepFocusDataModule
 
 
 @pytest.fixture

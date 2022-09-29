@@ -3,27 +3,28 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
+import copy
 import pickle
+
 import numpy as np
 import pandas as pd
-import copy
 import pytest
 
-from pathml.preprocessing import Pipeline
 from pathml.preprocessing import (
-    MedianBlur,
-    GaussianBlur,
-    BoxBlur,
     BinaryThreshold,
-    MorphOpen,
-    MorphClose,
-    ForegroundDetection,
-    SuperpixelInterpolation,
-    StainNormalizationHE,
-    NucleusDetectionHE,
-    TissueDetectionHE,
-    QuantifyMIF,
+    BoxBlur,
     CollapseRunsVectra,
+    ForegroundDetection,
+    GaussianBlur,
+    MedianBlur,
+    MorphClose,
+    MorphOpen,
+    NucleusDetectionHE,
+    Pipeline,
+    QuantifyMIF,
+    StainNormalizationHE,
+    SuperpixelInterpolation,
+    TissueDetectionHE,
 )
 from pathml.utils import RGB_to_GREY
 

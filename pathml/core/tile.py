@@ -3,12 +3,13 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-import numpy as np
-import anndata
-from collections import OrderedDict
-import matplotlib.pyplot as plt
-import h5py
 import reprlib
+from collections import OrderedDict
+
+import anndata
+import h5py
+import matplotlib.pyplot as plt
+import numpy as np
 from loguru import logger
 
 import pathml.core.masks

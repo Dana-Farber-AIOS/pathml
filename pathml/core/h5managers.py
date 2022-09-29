@@ -9,9 +9,10 @@ import tempfile
 from collections import OrderedDict
 
 import anndata
-from loguru import logger
 import h5py
 import numpy as np
+from loguru import logger
+
 import pathml.core
 import pathml.core.masks
 import pathml.core.tile

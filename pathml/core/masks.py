@@ -3,12 +3,13 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-import numpy as np
 import os
-from pathlib import Path
-from collections import OrderedDict
-import h5py
 import reprlib
+from collections import OrderedDict
+from pathlib import Path
+
+import h5py
+import numpy as np
 from loguru import logger
 
 import pathml.core.h5managers

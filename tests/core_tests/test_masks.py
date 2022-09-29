@@ -3,11 +3,11 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-import pytest
 import numpy as np
+import pytest
 
 import pathml.core.h5managers
-from pathml.core import Masks, HESlide
+from pathml.core import HESlide, Masks
 
 
 @pytest.fixture

@@ -6,11 +6,15 @@ License: GNU GPL 2.0
 import os
 from warnings import warn
 
-from loguru import logger
 import anndata
 import cv2
 import numpy as np
 import pandas as pd
+from loguru import logger
+from skimage import restoration
+from skimage.exposure import equalize_adapthist, equalize_hist, rescale_intensity
+from skimage.measure import regionprops_table
+
 import pathml.core
 import pathml.core.slide_data
 from pathml.utils import (
@@ -20,9 +24,7 @@ from pathml.utils import (
     RGB_to_OD,
     normalize_matrix_cols,
 )
-from skimage import restoration
-from skimage.exposure import equalize_adapthist, equalize_hist, rescale_intensity
-from skimage.measure import regionprops_table
+
 
 # Base class
 class Transform:

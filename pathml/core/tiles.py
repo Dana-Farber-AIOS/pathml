@@ -7,9 +7,10 @@ import os
 import reprlib
 from collections import OrderedDict
 from pathlib import Path
-from loguru import logger
 
 import h5py
+from loguru import logger
+
 import pathml.core.h5managers
 import pathml.core.masks
 import pathml.core.tile

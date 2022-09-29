@@ -3,10 +3,10 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-import pytest
 import numpy as np
+import pytest
 
-from pathml.core import OpenSlideBackend, DICOMBackend, BioFormatsBackend, Tile
+from pathml.core import BioFormatsBackend, DICOMBackend, OpenSlideBackend, Tile
 
 
 def openslide_backend():

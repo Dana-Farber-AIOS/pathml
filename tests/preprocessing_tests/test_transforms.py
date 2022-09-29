@@ -5,29 +5,30 @@ License: GNU GPL 2.0
 
 import numpy as np
 import pytest
+
+from pathml.core import Tile
 from pathml.preprocessing import (
-    MedianBlur,
-    GaussianBlur,
-    BoxBlur,
+    AdaptiveHistogramEqualization,
     BinaryThreshold,
-    MorphOpen,
-    MorphClose,
+    BoxBlur,
+    CollapseRunsCODEX,
+    CollapseRunsVectra,
     ForegroundDetection,
-    SuperpixelInterpolation,
-    StainNormalizationHE,
-    NucleusDetectionHE,
-    TissueDetectionHE,
+    GaussianBlur,
+    HistogramEqualization,
     LabelArtifactTileHE,
     LabelWhiteSpaceHE,
+    MedianBlur,
+    MorphClose,
+    MorphOpen,
+    NucleusDetectionHE,
     QuantifyMIF,
-    CollapseRunsVectra,
-    CollapseRunsCODEX,
-    AdaptiveHistogramEqualization,
-    HistogramEqualization,
     RescaleIntensity,
+    StainNormalizationHE,
+    SuperpixelInterpolation,
+    TissueDetectionHE,
 )
 from pathml.utils import RGB_to_GREY
-from pathml.core import Tile
 
 
 @pytest.mark.parametrize("ksize", [3, 7, 21])

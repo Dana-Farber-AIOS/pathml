@@ -8,20 +8,21 @@ License: GNU GPL 2.0
 
 import argparse
 import cProfile
+import logging
 import pstats
 import tempfile
 from pstats import SortKey
-import logging
+
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 from dask.distributed import Client, LocalCluster
 from torch.utils.data import DataLoader
+
 from pathml.core import HESlide
+from pathml.ml import TileDataset
 from pathml.preprocessing import BoxBlur, Pipeline, TissueDetectionHE
 from pathml.utils import download_from_url
-from pathml.ml import TileDataset
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument(

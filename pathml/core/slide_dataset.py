@@ -5,9 +5,9 @@ License: GNU GPL 2.0
 
 import reprlib
 from pathlib import Path
-from loguru import logger
 
 import dask.distributed
+from loguru import logger
 from torch.utils.data import ConcatDataset
 
 

@@ -7,10 +7,12 @@ import ast
 import tempfile
 from collections import OrderedDict
 from dataclasses import asdict
-from loguru import logger
+
 import anndata
 import h5py
 import numpy as np
+from loguru import logger
+
 import pathml.core.slide_backends
 import pathml.core.slide_data
 

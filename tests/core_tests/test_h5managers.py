@@ -7,6 +7,7 @@ import copy
 
 import numpy as np
 import pytest
+
 from pathml.core import HESlide
 from pathml.core.h5managers import h5pathManager
 from pathml.core.tiles import Tiles

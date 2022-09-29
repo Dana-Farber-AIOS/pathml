@@ -8,11 +8,8 @@ from typing import Tuple
 
 import numpy as np
 import openslide
-from loguru import logger
-import pathml.core
-import pathml.core.tile
 from javabridge.jutil import JavaException
-from pathml.utils import pil_to_rgb
+from loguru import logger
 from PIL import Image
 from pydicom.dataset import Dataset
 from pydicom.encaps import get_frame_offsets
@@ -21,6 +18,10 @@ from pydicom.filereader import data_element_offset_to_value, dcmread
 from pydicom.tag import SequenceDelimiterTag, TupleTag
 from pydicom.uid import UID
 from scipy.ndimage import zoom
+
+import pathml.core
+import pathml.core.tile
+from pathml.utils import pil_to_rgb
 
 try:
     import bioformats
@@ -490,7 +491,7 @@ class BioFormatsBackend(SlideBackend):
                 f"Scaling image to [0, 1] by dividing by {(2 ** (8 * self.pixel_dtype.itemsize))}"
             )
             # then scale to [0-255] and convert to 8 bit
-            array_scaled = array_scaled * 2 ** 8
+            array_scaled = array_scaled * 2**8
             return array_scaled.astype(np.uint8)
 
     def get_thumbnail(self, size=None):
