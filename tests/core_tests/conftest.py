@@ -9,7 +9,7 @@ import numpy as np
 # define fixtures here, and use them throughout the other tests in core_tests/
 import pytest
 
-from pathml.core import SlideData, SlideDataset, Tile, VectraSlide, types
+from pathml.core import SlideData, SlideDataset, VectraSlide, types
 
 
 @pytest.fixture
@@ -22,7 +22,7 @@ def example_slide_data():
         "test_bool_label": True,
     }
     wsi = SlideData(
-        "tests/testdata/small_HE.svs", name=f"test", labels=labs, backend="openslide"
+        "tests/testdata/small_HE.svs", name="test", labels=labs, backend="openslide"
     )
     return wsi
 
@@ -39,7 +39,7 @@ def example_slide_data_with_tiles(tile):
     adata = anndata.AnnData()
     wsi = SlideData(
         "tests/testdata/small_HE.svs",
-        name=f"test",
+        name="test",
         labels=labs,
         backend="openslide",
         tiles=[tile],

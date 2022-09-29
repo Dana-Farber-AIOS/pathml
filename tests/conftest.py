@@ -10,7 +10,7 @@ import openslide
 import pytest
 import scanpy as sc
 
-from pathml.core import HESlide, Masks, Tile, VectraSlide, types
+from pathml.core import Tile, VectraSlide, types
 
 
 def pytest_sessionfinish(session, exitstatus):

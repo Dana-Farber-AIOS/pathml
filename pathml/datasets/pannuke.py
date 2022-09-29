@@ -8,7 +8,6 @@ import re
 import shutil
 import zipfile
 from pathlib import Path
-from warnings import warn
 
 import cv2
 import numpy as np

@@ -8,4 +8,4 @@ from . import ml
 from . import preprocessing as pp
 from ._logging import PathMLLogger
 from ._version import __version__
-from .core import *
+from .core import *  # noqa: F403

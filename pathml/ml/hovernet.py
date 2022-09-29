@@ -3,8 +3,6 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-from warnings import warn
-
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -432,7 +430,8 @@ def compute_hv_map(mask):
 
     try:
         inst_list.remove(0)  # 0 is background
-    except:
+    # TODO: change to specific exception
+    except Exception:
         logger.warning(
             "No pixels with 0 label. This means that there are no background pixels. This may indicate a problem. Ignore this warning if this is expected/intended."
         )

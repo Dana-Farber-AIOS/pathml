@@ -213,7 +213,7 @@ def check_pannuke_data_urls():
 
 def check_wrong_path_download_false_fails():
     with pytest.raises(AssertionError):
-        pannuke = PanNukeDataModule(data_dir="wrong/path/to/pannuke", download=False)
+        PanNukeDataModule(data_dir="wrong/path/to/pannuke", download=False)
 
 
 def test_pannuke_multiclass_mask_to_nucleus_mask():

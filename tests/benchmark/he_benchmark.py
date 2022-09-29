@@ -10,12 +10,8 @@ import argparse
 import cProfile
 import logging
 import pstats
-import tempfile
 from pstats import SortKey
 
-import h5py
-import matplotlib.pyplot as plt
-import numpy as np
 from dask.distributed import Client, LocalCluster
 from torch.utils.data import DataLoader
 

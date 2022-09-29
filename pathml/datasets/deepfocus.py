@@ -48,7 +48,7 @@ class DeepFocusDataModule(BaseDataModule):
         else:
             assert (
                 self._check_integrity()
-            ), f"download is False but data directory does not exist or md5 checksum failed"
+            ), "download is False but data directory does not exist or md5 checksum failed"
         self.shuffle = shuffle
         self.transforms = transforms
         self.batch_size = batch_size

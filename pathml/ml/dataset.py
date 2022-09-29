@@ -6,7 +6,6 @@ License: GNU GPL 2.0
 import h5py
 import numpy as np
 import torch
-from loguru import logger
 
 
 class TileDataset(torch.utils.data.Dataset):
@@ -52,7 +51,7 @@ class TileDataset(torch.utils.data.Dataset):
             self.h5 = h5py.File(self.file_path, "r")
 
         k = self.tile_keys[ix]
-        ### this part copied from h5manager.get_tile()
+        # this part copied from h5manager.get_tile()
         tile_image = self.h5["tiles"][str(k)]["array"][:]
 
         # get corresponding masks if there are masks

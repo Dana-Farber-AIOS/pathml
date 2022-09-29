@@ -214,7 +214,8 @@ class SlideData:
         out.append(f"image shape: {self.shape}")
         try:
             nlevels = self.slide.level_count
-        except:
+        # TODO: change to specific exception
+        except Exception:
             nlevels = 1
         out.append(f"number of levels: {nlevels}")
         out.append(repr(self.tiles))
@@ -230,7 +231,7 @@ class SlideData:
         if self.counts:
             out.append(f"counts matrix of shape {self.counts.shape}")
         else:
-            out.append(f"counts=None")
+            out.append("counts=None")
 
         out = ",\n\t".join(out)
         out += ")"
@@ -280,7 +281,7 @@ class SlideData:
             # in this case, tiles already exist
             if not overwrite_existing_tiles:
                 raise Exception(
-                    f"Slide already has tiles. Running the pipeline will overwrite the existing tiles. Use overwrite_existing_tiles=True to force overwriting existing tiles."
+                    "Slide already has tiles. Running the pipeline will overwrite the existing tiles. Use overwrite_existing_tiles=True to force overwriting existing tiles."
                 )
             else:
                 # delete all existing tiles
@@ -443,10 +444,11 @@ class SlideData:
         """
         try:
             thumbnail = self.slide.get_thumbnail(size=(500, 500))
-        except:
+        # TODO: change to specific exception
+        except Exception:
             if not self.slide:
                 raise NotImplementedError(
-                    f"Plotting only supported via backend, but SlideData has no backend."
+                    "Plotting only supported via backend, but SlideData has no backend."
                 )
             else:
                 raise NotImplementedError(
@@ -472,7 +474,7 @@ class SlideData:
             self.tiles.h5manager.counts = value
         else:
             raise AttributeError(
-                f"cannot assign counts slidedata contains no tiles, first generate tiles"
+                "cannot assign counts slidedata contains no tiles, first generate tiles"
             )
 
     def write(self, path):

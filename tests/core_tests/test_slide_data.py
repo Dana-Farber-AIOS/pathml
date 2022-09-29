@@ -11,14 +11,7 @@ import pytest
 from dask.distributed import Client
 
 import pathml
-from pathml.core import (
-    BioFormatsBackend,
-    HESlide,
-    MultiparametricSlide,
-    OpenSlideBackend,
-    SlideData,
-    Tile,
-)
+from pathml.core import HESlide, MultiparametricSlide, SlideData, Tile
 from pathml.core.slide_data import infer_backend
 from pathml.preprocessing import BoxBlur, Pipeline
 

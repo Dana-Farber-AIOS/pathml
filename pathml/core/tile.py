@@ -10,7 +10,6 @@ import anndata
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
-from loguru import logger
 
 import pathml.core.masks
 
@@ -154,7 +153,7 @@ class Tile:
         if self.counts:
             out.append(f"counts matrix of shape {self.counts.shape}")
         else:
-            out.append(f"counts=None")
+            out.append("counts=None")
         out = ",\n\t".join(out)
         out += ")"
         return out

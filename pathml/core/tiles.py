@@ -3,13 +3,8 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-import os
 import reprlib
 from collections import OrderedDict
-from pathlib import Path
-
-import h5py
-from loguru import logger
 
 import pathml.core.h5managers
 import pathml.core.masks
@@ -40,7 +35,7 @@ class Tiles:
                         f"Tiles expects a list of type Tile but was given {type(tile)}"
                     )
                 if tile.coords is None:
-                    raise ValueError(f"tiles must contain valid coords")
+                    raise ValueError("tiles must contain valid coords")
                 coords = tile.coords
                 tiledictionary[coords] = tile
             self._tiles = OrderedDict(tiledictionary)

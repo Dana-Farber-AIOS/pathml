@@ -3,10 +3,8 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-import itertools
 import os
 import tempfile
-from collections import OrderedDict
 
 import anndata
 import h5py
@@ -36,10 +34,10 @@ class h5pathManager:
         if h5path:
             assert (
                 not slidedata
-            ), f"if creating h5pathmanager from h5path, slidedata should not be required"
+            ), "if creating h5pathmanager from h5path, slidedata should not be required"
             assert check_valid_h5path_format(
                 h5path
-            ), f"h5path must conform to .h5path standard, see documentation"
+            ), "h5path must conform to .h5path standard, see documentation"
             # copy h5path into self.h5
             for ds in h5path.keys():
                 if ds in ["fields", "masks", "tiles"]:
@@ -53,19 +51,19 @@ class h5pathManager:
                         )
 
         else:
-            assert slidedata, f"must pass slidedata object to create h5path"
+            assert slidedata, "must pass slidedata object to create h5path"
             # initialize h5path file hierarchy
             # fields
             fieldsgroup = self.h5.create_group("fields")
             # name, shape, labels
             fieldsgroup.attrs["name"] = slidedata.name
             fieldsgroup.attrs["shape"] = slidedata.slide.get_image_shape()
-            labelsgroup = self.h5["fields"].create_group("labels")
+            self.h5["fields"].create_group("labels")
             if slidedata.labels:
                 for key, label in slidedata.labels.items():
                     self.h5["fields/labels"].attrs[key] = label
             # slidetype
-            slidetypegroup = self.h5["fields"].create_group("slide_type")
+            self.h5["fields"].create_group("slide_type")
             if slidedata.slide_type:
                 for key, val in slidedata.slide_type.asdict().items():
                     self.h5["fields/slide_type"].attrs[key] = val
@@ -76,9 +74,9 @@ class h5pathManager:
             # initialize stride with 0
             tilesgroup.attrs["tile_stride"] = b"(0, 0)"
             # masks
-            masksgroup = self.h5.create_group("masks")
+            self.h5.create_group("masks")
             # counts
-            countsgroup = self.h5.create_group("counts")
+            self.h5.create_group("counts")
 
         slide_type_dict = {
             key: val for key, val in self.h5["fields/slide_type"].attrs.items()
@@ -151,7 +149,7 @@ class h5pathManager:
         if tile.masks:
             # create a group to hold tile-level masks
             if "masks" not in self.h5["tiles"][str(tile.coords)].keys():
-                masksgroup = self.h5["tiles"][str(tile.coords)].create_group("masks")
+                self.h5["tiles"][str(tile.coords)].create_group("masks")
 
             # add tile-level masks
             for key, mask in tile.masks.items():
@@ -169,7 +167,7 @@ class h5pathManager:
         self.h5["tiles"][str(tile.coords)].attrs["name"] = (
             str(tile.name) if tile.name else 0
         )
-        tilelabelsgroup = self.h5["tiles"][str(tile.coords)].create_group("labels")
+        self.h5["tiles"][str(tile.coords)].create_group("labels")
         if tile.labels:
             for key, val in tile.labels.items():
                 self.h5["tiles"][str(tile.coords)]["labels"].attrs[key] = val
@@ -199,7 +197,7 @@ class h5pathManager:
             Tile(pathml.core.tile.Tile)
         """
         if isinstance(item, bool):
-            raise KeyError(f"invalid key, pass str or tuple")
+            raise KeyError("invalid key, pass str or tuple")
         if isinstance(item, (str, tuple)):
             item = str(item)
             if item not in self.h5["tiles"].keys():
@@ -247,7 +245,7 @@ class h5pathManager:
         Remove tile from self.h5 by key.
         """
         if not isinstance(key, (str, tuple)):
-            raise KeyError(f"key must be str or tuple, check valid keys in repr")
+            raise KeyError("key must be str or tuple, check valid keys in repr")
         if str(key) not in self.h5["tiles"].keys():
             raise KeyError(f"key {key} is not in Tiles")
         del self.h5["tiles"][str(key)]
@@ -271,7 +269,7 @@ class h5pathManager:
             raise ValueError(
                 f"key {key} already exists in 'masks'. Cannot add. Must update to modify existing mask."
             )
-        newmask = self.h5["masks"].create_dataset(key, data=mask)
+        self.h5["masks"].create_dataset(key, data=mask)
 
     def update_mask(self, key, mask):
         """
@@ -341,7 +339,7 @@ class h5pathManager:
                 f"masks keys must be of type(str) but key was passed of type {type(key)}"
             )
         if key not in self.h5["masks"].keys():
-            raise KeyError(f"key is not in Masks")
+            raise KeyError("key is not in Masks")
         del self.h5["masks"][key]
 
     def get_slidetype(self):

@@ -26,7 +26,7 @@ def dicom_backend():
     return DICOMBackend("tests/testdata/small_dicom.dcm")
 
 
-## test each method for each backend
+# test each method for each backend
 
 
 @pytest.mark.parametrize(
@@ -232,5 +232,4 @@ def test_dicom_coords_index_conversion():
 # this test takes a long time, so skip by running 'python -m pytest -m "not slow"'
 @pytest.mark.slow
 def test_bioformats_vm_handling(vectra_slide):
-    tiles = vectra_slide.generate_tiles(shape=10)
-    list_of_tiles = list(tiles)
+    vectra_slide.generate_tiles(shape=10)

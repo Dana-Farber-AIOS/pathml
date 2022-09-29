@@ -14,17 +14,12 @@ from pathml.preprocessing import (
     BinaryThreshold,
     BoxBlur,
     CollapseRunsVectra,
-    ForegroundDetection,
     GaussianBlur,
     MedianBlur,
     MorphClose,
     MorphOpen,
-    NucleusDetectionHE,
     Pipeline,
     QuantifyMIF,
-    StainNormalizationHE,
-    SuperpixelInterpolation,
-    TissueDetectionHE,
 )
 from pathml.utils import RGB_to_GREY
 
@@ -75,7 +70,7 @@ def test_pipeline_mif(tileVectra):
     """
     Run MIF pipeline
     """
-    deepcell = pytest.importorskip("deepcell")
+    pytest.importorskip("deepcell")
     from pathml.preprocessing.transforms import SegmentMIF
 
     orig_tile = copy.copy(tileVectra)

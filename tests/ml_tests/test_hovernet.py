@@ -55,8 +55,8 @@ def test_hovernet_loss(n_classes):
     ims, masks, hv = fake_hovernet_inputs(n_classes)
     truth = [masks, hv]
     outputs = fake_hovernet_output(n_classes)
-    l = hovernet.loss_hovernet(outputs, truth, n_classes=n_classes)
-    assert l.item() > 0
+    loss = hovernet.loss_hovernet(outputs, truth, n_classes=n_classes)
+    assert loss.item() > 0
 
 
 # TODO test each individual loss function

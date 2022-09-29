@@ -17,14 +17,10 @@ from pathml.core import Tile
 )
 def test_init_incorrect_input(incorrect_input, incorrect_input_name):
     with pytest.raises(AssertionError):
-        testimage = Tile(incorrect_input, coords=(1, 3))
-        testcoords = Tile(np.random.randn((224, 224, 3)), coords=incorrect_input)
-        testmasks = Tile(
-            np.random.randn((224, 224, 3)), coords=(1, 3), masks=incorrect_input
-        )
-        testname = Tile(
-            np.random.randn((224, 224, 3)), coords=(1, 3), name=incorrect_input_name
-        )
+        Tile(incorrect_input, coords=(1, 3))
+        Tile(np.random.randn((224, 224, 3)), coords=incorrect_input)
+        Tile(np.random.randn((224, 224, 3)), coords=(1, 3), masks=incorrect_input)
+        Tile(np.random.randn((224, 224, 3)), coords=(1, 3), name=incorrect_input_name)
 
 
 def test_tile():

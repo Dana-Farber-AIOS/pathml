@@ -5,7 +5,6 @@ License: GNU GPL 2.0
 import logging
 
 import pytest
-from _pytest.logging import caplog as _caplog
 from loguru import logger
 
 from pathml._logging import PathMLLogger as pml
