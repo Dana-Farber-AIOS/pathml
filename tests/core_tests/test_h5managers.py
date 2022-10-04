@@ -49,7 +49,7 @@ def test_tile_dtype_HE(tileHE):
     slidedata.tiles.add(tileHE)
     tile_retrieved = slidedata.tiles[tileHE.coords]
     assert tile_retrieved.image.dtype == np.float16
-    assert tile_retrieved.masks["testmask"].dtype == np.float16
+    assert tile_retrieved.masks["testmask"].dtype == bool
 
 
 def test_tile_dtype_IF(tileVectra, vectra_slide):
@@ -57,4 +57,4 @@ def test_tile_dtype_IF(tileVectra, vectra_slide):
     vectra_slide.tiles.add(tileVectra)
     tile_retrieved = vectra_slide.tiles[tileVectra.coords]
     assert tile_retrieved.image.dtype == np.float16
-    assert tile_retrieved.masks["testmask"].dtype == np.float16
+    assert tile_retrieved.masks["testmask"].dtype == bool

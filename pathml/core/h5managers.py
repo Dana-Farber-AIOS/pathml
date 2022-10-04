@@ -157,7 +157,11 @@ class h5pathManager:
                 self.h5["tiles"][str(tile.coords)]["masks"].create_dataset(
                     str(key),
                     data=mask,
-                    dtype="float16",
+                    chunks=True,
+                    compression="gzip",
+                    compression_opts=9,  # masks should be highly compressible
+                    shuffle=True,
+                    dtype="bool",
                 )
 
         # add coords
