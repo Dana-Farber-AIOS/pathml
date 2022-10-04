@@ -15,12 +15,12 @@ import numpy as np
 import pathml.core
 import pathml.core.masks
 import pathml.core.tile
-from pathml.core.utils import readcounts
+from pathml.core.utils import readcounts, get_tiles_dtype
 
 
 class h5pathManager:
     """
-    Interface between slidedata object and data management on disk by h5py.
+    Interface between SlideData object and data management on disk by h5py.
     """
 
     def __init__(self, h5path=None, slidedata=None):
@@ -50,9 +50,12 @@ class h5pathManager:
                         self.counts.filename = (
                             str(self.countspath.name) + "/tmpfile.h5ad"
                         )
+            # Default to float16 if there are no tiles
+            self.dtype = get_tiles_dtype(h5path) or np.dtype('float16')
 
         else:
             assert slidedata, f"must pass slidedata object to create h5path"
+            self.dtype = slidedata.dtype
             # initialize h5path file hierarchy
             # fields
             fieldsgroup = self.h5.create_group("fields")
@@ -137,7 +140,7 @@ class h5pathManager:
             compression="gzip",
             compression_opts=5,
             shuffle=True,
-            dtype="float16",
+            dtype=self.dtype,
         )
 
         # save tile_shape as an attribute to enforce consistency
