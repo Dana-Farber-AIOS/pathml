@@ -92,6 +92,8 @@ pip install -e .
 
 First, download or build the PathML Docker container:
 
+![pathml-docker-installation](https://user-images.githubusercontent.com/25375373/191053363-477497a1-9804-48f3-91f9-767dc7f859ed.gif)
+
 - Option A: download PathML container from Docker Hub
    ````
    docker pull pathml/pathml:latest
