@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 import h5py
 import reprlib
 from loguru import logger
+import dask
+from dask.delayed import Delayed
 
 import pathml.core.masks
 
@@ -21,7 +23,7 @@ class Tile:
     on labelling the top-leftmost pixel as (0, 0)
 
     Args:
-        image (np.ndarray): Image array of tile
+        image (np.ndarray or dask.delayed.Delayed): Tile image or dask.delayed.Delayed object to load image
         coords (tuple): Coordinates of tile relative to the whole-slide image.
             The (i,j) coordinate system is based on labelling the top-leftmost pixel of the WSI as (0, 0).
         name (str, optional): Name of tile
@@ -60,9 +62,9 @@ class Tile:
         time_series=None,
     ):
         # check inputs
-        assert isinstance(
+        assert isinstance(image, Delayed) or isinstance(
             image, np.ndarray
-        ), f"image of type {type(image)} must be a np.ndarray"
+        ), f"image of type {type(image)} must be a np.ndarray or a dask.delayed.Delayed object"
         assert masks is None or isinstance(
             masks, dict
         ), f"masks is of type {type(masks)} but must be of type dict"
@@ -115,22 +117,37 @@ class Tile:
             counts, anndata.AnnData
         ), f"counts is of type {type(counts)} but must be of type anndata.AnnData or None"
 
-        if masks:
-            for val in masks.values():
-                if val.shape[:2] != image.shape[:2]:
-                    raise ValueError(
-                        f"mask is of shape {val.shape} but must match tile shape {image.shape}"
-                    )
-            self.masks = masks
-        else:
-            self.masks = OrderedDict()
-
-        self.image = image
+        self._image = image
+        self.masks = masks if masks else OrderedDict()
         self.name = name
         self.coords = coords
         self.slide_type = slide_type
         self.labels = labels
         self.counts = counts
+
+    @property
+    def image(self):
+        if isinstance(self._image, Delayed):
+            image = dask.compute(self._image, scheduler="single-threaded")
+            if isinstance(image, tuple):
+                image = image[0]
+            assert isinstance(
+                image, np.ndarray
+            ), f"image of type {type(image)} must be a np.ndarray"
+            for val in self.masks.values():
+                if val.shape[:2] != image.shape[:2]:
+                    raise ValueError(
+                        f"mask is of shape {val.shape} but must match tile shape {image.shape}"
+                    )
+            self._image = image
+        return self._image
+
+    @image.setter
+    def image(self, image):
+        assert isinstance(
+            image, np.ndarray
+        ), f"image of type {type(image)} must be a np.ndarray"
+        self._image = image
 
     def __repr__(self):
         out = []

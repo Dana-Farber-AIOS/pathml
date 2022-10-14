@@ -4,8 +4,8 @@ License: GNU GPL 2.0
 """
 
 from io import BytesIO
-from typing import Tuple
 
+import dask
 import numpy as np
 import openslide
 from loguru import logger
@@ -62,8 +62,14 @@ class OpenSlideBackend(SlideBackend):
     def __init__(self, filename):
         logger.info(f"OpenSlideBackend loading file at: {filename}")
         self.filename = filename
-        self.slide = openslide.open_slide(filename=filename)
-        self.level_count = self.slide.level_count
+
+    @property
+    def slide(self):
+        return openslide.open_slide(filename=self.filename)
+
+    @property
+    def level_count(self):
+        return self.slide.level_count
 
     def __repr__(self):
         return f"OpenSlideBackend('{self.filename}')"
@@ -211,9 +217,10 @@ class OpenSlideBackend(SlideBackend):
         for ix_i in range(n_tiles_i):
             for ix_j in range(n_tiles_j):
                 coords = (int(ix_i * stride_i), int(ix_j * stride_j))
-                # get image for tile
-                tile_im = self.extract_region(location=coords, size=shape, level=level)
-                yield pathml.core.tile.Tile(image=tile_im, coords=coords)
+                image = dask.delayed(self.extract_region)(
+                    location=coords, size=shape, level=level
+                )
+                yield pathml.core.tile.Tile(image, coords=coords)
 
 
 def _init_logger():
@@ -420,7 +427,10 @@ class BioFormatsBackend(SlideBackend):
                     f"Multi-level images not supported with series_as_channels=True. Input 'level={level}' invalid. Use 'level=0'."
                 )
 
-        javabridge.start_vm(class_path=bioformats.JARS, max_heap_size="100G")
+        dask.delayed(javabridge.start_vm)(
+            class_path=bioformats.JARS, max_heap_size="100G", run_headless=True
+        )
+
         with bioformats.ImageReader(str(self.filename), perform_init=True) as reader:
             # expand size
             logger.info(f"extracting region with input size = {size}")
@@ -490,7 +500,7 @@ class BioFormatsBackend(SlideBackend):
                 f"Scaling image to [0, 1] by dividing by {(2 ** (8 * self.pixel_dtype.itemsize))}"
             )
             # then scale to [0-255] and convert to 8 bit
-            array_scaled = array_scaled * 2 ** 8
+            array_scaled = array_scaled * 2**8
             return array_scaled.astype(np.uint8)
 
     def get_thumbnail(self, size=None):
@@ -592,27 +602,28 @@ class BioFormatsBackend(SlideBackend):
             for ix_j in range(n_tiles_j):
                 coords = (int(ix_i * stride_i), int(ix_j * stride_j))
                 if coords[0] + shape[0] < i and coords[1] + shape[1] < j:
-                    # get image for tile
-                    tile_im = self.extract_region(
+                    image = dask.delayed(self.extract_region)(
                         location=coords, size=shape, level=level, **kwargs
                     )
-                    yield pathml.core.tile.Tile(image=tile_im, coords=coords)
+                # Image on edge and needs to be padded with 0s
                 else:
-                    unpaddedshape = (
+                    unpadded_shape = (
                         i - coords[0] if coords[0] + shape[0] > i else shape[0],
                         j - coords[1] if coords[1] + shape[1] > j else shape[1],
                     )
-                    tile_im = self.extract_region(
-                        location=coords, size=unpaddedshape, level=level, **kwargs
+                    edge_image = dask.delayed(self.extract_region)(
+                        location=coords, size=unpadded_shape, level=level, **kwargs
                     )
-                    zeroarrayshape = list(tile_im.shape)
-                    zeroarrayshape[0], zeroarrayshape[1] = (
-                        list(shape)[0],
-                        list(shape)[1],
-                    )
-                    padded_im = np.zeros(zeroarrayshape)
-                    padded_im[: tile_im.shape[0], : tile_im.shape[1], ...] = tile_im
-                    yield pathml.core.tile.Tile(image=padded_im, coords=coords)
+
+                    def pad(image):
+                        """Pads edge tiles with zeros."""
+                        padded = np.zeros((*shape, *image.shape[:-2]))
+                        padded[: image.shape[0], : image.shape[1]] = image
+                        return padded
+
+                    # Need to delay to use shape of edge_image
+                    image = dask.delayed(pad)(edge_image)
+                yield pathml.core.tile.Tile(image=image, coords=coords)
 
 
 class DICOMBackend(SlideBackend):
@@ -652,19 +663,25 @@ class DICOMBackend(SlideBackend):
             f"DICOM metadata: frame_shape={self.frame_shape}, nrows = {self.n_rows}, ncols = {self.n_cols}"
         )
 
-        # actual file
-        self.fp = DicomFile(self.filename, mode="rb")
-        self.fp.is_little_endian = self.transfer_syntax_uid.is_little_endian
-        self.fp.is_implicit_VR = self.transfer_syntax_uid.is_implicit_VR
+        fp = self.fp
+
         # need to do this to advance the file to the correct point, at the beginning of the pixels
-        self.metadata = dcmread(self.fp, stop_before_pixels=True)
-        self.pixel_data_offset = self.fp.tell()
-        self.fp.seek(self.pixel_data_offset, 0)
+        self.metadata = dcmread(fp, stop_before_pixels=True)
+        pixel_data_offset = fp.tell()
+        fp.seek(pixel_data_offset, 0)
         # note that reading this tag is necessary to advance the file to correct position
-        _ = TupleTag(self.fp.read_tag())
+        _ = TupleTag(fp.read_tag())
         # get basic offset table, to enable reading individual frames without loading entire image
-        self.bot = self.get_bot(self.fp)
-        self.first_frame = self.fp.tell()
+        self.bot = self.get_bot(fp)
+        self.first_frame = fp.tell()
+
+    @property
+    def fp(self):
+        """actual file"""
+        fp = DicomFile(self.filename, mode="rb")
+        fp.is_little_endian = self.transfer_syntax_uid.is_little_endian
+        fp.is_implicit_VR = self.transfer_syntax_uid.is_implicit_VR
+        return fp
 
     def __repr__(self):
         out = f"DICOMBackend('{self.filename}')\n"
@@ -806,7 +823,9 @@ class DICOMBackend(SlideBackend):
             np.ndarray: pixel data of that frame
         """
         frame_offset = self.bot[int(frame_ix)]
-        self.fp.seek(self.first_frame + frame_offset, 0)
+        # self.fp refers to a different filelike object each time it is accessed
+        fp = self.fp
+        fp.seek(self.first_frame + frame_offset, 0)
         try:
             stop_at = self.bot[frame_ix + 1] - frame_offset
         except IndexError:
@@ -815,11 +834,11 @@ class DICOMBackend(SlideBackend):
         # A frame may comprised of multiple chunks
         chunks = []
         while True:
-            tag = TupleTag(self.fp.read_tag())
+            tag = TupleTag(fp.read_tag())
             if n == stop_at or int(tag) == SequenceDelimiterTag:
                 break
-            length = self.fp.read_UL()
-            chunks.append(self.fp.read(length))
+            length = fp.read_UL()
+            chunks.append(fp.read(length))
             n += 8 + length
 
         frame_bytes = b"".join(chunks)
@@ -898,7 +917,7 @@ class DICOMBackend(SlideBackend):
                 if i >= (self.n_frames - self.n_cols):
                     continue
 
-            frame_im = self.extract_region(location=i)
+            im = dask.delayed(self.extract_region)(location=i)
             coords = self._index_to_coords(i)
-            frame_tile = pathml.core.tile.Tile(image=frame_im, coords=coords)
-            yield frame_tile
+            tile = pathml.core.tile.Tile(image=im, coords=coords)
+            yield tile
