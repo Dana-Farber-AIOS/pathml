@@ -12,13 +12,15 @@
 
 import os
 import sys
+from datetime import datetime
+
 sys.path.insert(0, os.path.abspath('../../'))
 
 
 # -- Project information -----------------------------------------------------
 
 project = 'PathML'
-copyright = '2021, Dana-Farber Cancer Institute and Weill Cornell Medicine'
+copyright = f'{datetime.now().year}, Dana-Farber Cancer Institute and Weill Cornell Medicine'
 author = 'Jacob Rosenthal et al.'
 
 about = {}

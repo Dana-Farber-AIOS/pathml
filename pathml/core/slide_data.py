@@ -386,6 +386,12 @@ class SlideData:
         Returns:
             np.ndarray: image at the specified region
         """
+        if self.slide is None:
+            raise ValueError(
+                "Cannot call `.extract_region()` because no slide is specified. "
+                "If already tiled, access `.tiles` directly instead"
+            )
+
         return self.slide.extract_region(location, size, *args, **kwargs)
 
     def generate_tiles(self, shape=3000, stride=None, pad=False, **kwargs):
