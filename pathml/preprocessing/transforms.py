@@ -997,6 +997,10 @@ class NucleusDetectionHE(Transform):
         tile.masks[self.mask_name] = nucleus_mask
 
 
+class DropTileException(Exception):
+    """Stops the SlideData from adding a tile to the h5path."""
+    pass
+
 class TissueDetectionHE(Transform):
     """
     Detect tissue regions from H&E stained slide.
@@ -1015,11 +1019,12 @@ class TissueDetectionHE(Transform):
             Ignored if outer_contours_only=True. Defaults to 1500.
         outer_contours_only (bool): If true, ignore holes in detected foreground regions. Defaults to False.
         mask_name (str): name for new mask
+        drop_empty_tiles (bool): If true, only writes tiles with detected tissue to the h5path
+        keep_mask (bool): whether to record the mask for the detected tissue to the h5path
     """
 
     def __init__(
         self,
-        mask_name=None,
         use_saturation=True,
         blur_ksize=17,
         threshold=None,
@@ -1028,6 +1033,9 @@ class TissueDetectionHE(Transform):
         min_region_size=5000,
         max_hole_size=1500,
         outer_contours_only=False,
+        mask_name=None,
+        drop_empty_tiles=False,
+        keep_mask=True,
     ):
         self.use_sat = use_saturation
         self.blur_ksize = blur_ksize
@@ -1038,13 +1046,16 @@ class TissueDetectionHE(Transform):
         self.max_hole_size = max_hole_size
         self.outer_contours_only = outer_contours_only
         self.mask_name = mask_name
+        self.drop_empty_tiles = drop_empty_tiles
+        self.keep_mask = keep_mask
 
     def __repr__(self):
         return (
             f"TissueDetectionHE(mask_name={self.mask_name}, use_sat={self.use_sat}, blur_ksize={self.blur_ksize}, "
             f"threshold={self.threshold}, morph_n_iter={self.morph_n_iter}, "
             f"morph_k_size={self.morph_k_size}, min_region_size={self.min_region_size}, "
-            f"max_hole_size={self.max_hole_size}, outer_contours_only={self.outer_contours_only})"
+            f"max_hole_size={self.max_hole_size}, outer_contours_only={self.outer_contours_only}, "
+            f"drop_empty_tiles={self.drop_empty_tiles}, keep_mask={self.keep_mask})"
         )
 
     def F(self, image):
@@ -1089,7 +1100,12 @@ class TissueDetectionHE(Transform):
             tile.slide_type.stain == "HE"
         ), f"Tile has slide_type.stain={tile.slide_type.stain}, but must be 'HE'"
         mask = self.F(tile.image)
-        tile.masks[self.mask_name] = mask
+        if self.drop_empty_tiles:
+            if np.sum(mask) == 0:
+                raise DropTileException()
+        if self.keep_mask:
+            tile.masks[self.mask_name] = mask
+        return tile
 
 
 class LabelWhiteSpaceHE(Transform):
