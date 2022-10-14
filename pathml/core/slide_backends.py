@@ -427,7 +427,7 @@ class BioFormatsBackend(SlideBackend):
                     f"Multi-level images not supported with series_as_channels=True. Input 'level={level}' invalid. Use 'level=0'."
                 )
 
-        dask.delayed(javabridge.start_vm)(
+        javabridge.start_vm(
             class_path=bioformats.JARS, max_heap_size="100G", run_headless=True
         )
 
