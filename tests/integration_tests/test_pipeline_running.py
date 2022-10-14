@@ -23,12 +23,17 @@ from pathml.utils import pil_to_rgb
 from pathml.preprocessing.transforms import Transform
 
 
+@pytest.fixture()
+def cluster():
+    return LocalCluster(n_workers=2)
+
+
 # test HE pipelines with both DICOM and OpenSlide backends
 @pytest.mark.parametrize(
     "im_path", ["tests/testdata/small_HE.svs", "tests/testdata/small_dicom.dcm"]
 )
 @pytest.mark.parametrize("dist", [False, True])
-def test_pipeline_HE(tmp_path, im_path, dist):
+def test_pipeline_HE(tmp_path, im_path, dist, cluster):
     labs = {
         "test_string_label": "testlabel",
         "test_array_label": np.array([2, 3, 4]),
@@ -40,11 +45,7 @@ def test_pipeline_HE(tmp_path, im_path, dist):
     pipeline = Pipeline(
         [BoxBlur(kernel_size=15), TissueDetectionHE(mask_name="tissue")]
     )
-    if dist:
-        cluster = LocalCluster(n_workers=2)
-        cli = Client(cluster)
-    else:
-        cli = None
+    cli = Client(cluster) if dist else None
     slide.run(pipeline, distributed=dist, client=cli, tile_size=500)
     save_path = str(tmp_path) + str(np.round(np.random.rand(), 8)) + "HE_slide.h5"
     slide.write(path=save_path)
@@ -69,15 +70,11 @@ def test_pipeline_HE(tmp_path, im_path, dist):
 # need to test tif and qptiff because they can have different behaviors due to different shapes (HWC vs HWZCT)
 @pytest.mark.parametrize("dist", [False, True])
 @pytest.mark.parametrize("tile_size", [400, (640, 480)])
-def test_pipeline_bioformats_tiff(tmp_path, dist, tile_size):
+def test_pipeline_bioformats_tiff(tmp_path, dist, tile_size, cluster):
     slide = VectraSlide("tests/testdata/smalltif.tif")
     # use a passthru dummy pipeline
     pipeline = Pipeline([])
-    if dist:
-        cluster = LocalCluster(n_workers=2)
-        cli = Client(cluster)
-    else:
-        cli = None
+    cli = Client(cluster) if dist else None
     slide.run(pipeline, distributed=dist, client=cli, tile_size=tile_size)
     slide.write(path=str(tmp_path) + "tifslide.h5")
     readslidedata = SlideData(str(tmp_path) + "tifslide.h5")
@@ -103,7 +100,7 @@ def test_pipeline_bioformats_tiff(tmp_path, dist, tile_size):
 
 @pytest.mark.parametrize("dist", [False, True])
 @pytest.mark.parametrize("tile_size", [1000, (1920, 1440)])
-def test_pipeline_bioformats_vectra(tmp_path, dist, tile_size):
+def test_pipeline_bioformats_vectra(tmp_path, dist, tile_size, cluster):
     deepcell = pytest.importorskip("deepcell")
     from pathml.preprocessing.transforms import SegmentMIF
 
@@ -120,11 +117,7 @@ def test_pipeline_bioformats_vectra(tmp_path, dist, tile_size):
             QuantifyMIF(segmentation_mask="cell_segmentation"),
         ]
     )
-    if dist:
-        cluster = LocalCluster(n_workers=2)
-        cli = Client(cluster)
-    else:
-        cli = None
+    cli = Client(cluster) if dist else None
     slide.run(pipeline, distributed=dist, client=cli, tile_size=tile_size)
     slide.write(path=str(tmp_path) + "vectraslide.h5")
     os.remove(str(tmp_path) + "vectraslide.h5")
