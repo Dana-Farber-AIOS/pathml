@@ -332,14 +332,16 @@ class SlideData:
                     else:
                         raise exc.with_traceback(tb)
                 # TODO: Free memory used for tile
-                # all of these still leave unmanaged memory on each worker
                 # Each in-memory future holding a Tile shows a size of 48 bytes on the Dask dashboard
                 # which clearly does not include image data.
                 # Could it be that loaded image data is somehow not being garbage collected with Tiles?
+
+                # # all of these still leave unmanaged memory on each worker
                 # future.release()
                 # future.cancel()
                 # del result
                 # del future
+           # del futures
 
             if shutdown_after:
                 client.shutdown()
