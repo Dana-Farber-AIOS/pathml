@@ -51,12 +51,12 @@ def test_tile_dtype_HE(tileHE):
     assert tile_retrieved.image.dtype == np.float16
     assert tile_retrieved.masks["testmask"].dtype == bool
 
+
 def test_tile_dtype_HE_uint8(tileHE):
     """Test that tiles have modified uint8 dtype and masks are bool"""
-    slidedata = HESlide("tests/testdata/small_HE.svs", dtype=np.dtype('uint8'))
+    slidedata = HESlide("tests/testdata/small_HE.svs", dtype=np.dtype("uint8"))
     slidedata.tiles.add(tileHE)
     tile_retrieved = slidedata.tiles[tileHE.coords]
-    import pdb; pdb.set_trace()
     assert tile_retrieved.image.dtype == np.uint8
     assert tile_retrieved.masks["testmask"].dtype == bool
 
