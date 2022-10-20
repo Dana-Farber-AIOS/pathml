@@ -188,3 +188,25 @@ def test_pipeline_overlapping_tiles(tmp_path, stride, pad, tile_size):
     )
     expected = AddMean().F(im).astype(np.float16)
     np.testing.assert_equal(readslidedata.tiles[(1000, 1000)].image, expected)
+
+
+@pytest.mark.parametrize("dist", [False, True])
+def test_pipeline_on_h5path(tmp_path, dist, cluster):
+    save_path = str(tmp_path) + str(np.round(np.random.rand(), 8)) + "HE_slide.h5"
+    # Make h5path
+    slide = HESlide("tests/testdata/small_HE.svs")
+    pipeline = Pipeline([BoxBlur(kernel_size=15)])
+    cli = Client(cluster) if dist else None
+    slide.run(pipeline, distributed=dist, client=cli)
+    slide.write(path=save_path)
+    # Load saved h5path and run pipeline
+    h5path_slide = HESlide(save_path, dtype=np.uint8)
+    h5path_slide.run(pipeline, distributed=dist, client=cli)
+    h5path_slide.write(path=save_path)
+
+    if dist:
+        cli.shutdown()
+
+    # test out the dataset
+    dataset = TileDataset(save_path)
+    assert len(dataset) == len(slide.tiles)

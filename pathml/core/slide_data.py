@@ -215,7 +215,7 @@ class SlideData:
 
         self.masks = pathml.core.Masks(h5manager=self.h5manager, masks=masks)
         self.tiles = pathml.core.Tiles(h5manager=self.h5manager, tiles=tiles)
-        self._add_tiles = tiles is None
+        self._add_tiles = tiles is None and not _load_from_h5path
 
         self.tile_size = tile_size
         self._tile_stride = tile_stride
@@ -298,7 +298,9 @@ class SlideData:
         assert isinstance(
             pipeline, pathml.preprocessing.pipeline.Pipeline
         ), f"pipeline is of type {type(pipeline)} but must be of type pathml.preprocessing.pipeline.Pipeline"
-        assert self.slide is not None, "cannot run pipeline because self.slide is None"
+        assert (
+            self.slide is not None or not self._add_tiles
+        ), "cannot run pipeline because self.slide is None and no tiles already exist"
 
         shutdown_after = False
 
