@@ -1043,7 +1043,7 @@ class HoVerNetSegmentation(Transform):
         hovernet.load_state_dict(checkpoint)
         hovernet.eval()
 
-        self.model = hovernet
+        self.hovernet = hovernet
         self.weights = weights
         self.n_classes = n_classes
         self.use_gpu = use_gpu
