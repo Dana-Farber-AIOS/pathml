@@ -245,7 +245,7 @@ class SlideData:
         self._tile_stride = value
 
     def get_tiles(self):
-        if self.slide is None and not self._generated_tiles:
+        if self.slide is not None and not self._generated_tiles:
             self._generated_tiles = True
             for tile in self._generate_tiles():
                 yield tile
