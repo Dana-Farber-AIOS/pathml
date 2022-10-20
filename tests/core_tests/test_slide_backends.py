@@ -75,7 +75,8 @@ def test_extract_region_openslide(example_slide_data, shape):
     if isinstance(shape, int):
         shape = (shape, shape)
     h, w = shape
-    for tile in example_slide_data.generate_tiles(shape=shape):
+    example_slide_data.tile_size = shape
+    for tile in example_slide_data.tiles:
         i, j = tile.coords
         assert np.array_equal(tile.image, raw_im_array[i : i + h, j : j + w, :])
         assert tile.image.shape[0:2] == shape

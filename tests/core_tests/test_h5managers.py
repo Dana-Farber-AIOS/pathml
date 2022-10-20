@@ -18,7 +18,7 @@ def test_h5manager(example_slide_data):
     See issue #181.
     """
     pipe = Pipeline([])
-    example_slide_data.run(pipe, distributed=False, tile_size=200)
+    example_slide_data.run(pipe, distributed=False)
     for tile in example_slide_data.tiles:
         assert np.count_nonzero(tile.image) > 0
 

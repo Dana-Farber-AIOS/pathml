@@ -214,37 +214,34 @@ class SlideData:
             self.h5manager = pathml.core.h5managers.h5pathManager(slidedata=self)
 
         self.masks = pathml.core.Masks(h5manager=self.h5manager, masks=masks)
-        self._tiles = (
-            pathml.core.Tiles(h5manager=self.h5manager, tiles=tiles)
-            if tiles is not None
-            else None
-        )
-
-        if tile_stride is None:
-            tile_stride = tile_size
-        elif isinstance(tile_stride, int):
-            tile_stride = (tile_stride, tile_stride)
+        self.tiles = pathml.core.Tiles(h5manager=self.h5manager, tiles=tiles)
+        self._add_tiles = tiles is None
 
         self.tile_size = tile_size
-        self.tile_stride = tile_stride
+        self._tile_stride = tile_stride
         self.tile_level = tile_level
         self.tile_pad = tile_pad
         self.tile_kwargs = tile_kwargs
 
-        # TODO: be careful here since we are modifying h5 outside of h5manager
-        # look into whether we can push this into h5manager
-
-        self.h5manager.h5["tiles"].attrs["tile_stride"] = tile_stride
-
     @property
-    def tiles(self):
-        self._add_tiles = self._tiles is None
-        if self._tiles is None:
-            self._tiles = pathml.core.Tiles(h5manager=self.h5manager)
+    def tile_stride(self):
+        stride = self._tile_stride
+        if stride is None:
+            stride = self.tile_size
+        elif isinstance(stride, int):
+            stride = (stride, stride)
+        return stride
+
+    @tile_stride.setter
+    def tile_stride(self, value):
+        self._tile_stride = value
+
+    def get_tiles(self):
+        if self._add_tiles:
             for tile in self._generate_tiles():
                 yield tile
         else:
-            for tile in self._tiles:
+            for tile in self.tiles:
                 yield tile
 
     def __repr__(self):
@@ -314,14 +311,14 @@ class SlideData:
                 )
 
             # map pipeline application onto each tile
-            futures = [client.submit(pipeline.apply, tile) for tile in self.tiles]
+            futures = [client.submit(pipeline.apply, tile) for tile in self.get_tiles()]
 
             # After a worker processes a tile, add the tile to h5
             for future, result in dask.distributed.as_completed(
                 futures, with_results=True, raise_errors=False
             ):
                 if future.status == "finished":
-                    if self._add_tiles:
+                    if not self._add_tiles:
                         self.tiles.add(result)
                 if future.status == "error":
                     typ, exc, tb = result
@@ -350,7 +347,7 @@ class SlideData:
                 client.restart()
 
         else:
-            for tile in self.tiles:
+            for tile in self.get_tiles():
                 try:
                     pipeline.apply(tile)
                 except DropTileException:
@@ -407,8 +404,12 @@ class SlideData:
         Tries to add the corresponding slide-level masks to each tile, if possible.
         Adds slide-level labels to each tile, if possible.
         """
+
+        # TODO: be careful here since we are modifying h5 outside of h5manager
+        # look into whether we can push this into h5manager
+        self.h5manager.h5["tiles"].attrs["tile_stride"] = self.tile_stride
         for tile in self.slide.generate_tiles(
-            self.tile_shape, self.tile_stride, self.tile_pad, level=self.level
+            self.tile_size, self.tile_stride, self.tile_pad, level=self.tile_level
         ):
             # add masks for tile, if possible
             if self.masks is not None and tile.coords is not None:
