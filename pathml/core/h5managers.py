@@ -164,7 +164,7 @@ class h5pathManager:
                     compression="gzip",
                     compression_opts=9,  # masks should be highly compressible
                     shuffle=True,
-                    dtype="bool",
+                    dtype=mask.dtype,
                 )
 
         # add coords
