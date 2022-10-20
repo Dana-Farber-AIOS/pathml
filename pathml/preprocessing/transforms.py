@@ -23,6 +23,9 @@ from pathml.utils import (
 from skimage import restoration
 from skimage.exposure import equalize_adapthist, equalize_hist, rescale_intensity
 from skimage.measure import regionprops_table
+import torch
+
+from pathml.ml.hovernet import HoVerNet, post_process_batch_hovernet
 
 # Base class
 class Transform:
@@ -995,6 +998,98 @@ class NucleusDetectionHE(Transform):
         ), f"Tile has slide_type.stain={tile.slide_type.stain}, but must be 'HE'"
         nucleus_mask = self.F(tile.image)
         tile.masks[self.mask_name] = nucleus_mask
+
+
+class HoVerNetSegmentation(Transform):
+    """
+    Apply HoVeRNet nuclear segmentation and classification to H&E images.
+    Input images must be formatted with XYC dimension order.
+
+    .. note::
+        Users must provide the path to the weights for a trained HoVeRNet model.
+        PathML does not distribute pretrained weights,
+        but they can be downloaded and used locally from
+        https://www.dropbox.com/s/rq3cqzopnlfuj4c/hovernet_pannuke.pt.
+
+    Args:
+        weights (str): path for file with HoVeRNet weights
+        n_classes (int): Number of classes for classification task. If None then the classification branch is not used.
+        use_gpu (bool): Whether to run inference on a GPU.
+
+    References:
+        Graham, S., Vu, Q.D., Raza, S.E.A., Azam, A., Tsang, Y.W.,
+        Kwak, J.T. and Rajpoot, N., 2019. Hover-Net: Simultaneous segmentation
+        and classification of nuclei in multi-tissue histology images.
+        Medical Image Analysis, 58, p.101563.
+    """
+
+    def __init__(
+        self,
+        weights=None,
+        n_classes=None,
+        use_gpu=False,
+        mask_name="nuclei",
+        class_name="nuclei_classes",
+    ):
+        hovernet = HoVerNet(n_classes=n_classes)
+        hovernet = torch.nn.DataParallel(hovernet)
+
+        if use_gpu:
+            device = torch.device("cuda:0")
+            hovernet.to(device)
+            self.device = device
+
+        checkpoint = torch.load(weights, map_location=torch.device("cpu"))
+        hovernet.load_state_dict(checkpoint)
+        hovernet.eval()
+
+        self.model = hovernet
+        self.weights = weights
+        self.n_classes = n_classes
+        self.use_gpu = use_gpu
+        self.mask_name = mask_name
+        self.class_name = class_name
+
+    def __repr__(self):
+        return (
+            f"SegmentHovernet("
+            f"weights={self.weights}, "
+            f"n_classes={self.n_classes}, "
+            f"use_gpu={self.use_gpu}), "
+            f"mask_name={self.mask_name}), "
+            f"class_name={self.class_name})"
+        )
+
+    def F(self, image):
+
+        # TODO: check if model should be initialized here for dask distributed reasons like SegmentMIF
+
+        # currently expecting XYC dimension order
+        # Move channels to first dimension and add batch dimension at start
+        tensor = torch.tensor(image).permute(2, 0, 1)[None].float()
+        if self.use_gpu:
+            tensor = tensor.to(self.device)
+        results = self.hovernet(tensor)
+        return post_process_batch_hovernet(results, n_classes=self.n_classes)
+
+    def apply(self, tile):
+        assert isinstance(
+            tile, pathml.core.tile.Tile
+        ), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        assert (
+            tile.slide_type.stain == "HE"
+        ), f"Tile has slide_type.stain='{tile.slide_type.stain}', but must be 'HE'"
+        if self.n_classes is None:
+            segmentation = self.F(tile.image)
+        else:
+            segmentation, classes = self.F(tile.image)
+            # Store nuclear classification as (cell, class) pairs to avoid storing multiple segmentation arrays
+            classes = np.argmax(classes, axis=1)
+            classes = [np.unique(classes[0, i]) for i in range(self.n_classes)]
+            classes = [c[1:] if c[0] == 0 else c for c in classes]
+            classes = np.array([(cell, i) for i, c in enumerate(classes) for cell in c])
+            tile.labels[self.class_name] = classes
+        tile.masks[self.mask_name] = segmentation
 
 
 class DropTileException(Exception):
