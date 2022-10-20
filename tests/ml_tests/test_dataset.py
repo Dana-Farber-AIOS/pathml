@@ -37,9 +37,9 @@ def test_dataset(tmp_path, im_path):
         "test_float_label": 3.0,
         "test_bool_label": True,
     }
-    wsi = SlideData(im_path, labels=labs)
+    wsi = SlideData(im_path, labels=labs, tile_size=500)
     pipeline = Pipeline([TestingTransform()])
-    wsi.run(pipeline, distributed=False, tile_size=500)
+    wsi.run(pipeline, distributed=False)
     save_path = str(tmp_path) + str(np.round(np.random.rand(), 8)) + "slide.h5"
     wsi.write(path=save_path)
     # load dataset from h5path, and compare to what we expect

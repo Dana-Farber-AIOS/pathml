@@ -41,12 +41,12 @@ def test_pipeline_HE(tmp_path, im_path, dist, cluster):
         "test_float_label": 3.0,
         "test_bool_label": True,
     }
-    slide = HESlide(im_path, labels=labs)
+    slide = HESlide(im_path, labels=labs, tile_size=500)
     pipeline = Pipeline(
         [BoxBlur(kernel_size=15), TissueDetectionHE(mask_name="tissue")]
     )
     cli = Client(cluster) if dist else None
-    slide.run(pipeline, distributed=dist, client=cli, tile_size=500)
+    slide.run(pipeline, distributed=dist, client=cli)
     save_path = str(tmp_path) + str(np.round(np.random.rand(), 8)) + "HE_slide.h5"
     slide.write(path=save_path)
     if dist:
@@ -71,11 +71,11 @@ def test_pipeline_HE(tmp_path, im_path, dist, cluster):
 @pytest.mark.parametrize("dist", [False, True])
 @pytest.mark.parametrize("tile_size", [400, (640, 480)])
 def test_pipeline_bioformats_tiff(tmp_path, dist, tile_size, cluster):
-    slide = VectraSlide("tests/testdata/smalltif.tif")
+    slide = VectraSlide("tests/testdata/smalltif.tif", tile_size=tile_size)
     # use a passthru dummy pipeline
     pipeline = Pipeline([])
     cli = Client(cluster) if dist else None
-    slide.run(pipeline, distributed=dist, client=cli, tile_size=tile_size)
+    slide.run(pipeline, distributed=dist, client=cli)
     slide.write(path=str(tmp_path) + "tifslide.h5")
     readslidedata = SlideData(str(tmp_path) + "tifslide.h5")
     assert readslidedata.name == slide.name
@@ -104,7 +104,7 @@ def test_pipeline_bioformats_vectra(tmp_path, dist, tile_size, cluster):
     deepcell = pytest.importorskip("deepcell")
     from pathml.preprocessing.transforms import SegmentMIF
 
-    slide = VectraSlide("tests/testdata/small_vectra.qptiff")
+    slide = VectraSlide("tests/testdata/small_vectra.qptiff", tile_size=tile_size)
     pipeline = Pipeline(
         [
             CollapseRunsVectra(),
@@ -118,7 +118,7 @@ def test_pipeline_bioformats_vectra(tmp_path, dist, tile_size, cluster):
         ]
     )
     cli = Client(cluster) if dist else None
-    slide.run(pipeline, distributed=dist, client=cli, tile_size=tile_size)
+    slide.run(pipeline, distributed=dist, client=cli)
     slide.write(path=str(tmp_path) + "vectraslide.h5")
     os.remove(str(tmp_path) + "vectraslide.h5")
     if dist:
@@ -154,11 +154,14 @@ class AddMean(Transform):
 def test_pipeline_overlapping_tiles(tmp_path, stride, pad, tile_size):
     """test that we can run pipeline with overlapping tiles"""
     pipe = Pipeline([AddMean()])
-    wsi = SlideData("tests/testdata/small_HE.svs")
-
-    wsi.run(
-        pipe, distributed=False, tile_size=tile_size, tile_stride=stride, tile_pad=pad
+    wsi = SlideData(
+        "tests/testdata/small_HE.svs",
+        tile_size=tile_size,
+        tile_stride=stride,
+        tile_pad=pad,
     )
+
+    wsi.run(pipe, distributed=False)
 
     if pad:
         tile_count = [dim // stride + 1 for dim in wsi.shape]
