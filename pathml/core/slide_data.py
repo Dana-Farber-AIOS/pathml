@@ -14,6 +14,7 @@ import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 import pathml.core
+from pathml.core.utils import get_tiles_dtype
 import pathml.preprocessing.pipeline
 from pathml.core.slide_types import SlideType
 from pathml.preprocessing.transforms import DropTileException
@@ -74,6 +75,7 @@ class SlideData:
         time_series (bool, optional): Flag indicating whether the image is a time series.
             Defaults to ``None``. Ignored if ``slide_type`` is specified.
         counts (anndata.AnnData): object containing counts matrix associated with image quantification
+        dtype (np.dtype): datatype for image storage
         tile_size (int, optional): Size of each tile. Defaults to 256px
         tile_stride (int, optional): Stride between tiles. If ``None``, uses ``tile_stride = tile_size``
             for non-overlapping tiles. Defaults to ``None``.
@@ -190,11 +192,17 @@ class SlideData:
         self.name = name
         self.labels = labels
         self.slide_type = slide_type
+        self.dtype = np.dtype("float16") if dtype is None else np.dtype(dtype)
 
         if _load_from_h5path:
             # populate the SlideData object from existing h5path file
             with h5py.File(filepath, "r") as f:
                 self.h5manager = pathml.core.h5managers.h5pathManager(h5path=f)
+                self.dtype = get_tiles_dtype(f)
+                if dtype != self.dtype and dtype is not None:
+                    logger.info(
+                        f"using dtype {self.dtype} from h5path instead of {dtype}"
+                    )
             self.name = self.h5manager.h5["fields"].attrs["name"]
             self.labels = {
                 key: val
@@ -253,6 +261,7 @@ class SlideData:
         if self.backend:
             out.append(f"backend={repr(self.backend)}")
         out.append(f"image shape: {self.shape}")
+        out.append(f"image dtype: {self.dtype}")
         try:
             nlevels = self.slide.level_count
         except:
