@@ -318,7 +318,7 @@ class SlideData:
                 futures, with_results=True, raise_errors=False
             ):
                 if future.status == "finished":
-                    if not self._add_tiles:
+                    if self._add_tiles:
                         self.tiles.add(result)
                 if future.status == "error":
                     typ, exc, tb = result
