@@ -5,6 +5,7 @@ License: GNU GPL 2.0
 
 import os
 from warnings import warn
+import timeit
 
 from loguru import logger
 import anndata
@@ -1031,21 +1032,6 @@ class HoVerNetSegmentation(Transform):
         mask_name="nuclei",
         classes_name="nuclei_classes",
     ):
-        hovernet = HoVerNet(n_classes=n_classes)
-        hovernet = torch.nn.DataParallel(hovernet)
-
-        if use_gpu:
-            device = torch.device("cuda:0")
-            hovernet.to(device)
-        else:
-            device = torch.device("cpu")
-        self.device = device
-
-        checkpoint = torch.load(weights, map_location=device)
-        hovernet.load_state_dict(checkpoint)
-        hovernet.eval()
-
-        self.hovernet = hovernet
         self.weights = weights
         self.n_classes = n_classes
         self.use_gpu = use_gpu
@@ -1063,16 +1049,35 @@ class HoVerNetSegmentation(Transform):
         )
 
     def F(self, image):
-
         # TODO: check if model should be initialized here for dask distributed reasons like SegmentMIF
+        start = timeit.default_timer()
+        hovernet = HoVerNet(n_classes=self.n_classes)
+        hovernet = torch.nn.DataParallel(hovernet)
+
+        if self.use_gpu:
+            device = torch.device("cuda:0")
+            hovernet.to(device)
+        else:
+            device = torch.device("cpu")
+        self.device = device
+
+        checkpoint = torch.load(self.weights, map_location=device)
+        hovernet.load_state_dict(checkpoint)
+        hovernet.eval()
 
         # currently expecting XYC dimension order
-        # Move channels to first dimension and add batch dimension at start
+        # Move channels topipeline first dimension and add batch dimension at start
         tensor = torch.tensor(image).permute(2, 0, 1)[None].float()
         if self.use_gpu:
             tensor = tensor.to(self.device)
-        results = self.hovernet(tensor)
-        return post_process_batch_hovernet(results, n_classes=self.n_classes)
+        print(f"model loaded in {timeit.default_timer() - start} seconds")
+        start = timeit.default_timer()
+        results = hovernet(tensor)
+        print(f"inference in {timeit.default_timer() - start} seconds")
+        start = timeit.default_timer()
+        results = post_process_batch_hovernet(results, n_classes=self.n_classes)
+        print(f"post processing in {timeit.default_timer() - start} seconds")
+        return results
 
     def apply(self, tile):
         assert isinstance(
