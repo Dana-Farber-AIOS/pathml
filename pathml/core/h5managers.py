@@ -257,7 +257,7 @@ class h5pathManager:
         if str(key) in self.h5["tiles"].keys():
             del self.h5["tiles"][str(key)]
         else:
-            logger.info((f"key {key} is not in Tiles")
+            logger.info(f"key {key} is not in Tiles")
 
     def add_mask(self, key, mask):
         """
