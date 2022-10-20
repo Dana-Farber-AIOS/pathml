@@ -254,9 +254,10 @@ class h5pathManager:
         """
         if not isinstance(key, (str, tuple)):
             raise KeyError(f"key must be str or tuple, check valid keys in repr")
-        if str(key) not in self.h5["tiles"].keys():
-            raise KeyError(f"key {key} is not in Tiles")
-        del self.h5["tiles"][str(key)]
+        if str(key) in self.h5["tiles"].keys():
+            del self.h5["tiles"][str(key)]
+        else:
+            logger.info((f"key {key} is not in Tiles")
 
     def add_mask(self, key, mask):
         """

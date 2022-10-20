@@ -176,19 +176,19 @@ class SlideData:
                 _load_from_h5path = True
 
         if backend.lower() == "openslide":
-            backend_obj = pathml.core.OpenSlideBackend(filepath)
+            slide = pathml.core.OpenSlideBackend(filepath)
         elif backend.lower() == "bioformats":
-            backend_obj = pathml.core.BioFormatsBackend(filepath, dtype)
+            slide = pathml.core.BioFormatsBackend(filepath, dtype)
         elif backend.lower() == "dicom":
-            backend_obj = pathml.core.DICOMBackend(filepath)
+            slide = pathml.core.DICOMBackend(filepath)
         elif backend.lower() == "h5path":
-            backend_obj = None
+            slide = None
         else:
             raise ValueError(f"invalid backend: {repr(backend)}.")
 
         self._filepath = filepath if filepath else None
         self.backend = backend
-        self.slide = backend_obj if backend_obj else None
+        self.slide = slide
         self.name = name
         self.labels = labels
         self.slide_type = slide_type
@@ -223,8 +223,8 @@ class SlideData:
 
         self.masks = pathml.core.Masks(h5manager=self.h5manager, masks=masks)
         self.tiles = pathml.core.Tiles(h5manager=self.h5manager, tiles=tiles)
-        self._add_tiles = tiles is None and not _load_from_h5path
 
+        self._generated_tiles = False
         self.tile_size = tile_size
         self._tile_stride = tile_stride
         self.tile_level = tile_level
@@ -245,7 +245,8 @@ class SlideData:
         self._tile_stride = value
 
     def get_tiles(self):
-        if self._add_tiles:
+        if self.slide is None and not self._generated_tiles:
+            self._generated_tiles = True
             for tile in self._generate_tiles():
                 yield tile
         else:
@@ -307,9 +308,6 @@ class SlideData:
         assert isinstance(
             pipeline, pathml.preprocessing.pipeline.Pipeline
         ), f"pipeline is of type {type(pipeline)} but must be of type pathml.preprocessing.pipeline.Pipeline"
-        assert (
-            self.slide is not None or not self._add_tiles
-        ), "cannot run pipeline because self.slide is None and no tiles already exist"
 
         shutdown_after = False
 
@@ -329,13 +327,13 @@ class SlideData:
                 futures, with_results=True, raise_errors=False
             ):
                 if future.status == "finished":
-                    if self._add_tiles:
-                        self.tiles.add(result)
+                    self.tiles.add(result)
                 if future.status == "error":
                     typ, exc, tb = result
                     if typ is DropTileException:
-                        # TODO: remove tile if it already is in Tiles
-                        # TODO: figure out how to access tile.coords; need to get input that led to exception...
+                        # TODO: remove existing tiles
+                        # figure out how to access tile.coords from input tile
+                        # self.tiles.remove(tile.coords)
                         pass
                     else:
                         raise exc.with_traceback(tb)
@@ -362,15 +360,11 @@ class SlideData:
                 try:
                     pipeline.apply(tile)
                 except DropTileException:
-                    if not self._add_tiles:
-                        self.tiles.remove(tile.coords)
-                if self._add_tiles:
-                    self.tiles.add(tile)
+                    self.tiles.remove(tile.coords)
+                self.tiles.add(tile)
 
         if write_dir:
             self.write(Path(write_dir) / f"{self.name}.h5path")
-        # Tiles generated after pipeline run
-        self._add_tiles = False
 
     @property
     def shape(self):
