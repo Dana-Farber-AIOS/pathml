@@ -1029,7 +1029,7 @@ class HoVerNetSegmentation(Transform):
         n_classes=None,
         use_gpu=False,
         mask_name="nuclei",
-        class_name="nuclei_classes",
+        classes_name="nuclei_classes",
     ):
         hovernet = HoVerNet(n_classes=n_classes)
         hovernet = torch.nn.DataParallel(hovernet)
@@ -1048,7 +1048,7 @@ class HoVerNetSegmentation(Transform):
         self.n_classes = n_classes
         self.use_gpu = use_gpu
         self.mask_name = mask_name
-        self.class_name = class_name
+        self.classes_name = classes_name
 
     def __repr__(self):
         return (
@@ -1057,7 +1057,7 @@ class HoVerNetSegmentation(Transform):
             f"n_classes={self.n_classes}, "
             f"use_gpu={self.use_gpu}), "
             f"mask_name={self.mask_name}), "
-            f"class_name={self.class_name})"
+            f"classes_name={self.classes_name})"
         )
 
     def F(self, image):
@@ -1084,11 +1084,10 @@ class HoVerNetSegmentation(Transform):
         else:
             segmentation, classes = self.F(tile.image)
             # Store nuclear classification as (cell, class) pairs to avoid storing multiple segmentation arrays
-            classes = np.argmax(classes, axis=1)
             classes = [np.unique(classes[0, i]) for i in range(self.n_classes)]
             classes = [c[1:] if c[0] == 0 else c for c in classes]
             classes = np.array([(cell, i) for i, c in enumerate(classes) for cell in c])
-            tile.labels[self.class_name] = classes
+            tile.labels[self.classes_name] = classes
         tile.masks[self.mask_name] = segmentation
 
 
