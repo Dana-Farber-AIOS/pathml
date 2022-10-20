@@ -363,12 +363,14 @@ class SlideData:
                     pipeline.apply(tile)
                 except DropTileException:
                     if not self._add_tiles:
-                        self.tiles.remove(self.tile.coords)
+                        self.tiles.remove(tile.coords)
                 if self._add_tiles:
                     self.tiles.add(tile)
 
         if write_dir:
             self.write(Path(write_dir) / f"{self.name}.h5path")
+        # Tiles generated after pipeline run
+        self._add_tiles = False
 
     @property
     def shape(self):
