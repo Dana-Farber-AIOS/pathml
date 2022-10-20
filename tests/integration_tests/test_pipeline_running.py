@@ -194,13 +194,17 @@ def test_pipeline_overlapping_tiles(tmp_path, stride, pad, tile_size):
 def test_pipeline_on_h5path(tmp_path, dist, cluster):
     save_path = str(tmp_path) + str(np.round(np.random.rand(), 8)) + "HE_slide.h5"
     # Make h5path
-    slide = HESlide("tests/testdata/small_HE.svs")
+    slide = HESlide(
+        "tests/testdata/small_HE.svs",
+        # need to save as np.uint8 to be able to run BoxBlur after reloading h5path
+        dtype=np.uint8,
+    )
     pipeline = Pipeline([BoxBlur(kernel_size=15)])
     cli = Client(cluster) if dist else None
     slide.run(pipeline, distributed=dist, client=cli)
     slide.write(path=save_path)
     # Load saved h5path and run pipeline
-    h5path_slide = HESlide(save_path, dtype=np.uint8)
+    h5path_slide = HESlide(save_path)
     h5path_slide.run(pipeline, distributed=dist, client=cli)
     h5path_slide.write(path=save_path)
 
