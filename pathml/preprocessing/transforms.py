@@ -1037,9 +1037,11 @@ class HoVerNetSegmentation(Transform):
         if use_gpu:
             device = torch.device("cuda:0")
             hovernet.to(device)
-            self.device = device
+        else:
+            device = torch.device("cpu")
+        self.device = device
 
-        checkpoint = torch.load(weights, map_location=torch.device("cpu"))
+        checkpoint = torch.load(weights, map_location=device)
         hovernet.load_state_dict(checkpoint)
         hovernet.eval()
 
