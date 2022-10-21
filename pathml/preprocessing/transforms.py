@@ -5,7 +5,6 @@ License: GNU GPL 2.0
 
 import os
 from warnings import warn
-import timeit
 
 from loguru import logger
 import anndata
@@ -1038,19 +1037,6 @@ class HoVerNetSegmentation(Transform):
         self.mask_name = mask_name
         self.classes_name = classes_name
 
-    def __repr__(self):
-        return (
-            f"SegmentHovernet("
-            f"weights={self.weights}, "
-            f"n_classes={self.n_classes}, "
-            f"use_gpu={self.use_gpu}), "
-            f"mask_name={self.mask_name}), "
-            f"classes_name={self.classes_name})"
-        )
-
-    def F(self, image):
-        # TODO: check if model should be initialized here for dask distributed reasons like SegmentMIF
-        start = timeit.default_timer()
         hovernet = HoVerNet(n_classes=self.n_classes)
         hovernet = torch.nn.DataParallel(hovernet)
 
@@ -1065,18 +1051,28 @@ class HoVerNetSegmentation(Transform):
         hovernet.load_state_dict(checkpoint)
         hovernet.eval()
 
+        self.hovernet = hovernet
+
+    def __repr__(self):
+        return (
+            f"SegmentHovernet("
+            f"weights={self.weights}, "
+            f"n_classes={self.n_classes}, "
+            f"use_gpu={self.use_gpu}), "
+            f"mask_name={self.mask_name}), "
+            f"classes_name={self.classes_name})"
+        )
+
+    def F(self, image):
+        # TODO: check if model should be initialized here for dask distributed reasons like SegmentMIF
+
         # currently expecting XYC dimension order
         # Move channels topipeline first dimension and add batch dimension at start
         tensor = torch.tensor(image).permute(2, 0, 1)[None].float()
         if self.use_gpu:
             tensor = tensor.to(self.device)
-        print(f"model loaded in {timeit.default_timer() - start} seconds")
-        start = timeit.default_timer()
-        results = hovernet(tensor)
-        print(f"inference in {timeit.default_timer() - start} seconds")
-        start = timeit.default_timer()
+        results = self.hovernet(tensor)
         results = post_process_batch_hovernet(results, n_classes=self.n_classes)
-        print(f"post processing in {timeit.default_timer() - start} seconds")
         return results
 
     def apply(self, tile):
@@ -1095,7 +1091,7 @@ class HoVerNetSegmentation(Transform):
             classes = [c[1:] if c[0] == 0 else c for c in classes]
             classes = np.array([(cell, i) for i, c in enumerate(classes) for cell in c])
             tile.labels[self.classes_name] = classes
-        tile.masks[self.mask_name] = segmentation
+        tile.masks[self.mask_name] = segmentation.astype(np.uint16)
 
 
 class DropTileException(Exception):
