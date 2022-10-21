@@ -128,7 +128,7 @@ class Tile:
     @property
     def image(self):
         if isinstance(self._image, Delayed):
-            image = dask.compute(self._image, scheduler="single-threaded")
+            image = dask.compute(self._image)  # , scheduler="single-threaded")
             if isinstance(image, tuple):
                 image = image[0]
             assert isinstance(
