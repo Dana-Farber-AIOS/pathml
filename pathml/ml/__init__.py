@@ -4,4 +4,4 @@ License: GNU GPL 2.0
 """
 
 from .dataset import TileDataset
-from .hovernet import HoVerNet, post_process_batch_hovernet, loss_hovernet
+from .hovernet import HoVerNet, loss_hovernet, post_process_batch_hovernet

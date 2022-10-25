@@ -3,9 +3,10 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-from loguru import logger
 import functools
 import sys
+
+from loguru import logger
 
 
 class PathMLLogger:

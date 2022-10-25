@@ -3,14 +3,14 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-import pytest
-import numpy as np
 import cv2
-import openslide
 import javabridge
+import numpy as np
+import openslide
+import pytest
 import scanpy as sc
 
-from pathml.core import HESlide, VectraSlide, Tile, Masks, types
+from pathml.core import Tile, VectraSlide, types
 
 
 def pytest_sessionfinish(session, exitstatus):

@@ -8,11 +8,8 @@ from io import BytesIO
 import dask
 import numpy as np
 import openslide
-from loguru import logger
-import pathml.core
-import pathml.core.tile
 from javabridge.jutil import JavaException
-from pathml.utils import pil_to_rgb
+from loguru import logger
 from PIL import Image
 from pydicom.dataset import Dataset
 from pydicom.encaps import get_frame_offsets
@@ -22,6 +19,10 @@ from pydicom.tag import SequenceDelimiterTag, TupleTag
 from pydicom.uid import UID
 from scipy.ndimage import zoom
 
+import pathml.core
+import pathml.core.tile
+from pathml.utils import pil_to_rgb
+
 try:
     import bioformats
     import javabridge
@@ -29,7 +30,7 @@ try:
 except ImportError:
     logger.exception("Unable to import bioformats, javabridge")
     raise Exception(
-        f"Installation of PathML not complete. Please install openjdk8, bioformats, and javabridge:\nconda install openjdk==8.0.152\npip install javabridge==1.0.19 python-bioformats==4.0.0\nFor detailed installation instructions, please see https://github.com/Dana-Farber-AIOS/pathml/"
+        "Installation of PathML not complete. Please install openjdk8, bioformats, and javabridge:\nconda install openjdk==8.0.152\npip install javabridge==1.0.19 python-bioformats==4.0.0\nFor detailed installation instructions, please see https://github.com/Dana-Farber-AIOS/pathml/"
     )
 
 
@@ -337,7 +338,8 @@ class BioFormatsBackend(SlideBackend):
             try:
                 self.pixel_dtype = pixel_dtype_map[ome_pixeltype]
                 logger.info(f"Found corresponding dtype: {self.pixel_dtype}")
-            except:
+            # TODO: change to specific exception
+            except Exception:
                 logger.exception("datatype from metadata not found in pixel_dtype_map")
                 raise Exception(
                     f"pixel type '{ome_pixeltype}' detected from OME metadata not recognized."
@@ -418,7 +420,7 @@ class BioFormatsBackend(SlideBackend):
                 f"input size {size} invalid. Must be a tuple of integer coordinates of len<2"
             )
         if series_as_channels:
-            logger.info(f"using series_as_channels=True")
+            logger.info("using series_as_channels=True")
             if level != 0:
                 logger.exception(
                     f"When series_as_channels=True, must use level=0. Input 'level={level}' invalid."
@@ -517,7 +519,7 @@ class BioFormatsBackend(SlideBackend):
             shape = data.slide.get_image_shape()
             thumb = data.slide.get_thumbnail(size=(1000,1000, shape[2], shape[3], shape[4]))
         """
-        assert isinstance(size, (tuple, type(None))), f"Size must be a tuple of ints."
+        assert isinstance(size, (tuple, type(None))), "Size must be a tuple of ints."
         if size is not None:
             if len(size) != len(self.shape):
                 size = size + self.shape[len(size) :]
@@ -530,7 +532,7 @@ class BioFormatsBackend(SlideBackend):
             ratio = tuple([x / y for x, y in zip(size, self.shape)])
             assert (
                 ratio[3] == 1
-            ), f"cannot interpolate between fluor channels, resampling doesn't apply, fix size[3]"
+            ), "cannot interpolate between fluor channels, resampling doesn't apply, fix size[3]"
             image_array = zoom(array, ratio)
         return image_array
 
@@ -785,7 +787,7 @@ class DICOMBackend(SlideBackend):
         Returns:
             np.ndarray: image at the specified region
         """
-        assert level == 0 or level is None, f"dicom does not support levels"
+        assert level == 0 or level is None, "dicom does not support levels"
         # check inputs first
         # check location
         if isinstance(location, tuple):
@@ -906,7 +908,7 @@ class DICOMBackend(SlideBackend):
         Yields:
             pathml.core.tile.Tile: Extracted Tile object
         """
-        assert level == 0 or level is None, f"dicom does not support levels"
+        assert level == 0 or level is None, "dicom does not support levels"
         for i in range(self.n_frames):
 
             if not pad:

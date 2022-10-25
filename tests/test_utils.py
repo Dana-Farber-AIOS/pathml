@@ -3,33 +3,33 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
+import cv2
 import numpy as np
 import pytest
-import cv2
 from matplotlib.testing.decorators import check_figures_equal
 
 from pathml.utils import (
-    segmentation_lines,
-    contour_centroid,
-    sort_points_clockwise,
-    pad_or_crop,
-    _pad_or_crop_1d,
-    upsample_array,
-    plot_mask,
-    RGB_to_HSV,
-    RGB_to_OD,
-    RGB_to_HSI,
     RGB_to_GREY,
+    RGB_to_HSI,
+    RGB_to_HSV,
     RGB_to_LAB,
+    RGB_to_OD,
+    _pad_or_crop_1d,
+    contour_centroid,
+    download_from_url,
     normalize_matrix_cols,
     normalize_matrix_rows,
+    pad_or_crop,
     parse_file_size,
-    download_from_url,
+    plot_mask,
+    segmentation_lines,
+    sort_points_clockwise,
+    upsample_array,
 )
 
 
 @pytest.mark.parametrize(
-    "test_input,expected", [("10 gb", 10 ** 10), ("1.17 mB", 1.17e6), ("0.89 KB", 890)]
+    "test_input,expected", [("10 gb", 10**10), ("1.17 mB", 1.17e6), ("0.89 KB", 890)]
 )
 def test_parse_file_sizes(test_input, expected):
     assert parse_file_size(test_input) == expected
