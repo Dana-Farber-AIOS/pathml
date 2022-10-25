@@ -7,9 +7,9 @@ import numpy as np
 import pytest
 
 from pathml.core import SlideData
+from pathml.ml import TileDataset
 from pathml.preprocessing import Pipeline
 from pathml.preprocessing.transforms import Transform
-from pathml.ml import TileDataset
 
 
 class TestingTransform(Transform):

@@ -8,13 +8,13 @@ import re
 import shutil
 import zipfile
 from pathlib import Path
-from warnings import warn
 
 import cv2
 import numpy as np
-from loguru import logger
 import torch
 import torch.utils.data as data
+from loguru import logger
+
 from pathml.datasets.base_data_module import BaseDataModule
 from pathml.datasets.utils import pannuke_multiclass_mask_to_nucleus_mask
 from pathml.ml.hovernet import compute_hv_map

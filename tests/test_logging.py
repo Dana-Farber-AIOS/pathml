@@ -3,12 +3,13 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 import logging
-from loguru import logger
-import pytest
-from _pytest.logging import caplog as _caplog
 
-from pathml.utils import _test_log
+import pytest
+from _pytest.logging import caplog as _caplog  # noqa: F401
+from loguru import logger
+
 from pathml._logging import PathMLLogger as pml
+from pathml.utils import _test_log
 
 
 @pytest.fixture

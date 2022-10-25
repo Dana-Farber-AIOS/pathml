@@ -3,14 +3,14 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-import numpy as np
-import anndata
-from collections import OrderedDict
-import matplotlib.pyplot as plt
-import h5py
 import reprlib
-from loguru import logger
+from collections import OrderedDict
+
+import anndata
 import dask
+import h5py
+import matplotlib.pyplot as plt
+import numpy as np
 from dask.delayed import Delayed
 
 import pathml.core.masks
@@ -170,7 +170,7 @@ class Tile:
         if self.counts:
             out.append(f"counts matrix of shape {self.counts.shape}")
         else:
-            out.append(f"counts=None")
+            out.append("counts=None")
         out = ",\n\t".join(out)
         out += ")"
         return out

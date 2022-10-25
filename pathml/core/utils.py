@@ -3,11 +3,8 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-import ast
 import tempfile
-from collections import OrderedDict
-from dataclasses import asdict
-from loguru import logger
+
 import anndata
 import h5py
 import numpy as np
@@ -23,7 +20,7 @@ def writedataframeh5(h5, name, df):
         name(str): name of dataset to be created
         df(pd.DataFrame): dataframe to be written
     """
-    dataset = h5.create_dataset(
+    h5.create_dataset(
         str(name),
         data=df,
         chunks=True,

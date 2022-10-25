@@ -4,22 +4,16 @@ License: GNU GPL 2.0
 """
 
 from pathlib import Path
+
+import h5py
+import numpy as np
 import pytest
 from dask.distributed import Client
-import numpy as np
-import h5py
 
 import pathml
-from pathml.core import (
-    SlideData,
-    HESlide,
-    MultiparametricSlide,
-    OpenSlideBackend,
-    BioFormatsBackend,
-    Tile,
-)
+from pathml.core import HESlide, MultiparametricSlide, SlideData, Tile
 from pathml.core.slide_data import infer_backend
-from pathml.preprocessing import Pipeline, BoxBlur
+from pathml.preprocessing import BoxBlur, Pipeline
 
 
 @pytest.mark.parametrize("slide", [SlideData, HESlide, MultiparametricSlide])
