@@ -13,7 +13,7 @@ from pathml.utils import _test_log
 
 
 @pytest.fixture
-def caplog(_caplog):
+def caplog(_caplog):  # noqa: F811
     """
     loguru is not built on the standard library logging module, but pytest's logging functionality is.
     In this fixture, we make sure that all logs to loguru are also propagated to the standard library logger so that
