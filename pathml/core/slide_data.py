@@ -343,7 +343,7 @@ class SlideData:
                 # future.cancel()
                 # del result
                 # del future
-           # del futures
+            # del futures
 
             if shutdown_after:
                 client.shutdown()

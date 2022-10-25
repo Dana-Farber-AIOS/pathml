@@ -1000,7 +1000,9 @@ class NucleusDetectionHE(Transform):
 
 class DropTileException(Exception):
     """Stops the SlideData from adding a tile to the h5path."""
+
     pass
+
 
 class TissueDetectionHE(Transform):
     """
