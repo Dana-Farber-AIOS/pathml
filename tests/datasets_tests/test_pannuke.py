@@ -3,12 +3,12 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
+import urllib
 import zipfile
 
-import pytest
-import urllib
-import numpy as np
 import cv2
+import numpy as np
+import pytest
 
 from pathml.datasets import PanNukeDataModule
 from pathml.datasets.pannuke import PanNukeDataset
@@ -213,7 +213,7 @@ def check_pannuke_data_urls():
 
 def check_wrong_path_download_false_fails():
     with pytest.raises(AssertionError):
-        pannuke = PanNukeDataModule(data_dir="wrong/path/to/pannuke", download=False)
+        PanNukeDataModule(data_dir="wrong/path/to/pannuke", download=False)
 
 
 def test_pannuke_multiclass_mask_to_nucleus_mask():

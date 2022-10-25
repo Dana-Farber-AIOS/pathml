@@ -22,7 +22,7 @@ def test_extract_tiles(n_channels, stride, tile_size):
     if stride is None:
         stride = tile_size
     n_tiles_expected = 1 + (arr_size - tile_size) / stride
-    assert tiled.shape == (n_tiles_expected ** 2, tile_size, tile_size, n_channels)
+    assert tiled.shape == (n_tiles_expected**2, tile_size, tile_size, n_channels)
     assert np.array_equal(tiled[0, ...], arr[0:tile_size, 0:tile_size, :])
 
 
@@ -51,4 +51,4 @@ def test_extract_tiles_with_mask(n_channels_arr, n_channels_mask, stride, tile_s
     # n_expected should be the same as if we only tiled a (25 x 25) array
     n_tiles_expected = 1 + (25 - tile_size) // stride
 
-    assert tiled.shape == (n_tiles_expected ** 2, tile_size, tile_size, n_channels_arr)
+    assert tiled.shape == (n_tiles_expected**2, tile_size, tile_size, n_channels_arr)

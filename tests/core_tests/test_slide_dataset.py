@@ -3,11 +3,12 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-import pytest
 from pathlib import Path
 
+import pytest
+
 from pathml.core import SlideData, Tile
-from pathml.preprocessing import Pipeline, BoxBlur
+from pathml.preprocessing import BoxBlur, Pipeline
 
 
 def test_dataset_len_getitem(slide_dataset):
