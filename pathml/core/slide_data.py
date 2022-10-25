@@ -15,6 +15,7 @@ import numpy as np
 from loguru import logger
 
 import pathml.core
+from pathml.core.utils import get_tiles_dtype
 import pathml.preprocessing.pipeline
 from pathml.core.slide_types import SlideType
 from pathml.preprocessing.transforms import DropTileException
@@ -62,7 +63,7 @@ class SlideData:
         slide_type (pathml.core.SlideType, optional): slide type specification. Must be a
             :class:`~pathml.core.SlideType` object. Alternatively, slide type can be specified by using the
             parameters ``stain``, ``tma``, ``rgb``, ``volumetric``, and ``time_series``.
-        stain (str, optional): Flag indicating type of slide stain. Must be one of [‘HE’, ‘IHC’, ‘Fluor’].
+        stain (str, optional): Flag indicating type of slide stain. Must be one of ["HE", "IHC", "Fluor"].
             Defaults to ``None``. Ignored if ``slide_type`` is specified.
         platform (str, optional): Flag indicating the imaging platform (e.g. CODEX, Vectra, etc.).
             Defaults to ``None``. Ignored if ``slide_type`` is specified.
@@ -75,6 +76,15 @@ class SlideData:
         time_series (bool, optional): Flag indicating whether the image is a time series.
             Defaults to ``None``. Ignored if ``slide_type`` is specified.
         counts (anndata.AnnData): object containing counts matrix associated with image quantification
+        dtype (np.dtype): datatype for image storage
+        tile_size (int, optional): Size of each tile. Defaults to 256px
+        tile_stride (int, optional): Stride between tiles. If ``None``, uses ``tile_stride = tile_size``
+            for non-overlapping tiles. Defaults to ``None``.
+        tile_level (int, optional): Level to extract tiles from. Defaults to 0.
+        tile_pad (bool): How to handle chunks on the edges. If ``True``, these edge chunks will be zero-padded
+            symmetrically and yielded with the other chunks. If ``False``, incomplete edge chunks will be ignored.
+            Defaults to ``False``.
+        **tile_kwargs: Other arguments passed through to ``generate_tiles()`` method of the backend.
     """
 
     def __init__(
@@ -94,6 +104,11 @@ class SlideData:
         time_series=None,
         counts=None,
         dtype=None,
+        tile_size=256,
+        tile_stride=None,
+        tile_level=0,
+        tile_pad=False,
+        **tile_kwargs,
     ):
         # check inputs
         assert masks is None or isinstance(
@@ -162,27 +177,33 @@ class SlideData:
                 _load_from_h5path = True
 
         if backend.lower() == "openslide":
-            backend_obj = pathml.core.OpenSlideBackend(filepath)
+            slide = pathml.core.OpenSlideBackend(filepath)
         elif backend.lower() == "bioformats":
-            backend_obj = pathml.core.BioFormatsBackend(filepath, dtype)
+            slide = pathml.core.BioFormatsBackend(filepath, dtype)
         elif backend.lower() == "dicom":
-            backend_obj = pathml.core.DICOMBackend(filepath)
+            slide = pathml.core.DICOMBackend(filepath)
         elif backend.lower() == "h5path":
-            backend_obj = None
+            slide = None
         else:
             raise ValueError(f"invalid backend: {repr(backend)}.")
 
         self._filepath = filepath if filepath else None
         self.backend = backend
-        self.slide = backend_obj if backend_obj else None
+        self.slide = slide
         self.name = name
         self.labels = labels
         self.slide_type = slide_type
+        self.dtype = np.dtype("float16") if dtype is None else np.dtype(dtype)
 
         if _load_from_h5path:
             # populate the SlideData object from existing h5path file
             with h5py.File(filepath, "r") as f:
                 self.h5manager = pathml.core.h5managers.h5pathManager(h5path=f)
+                self.dtype = get_tiles_dtype(f)
+                if dtype != self.dtype and dtype is not None:
+                    logger.info(
+                        f"using dtype {self.dtype} from h5path instead of {dtype}"
+                    )
             self.name = self.h5manager.h5["fields"].attrs["name"]
             self.labels = {
                 key: val
@@ -204,6 +225,35 @@ class SlideData:
         self.masks = pathml.core.Masks(h5manager=self.h5manager, masks=masks)
         self.tiles = pathml.core.Tiles(h5manager=self.h5manager, tiles=tiles)
 
+        self._generated_tiles = False
+        self.tile_size = tile_size
+        self._tile_stride = tile_stride
+        self.tile_level = tile_level
+        self.tile_pad = tile_pad
+        self.tile_kwargs = tile_kwargs
+
+    @property
+    def tile_stride(self):
+        stride = self._tile_stride
+        if stride is None:
+            stride = self.tile_size
+        elif isinstance(stride, int):
+            stride = (stride, stride)
+        return stride
+
+    @tile_stride.setter
+    def tile_stride(self, value):
+        self._tile_stride = value
+
+    def get_tiles(self):
+        if self.slide is not None and not self._generated_tiles:
+            self._generated_tiles = True
+            for tile in self._generate_tiles():
+                yield tile
+        else:
+            for tile in self.tiles:
+                yield tile
+
     def __repr__(self):
         out = []
         out.append(f"SlideData(name={repr(self.name)}")
@@ -213,6 +263,7 @@ class SlideData:
         if self.backend:
             out.append(f"backend={repr(self.backend)}")
         out.append(f"image shape: {self.shape}")
+        out.append(f"image dtype: {self.dtype}")
         try:
             nlevels = self.slide.level_count
         # TODO: change to specific exception
@@ -243,61 +294,22 @@ class SlideData:
         pipeline,
         distributed=True,
         client=None,
-        tile_size=256,
-        tile_stride=None,
-        level=0,
-        tile_pad=False,
-        overwrite_existing_tiles=False,
         write_dir=None,
-        **kwargs,
     ):
         """
-        Run a preprocessing pipeline on SlideData.
-        Tiles are generated by calling self.generate_tiles() and pipeline is applied to each tile.
+        Run a preprocessing pipeline on all tiles in SlideData.
 
         Args:
             pipeline (pathml.preprocessing.pipeline.Pipeline): Preprocessing pipeline.
             distributed (bool): Whether to distribute model using client. Defaults to True.
             client: dask.distributed client
-            tile_size (int, optional): Size of each tile. Defaults to 256px
-            tile_stride (int, optional): Stride between tiles. If ``None``, uses ``tile_stride = tile_size``
-                for non-overlapping tiles. Defaults to ``None``.
-            level (int, optional): Level to extract tiles from. Defaults to ``None``.
-            tile_pad (bool): How to handle chunks on the edges. If ``True``, these edge chunks will be zero-padded
-                symmetrically and yielded with the other chunks. If ``False``, incomplete edge chunks will be ignored.
-                Defaults to ``False``.
-            overwrite_existing_tiles (bool): Whether to overwrite existing tiles. If ``False``, running a pipeline will
-                fail if ``tiles is not None``. Defaults to ``False``.
             write_dir (str): Path to directory to write the processed slide to. The processed SlideData object
                 will be written to the directory immediately after the pipeline has completed running.
                 The filepath will default to "<write_dir>/<slide.name>.h5path. Defaults to ``None``.
-            **kwargs: Other arguments passed through to ``generate_tiles()`` method of the backend.
         """
         assert isinstance(
             pipeline, pathml.preprocessing.pipeline.Pipeline
         ), f"pipeline is of type {type(pipeline)} but must be of type pathml.preprocessing.pipeline.Pipeline"
-        assert self.slide is not None, "cannot run pipeline because self.slide is None"
-
-        if len(self.tiles) != 0:
-            # in this case, tiles already exist
-            if not overwrite_existing_tiles:
-                raise Exception(
-                    "Slide already has tiles. Running the pipeline will overwrite the existing tiles. Use overwrite_existing_tiles=True to force overwriting existing tiles."
-                )
-            else:
-                # delete all existing tiles
-                for tile_key in self.tiles.keys:
-                    self.tiles.remove(tile_key)
-
-        # TODO: be careful here since we are modifying h5 outside of h5manager
-        # look into whether we can push this into h5manager
-
-        if tile_stride is None:
-            tile_stride = tile_size
-        elif isinstance(tile_stride, int):
-            tile_stride = (tile_stride, tile_stride)
-
-        self.h5manager.h5["tiles"].attrs["tile_stride"] = tile_stride
 
         shutdown_after = False
 
@@ -310,16 +322,7 @@ class SlideData:
                 )
 
             # map pipeline application onto each tile
-            futures = [
-                client.submit(pipeline.apply, tile)
-                for tile in self.generate_tiles(
-                    level=level,
-                    shape=tile_size,
-                    stride=tile_stride,
-                    pad=tile_pad,
-                    **kwargs,
-                )
-            ]
+            futures = [client.submit(pipeline.apply, tile) for tile in self.get_tiles()]
 
             # After a worker processes a tile, add the tile to h5
             for future, result in dask.distributed.as_completed(
@@ -330,6 +333,9 @@ class SlideData:
                 if future.status == "error":
                     typ, exc, tb = result
                     if typ is DropTileException:
+                        # TODO: remove existing tiles
+                        # figure out how to access tile.coords from input tile
+                        # self.tiles.remove(tile.coords)
                         pass
                     else:
                         raise exc.with_traceback(tb)
@@ -348,19 +354,15 @@ class SlideData:
             if shutdown_after:
                 client.shutdown()
             else:
-                pass
                 # Stopgap to free unmanaged memory on client before processing another slide
                 client.restart()
 
         else:
-            for tile in self.generate_tiles(
-                level=level,
-                shape=tile_size,
-                stride=tile_stride,
-                pad=tile_pad,
-                **kwargs,
-            ):
-                pipeline.apply(tile)
+            for tile in self.get_tiles():
+                try:
+                    pipeline.apply(tile)
+                except DropTileException:
+                    self.tiles.remove(tile.coords)
                 self.tiles.add(tile)
 
         if write_dir:
@@ -404,35 +406,25 @@ class SlideData:
 
         return self.slide.extract_region(location, size, *args, **kwargs)
 
-    def generate_tiles(self, shape=3000, stride=None, pad=False, **kwargs):
+    def _generate_tiles(self):
         """
         Generator over Tile objects containing regions of the image.
         Calls ``generate_tiles()`` method of the backend.
         Tries to add the corresponding slide-level masks to each tile, if possible.
         Adds slide-level labels to each tile, if possible.
-
-        Args:
-            shape (int or tuple(int)): Size of each tile. May be a tuple of (height, width) or a single integer,
-                in which case square tiles of that size are generated. Defaults to 256px.
-            stride (int): stride between chunks. If ``None``, uses ``stride = size`` for non-overlapping chunks.
-                Defaults to ``None``.
-            pad (bool): How to handle tiles on the edges. If ``True``, these edge tiles will be zero-padded
-                and yielded with the other chunks. If ``False``, incomplete edge chunks will be ignored.
-                Defaults to ``False``.
-            **kwargs: Other arguments passed through to ``generate_tiles()`` method of the backend.
-
-        Yields:
-            pathml.core.tile.Tile: Extracted Tile object
         """
-        for tile in self.slide.generate_tiles(shape, stride, pad, **kwargs):
-            # TODO: move to worker!! (forces loading data on main thread)
 
+        # TODO: be careful here since we are modifying h5 outside of h5manager
+        # look into whether we can push this into h5manager
+        self.h5manager.h5["tiles"].attrs["tile_stride"] = self.tile_stride
+        for tile in self.slide.generate_tiles(
+            self.tile_size, self.tile_stride, self.tile_pad, level=self.tile_level
+        ):
             # add masks for tile, if possible
-            # i.e. if the SlideData has a Masks object, and the tile has coordinates
             if self.masks is not None and tile.coords is not None:
                 # masks not supported if pad=True
-                # to implement, need to update Mask.slice to support slices that go beyond the full mask
-                if not pad:
+                # TODO: update Mask.slice to support slices that go beyond the full mask
+                if not self.tile_pad:
                     i, j = tile.coords
                     # Accessing image loads data on main thread
                     # dask.delayed waits until compute is called on worker
@@ -449,8 +441,6 @@ class SlideData:
 
                     tile_slices = [slice(i, i + di), slice(j, j + dj)]
                     tile.masks = self.masks.slice(tile_slices)
-
-            # TODO: end move to worker
 
             # add slide-level labels to each tile, if possible
             if self.labels is not None:

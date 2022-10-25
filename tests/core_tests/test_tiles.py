@@ -147,16 +147,13 @@ def test_add_get(emptytiles, tileHE, incorrect_input, incorrect_input2):
 
 
 @pytest.mark.parametrize(
-    "incorrect_input", ["string", None, True, 5, [5, 4, 3], {"dict": "testing"}]
+    "incorrect_input", [None, True, 5, [5, 4, 3], {"dict": "testing"}]
 )
 def test_remove(emptytiles, tileHE, incorrect_input):
     tiles = emptytiles
     tiles.add(tileHE)
     tiles.remove((1, 3))
-    with pytest.raises(Exception):
-        tiles[(1, 3)]
-    with pytest.raises(KeyError):
-        tiles.remove((1, 3))
+    tiles.remove((1, 3))
     # incorrect input
     with pytest.raises(KeyError):
         tiles.remove(incorrect_input)

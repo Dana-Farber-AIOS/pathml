@@ -45,22 +45,10 @@ def test_run_pipeline(example_slide_data):
     # start the dask client
     client = Client()
     # run the pipeline
-    example_slide_data.run(pipeline=pipeline, client=client, tile_size=50)
+    example_slide_data.tile_size = 50
+    example_slide_data.run(pipeline=pipeline, client=client)
     # close the dask client
     client.close()
-
-
-@pytest.mark.parametrize("overwrite_tiles", [True, False])
-def test_run_existing_tiles(slide_dataset_with_tiles, overwrite_tiles):
-    dataset = slide_dataset_with_tiles
-    pipeline = Pipeline([BoxBlur(kernel_size=15)])
-    if overwrite_tiles:
-        dataset.run(pipeline, overwrite_existing_tiles=overwrite_tiles, tile_size=500)
-    else:
-        with pytest.raises(Exception):
-            dataset.run(
-                pipeline, overwrite_existing_tiles=overwrite_tiles, tile_size=500
-            )
 
 
 @pytest.fixture
@@ -84,28 +72,32 @@ def test_multiparametric(multiparametric_slide):
 @pytest.mark.parametrize("stride", [None, 1000])
 @pytest.mark.parametrize("pad", [True, False])
 @pytest.mark.parametrize("level", [0])
-def test_generate_tiles_he(he_slide, shape, stride, pad, level):
-    for tile in he_slide.generate_tiles(
-        shape=shape, stride=stride, pad=pad, level=level
-    ):
+def test_get_tiles_he(he_slide, shape, stride, pad, level):
+    he_slide.tile_size = shape
+    he_slide.tile_stride = stride
+    he_slide.tile_pad = pad
+    he_slide.tile_level = level
+    for tile in he_slide.get_tiles():
         assert isinstance(tile, Tile)
 
 
 @pytest.mark.parametrize("shape", [100, (50, 100)])
 @pytest.mark.parametrize("stride", [None, 100])
 @pytest.mark.parametrize("pad", [True, False])
-def test_generate_tiles_multiparametric(multiparametric_slide, shape, stride, pad):
-    for tile in multiparametric_slide.generate_tiles(
-        shape=shape, stride=stride, pad=pad
-    ):
+def test_get_tiles_multiparametric(multiparametric_slide, shape, stride, pad):
+    multiparametric_slide.tile_size = shape
+    multiparametric_slide.tile_stride = stride
+    multiparametric_slide.tile_pad = pad
+    for tile in multiparametric_slide.get_tiles():
         assert isinstance(tile, Tile)
 
 
 @pytest.mark.parametrize("pad", [True, False])
-def test_generate_tiles_padding(he_slide, pad):
-    shape = 300
-    stride = 300
-    tiles = list(he_slide.generate_tiles(shape=shape, stride=stride, pad=pad))
+def test_get_tiles_padding(he_slide, pad):
+    he_slide.tile_size = 300
+    he_slide.tile_stride = 300
+    he_slide.tile_pad = pad
+    tiles = list(he_slide.get_tiles())
     # he_slide.slide.get_image_shape() --> (2967, 2220)
     # if no padding, expect: 9*7 = 63 tiles
     # if padding, expect: 10*8 - 80 tiles
@@ -169,6 +161,7 @@ def compare_dict_ignore_order(d1, d2):
 @pytest.mark.parametrize("write", [True, False])
 def test_run_and_write(tmpdir, write):
     wsi = HESlide("tests/testdata/small_HE.svs", backend="openslide", name="testwrite")
+    wsi.tile_size = 500
     pipe = Pipeline()
 
     if write:
@@ -176,7 +169,7 @@ def test_run_and_write(tmpdir, write):
     else:
         write_dir_arg = None
 
-    wsi.run(pipe, tile_size=500, distributed=False, write_dir=write_dir_arg)
+    wsi.run(pipe, distributed=False, write_dir=write_dir_arg)
 
     written_path = tmpdir / "testwrite.h5path"
 

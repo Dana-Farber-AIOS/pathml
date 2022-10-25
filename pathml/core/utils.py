@@ -110,3 +110,22 @@ def readcounts(h5):
             for ds in h5.keys():
                 h5.copy(ds, f)
         return anndata.read_h5ad(path.name)
+
+def get_tiles_dtype(h5):
+    """
+    Returns the dtype of tile images in h5path file.
+
+    Returns:
+        np.dtype or None if no tiles in file
+    """
+    # Check that all tiles have the same dtype as the first tile
+    dtype = None
+    for tile in h5["tiles"]:
+        tile_dtype = h5["tiles"][tile]['array'].dtype
+        if dtype is None:
+            dtype = tile_dtype
+        assert (
+            dtype == tile_dtype,
+            f"all tiles must have the same dtype. Tile {tile} has dtype {tile_dtype} instead of {dtype}"
+        )
+    return dtype
