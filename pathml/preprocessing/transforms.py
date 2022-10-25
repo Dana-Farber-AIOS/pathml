@@ -4,13 +4,16 @@ License: GNU GPL 2.0
 """
 
 import os
-from warnings import warn
 
-from loguru import logger
 import anndata
 import cv2
 import numpy as np
 import pandas as pd
+from loguru import logger
+from skimage import restoration
+from skimage.exposure import equalize_adapthist, equalize_hist, rescale_intensity
+from skimage.measure import regionprops_table
+
 import pathml.core
 import pathml.core.slide_data
 from pathml.utils import (
@@ -20,9 +23,7 @@ from pathml.utils import (
     RGB_to_OD,
     normalize_matrix_cols,
 )
-from skimage import restoration
-from skimage.exposure import equalize_adapthist, equalize_hist, rescale_intensity
-from skimage.measure import regionprops_table
+
 
 # Base class
 class Transform:
@@ -647,10 +648,10 @@ class StainNormalizationHE(Transform):
 
         if stain_estimation_method.lower() == "vahadane":
             try:
-                import spams
+                import spams  # noqa: F401
             except (ImportError, ModuleNotFoundError):
                 raise Exception(
-                    f"Vahadane method requires `spams` package to be installed"
+                    "Vahadane method requires `spams` package to be installed"
                 )
 
         self.target = target.lower()
@@ -743,7 +744,7 @@ class StainNormalizationHE(Transform):
         try:
             import spams
         except (ImportError, ModuleNotFoundError):
-            raise Exception(f"Vahadane method requires `spams` package to be installed")
+            raise Exception("Vahadane method requires `spams` package to be installed")
         # convert to Optical Density (OD) space
         image_OD = RGB_to_OD(image)
         # reshape to (M*N)x3
@@ -847,7 +848,7 @@ class StainNormalizationHE(Transform):
         try:
             import spams
         except (ImportError, ModuleNotFoundError):
-            raise Exception(f"Vahadane method requires `spams` package to be installed")
+            raise Exception("Vahadane method requires `spams` package to be installed")
         image_OD = RGB_to_OD(image).reshape(-1, 3)
 
         # Get concentrations of each stain at each pixel
@@ -1230,7 +1231,7 @@ class DeconvolveMIF(Transform):
         if psfparameters:
             assert (
                 psf is None
-            ), f"you passed an empirical psf, cannot simultaneously use theoretical psf"
+            ), "you passed an empirical psf, cannot simultaneously use theoretical psf"
         self.psfparameters = psfparameters
         self.iterations = iterations
 
@@ -1318,10 +1319,10 @@ class SegmentMIF(Transform):
     ):
         assert isinstance(
             nuclear_channel, int
-        ), f"nuclear_channel must be an int indicating index"
+        ), "nuclear_channel must be an int indicating index"
         assert isinstance(
             cytoplasm_channel, int
-        ), f"cytoplasm_channel must be an int indicating index"
+        ), "cytoplasm_channel must be an int indicating index"
         self.nuclear_channel = nuclear_channel
         self.cytoplasm_channel = cytoplasm_channel
         self.image_resolution = image_resolution
@@ -1335,21 +1336,21 @@ class SegmentMIF(Transform):
 
         if model.lower() == "mesmer":
             try:
-                from deepcell.applications import Mesmer
+                from deepcell.applications import Mesmer  # noqa: F401
             except ImportError:
                 logger.warning(
                     "The Mesmer model in SegmentMIF requires extra libraries to be installed.\nYou can install these via pip using:\npip install deepcell"
                 )
                 raise ImportError(
-                    f"The Mesmer model in SegmentMIF requires deepcell to be installed"
+                    "The Mesmer model in SegmentMIF requires deepcell to be installed"
                 ) from None
             self.model = model.lower()
         elif model.lower() == "cellpose":
             """from cellpose import models
             self.model = models.Cellpose(gpu=self.gpu, model_type='cyto')"""
-            raise NotImplementedError(f"Cellpose model not currently supported")
+            raise NotImplementedError("Cellpose model not currently supported")
         else:
-            raise ValueError(f"currently only supports mesmer model")
+            raise ValueError("currently only supports mesmer model")
 
     def __repr__(self):
         return (
@@ -1491,7 +1492,8 @@ class QuantifyMIF(Transform):
         counts.layers["max_intensity"] = max_intensities
         try:
             counts.obsm["spatial"] = np.array(counts.obs[["x", "y"]])
-        except:
+        # TODO: change to specific exception
+        except Exception:
             logger.warning("did not log coordinates in obsm")
         return counts
 
@@ -1522,7 +1524,7 @@ class CollapseRunsVectra(Transform):
         pass
 
     def __repr__(self):
-        return f"CollapseRunsVectra()"
+        return "CollapseRunsVectra()"
 
     def F(self, image):
         image = np.squeeze(image)

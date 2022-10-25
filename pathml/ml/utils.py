@@ -3,11 +3,11 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
+import numpy as np
+
 # Utilities for ML module
 import torch
 from torch.nn import functional as F
-import numpy as np
-from loguru import logger
 
 
 def center_crop_im_batch(batch, dims, batch_order="BCHW"):
@@ -43,7 +43,7 @@ def center_crop_im_batch(batch, dims, batch_order="BCHW"):
         elif batch_order == "BCHW":
             batch_cropped = batch[:, :, crop_t:-crop_b, crop_l:-crop_r]
         else:
-            raise Exception(f"Input batch order not valid")
+            raise Exception("Input batch order not valid")
 
     return batch_cropped
 
@@ -160,7 +160,7 @@ def wrap_transform_multichannel(transform):
     # make sure that everything is correct so that transform is correctly applied
     assert all(
         [v == "mask" for v in targets.values()]
-    ), f"error all values in transform.additional_targets must be 'mask'."
+    ), "error all values in transform.additional_targets must be 'mask'."
 
     def transform_out(*args, **kwargs):
         mask = kwargs.pop("mask")

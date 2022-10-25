@@ -5,10 +5,9 @@ License: GNU GPL 2.0
 
 import reprlib
 from pathlib import Path
-from loguru import logger
 
 import dask.distributed
-from torch.utils.data import ConcatDataset
+from loguru import logger
 
 
 class SlideDataset:
@@ -88,6 +87,6 @@ class SlideDataset:
                 slide_path = d / (slide.name + ".h5path")
             else:
                 raise ValueError(
-                    f"slide does not have a .name attribute. Must supply a 'filenames' argument."
+                    "slide does not have a .name attribute. Must supply a 'filenames' argument."
                 )
             slide.write(slide_path)

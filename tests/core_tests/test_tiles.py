@@ -3,11 +3,10 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-import pytest
 import numpy as np
+import pytest
 
-import pathml.core.h5managers
-from pathml.core import Tiles, Tile, Masks, OpenSlideBackend, types, HESlide
+from pathml.core import HESlide, Tile, types
 
 
 @pytest.fixture
@@ -155,7 +154,7 @@ def test_remove(emptytiles, tileHE, incorrect_input):
     tiles.add(tileHE)
     tiles.remove((1, 3))
     with pytest.raises(Exception):
-        triggerexception = tiles[(1, 3)]
+        tiles[(1, 3)]
     with pytest.raises(KeyError):
         tiles.remove((1, 3))
     # incorrect input
