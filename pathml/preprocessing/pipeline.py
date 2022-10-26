@@ -4,7 +4,6 @@ License: GNU GPL 2.0
 """
 
 import pickle
-from loguru import logger
 
 import pathml.core.tile
 from pathml.preprocessing.transforms import Transform
@@ -22,7 +21,7 @@ class Pipeline(Transform):
     def __init__(self, transform_sequence=None):
         assert transform_sequence is None or all(
             [isinstance(t, Transform) for t in transform_sequence]
-        ), (f"All elements in input list must be of" f" type pathml.core.Transform")
+        ), "All elements in input list must be of type pathml.core.Transform"
         self.transforms = transform_sequence
 
     def __len__(self):
@@ -32,7 +31,7 @@ class Pipeline(Transform):
         if self.transforms is None:
             return "Pipeline()"
         else:
-            out = f"Pipeline([\n"
+            out = "Pipeline([\n"
             for t in self.transforms:
                 out += f"\t{repr(t)},\n"
             out += "])"

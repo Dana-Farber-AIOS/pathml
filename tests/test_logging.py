@@ -3,16 +3,17 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 import logging
-from loguru import logger
-import pytest
-from _pytest.logging import caplog as _caplog
 
-from pathml.utils import _test_log
+import pytest
+from _pytest.logging import caplog as _caplog  # noqa: F401
+from loguru import logger
+
 from pathml._logging import PathMLLogger as pml
+from pathml.utils import _test_log
 
 
 @pytest.fixture
-def caplog(_caplog):
+def caplog(_caplog):  # noqa: F811
     """
     loguru is not built on the standard library logging module, but pytest's logging functionality is.
     In this fixture, we make sure that all logs to loguru are also propagated to the standard library logger so that
