@@ -141,7 +141,10 @@ Whole-slide masks are stored in the ``masks/`` Group. All masks are enforced to 
 However, when running a pipeline, these masks are moved to the tile-level and stored within the tile groups.
 The slide-level masks are therefore not saved when calling :meth:`SlideData.write() <pathml.core.SlideData.write>`.
 
-We use ``float16`` as the data type for all Datasets.
+By default, we use ``float16`` as the data type for all Datasets and HDF5's 
+`ENUM type <https://docs.h5py.org/en/stable/special.html#enumerated-types>` 
+for masks, which are stored as 8-bit integers. Changing the `dtype` in 
+the Slide constructor changes the data type used to store images.
 
 .. note:: Be aware that the ``h5path`` format specification may change between major versions
 
