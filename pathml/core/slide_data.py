@@ -17,6 +17,7 @@ from loguru import logger
 import pathml.core
 import pathml.preprocessing.pipeline
 from pathml.core.slide_types import SlideType
+from pathml.preprocessing.transforms import DropTileException
 
 
 def infer_backend(path):
@@ -309,31 +310,47 @@ class SlideData:
                 )
 
             # map pipeline application onto each tile
-            processed_tile_futures = []
+            futures = [
+                client.submit(pipeline.apply, tile)
+                for tile in self.generate_tiles(
+                    level=level,
+                    shape=tile_size,
+                    stride=tile_stride,
+                    pad=tile_pad,
+                    **kwargs,
+                )
+            ]
 
-            for tile in self.generate_tiles(
-                level=level,
-                shape=tile_size,
-                stride=tile_stride,
-                pad=tile_pad,
-                **kwargs,
+            # After a worker processes a tile, add the tile to h5
+            for future, result in dask.distributed.as_completed(
+                futures, with_results=True, raise_errors=False
             ):
-                if not tile.slide_type:
-                    tile.slide_type = self.slide_type
-                # explicitly scatter data, i.e. send the tile data out to the cluster before applying the pipeline
-                # according to dask, this can reduce scheduler burden and keep data on workers
-                big_future = client.scatter(tile)
-                f = client.submit(pipeline.apply, big_future)
-                processed_tile_futures.append(f)
+                if future.status == "finished":
+                    self.tiles.add(result)
+                if future.status == "error":
+                    typ, exc, tb = result
+                    if typ is DropTileException:
+                        pass
+                    else:
+                        raise exc.with_traceback(tb)
+                # TODO: Free memory used for tile
+                # Each in-memory future holding a Tile shows a size of 48 bytes on the Dask dashboard
+                # which clearly does not include image data.
+                # Could it be that loaded image data is somehow not being garbage collected with Tiles?
 
-            # as tiles are processed, add them to h5
-            for future, tile in dask.distributed.as_completed(
-                processed_tile_futures, with_results=True
-            ):
-                self.tiles.add(tile)
+                # # all of these still leave unmanaged memory on each worker
+                # future.release()
+                # future.cancel()
+                # del result
+                # del future
+            # del futures
 
             if shutdown_after:
                 client.shutdown()
+            else:
+                pass
+                # Stopgap to free unmanaged memory on client before processing another slide
+                client.restart()
 
         else:
             for tile in self.generate_tiles(
@@ -343,8 +360,6 @@ class SlideData:
                 pad=tile_pad,
                 **kwargs,
             ):
-                if not tile.slide_type:
-                    tile.slide_type = self.slide_type
                 pipeline.apply(tile)
                 self.tiles.add(tile)
 
@@ -410,6 +425,8 @@ class SlideData:
             pathml.core.tile.Tile: Extracted Tile object
         """
         for tile in self.slide.generate_tiles(shape, stride, pad, **kwargs):
+            # TODO: move to worker!! (forces loading data on main thread)
+
             # add masks for tile, if possible
             # i.e. if the SlideData has a Masks object, and the tile has coordinates
             if self.masks is not None and tile.coords is not None:
@@ -417,7 +434,10 @@ class SlideData:
                 # to implement, need to update Mask.slice to support slices that go beyond the full mask
                 if not pad:
                     i, j = tile.coords
-                    di, dj = tile.image.shape[0:2]
+                    # Accessing image loads data on main thread
+                    # dask.delayed waits until compute is called on worker
+                    shape = dask.delayed(tile).image.shape[0:2]
+                    di, dj = shape[0], shape[1]
                     # add the Masks object for the masks corresponding to the tile
                     # this assumes that the tile didn't already have any masks
                     # this should work since the backend reads from image only
@@ -429,6 +449,8 @@ class SlideData:
 
                     tile_slices = [slice(i, i + di), slice(j, j + dj)]
                     tile.masks = self.masks.slice(tile_slices)
+
+            # TODO: end move to worker
 
             # add slide-level labels to each tile, if possible
             if self.labels is not None:
