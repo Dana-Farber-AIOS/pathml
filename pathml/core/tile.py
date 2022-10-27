@@ -153,7 +153,7 @@ class Tile:
         out = []
         out.append(f"Tile(coords={self.coords}")
         out.append(f"name={self.name}")
-        out.append(f"image shape: {self.image.shape}")
+        # out.append(f"image shape: {self.image.shape}")
         out.append(f"slide_type={repr(self.slide_type)}")
         if self.labels:
             out.append(
