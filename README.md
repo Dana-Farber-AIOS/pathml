@@ -191,12 +191,38 @@ See [contributing](https://github.com/Dana-Farber-AIOS/pathml/blob/master/CONTRI
 
 # Citing
 
-If you use `PathML` in your work, please cite our paper:
+If you use `PathML` please cite:
 
-Rosenthal J, Carelli R, Omar M, Brundage D, Halbert E, Nyman J, Hari SN, Van Allen EM, Marchionni L, Umeton R, Loda M. 
-Building tools for machine learning and artificial intelligence in cancer research: best practices and a case study 
-with the PathML toolkit for computational pathology. *Molecular Cancer Research*, 2021. 
-DOI: [10.1158/1541-7786.MCR-21-0665](https://doi.org/10.1158/1541-7786.MCR-21-0665)
+[**J. Rosenthal et al., "Building tools for machine learning and artificial intelligence in cancer research: best practices and a case study with the PathML toolkit for computational pathology." Molecular Cancer Research, 2022.**](https://doi.org/10.1158/1541-7786.MCR-21-0665)
+
+So far, PathML was used in the following manuscripts: 
+
+- [A. Shmatko et al. **Nature Cancer** 2022](https://www.nature.com/articles/s43018-022-00436-4)
+- [J. Pocock et al. **Nature Communications Medicine** 2022](https://www.nature.com/articles/s43856-022-00186-5)
+- [A. Marcolini et al. **SoftwareX** 2022](https://www.sciencedirect.com/science/article/pii/S2352711022001558)
+- [M. Rahman et al. **Bioengineering** 2022](https://www.mdpi.com/2306-5354/9/8/335)
+- [C. Lama et al. **bioRxiv** 2022](https://www.biorxiv.org/content/10.1101/2022.09.28.509751v1.full)
+- [D. Brundage et al. **arXiv** 2022](https://arxiv.org/abs/2203.13888)
+- [S. Orsulic et al. **Frontiers in Oncology** 2022](https://www.frontiersin.org/articles/10.3389/fonc.2022.924945/full)
+- [J. Linares et al. **Molecular Cell** 2021](https://www.cell.com/molecular-cell/fulltext/S1097-2765(21)00729-2)
+
+# Users
+
+<a href="https://ossinsight.io/analyze/Dana-Farber-AIOS/pathml#people">
+<table border=0><tr><td>
+This is where in the world our most enthusiastic supporters are located:
+   
+<img src="https://user-images.githubusercontent.com/25375373/208137141-e450aa86-8433-415a-9cc7-c4274139bdc2.png" width="500px">
+   </td><td>   
+and this is where they work:
+   
+<img src="https://user-images.githubusercontent.com/25375373/208137644-f73c86d0-c5c7-4094-80d9-ea11e0edbdc5.png" width="400px">
+</td>                                                                                                                             
+</tr>
+</table>
+</a>
+Source: https://ossinsight.io/analyze/Dana-Farber-AIOS/pathml#people
+
 
 # License
 
