@@ -193,7 +193,7 @@ See [contributing](https://github.com/Dana-Farber-AIOS/pathml/blob/master/CONTRI
 
 If you use `PathML` please cite:
 
-[**J. Rosenthal et al., "Building tools for machine learning and artificial intelligence in cancer research: best practices and a case study with the PathML toolkit for computational pathology." Molecular Cancer Research, 2022.**](https://doi.org/10.1158/1541-7786.MCR-21-0665)
+- [**J. Rosenthal et al., "Building tools for machine learning and artificial intelligence in cancer research: best practices and a case study with the PathML toolkit for computational pathology." Molecular Cancer Research, 2022.**](https://doi.org/10.1158/1541-7786.MCR-21-0665)
 
 So far, PathML was used in the following manuscripts: 
 
@@ -208,21 +208,18 @@ So far, PathML was used in the following manuscripts:
 
 # Users
 
-<a href="https://ossinsight.io/analyze/Dana-Farber-AIOS/pathml#people">
-<table border=0><tr><td>
-This is where in the world our most enthusiastic supporters are located:
-   
+<table style="border: 0px !important;"><tr><td>This is where in the world our most enthusiastic supporters are located:
+   <br/><br/>
 <img src="https://user-images.githubusercontent.com/25375373/208137141-e450aa86-8433-415a-9cc7-c4274139bdc2.png" width="500px">
    </td><td>   
 and this is where they work:
-   
+   <br/><br/>
 <img src="https://user-images.githubusercontent.com/25375373/208137644-f73c86d0-c5c7-4094-80d9-ea11e0edbdc5.png" width="400px">
 </td>                                                                                                                             
 </tr>
 </table>
-</a>
-Source: https://ossinsight.io/analyze/Dana-Farber-AIOS/pathml#people
 
+Source: https://ossinsight.io/analyze/Dana-Farber-AIOS/pathml#people
 
 # License
 
