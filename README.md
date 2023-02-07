@@ -1,3 +1,11 @@
+🤖🔬 **PathML: Tools for computational pathology.**
+
+⭐ **PathML objective is to lower the barrier to entry to digital pathology.**
+
+ℹ️ Imaging datasets in cancer research are growing exponentially in both quantity and information density. These massive datasets may enable derivation of insights for cancer research and clinical care, but only if researchers are equipped with the tools to leverage advanced computational analysis approaches such as machine learning and artificial intelligence. In this work, we highlight three themes to guide development of such computational tools: scalability, standardization, and ease of use. We then apply these principles to develop PathML, a general-purpose research toolkit for computational pathology. We describe the design of the PathML framework and demonstrate applications in diverse use cases. 
+ 
+🚀 The fastest way to get started? `docker pull pathml/pathml`
+
 <img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/logo.png width="300"> 
 
 <img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/overview.png width="750">
@@ -232,6 +240,6 @@ Commercial license options are available also.
 
 Questions? Comments? Suggestions? Get in touch!
 
-[PathML@dfci.harvard.edu](mailto:PathML@dfci.harvard.edu)
+[pathml@dfci.harvard.edu](mailto:pathml@dfci.harvard.edu)
 
 <img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/dfci_cornell_joint_logos.png width="750"> 
