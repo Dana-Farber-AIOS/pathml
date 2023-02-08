@@ -1,27 +1,27 @@
-🤖🔬 **PathML: Tools for computational pathology.**
+🤖🔬 **PathML: Tools for computational pathology**
 
-⭐ **PathML objective is to lower the barrier to entry to digital pathology.**
-
-ℹ️ Imaging datasets in cancer research are growing exponentially in both quantity and information density. These massive datasets may enable derivation of insights for cancer research and clinical care, but only if researchers are equipped with the tools to leverage advanced computational analysis approaches such as machine learning and artificial intelligence. In this work, we highlight three themes to guide development of such computational tools: scalability, standardization, and ease of use. We then apply these principles to develop PathML, a general-purpose research toolkit for computational pathology. We describe the design of the PathML framework and demonstrate applications in diverse use cases. 
- 
-🚀 The fastest way to get started? `docker pull pathml/pathml && docker run -it -p 8888:8888 pathml/pathml`
-
-<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/logo.png width="300"> 
-
-<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/overview.png width="750">
-
+[![Downloads](https://pepy.tech/badge/pathml)](https://pepy.tech/project/pathml)
 [![Documentation Status](https://readthedocs.org/projects/pathml/badge/?version=latest)](https://pathml.readthedocs.io/en/latest/?badge=latest)
+[![codecov](https://codecov.io/gh/Dana-Farber-AIOS/pathml/branch/master/graph/badge.svg?token=UHSQPTM28Y)](https://codecov.io/gh/Dana-Farber-AIOS/pathml)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![PyPI version](https://img.shields.io/pypi/v/pathml)](https://pypi.org/project/pathml/)
-[![Downloads](https://pepy.tech/badge/pathml)](https://pepy.tech/project/pathml)
-[![codecov](https://codecov.io/gh/Dana-Farber-AIOS/pathml/branch/master/graph/badge.svg?token=UHSQPTM28Y)](https://codecov.io/gh/Dana-Farber-AIOS/pathml)
+
+⭐ **PathML objective is to lower the barrier to entry to digital pathology**
+
+Imaging datasets in cancer research are growing exponentially in both quantity and information density. These massive datasets may enable derivation of insights for cancer research and clinical care, but only if researchers are equipped with the tools to leverage advanced computational analysis approaches such as machine learning and artificial intelligence. In this work, we highlight three themes to guide development of such computational tools: scalability, standardization, and ease of use. We then apply these principles to develop PathML, a general-purpose research toolkit for computational pathology. We describe the design of the PathML framework and demonstrate applications in diverse use cases. 
+
+🚀 **The fastest way to get started?**
+
+    docker pull pathml/pathml && docker run -it -p 8888:8888 pathml/pathml
 
 | Branch | Test status   |
 | ------ | ------------- |
 | master | ![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg?branch=master) |
 | dev    | ![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg?branch=dev) |
 
-An open-source toolkit for computational pathology and machine learning.
+<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/logo.png width="300"> 
+
+<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/overview.png width="750">
 
 **View [documentation](https://pathml.readthedocs.io/en/latest/)**
 
