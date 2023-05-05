@@ -133,6 +133,23 @@ Note that these instructions assume that there are no other processes using port
 Please refer to the `Docker run` [documentation](https://docs.docker.com/engine/reference/run/) for further instructions
 on accessing the container, e.g. for mounting volumes to access files on a local machine from within the container.
 
+## Option 4: Google Colab
+
+To get PathML running in a Colab environment:
+
+````
+!pip install openslide-python
+!apt-get install openslide-tools
+!apt-get install openjdk-8-jdk-headless -qq > /dev/null
+os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-8-openjdk-amd64"
+!update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
+!java -version
+!pip install pathml
+````
+
+*Thanks to all of our open-source collaborators for helping maintain these installation instructions!*  
+*Please open an issue for any bugs or other problems during installation process.*
+
 ## CUDA
 
 To use GPU acceleration for model training or other tasks, you must install CUDA. 
