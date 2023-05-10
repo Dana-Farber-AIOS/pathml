@@ -5,29 +5,30 @@ License: GNU GPL 2.0
 
 import numpy as np
 import pytest
+
+from pathml.core import Tile
 from pathml.preprocessing import (
-    MedianBlur,
-    GaussianBlur,
-    BoxBlur,
+    AdaptiveHistogramEqualization,
     BinaryThreshold,
-    MorphOpen,
-    MorphClose,
+    BoxBlur,
+    CollapseRunsCODEX,
+    CollapseRunsVectra,
     ForegroundDetection,
-    SuperpixelInterpolation,
-    StainNormalizationHE,
-    NucleusDetectionHE,
-    TissueDetectionHE,
+    GaussianBlur,
+    HistogramEqualization,
     LabelArtifactTileHE,
     LabelWhiteSpaceHE,
+    MedianBlur,
+    MorphClose,
+    MorphOpen,
+    NucleusDetectionHE,
     QuantifyMIF,
-    CollapseRunsVectra,
-    CollapseRunsCODEX,
-    AdaptiveHistogramEqualization,
-    HistogramEqualization,
     RescaleIntensity,
+    StainNormalizationHE,
+    SuperpixelInterpolation,
+    TissueDetectionHE,
 )
 from pathml.utils import RGB_to_GREY
-from pathml.core import Tile
 
 
 @pytest.mark.parametrize("ksize", [3, 7, 21])
@@ -160,7 +161,7 @@ def test_binary_label_transforms(tileHE, transform):
 
 
 def test_segment_mif(tileVectra):
-    deepcell = pytest.importorskip("deepcell")
+    pytest.importorskip("deepcell")
     from pathml.preprocessing.transforms import SegmentMIF
 
     vectra_collapse = CollapseRunsVectra()
@@ -174,7 +175,7 @@ def test_segment_mif(tileVectra):
 
 
 def test_quantify_mif(tileVectra):
-    deepcell = pytest.importorskip("deepcell")
+    pytest.importorskip("deepcell")
     from pathml.preprocessing.transforms import SegmentMIF
 
     t = QuantifyMIF("cell_segmentation")
@@ -240,7 +241,7 @@ def test_repr(transform):
 
 
 def test_segmentMIF_repr():
-    deepcell = pytest.importorskip("deepcell")
+    pytest.importorskip("deepcell")
     from pathml.preprocessing.transforms import SegmentMIF
 
     repr(SegmentMIF(nuclear_channel=0, cytoplasm_channel=1))

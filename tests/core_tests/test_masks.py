@@ -3,11 +3,11 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-import pytest
 import numpy as np
+import pytest
 
 import pathml.core.h5managers
-from pathml.core import Masks, HESlide
+from pathml.core import HESlide, Masks
 
 
 @pytest.fixture
@@ -34,7 +34,7 @@ def smallmasks():
 def test_init_incorrect_input(incorrect_input):
     slidedata = HESlide("tests/testdata/small_HE.svs")
     with pytest.raises(ValueError):
-        masks = Masks(
+        Masks(
             h5manager=pathml.core.h5managers.h5pathManager(slidedata=slidedata),
             masks=incorrect_input,
         )
@@ -50,7 +50,7 @@ def test_add_get_incorrect_input(emptymasks, smallmasks, incorrect_input):
         )
         emptymasks.add("newmask", incorrect_input)
     with pytest.raises(KeyError):
-        mask = smallmasks[incorrect_input]
+        smallmasks[incorrect_input]
 
 
 @pytest.mark.parametrize(
@@ -72,5 +72,4 @@ def test_remove(smallmasks, incorrect_input):
     masks = smallmasks
     masks.remove("mask1")
     with pytest.raises(KeyError):
-        mask = masks["mask1"]
         masks.remove(incorrect_input)

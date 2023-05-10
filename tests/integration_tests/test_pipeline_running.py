@@ -9,18 +9,18 @@ import h5py
 import numpy as np
 import pytest
 from dask.distributed import Client, LocalCluster
+
 from pathml.core import HESlide, SlideData, VectraSlide
+from pathml.ml import TileDataset
 from pathml.preprocessing import (
     BoxBlur,
     CollapseRunsVectra,
     Pipeline,
     QuantifyMIF,
-    SegmentMIF,
     TissueDetectionHE,
 )
-from pathml.ml import TileDataset
-from pathml.utils import pil_to_rgb
 from pathml.preprocessing.transforms import Transform
+from pathml.utils import pil_to_rgb
 
 
 # test HE pipelines with both DICOM and OpenSlide backends
@@ -104,7 +104,7 @@ def test_pipeline_bioformats_tiff(tmp_path, dist, tile_size):
 @pytest.mark.parametrize("dist", [False, True])
 @pytest.mark.parametrize("tile_size", [1000, (1920, 1440)])
 def test_pipeline_bioformats_vectra(tmp_path, dist, tile_size):
-    deepcell = pytest.importorskip("deepcell")
+    pytest.importorskip("deepcell")
     from pathml.preprocessing.transforms import SegmentMIF
 
     slide = VectraSlide("tests/testdata/small_vectra.qptiff")

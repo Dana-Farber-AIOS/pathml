@@ -3,20 +3,19 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
+from loguru import logger
+from matplotlib.colors import TABLEAU_COLORS
+from scipy.ndimage.morphology import binary_fill_holes
+from skimage.segmentation import watershed
 from torch import nn
 from torch.nn import functional as F
-import numpy as np
-import cv2
-from loguru import logger
-from skimage.segmentation import watershed
-from scipy.ndimage.morphology import binary_fill_holes
-import matplotlib.pyplot as plt
-from matplotlib.colors import TABLEAU_COLORS
-from warnings import warn
 
-from pathml.utils import segmentation_lines
 from pathml.ml.utils import center_crop_im_batch, dice_loss, get_sobel_kernels
+from pathml.utils import segmentation_lines
 
 
 class _BatchNormRelu(nn.Module):
@@ -431,7 +430,8 @@ def compute_hv_map(mask):
 
     try:
         inst_list.remove(0)  # 0 is background
-    except:
+    # TODO: change to specific exception
+    except Exception:
         logger.warning(
             "No pixels with 0 label. This means that there are no background pixels. This may indicate a problem. Ignore this warning if this is expected/intended."
         )

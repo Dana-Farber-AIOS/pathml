@@ -44,7 +44,7 @@ COPY tests/ /opt/pathml/tests
 
 # install pathml and deepcell
 RUN pip3 install pip==21.3.1 \
-    && pip3 install numpy==1.19.5 spams==2.6.2.5 \
+    && pip3 install numpy==1.19.5 spams==2.6.2.5 protobuf==3.20.1\
     && pip3 install python-bioformats==4.0.0 deepcell /opt/pathml/ pytest
 
 # run tests to verify container
