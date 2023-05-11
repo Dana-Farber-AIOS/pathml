@@ -1,4 +1,5 @@
 <img src="https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/overview.png" width="750">
+
 🤖🔬 **PathML: Tools for computational pathology**
 
 [![Downloads](https://pepy.tech/badge/pathml)](https://pepy.tech/project/pathml)
