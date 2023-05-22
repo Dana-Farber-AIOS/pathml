@@ -16,7 +16,7 @@ jobs:
     strategy:
       max-parallel: 5
       matrix:
-        python-version: [3.8]
+        python-version: [3.8, 3.9]
     timeout-minutes: 60 # add a timeout
 
     steps:
