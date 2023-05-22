@@ -17,6 +17,7 @@ jobs:
       max-parallel: 5
       matrix:
         python-version: [3.8, 3.9]
+    timeout-minutes: 60 # add a timeout
 
     steps:
     - uses: actions/checkout@v2
@@ -40,9 +41,17 @@ jobs:
         environment-file: environment.yml
         mamba-version: "*"
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies with mamba
+    - name: Debugging
       run: |
-        mamba env update --file environment.yml --name pathml
+        echo "Printing the environment.yml file..."
+        cat environment.yml
+        echo "Checking the status of mamba..."
+        mamba --version
+        echo "Checking the available disk space..."
+        df -h
+    - name: Install dependencies with mamba
+      shell: bash -l {0}
+      run: mamba env update --file environment.yml --name pathml
     - name: Conda info
       shell: bash -l {0}
       run: |
