@@ -17,34 +17,31 @@ jobs:
       max-parallel: 5
       matrix:
         python-version: [3.8, 3.9]
-    timeout-minutes: 60 
+    timeout-minutes: 60 # add a timeout
 
     steps:
     - uses: actions/checkout@v2
-
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-
     - name: Display Python version
       run: python -c "import sys; print(sys.version)"
-
-    - name: Install system dependencies
+    - name: Install dependencies
       shell: bash -l {0}
       run: |
         sudo apt-get update
-        sudo apt-get install -y openslide-tools pandoc
-
-    - name: Setup Micromamba
-      uses: mamba-org/setup-micromamba@v1
+        sudo apt-get install openslide-tools
+        sudo apt-get install pandoc
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2
       with:
-        environment-file: environment.yml
-        micromamba-version: latest
+        auto-activate-base: false
         activate-environment: pathml
-
+        environment-file: environment.yml
+        mamba-version: "*"
+        python-version: ${{ matrix.python-version }}
     - name: Debugging
-      shell: bash -l {0}
       run: |
         echo "Printing the environment.yml file..."
         cat environment.yml
@@ -52,36 +49,32 @@ jobs:
         mamba --version
         echo "Checking the available disk space..."
         df -h
-
+    - name: Install dependencies with mamba
+      shell: bash -l {0}
+      run: mamba env update --file environment.yml --name pathml
     - name: Conda info
       shell: bash -l {0}
       run: |
         conda info
         conda list
-
-    - name: Install dependencies with mamba
-      run: mamba env update --file environment.yml --name pathml
-
-    - name: Install python-spams
-      run: micromamba install -y -n base -c conda-forge python-spams
-
-
     - name: Install PathML
-      shell: bash -l {0}
+      shell: bash -l {0}      
       run: pip install -e .
-
-    - name: Disk usage
+      
+    - name: Install python-spams
+      shell: bash -l {0}      
+      run: pip install python-spams
+      
+    - name: disk usage
       shell: bash -l {0}
       run: |
-        df -h
-        du -sh
-
+        sudo df -h
+        sudo du -h
     - name: Test with pytest and generate coverage report
       shell: bash -l {0}
       run: |
         coverage run -m pytest -m "not slow"
         coverage xml
-
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v2
       with:
@@ -91,7 +84,6 @@ jobs:
         files: ./coverage.xml
         name: codecov-umbrella
         verbose: true
-
     - name: Compile docs
       shell: bash -l {0}
       run: |
