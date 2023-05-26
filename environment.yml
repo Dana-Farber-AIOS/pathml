@@ -6,7 +6,7 @@ channels:
 
 dependencies:
     - pip==21.3.1
-    - python==3.8
+#     - python==3.8
     - numpy==1.19.5
     - scipy==1.7.3
     - scikit-image==0.18.3
