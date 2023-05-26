@@ -34,7 +34,7 @@ jobs:
         sudo apt-get install openslide-tools
         sudo apt-get install pandoc
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v2
+      uses: conda-incubator/setup-miniconda@v1
       with:
         auto-activate-base: false
         activate-environment: pathml
@@ -60,6 +60,9 @@ jobs:
     - name: Install PathML
       shell: bash -l {0}      
       run: pip install -e .
+    - name: Install python-spams
+      shell: bash -l {0} 
+      run: pip install python-spams
     - name: disk usage
       shell: bash -l {0}
       run: |
