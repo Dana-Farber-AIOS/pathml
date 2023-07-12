@@ -27,9 +27,10 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push
         id: docker_build
-        uses: docker/build-push-action@v2.7.0
+        uses: docker/build-push-action@v4 # prev 2.7.0
         with:
           context: .
+          platforms: linux/amd64,linux/arm64 # new line for m1/m2 macs 
           push: true
           tags: |
             pathml/pathml:latest
