@@ -23,6 +23,8 @@ dependencies:
         - python-javabridge==4.0.0
         - protobuf==3.20.1
         - deepcell==0.11.0
+        - onnx==1.14.0
+        - onnxruntime==1.15.1
         - opencv-contrib-python==4.5.3.56
         - openslide-python==1.2.0 
         - scanpy==1.8.2
