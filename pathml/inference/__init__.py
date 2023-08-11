@@ -9,5 +9,5 @@ from .inference import (
     InferenceBase,
     Inference,
     HaloAIInference,
-    RemoteTestHoverNet
+    RemoteTestHoverNet,
 )
