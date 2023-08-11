@@ -11,7 +11,7 @@ import pathml.preprocessing.transforms as Transforms
 import onnx
 import onnxruntime as ort 
 import pathml 
-
+import requests 
 
 def remove_initializer_from_input(model_path, new_path):
     """Removes initializers from HaloAI ONNX models
