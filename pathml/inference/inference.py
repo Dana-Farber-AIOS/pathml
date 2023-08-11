@@ -5,12 +5,9 @@ License: GNU GPL 2.0
 
 import os
 import numpy as np 
-from pathml.core import SlideData, Tile
-from pathml.preprocessing import Pipeline
 import pathml.preprocessing.transforms as Transforms
 import onnx
-import onnxruntime as ort 
-import pathml 
+import onnxruntime 
 import requests 
 
 def remove_initializer_from_input(model_path, new_path):
@@ -207,7 +204,7 @@ class Inference(InferenceBase):
         onnx.checker.check_model(onnx_model)
         
         # start an inference session
-        ort_sess = ort.InferenceSession(self.model_path)
+        ort_sess = onnxruntime.InferenceSession(self.model_path)
         
         # create model output, returns a list 
         model_output = ort_sess.run(None, {self.input_name: image.astype('f')}) 

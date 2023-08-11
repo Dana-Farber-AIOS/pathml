@@ -1,8 +1,6 @@
 import os
 import numpy as np
 import onnx
-import onnxruntime as ort 
-import pytest 
 
 from pathml.inference import (   
     remove_initializer_from_input,
