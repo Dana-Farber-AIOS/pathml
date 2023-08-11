@@ -4,10 +4,10 @@ License: GNU GPL 2.0
 """
 
 from .inference import (
-    remove_initializer_from_input,
-    check_onnx_clean,
-    InferenceBase,
-    Inference,
     HaloAIInference,
+    Inference,
+    InferenceBase,
     RemoteTestHoverNet,
+    check_onnx_clean,
+    remove_initializer_from_input,
 )

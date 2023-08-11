@@ -1,17 +1,17 @@
 import os
+
 import numpy as np
 import onnx
-import onnxruntime as ort
-import pytest
 
 from pathml.inference import (
-    remove_initializer_from_input,
-    check_onnx_clean,
-    InferenceBase,
-    Inference,
     HaloAIInference,
+    Inference,
+    InferenceBase,
     RemoteTestHoverNet,
+    check_onnx_clean,
+    remove_initializer_from_input,
 )
+
 
 
 def test_remove_initializer_from_input():

@@ -4,11 +4,14 @@ License: GNU GPL 2.0
 """
 
 import os
+
 import numpy as np
-import pathml.preprocessing.transforms as Transforms
 import onnx
 import onnxruntime
 import requests
+
+import pathml.preprocessing.transforms as Transforms
+
 
 
 def remove_initializer_from_input(model_path, new_path):
