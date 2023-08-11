@@ -13,7 +13,6 @@ from pathml.inference import (
 )
 
 
-
 def test_remove_initializer_from_input():
     # Create a temporary ONNX model file
     model_path = "test_model.onnx"
