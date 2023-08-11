@@ -4,7 +4,14 @@ import onnx
 import onnxruntime as ort 
 import pytest 
 
-from pathml.inference import *
+from pathml.inference import (   
+    remove_initializer_from_input,
+    check_onnx_clean, 
+    InferenceBase, 
+    Inference, 
+    HaloAIInference, 
+    RemoteTestHoverNet
+)
 
 
 def test_remove_initializer_from_input():
