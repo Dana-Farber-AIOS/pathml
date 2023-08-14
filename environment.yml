@@ -21,7 +21,7 @@ dependencies:
     - pip:
         - python-bioformats==4.0.0
         - python-javabridge==4.0.0
-        - protobuf==3.20.1
+        - protobuf==3.20.2
         - deepcell==0.11.0
         - onnx==1.14.0
         - onnxruntime==1.15.1
