@@ -22,7 +22,8 @@ dependencies:
         - python-bioformats==4.0.0
         - python-javabridge==4.0.0
         - protobuf==3.20.2
-        - deepcell==0.11.0
+        # - deepcell==0.11.0
+        - deepcell==0.12.7
         - onnx==1.14.0
         - onnxruntime==1.15.1
         - opencv-contrib-python==4.5.3.56
