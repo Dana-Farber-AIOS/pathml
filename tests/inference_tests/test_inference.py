@@ -3,6 +3,7 @@ import os
 import numpy as np
 import onnx
 
+from pathml.core import SlideData
 from pathml.inference import (
     HaloAIInference,
     Inference,
@@ -126,7 +127,7 @@ def test_InferenceBase():
 
 
 def test_Inference(tileHE):
-    new_path = "../testdata/andom_model.onnx"
+    new_path = "../testdata/random_model.onnx"
 
     inference = Inference(
         model_path=new_path, input_name="data", num_classes=1, model_type="segmentation"
@@ -138,7 +139,7 @@ def test_Inference(tileHE):
 
 
 def test_HaloAIInference(tileHE):
-    new_path = "../testdata/andom_model.onnx"
+    new_path = "../testdata/random_model.onnx"
 
     inference = HaloAIInference(
         model_path=new_path, input_name="data", num_classes=1, model_type="segmentation"
@@ -148,11 +149,22 @@ def test_HaloAIInference(tileHE):
     assert np.array_equal(tileHE.image, inference.F(orig_im))
 
 
-def test_RemoteTestHoverNet(tileHE):
+def test_RemoteTestHoverNet():
     inference = RemoteTestHoverNet()
 
-    orig_im = tileHE.image
-    inference.apply(tileHE)
-    assert np.array_equal(tileHE.image, inference.F(orig_im))
+    wsi = SlideData("../testdata/small_HE.svs")
+
+    tiles = wsi.generate_tiles(shape=(256, 256), pad=False)
+    a = 0
+    test_tile = None
+
+    while a == 0:
+        for tile in tiles:
+            test_tile = tile
+            a += 1
+
+    orig_im = test_tile.image
+    inference.apply(test_tile)
+    assert np.array_equal(test_tile.image, inference.F(orig_im))
 
     inference.remove()
