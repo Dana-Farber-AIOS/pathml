@@ -127,7 +127,7 @@ def test_InferenceBase():
 
 
 def test_Inference(tileHE):
-    new_path = "../testdata/random_model.onnx"
+    new_path = "tests/testdata/random_model.onnx"
 
     inference = Inference(
         model_path=new_path, input_name="data", num_classes=1, model_type="segmentation"
@@ -139,7 +139,7 @@ def test_Inference(tileHE):
 
 
 def test_HaloAIInference(tileHE):
-    new_path = "../testdata/random_model.onnx"
+    new_path = "tests/testdata/random_model.onnx"
 
     inference = HaloAIInference(
         model_path=new_path, input_name="data", num_classes=1, model_type="segmentation"
@@ -152,7 +152,7 @@ def test_HaloAIInference(tileHE):
 def test_RemoteTestHoverNet():
     inference = RemoteTestHoverNet()
 
-    wsi = SlideData("../testdata/small_HE.svs")
+    wsi = SlideData("tests/testdata/small_HE.svs")
 
     tiles = wsi.generate_tiles(shape=(256, 256), pad=False)
     a = 0
