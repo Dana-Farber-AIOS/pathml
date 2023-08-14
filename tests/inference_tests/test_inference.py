@@ -126,7 +126,7 @@ def test_InferenceBase():
 
 
 def test_Inference(tileHE):
-    new_path = "../random_model.onnx"
+    new_path = "../testdata/andom_model.onnx"
 
     inference = Inference(
         model_path=new_path, input_name="data", num_classes=1, model_type="segmentation"
@@ -138,7 +138,7 @@ def test_Inference(tileHE):
 
 
 def test_HaloAIInference(tileHE):
-    new_path = "../random_model.onnx"
+    new_path = "../testdata/andom_model.onnx"
 
     inference = HaloAIInference(
         model_path=new_path, input_name="data", num_classes=1, model_type="segmentation"
