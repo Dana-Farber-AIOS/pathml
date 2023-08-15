@@ -6,7 +6,7 @@ channels:
 
 dependencies:
     - pip==21.3.1
-    - numpy==1.21.6
+    - numpy==1.25.2 # orig = 1.19.5
     - scipy==1.7.3
     - scikit-image==0.18.3
     - matplotlib==3.5.1
@@ -15,20 +15,19 @@ dependencies:
     - h5py==3.1.0
     - dask==2021.12.0
     - pydicom==2.2.2
-    # - pytest==6.2.5
-    - pytest==7.4.0
+    - pytest==7.4.0 # orig = 6.2.5
     - pre-commit==2.16.0
     - coverage==5.5
     - pip:
         - python-bioformats==4.0.0
         - python-javabridge==4.0.0
         - protobuf==3.20.2
-        - deepcell==0.12.7
+        - deepcell==0.12.7 # orig = 0.11.0
         - onnx==1.14.0
         - onnxruntime==1.15.1
         - opencv-contrib-python==4.5.3.56
         - openslide-python==1.2.0
-        - pandas==1.5.2 
+        - pandas==1.5.2 # orig no req
         - scanpy==1.8.2
         - anndata==0.7.8
         - tqdm==4.62.3
