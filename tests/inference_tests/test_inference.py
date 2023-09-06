@@ -107,6 +107,10 @@ def test_InferenceBase():
     for key in test.model_card:
         assert key == test.model_card[key], f"function for {key} is not working"
 
+    assert "Base class for all ONNX models" == repr(test)
+
+    assert test.model_card == test.get_model_card()
+
     # test reshape function
     random = np.random.rand(1, 2, 3)
     assert test.reshape(random).shape == (
@@ -137,6 +141,8 @@ def test_Inference(tileHE):
     inference.apply(tileHE)
     assert np.array_equal(tileHE.image, inference.F(orig_im))
 
+    assert repr(inference) == "Class to handle ONNX model locally stored at {new_path}"
+
 
 def test_HaloAIInference(tileHE):
     new_path = "tests/testdata/random_model.onnx"
@@ -147,6 +153,11 @@ def test_HaloAIInference(tileHE):
     orig_im = tileHE.image
     inference.apply(tileHE)
     assert np.array_equal(tileHE.image, inference.F(orig_im))
+
+    assert (
+        repr(inference)
+        == "Class to handle HALO AI ONNX model locally stored at {new_path}"
+    )
 
 
 def test_RemoteTestHoverNet():
@@ -166,5 +177,10 @@ def test_RemoteTestHoverNet():
     orig_im = test_tile.image
     inference.apply(test_tile)
     assert np.array_equal(test_tile.image, inference.F(orig_im))
+
+    assert (
+        repr(inference)
+        == "Class to handle remote TIAToolBox HoverNet test ONNX. See model card for citation."
+    )
 
     inference.remove()
