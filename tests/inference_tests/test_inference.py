@@ -141,7 +141,7 @@ def test_Inference(tileHE):
     inference.apply(tileHE)
     assert np.array_equal(tileHE.image, inference.F(orig_im))
 
-    assert repr(inference) == "Class to handle ONNX model locally stored at {new_path}"
+    assert repr(inference) == f"Class to handle ONNX model locally stored at {new_path}"
 
 
 def test_HaloAIInference(tileHE):
@@ -156,7 +156,7 @@ def test_HaloAIInference(tileHE):
 
     assert (
         repr(inference)
-        == "Class to handle HALO AI ONNX model locally stored at {new_path}"
+        == f"Class to handle HALO AI ONNX model locally stored at {new_path}"
     )
 
 
