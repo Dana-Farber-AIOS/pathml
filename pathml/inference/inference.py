@@ -187,7 +187,7 @@ class Inference(InferenceBase):
         if self.local:
             return f"Class to handle ONNX model locally stored at {self.model_path}"
         else:
-            return f"Class to handle a {self.model_card['model_name']} from the PathML model zoo."
+            return f"Class to handle a {self.model_card['name']} from the PathML model zoo."
 
     def inference(self, image):
         # reshape the image
