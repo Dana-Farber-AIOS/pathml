@@ -104,11 +104,14 @@ def test_InferenceBase():
 
     test.set_citation("citation")
 
+    # test model card
     for key in test.model_card:
         assert key == test.model_card[key], f"function for {key} is not working"
 
+    # test repr function
     assert "Base class for all ONNX models" == repr(test)
 
+    # test get model card fxn
     assert test.model_card == test.get_model_card()
 
     # test reshape function
@@ -142,6 +145,13 @@ def test_Inference(tileHE):
     assert np.array_equal(tileHE.image, inference.F(orig_im))
 
     assert repr(inference) == f"Class to handle ONNX model locally stored at {new_path}"
+
+    # test initializer catching
+    new_path = "tests/testdata/model_with_initalizers.onnx"
+    try: 
+        inference = Inference(model_path=model_path, input_name="data", num_classes=1, model_type="segmentation")
+    except Exception as e:
+        assert str(e) == "The ONNX model still has graph initializers in the input graph. Use `remove_initializer_from_input` to remove them."
 
 
 def test_HaloAIInference(tileHE):
