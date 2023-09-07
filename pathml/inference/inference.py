@@ -63,7 +63,6 @@ def check_onnx_clean(model_path):
 
 
 # Base class
-# I think this should still inherit from Transforms to make the tiling easier/so we don't have to rewrite so much existing code
 class InferenceBase(Transforms.Transform):
     """
     Base class for all ONNX Models.
@@ -235,7 +234,6 @@ class Inference(InferenceBase):
         else:
             # concatenate prediction results
             # assumes that the tasks all output prediction arrays of same dimension on H and W
-            # To Do: figure out solution for way different tasks such as if a model does both segmentation and classification
             result_array = np.concatenate(prediction_map, axis=1)
             return result_array
 
@@ -287,7 +285,6 @@ class HaloAIInference(Inference):
 
 
 # class to handle remote onnx models
-# ToDo create function to remove model after tiling is done would be a sep line in workflow
 class RemoteTestHoverNet(Inference):
     """Transformation to run inferrence on ONNX model.
 
