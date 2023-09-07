@@ -147,11 +147,36 @@ def test_Inference(tileHE):
     assert repr(inference) == f"Class to handle ONNX model locally stored at {new_path}"
 
     # test initializer catching
-    new_path = "tests/testdata/model_with_initalizers.onnx"
-    try: 
-        inference = Inference(model_path=model_path, input_name="data", num_classes=1, model_type="segmentation")
+    bad_model = "tests/testdata/model_with_initalizers.onnx"
+    try:
+        inference = Inference(
+            model_path=bad_model,
+            input_name="data",
+            num_classes=1,
+            model_type="segmentation",
+        )
     except Exception as e:
-        assert str(e) == "The ONNX model still has graph initializers in the input graph. Use `remove_initializer_from_input` to remove them."
+        assert (
+            str(e)
+            == "The ONNX model still has graph initializers in the input graph. Use `remove_initializer_from_input` to remove them."
+        )
+
+    # test repr function with local set to False
+    inference = Inference(
+        model_path=new_path,
+        input_name="data",
+        num_classes=1,
+        model_type="segmentation",
+        local=False,
+    )
+
+    fake_model_name = "test model"
+    inference.set_name(fake_model_name)
+
+    assert (
+        repr(inference)
+        == f"Class to handle a {fake_model_name} from the PathML model zoo."
+    )
 
 
 def test_HaloAIInference(tileHE):
