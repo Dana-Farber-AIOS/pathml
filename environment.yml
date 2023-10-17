@@ -32,3 +32,4 @@ dependencies:
         - tqdm==4.62.3
         - loguru==0.5.3
         - pandas==1.5.2 # orig no req
+        # to do: adjust openslide
