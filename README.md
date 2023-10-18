@@ -1,19 +1,27 @@
-<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/logo.png width="300"> 
+🤖🔬 **PathML: Tools for computational pathology**
 
-<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/overview.png width="750">
-
+[![Downloads](https://static.pepy.tech/badge/pathml)](https://pepy.tech/project/pathml)
 [![Documentation Status](https://readthedocs.org/projects/pathml/badge/?version=latest)](https://pathml.readthedocs.io/en/latest/?badge=latest)
+[![codecov](https://codecov.io/gh/Dana-Farber-AIOS/pathml/branch/master/graph/badge.svg?token=UHSQPTM28Y)](https://codecov.io/gh/Dana-Farber-AIOS/pathml)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![PyPI version](https://img.shields.io/pypi/v/pathml)](https://pypi.org/project/pathml/)
-[![Downloads](https://pepy.tech/badge/pathml)](https://pepy.tech/project/pathml)
-[![codecov](https://codecov.io/gh/Dana-Farber-AIOS/pathml/branch/master/graph/badge.svg?token=UHSQPTM28Y)](https://codecov.io/gh/Dana-Farber-AIOS/pathml)
+
+⭐ **PathML objective is to lower the barrier to entry to digital pathology**
+
+Imaging datasets in cancer research are growing exponentially in both quantity and information density. These massive datasets may enable derivation of insights for cancer research and clinical care, but only if researchers are equipped with the tools to leverage advanced computational analysis approaches such as machine learning and artificial intelligence. In this work, we highlight three themes to guide development of such computational tools: scalability, standardization, and ease of use. We then apply these principles to develop PathML, a general-purpose research toolkit for computational pathology. We describe the design of the PathML framework and demonstrate applications in diverse use cases. 
+
+🚀 **The fastest way to get started?**
+
+    docker pull pathml/pathml && docker run -it -p 8888:8888 pathml/pathml
 
 | Branch | Test status   |
 | ------ | ------------- |
 | master | ![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg?branch=master) |
 | dev    | ![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg?branch=dev) |
 
-An open-source toolkit for computational pathology and machine learning.
+<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/logo.png width="300"> 
+
+<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/overview.png width="750">
 
 **View [documentation](https://pathml.readthedocs.io/en/latest/)**
 
@@ -125,6 +133,23 @@ Note that these instructions assume that there are no other processes using port
 Please refer to the `Docker run` [documentation](https://docs.docker.com/engine/reference/run/) for further instructions
 on accessing the container, e.g. for mounting volumes to access files on a local machine from within the container.
 
+## Option 4: Google Colab
+
+To get PathML running in a Colab environment:
+
+````
+!pip install openslide-python
+!apt-get install openslide-tools
+!apt-get install openjdk-8-jdk-headless -qq > /dev/null
+os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-8-openjdk-amd64"
+!update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
+!java -version
+!pip install pathml
+````
+
+*Thanks to all of our open-source collaborators for helping maintain these installation instructions!*  
+*Please open an issue for any bugs or other problems during installation process.*
+
 ## CUDA
 
 To use GPU acceleration for model training or other tasks, you must install CUDA. 
@@ -191,12 +216,36 @@ See [contributing](https://github.com/Dana-Farber-AIOS/pathml/blob/master/CONTRI
 
 # Citing
 
-If you use `PathML` in your work, please cite our paper:
+If you use `PathML` please cite:
 
-Rosenthal J, Carelli R, Omar M, Brundage D, Halbert E, Nyman J, Hari SN, Van Allen EM, Marchionni L, Umeton R, Loda M. 
-Building tools for machine learning and artificial intelligence in cancer research: best practices and a case study 
-with the PathML toolkit for computational pathology. *Molecular Cancer Research*, 2021. 
-DOI: [10.1158/1541-7786.MCR-21-0665](https://doi.org/10.1158/1541-7786.MCR-21-0665)
+- [**J. Rosenthal et al., "Building tools for machine learning and artificial intelligence in cancer research: best practices and a case study with the PathML toolkit for computational pathology." Molecular Cancer Research, 2022.**](https://doi.org/10.1158/1541-7786.MCR-21-0665)
+
+So far, PathML was used in the following manuscripts: 
+
+- [J. Linares et al. **Molecular Cell** 2021](https://www.cell.com/molecular-cell/fulltext/S1097-2765(21)00729-2)
+- [A. Shmatko et al. **Nature Cancer** 2022](https://www.nature.com/articles/s43018-022-00436-4)
+- [J. Pocock et al. **Nature Communications Medicine** 2022](https://www.nature.com/articles/s43856-022-00186-5)
+- [S. Orsulic et al. **Frontiers in Oncology** 2022](https://www.frontiersin.org/articles/10.3389/fonc.2022.924945/full)
+- [D. Brundage et al. **arXiv** 2022](https://arxiv.org/abs/2203.13888)
+- [A. Marcolini et al. **SoftwareX** 2022](https://www.sciencedirect.com/science/article/pii/S2352711022001558)
+- [M. Rahman et al. **Bioengineering** 2022](https://www.mdpi.com/2306-5354/9/8/335)
+- [C. Lama et al. **bioRxiv** 2022](https://www.biorxiv.org/content/10.1101/2022.09.28.509751v1.full)
+- the list continues [**here 🔗 for 2023 and onwards**](https://scholar.google.com/scholar?oi=bibs&hl=en&cites=1157052756975292108)
+
+# Users
+
+<table style="border: 0px !important;"><tr><td>This is where in the world our most enthusiastic supporters are located:
+   <br/><br/>
+<img src="https://user-images.githubusercontent.com/25375373/208137141-e450aa86-8433-415a-9cc7-c4274139bdc2.png" width="500px">
+   </td><td>   
+and this is where they work:
+   <br/><br/>
+<img src="https://user-images.githubusercontent.com/25375373/208137644-f73c86d0-c5c7-4094-80d9-ea11e0edbdc5.png" width="400px">
+</td>                                                                                                                             
+</tr>
+</table>
+
+Source: https://ossinsight.io/analyze/Dana-Farber-AIOS/pathml#people
 
 # License
 
@@ -209,6 +258,6 @@ Commercial license options are available also.
 
 Questions? Comments? Suggestions? Get in touch!
 
-[PathML@dfci.harvard.edu](mailto:PathML@dfci.harvard.edu)
+[pathml@dfci.harvard.edu](mailto:pathml@dfci.harvard.edu)
 
 <img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/dfci_cornell_joint_logos.png width="750"> 
