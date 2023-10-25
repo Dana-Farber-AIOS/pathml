@@ -260,4 +260,4 @@ Questions? Comments? Suggestions? Get in touch!
 
 [pathml@dfci.harvard.edu](mailto:pathml@dfci.harvard.edu)
 
-<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/dfci_cornell_joint_logos.png width="750"> 
+<img src="https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/dfci_cornell_joint_logos.png" width="750"> 
