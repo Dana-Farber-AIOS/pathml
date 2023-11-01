@@ -14,6 +14,7 @@ from pathml.inference import (
     convert_pytorch_onnx,
     remove_initializer_from_input,
 )
+from pathml.tests.testdata.simple_model import SimpleModel
 
 
 def test_remove_initializer_from_input():
@@ -224,18 +225,10 @@ def test_RemoteTestHoverNet():
 
 
 def test_convert_pytorch_onnx():
-    class SimpleModel(torch.nn.Module):
-        def __init__(self):
-            super(SimpleModel, self).__init__()
-            self.linear = torch.nn.Linear(10, 1)
-            torch.nn.init.xavier_uniform_(self.linear.weight)
-
-        def forward(self, x):
-            y = self.linear(x)
-            return y
+    model_test = SimpleModel()
 
     test_tensor = torch.randn(1, 10)
-    model_test = torch.load("tests/testdata/test.pt")
+    model_test.load_state_dict(torch.load("tests/testdata/test.pt"))
 
     model_test.eval()
 
