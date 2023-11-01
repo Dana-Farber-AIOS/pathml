@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import onnx
+import torch
 
 from pathml.core import SlideData
 from pathml.inference import (
@@ -10,6 +11,7 @@ from pathml.inference import (
     InferenceBase,
     RemoteTestHoverNet,
     check_onnx_clean,
+    convert_pytorch_onnx,
     remove_initializer_from_input,
 )
 
@@ -219,3 +221,52 @@ def test_RemoteTestHoverNet():
     )
 
     inference.remove()
+
+
+def test_convert_pytorch_onnx():
+    class SimpleModel(torch.nn.Module):
+        def __init__(self):
+            super(SimpleModel, self).__init__()
+            self.linear = torch.nn.Linear(10, 1)
+            torch.nn.init.xavier_uniform_(self.linear.weight)
+
+        def forward(self, x):
+            y = self.linear(x)
+            return y
+
+    test_tensor = torch.randn(1, 10)
+    model_test = torch.load("tests/testdata/test.pt")
+
+    model_test.eval()
+
+    convert_pytorch_onnx(
+        model=model_test, dummy_tensor=test_tensor, model_name="test_export.onnx"
+    )
+
+    os.remove("test_export.onnx")
+
+    # test Value Error Statements
+
+    # test lines to check model input
+    try:
+        convert_pytorch_onnx(
+            model=None, dummy_tensor=test_tensor, model_name="test_export.onnx"
+        )
+
+    except Exception as e:
+        assert (
+            str(e)
+            == f"The model is not of type torch.nn.Module. Received {type(None)}."
+        )
+
+    # test lines to check model dummy input
+    try:
+        convert_pytorch_onnx(
+            model=model_test, dummy_tensor=None, model_name="test_export.onnx"
+        )
+
+    except Exception as e:
+        assert (
+            str(e)
+            == f"The dummy tensor needs to be a torch tensor. Received {type(None)}."
+        )

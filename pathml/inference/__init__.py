@@ -9,5 +9,6 @@ from .inference import (
     InferenceBase,
     RemoteTestHoverNet,
     check_onnx_clean,
+    convert_pytorch_onnx,
     remove_initializer_from_input,
 )

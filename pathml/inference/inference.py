@@ -9,6 +9,7 @@ import numpy as np
 import onnx
 import onnxruntime
 import requests
+import torch
 
 import pathml.preprocessing.transforms as Transforms
 
@@ -60,6 +61,46 @@ def check_onnx_clean(model_path):
     for initializer in model.graph.initializer:
         if initializer.name in name_to_input:
             return True
+
+
+def convert_pytorch_onnx(
+    model, dummy_tensor, model_name, opset_version=10, input_name="data"
+):
+    """Converts a Pytorch Model to ONNX
+    Adjusted from https://pytorch.org/tutorials/advanced/super_resolution_with_onnxruntime.html
+
+    You need to define the model class and load the weights before exporting. See URL above for full steps.
+
+    Args:
+        model_path (torch.nn.Module Model): Pytorch model to be converted,
+        dummy_tensor (torch.tensor): dummy input tensor that is an example of what will be passed into the model,
+        model_name (str): name of ONNX model created with .onnx at the end,
+        opset_version (int): which opset version you want to use to export
+        input_name (str): name assigned to dummy_tensor
+
+    Returns:
+        Exports ONNX model converted from Pytorch
+    """
+
+    if not isinstance(model, torch.nn.Module):
+        raise ValueError(
+            f"The model is not of type torch.nn.Module. Received {type(model)}."
+        )
+
+    if not torch.is_tensor(dummy_tensor):
+        raise ValueError(
+            f"The dummy tensor needs to be a torch tensor. Received {type(dummy_tensor)}."
+        )
+
+    torch.onnx.export(
+        model,
+        dummy_tensor,
+        model_name,
+        export_params=True,
+        opset_version=opset_version,
+        do_constant_folding=True,
+        input_names=[input_name],
+    )
 
 
 # Base class
