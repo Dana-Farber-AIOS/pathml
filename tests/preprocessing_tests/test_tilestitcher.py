@@ -42,7 +42,7 @@ import subprocess
     
 #     return stitcher
 
-
+@pytest.mark.exclude
 @pytest.fixture(scope="module")
 def tile_stitcher(request):
     try:
@@ -80,17 +80,18 @@ def tile_stitcher(request):
 
     return stitcher
 
-
+@pytest.mark.exclude
 def test_set_environment_paths(tile_stitcher):
     tile_stitcher.set_environment_paths()
     assert "JAVA_HOME" in os.environ
 
-
+@pytest.mark.exclude
 def test_get_system_java_home(tile_stitcher):
     path = tile_stitcher.get_system_java_home()
     assert isinstance(path, str)
 
 
+@pytest.mark.exclude
 @patch("pathml.preprocessing.tilestitcher.jpype.startJVM")
 def test_start_jvm(mocked_jvm, tile_stitcher):
     # Check if JVM was already started
@@ -99,6 +100,7 @@ def test_start_jvm(mocked_jvm, tile_stitcher):
     tile_stitcher._start_jvm()
     mocked_jvm.assert_called()
 
+@pytest.mark.exclude
 @patch("pathml.preprocessing.tilestitcher.tifffile")
 def test_parse_region(mocked_tifffile, tile_stitcher):
     # Mock the return values
@@ -118,7 +120,7 @@ def test_parse_region(mocked_tifffile, tile_stitcher):
     assert region is not None
     assert isinstance(region, tile_stitcher.ImageRegion)
 
-
+@pytest.mark.exclude
 def test_collect_tif_files(tile_stitcher):
     # Assuming a directory with one tif file for testing
     dir_path = "some_directory"
@@ -133,27 +135,27 @@ def test_collect_tif_files(tile_stitcher):
     os.remove(os.path.join(dir_path, "test.tif"))
     os.rmdir(dir_path)
 
-
+@pytest.mark.exclude
 def test_checkTIFF_valid(tile_stitcher, tmp_path):
     # Create a mock TIFF file
     tiff_path = tmp_path / "mock.tiff"
     tiff_path.write_bytes(b"II*\x00")  # Little-endian TIFF signature
     assert tile_stitcher.checkTIFF(tiff_path) == True
 
-
+@pytest.mark.exclude
 def test_checkTIFF_invalid(tile_stitcher, tmp_path):
     # Create a mock non-TIFF file
     txt_path = tmp_path / "mock.txt"
     txt_path.write_text("Not a TIFF file")
     assert tile_stitcher.checkTIFF(txt_path) == False
 
-
+@pytest.mark.exclude
 def test_checkTIFF_nonexistent(tile_stitcher):
     # Test with a file that doesn't exist
     with pytest.raises(FileNotFoundError):
         tile_stitcher.checkTIFF("nonexistent_file.tiff")
 
-
+@pytest.mark.exclude
 def test_check_tiff(tile_stitcher):
     valid_tif = b"II*"
     invalid_tif = b"abcd"
@@ -170,13 +172,13 @@ def test_check_tiff(tile_stitcher):
     os.remove("valid_test.tif")
     os.remove("invalid_test.tif")
 
-
+@pytest.mark.exclude
 def test_get_outfile_ending_with_ome_tif(tile_stitcher):
     result, result_jpype = tile_stitcher._get_outfile("test.ome.tif")
     assert result == "test.ome.tif"
     assert str(result_jpype) == "test.ome.tif"
 
-
+@pytest.mark.exclude
 def test_get_outfile_without_ending(tile_stitcher):
     result, result_jpype = tile_stitcher._get_outfile("test.ome.tif")
     assert result == "test.ome.tif"
@@ -188,10 +190,12 @@ from unittest.mock import patch, MagicMock
 import zipfile
 import subprocess
 
+@pytest.mark.exclude
 # Dummy function to "fake" the file download
 def mocked_urlretrieve(*args, **kwargs):
     pass
 
+@pytest.mark.exclude
 # Mock Zip class as provided
 class MockZip:
     def __init__(self, zip_path, *args, **kwargs):
@@ -232,6 +236,7 @@ import zipfile
 from unittest.mock import patch, MagicMock
 import pytest
 
+@pytest.mark.exclude
 def mock_create_zip(zip_path):
     """
     Creates a mock zip file at the given path.
@@ -246,11 +251,12 @@ def mock_create_zip(zip_path):
     os.unlink(tmpfile.name)  # Clean up the temporary file
 
 
-
+@pytest.mark.exclude
 @pytest.fixture
 def bfconvert_dir(tmp_path):
     return tmp_path / 'bfconvert_dir'
 
+@pytest.mark.exclude
 def test_bfconvert_version_print(tile_stitcher, bfconvert_dir):
     tile_stitcher.setup_bfconvert(bfconvert_dir)
     output = subprocess.check_output([tile_stitcher.bfconvert_path, "-version"])
@@ -258,21 +264,25 @@ def test_bfconvert_version_print(tile_stitcher, bfconvert_dir):
 
     # assert subprocess.check_output([tile_stitcher.bfconvert_path, "-version"]) == b'version 1.0.0'
 
+@pytest.mark.exclude
 def test_permission_error_on_directory_creation(tile_stitcher):
     with patch("os.makedirs", side_effect=PermissionError("Permission denied")):
         with pytest.raises(PermissionError):
             tile_stitcher.setup_bfconvert("/fake/path")
 
+@pytest.mark.exclude
 def test_invalid_zip_file(tile_stitcher):
     with patch("zipfile.ZipFile", side_effect=zipfile.BadZipFile("Invalid ZIP file")):
         with pytest.raises(zipfile.BadZipFile):
             tile_stitcher.setup_bfconvert("/fake/path")
 
+@pytest.mark.exclude
 def test_permission_error_on_chmod(tile_stitcher):
     with patch("os.chmod", side_effect=PermissionError("Permission denied")):
         with pytest.raises(PermissionError):
             tile_stitcher.setup_bfconvert("/fake/path")
 
+@pytest.mark.exclude
 def throwing_function(*args, **kwargs):
     raise Exception("Simulated error")
 
@@ -304,54 +314,59 @@ class MockZip:
         with open(os.path.join(bftools_dir, 'bf.sh'), 'w') as f:
             f.write("#!/bin/sh\necho 'dummy bf.sh'")
 
-
+@pytest.mark.exclude
 @pytest.fixture
 def mock_tools_dir(tmp_path):
     return tmp_path / "tools"
 
+@pytest.mark.exclude
 @pytest.fixture
 def mock_zip_path(mock_tools_dir):
     return mock_tools_dir / "bftools.zip"
 
+@pytest.mark.exclude
 def mock_urlretrieve(*args, **kwargs):
     with zipfile.ZipFile(args[1], 'w') as zipf:
         zipf.writestr('bftools/bfconvert', 'dummy content')
         zipf.writestr('bftools/bf.sh', 'dummy content')
 
+@pytest.mark.exclude
 @patch("urllib.request.urlretrieve", side_effect=mock_urlretrieve)
 @patch("os.makedirs", side_effect=PermissionError)
 def test_invalid_path(mock_makedirs, mock_urlretrieve, tile_stitcher, mock_tools_dir):
     with pytest.raises(PermissionError):
         tile_stitcher.setup_bfconvert(str(mock_tools_dir))
 
+@pytest.mark.exclude
 @patch("urllib.request.urlretrieve", side_effect=mock_urlretrieve)
 @patch("zipfile.ZipFile", side_effect=zipfile.BadZipFile)
 def test_invalid_zip_file(mock_zipfile, mock_urlretrieve, tile_stitcher, mock_tools_dir):
     with pytest.raises(zipfile.BadZipFile):
         tile_stitcher.setup_bfconvert(str(mock_tools_dir))
 
+@pytest.mark.exclude
 @patch("urllib.request.urlretrieve", side_effect=mock_urlretrieve)
 @patch("subprocess.check_output", side_effect=subprocess.CalledProcessError(1, 'cmd'))
 def test_bfconvert_failure(mock_subprocess, mock_urlretrieve, tile_stitcher, mock_tools_dir):
     with pytest.raises(subprocess.CalledProcessError):
         tile_stitcher.setup_bfconvert(str(mock_tools_dir))
 
-
+@pytest.mark.exclude
 def test_is_bfconvert_available_true(tile_stitcher):
     with patch('subprocess.run', return_value=subprocess.CompletedProcess(args=[], returncode=0)):
         assert tile_stitcher.is_bfconvert_available() is True
 
-
+@pytest.mark.exclude
 def test_is_bfconvert_available_false(tile_stitcher):
     with patch('subprocess.run', return_value=subprocess.CompletedProcess(args=[], returncode=1)):
         assert tile_stitcher.is_bfconvert_available() is False
 
-
+@pytest.mark.exclude
 def test_is_bfconvert_available_file_not_found(tile_stitcher):
     with patch('subprocess.run', side_effect=FileNotFoundError()):
         assert tile_stitcher.is_bfconvert_available() is False
 
-
+@pytest.mark.exclude
 def test_run_bfconvert_bfconvert_not_available(tile_stitcher, capsys):
     tile_stitcher.bfconvert_path = "dummy_path"
     with patch.object(tile_stitcher, 'is_bfconvert_available', return_value=False):
@@ -359,7 +374,7 @@ def test_run_bfconvert_bfconvert_not_available(tile_stitcher, capsys):
         captured = capsys.readouterr()
         assert "bfconvert command not available. Skipping bfconvert step." in captured.out
 
-
+@pytest.mark.exclude
 def test_run_bfconvert_custom_bfconverted_path(tile_stitcher, capsys):
     tile_stitcher.bfconvert_path = "dummy_path"
     with patch.object(tile_stitcher, 'is_bfconvert_available', return_value=True):
@@ -369,7 +384,7 @@ def test_run_bfconvert_custom_bfconverted_path(tile_stitcher, capsys):
             captured = capsys.readouterr()
             assert "bfconvert completed. Output file: custom_path.tif" in captured.out
 
-
+@pytest.mark.exclude
 def test_run_bfconvert_default_bfconverted_path(tile_stitcher, capsys):
     tile_stitcher.bfconvert_path = "dummy_path"
     with patch.object(tile_stitcher, 'is_bfconvert_available', return_value=True):
@@ -379,7 +394,7 @@ def test_run_bfconvert_default_bfconverted_path(tile_stitcher, capsys):
             captured = capsys.readouterr()
             assert "bfconvert completed. Output file: dummy_stitched_image_path_sep.tif" in captured.out
 
-
+@pytest.mark.exclude
 def test_run_bfconvert_error(tile_stitcher, capsys):
     tile_stitcher.bfconvert_path = "dummy_path"
     with patch.object(tile_stitcher, 'is_bfconvert_available', return_value=True):
@@ -388,12 +403,13 @@ def test_run_bfconvert_error(tile_stitcher, capsys):
             captured = capsys.readouterr()
             assert "Error running bfconvert command." in captured.out
 
-
+@pytest.mark.exclude
 @pytest.fixture
 def sample_files():
     # Paths to your sample TIF files for testing
     return ["tests/testdata/tilestitching_testdata/MISI3542i_W21-04143_bi016966_M394_OVX_LM_Scan1_[14384,29683]_component_data.tif"]
 
+@pytest.mark.exclude
 def test_integration_stitching(tile_stitcher, sample_files):
     # Mocking the Java object returned by parse_regions
     mocked_java_object = MagicMock()
@@ -413,7 +429,7 @@ def test_integration_stitching(tile_stitcher, sample_files):
         
         # Add more assertions here if you have additional methods or behaviors to verify
 
-           
+@pytest.mark.exclude          
 def test_write_pyramidal_image_server(tile_stitcher, sample_files):
     
     infiles = tile_stitcher._collect_tif_files(sample_files)

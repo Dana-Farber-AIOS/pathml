@@ -27,7 +27,9 @@ class TileStitcher:
             os.environ["JAVA_HOME"] = java_path
         else:
             self.set_environment_paths()
-
+            print('Setting Environment Paths')
+        
+        # print(qupath_jarpath)
         self.classpath = os.pathsep.join(qupath_jarpath)
         self.memory = memory
         self._start_jvm()
