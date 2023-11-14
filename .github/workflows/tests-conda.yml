@@ -58,6 +58,13 @@ jobs:
       run: |
         conda info
         conda list
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v2
+      with:
+        java-version: '17'
+        distribution: 'adopt'
+        
     - name: Install PathML
       shell: bash -l {0}      
       run: pip install -e .
@@ -74,7 +81,7 @@ jobs:
     - name: Test with pytest and generate coverage report
       shell: bash -l {0}
       run: |
-        coverage run -m pytest -m "not slow"
+        coverage run -m pytest -m "not slow and not exclude"
         coverage xml
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v2
