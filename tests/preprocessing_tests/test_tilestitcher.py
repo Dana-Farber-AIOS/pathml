@@ -1,4 +1,5 @@
 from pathml.preprocessing.tilestitcher import TileStitcher
+from pathml.utils import setup_qupath
 import pytest
 import os
 from unittest.mock import MagicMock, patch
@@ -9,34 +10,74 @@ import zipfile
 import subprocess
 
 
+# @pytest.fixture(scope="module")
+# def tile_stitcher(request):
+    
+#     try:
+#         javabridge.kill_vm()
+#         print('Javabridge vm terminated')
+#     except:
+#         pass  # JVM was not running, so nothing to kill
+    
+#     java_home = os.environ.get('JAVA_HOME', '/usr/lib/jvm/jdk-17/') # Default path if JAVA_HOME is not set
+#     qupath_home = os.environ.get('QUPATH_HOME', '/home/jupyter/tools/qupath/QuPath/') # Default path if QUPATH_HOME is not set
+
+#     qupath_jars = glob.glob(os.path.abspath("/home/jupyter/Projects/tile_stitching/tools/QuPath/lib/app/*.jar"))
+#     qupath_jars.append(
+#         os.path.abspath("/home/jupyter/Projects/tile_stitching/tools/QuPath/lib/app/libopenslide-jni.so")
+#     )
+#     bfconvert_dir= './'
+#     stitcher = TileStitcher(qupath_jars,bfconvert_dir)
+#     stitcher._start_jvm()  # Ensure the JVM starts and QuPath classes are imported
+
+#     def teardown():
+#         try:
+#             # if javabridge.is_vm_running():
+#             javabridge.kill_vm()
+#             print('Javabridge vm terminated in teardown')
+#         except Exception as e:
+#             print(f"Error during JVM teardown: {e}")
+
+#     request.addfinalizer(teardown)
+    
+#     return stitcher
+
+
 @pytest.fixture(scope="module")
 def tile_stitcher(request):
-    
     try:
         javabridge.kill_vm()
         print('Javabridge vm terminated')
     except:
         pass  # JVM was not running, so nothing to kill
-    
+
+    # Set JAVA_HOME
     os.environ["JAVA_HOME"] = "/usr/lib/jvm/jdk-17/"
-    qupath_jars = glob.glob(os.path.abspath("/home/jupyter/Projects/tile_stitching/tools/QuPath/lib/app/*.jar"))
-    qupath_jars.append(
-        os.path.abspath("/home/jupyter/Projects/tile_stitching/tools/QuPath/lib/app/libopenslide-jni.so")
-    )
-    bfconvert_dir= './'
-    stitcher = TileStitcher(qupath_jars,bfconvert_dir)
-    stitcher._start_jvm()  # Ensure the JVM starts and QuPath classes are imported
+
+    # Setup QuPath using the setup_qupath function
+    qupath_home = setup_qupath('../../tools/qupath')  # Replace with the appropriate path
+
+    # Ensure QUPATH_HOME is set
+    os.environ['QUPATH_HOME'] = qupath_home
+
+    # Construct path to QuPath jars
+    qupath_jars_dir = os.path.join(qupath_home, 'lib', 'app')
+    qupath_jars = glob.glob(os.path.join(qupath_jars_dir, '*.jar'))
+    qupath_jars.append(os.path.join(qupath_jars_dir, 'libopenslide-jni.so'))
+
+    bfconvert_dir = './'
+    stitcher = TileStitcher(qupath_jars, bfconvert_dir)
+    stitcher._start_jvm()
 
     def teardown():
         try:
-            # if javabridge.is_vm_running():
             javabridge.kill_vm()
             print('Javabridge vm terminated in teardown')
         except Exception as e:
             print(f"Error during JVM teardown: {e}")
 
     request.addfinalizer(teardown)
-    
+
     return stitcher
 
 
