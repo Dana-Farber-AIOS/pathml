@@ -1,3 +1,9 @@
+"""
+Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
+License: GNU GPL 2.0
+"""
+
+
 import os
 import glob
 import jpype
@@ -11,9 +17,13 @@ import platform
 
 class TileStitcher:
     """
-    This class provides utilities to stitch TIFF tiles using QuPath.
+    
+    This class serves as a Python implementation of a script originally authored by Pete Bankhead, 
+    available at https://gist.github.com/petebankhead/b5a86caa333de1fdcff6bdee72a20abe 
+    The original script is designed to stitch spectrally unmixed images into a pyramidal OME-TIFF format.
 
     Make sure QuPath and JDK are installed before using this class.
+    
     """
 
         
