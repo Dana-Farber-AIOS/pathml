@@ -58,6 +58,12 @@ jobs:
       run: |
         conda info
         conda list
+    
+    - name: Set default Temurin JDK 17
+      run: |
+        sudo update-java-alternatives --set temurin-17-jdk-amd64 || true
+        java -version
+        
     - name: Install PathML
       shell: bash -l {0}      
       run: pip install -e .
