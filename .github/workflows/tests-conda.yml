@@ -78,25 +78,51 @@ jobs:
         sudo df -h
         sudo du -h
 
-    - name: Test with pytest for tile_stitcher
-      run: |
-        java -version
-        python -m pytest tests/preprocessing_tests/test_tilestitcher.py
+    # - name: Test with pytest for tile_stitcher
+    #   run: |
+    #     java -version
+    #     python -m pytest tests/preprocessing_tests/test_tilestitcher.py
         
-    - name: Test with pytest and generate coverage report
-      shell: bash -l {0}
+    # - name: Test with pytest and generate coverage report
+    #   shell: bash -l {0}
+    #   run: |
+    #     coverage run -m pytest -m "not slow and not exclude"
+    #     coverage xml
+    # - name: Upload coverage to Codecov
+    #   uses: codecov/codecov-action@v2
+    #   with:
+    #     token: ${{ secrets.CODECOV_TOKEN }}
+    #     env_vars: OS,PYTHON
+    #     fail_ci_if_error: true
+    #     files: ./coverage.xml
+    #     name: codecov-umbrella
+    #     verbose: true
+
+    - name: Test tile_stitcher with pytest and generate coverage
       run: |
-        coverage run -m pytest -m "not slow"
-        coverage xml
-    - name: Upload coverage to Codecov
+        coverage run -m pytest tests/preprocessing_tests/test_tilestitcher.py
+        coverage xml -o coverage_tilestitcher.xml
+
+    - name: Test other modules with pytest and generate coverage
+      run: |
+        coverage run -m pytest -m "not slow and not exclude"
+        coverage xml -o coverage_others.xml
+
+    - name: Combine coverage data
+      run: |
+        coverage combine coverage_tilestitcher.xml coverage_others.xml
+        coverage xml -o coverage_combined.xml
+
+    - name: Upload combined coverage to Codecov
       uses: codecov/codecov-action@v2
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         env_vars: OS,PYTHON
         fail_ci_if_error: true
-        files: ./coverage.xml
+        files: ./coverage_combined.xml
         name: codecov-umbrella
         verbose: true
+
     - name: Compile docs
       shell: bash -l {0}
       run: |
