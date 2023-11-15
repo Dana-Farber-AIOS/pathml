@@ -78,10 +78,10 @@ jobs:
         sudo df -h
         sudo du -h
 
-    - name: Check Coverage Command
-      run: |
-        which coverage
-        coverage --version
+    # - name: Check Coverage Command
+    #   run: |
+    #     which coverage
+    #     coverage --version
         
     # - name: Test with pytest for tile_stitcher
     #   run: |
@@ -103,16 +103,16 @@ jobs:
     #     name: codecov-umbrella
     #     verbose: true
 
-    - name: Test tile_stitcher with pytest and generate coverage
-      run: |
-        coverage run -m pytest -m tests/preprocessing_tests/test_tilestitcher.py
-        coverage xml -o coverage_tilestitcher.xml
-
     - name: Test other modules with pytest and generate coverage
       run: |
         coverage run -m pytest -m "not slow and not exclude"
         coverage xml -o coverage_others.xml
 
+    - name: Test tile_stitcher with pytest and generate coverage
+      run: |
+        coverage run -m pytest -m tests/preprocessing_tests/test_tilestitcher.py
+        coverage xml -o coverage_tilestitcher.xml
+        
     - name: Combine coverage data
       run: |
         coverage combine coverage_tilestitcher.xml coverage_others.xml
