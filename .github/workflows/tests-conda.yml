@@ -114,12 +114,22 @@ jobs:
       run: |
         coverage run -m pytest tests/preprocessing_tests/test_tilestitcher.py
         coverage xml -o coverage_tilestitcher.xml
-        
-    - name: Combine coverage data
+
+    - name: Combine Coverage Data
       shell: bash -l {0}
       run: |
-        coverage combine coverage_tilestitcher.xml coverage_others.xml
-        coverage xml -o coverage_combined.xml
+        coverage combine
+        
+    - name: Generate Combined Coverage Report
+      shell: bash -l {0}
+      run: |
+        coverage xml -o combined_coverage.xml
+    
+    # - name: Combine coverage data
+    #   shell: bash -l {0}
+    #   run: |
+    #     coverage combine coverage_tilestitcher.xml coverage_others.xml
+    #     coverage xml -o coverage_combined.xml
 
     - name: Upload combined coverage to Codecov
       uses: codecov/codecov-action@v2
