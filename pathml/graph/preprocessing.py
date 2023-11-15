@@ -140,7 +140,7 @@ class BaseGraphBuilder():
         
         return Graph(node_centroids=self.centroids, 
                      node_features=node_features, 
-                     edge_index=torch.tensor(np.array(edges)),
+                     edge_index=edges,
                      node_labels=node_labels,
                      target = torch.tensor(target))
 
@@ -262,7 +262,7 @@ class KNNGraphBuilder(BaseGraphBuilder):
         """Build topology using (thresholded) kNN"""
         
         # build kNN adjacency
-        adj = kneighbors_graph(
+        adjacency = kneighbors_graph(
             self.centroids,
             self.k,
             mode="distance",
@@ -271,9 +271,9 @@ class KNNGraphBuilder(BaseGraphBuilder):
 
         # filter edges that are too far (ie larger than thresh)
         if self.thresh is not None:
-            adj[adj > self.thresh] = 0
+            adjacency[adjacency > self.thresh] = 0
 
-        edge_list = np.nonzero(adj)
+        edge_list = torch.tensor(np.array(np.nonzero(adjacency)))
         return edge_list
 
 class RAGGraphBuilder(BaseGraphBuilder):
@@ -314,7 +314,7 @@ class RAGGraphBuilder(BaseGraphBuilder):
             idx -= 1  # because instance_map id starts from 1
             adjacency[instance_id, idx] = 1
 
-        edge_list = np.nonzero(adjacency)
+        edge_list = torch.tensor(np.array(np.nonzero(adjacency)))
         
         for _ in range(self.hops - 1):
             edge_list = two_hop(edge_list, self.num_nodes)

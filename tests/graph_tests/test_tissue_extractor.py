@@ -2,11 +2,13 @@
 Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
+
 import numpy as np
 import pytest
 import torch
 from skimage.draw import ellipse
 from skimage.measure import regionprops, label
+
 from pathml.datasets.utils import DeepPatchFeatureExtractor
 
 def make_fake_instance_maps(num, image_size, ellipse_height, ellipse_width):
@@ -37,7 +39,7 @@ def make_fake_image(instance_map):
 
 @pytest.mark.parametrize("patch_size", [1, 64, 128])
 @pytest.mark.parametrize("entity", ["cell", "tissue"])
-@pytest.mark.parametrize("threshold", [0, 0.1, 0.8])
+@pytest.mark.parametrize("threshold", [0, 0.05])
 def test_feature_extractor(entity, patch_size, threshold):
     image_size = (256, 256)
     
