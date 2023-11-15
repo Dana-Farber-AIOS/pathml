@@ -370,8 +370,9 @@ def setup_qupath(qupath_home=None):
 
     print("Downloading")
     # URL and name of QuPath tarball
-    qupath_url = "https://github.com/qupath/qupath/releases/download/v0.3.0/QuPath-0.3.0-Linux.tar.xz"
-    qupath_tar_name = "QuPath-0.3.0-Linux.tar.xz"
+    # qupath_url = "https://github.com/qupath/qupath/releases/download/v0.3.0/QuPath-0.3.0-Linux.tar.xz"
+    qupath_url = "https://github.com/qupath/qupath/releases/download/v0.4.3/QuPath-0.4.3-Linux.tar.xz"
+    qupath_tar_name = "QuPath-0.4.3-Linux.tar.xz"
     tar_path = download_from_url(qupath_url, qupath_home, qupath_tar_name)
 
     # Extract QuPath if the tarball was downloaded
