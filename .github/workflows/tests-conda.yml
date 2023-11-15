@@ -78,6 +78,11 @@ jobs:
         sudo df -h
         sudo du -h
 
+    - name: Check Coverage Command
+      run: |
+        which coverage
+        coverage --version
+        
     # - name: Test with pytest for tile_stitcher
     #   run: |
     #     java -version
@@ -100,7 +105,7 @@ jobs:
 
     - name: Test tile_stitcher with pytest and generate coverage
       run: |
-        coverage run -m pytest tests/preprocessing_tests/test_tilestitcher.py
+        coverage run -m pytest -m tests/preprocessing_tests/test_tilestitcher.py
         coverage xml -o coverage_tilestitcher.xml
 
     - name: Test other modules with pytest and generate coverage
