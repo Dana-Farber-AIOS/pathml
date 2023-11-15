@@ -115,11 +115,17 @@ jobs:
         coverage run -m pytest tests/preprocessing_tests/test_tilestitcher.py
         coverage xml -o coverage_tilestitcher.xml
 
+    
+    - name: List Files in Directory
+      shell: bash -l {0}
+      run: |
+        ls -la
+
     - name: Combine Coverage Data
       shell: bash -l {0}
       run: |
-        coverage combine
-        
+        coverage combine .coverage_tilestitcher .coverage_others
+
     - name: Generate Combined Coverage Report
       shell: bash -l {0}
       run: |
