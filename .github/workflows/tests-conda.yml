@@ -124,7 +124,7 @@ jobs:
     - name: Combine Coverage Data
       shell: bash -l {0}
       run: |
-        coverage combine .coverage_tilestitcher .coverage_others
+        coverage combine ./coverage_tilestitcher.xml ./coverage_others.xml
 
     - name: Generate Combined Coverage Report
       shell: bash -l {0}
