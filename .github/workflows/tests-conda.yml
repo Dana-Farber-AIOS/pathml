@@ -106,15 +106,12 @@ jobs:
     - name: Test other modules with pytest and generate coverage
       shell: bash -l {0}
       run: |
-        coverage run -m pytest -m "not slow and not exclude"
-        coverage xml -o coverage_others.xml
+        COVERAGE_FILE=.coverage_others coverage run -m pytest -m "not slow and not exclude"
 
     - name: Test tile_stitcher with pytest and generate coverage
       shell: bash -l {0}
       run: |
-        coverage run -m pytest tests/preprocessing_tests/test_tilestitcher.py
-        coverage xml -o coverage_tilestitcher.xml
-
+        COVERAGE_FILE=.coverage_tilestitcher coverage run -m pytest tests/preprocessing_tests/test_tilestitcher.py
     
     - name: List Files in Directory
       shell: bash -l {0}
@@ -124,7 +121,7 @@ jobs:
     - name: Combine Coverage Data
       shell: bash -l {0}
       run: |
-        coverage combine ./coverage_tilestitcher.xml ./coverage_others.xml
+        coverage combine .coverage_tilestitcher .coverage_others
 
     - name: Generate Combined Coverage Report
       shell: bash -l {0}
@@ -143,7 +140,7 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         env_vars: OS,PYTHON
         fail_ci_if_error: true
-        files: ./coverage_combined.xml
+        files: ./combined_coverage.xml
         name: codecov-umbrella
         verbose: true
 
