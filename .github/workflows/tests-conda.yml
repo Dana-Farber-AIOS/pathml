@@ -77,6 +77,12 @@ jobs:
       run: |
         sudo df -h
         sudo du -h
+
+    - name: Test with pytest for tile_stitcher
+      run: |
+        java -version
+        python -m pytest tests/preprocessing_tests/test_tilestitcher.py
+        
     - name: Test with pytest and generate coverage report
       shell: bash -l {0}
       run: |
