@@ -14,4 +14,6 @@ jobs:
       - name: Linting
         run: |
           pip install pre-commit
+          pip install black
+          black .
           pre-commit run --all-files
