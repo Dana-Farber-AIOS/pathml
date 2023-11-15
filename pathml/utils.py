@@ -5,10 +5,10 @@ License: GNU GPL 2.0
 
 import os
 import shutil
+import tarfile
 import urllib
 from pathlib import Path
-import tarfile
-import glob
+
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -42,7 +42,7 @@ def download_from_url(url, download_dir, name=None):
         # Download the file from `url` and save it locally under `file_name`:
         with urllib.request.urlopen(url) as response, open(path, "wb") as out_file:
             shutil.copyfileobj(response, out_file)
-        return path #added when including qupath utils
+        return path  # added when including qupath utils
 
 
 def parse_file_size(fs):
@@ -350,10 +350,10 @@ def _test_log(msg):
     # used for testing logging
     logger.info(msg)
 
-    
+
 def find_qupath_home(start_path):
     for root, dirs, files in os.walk(start_path):
-        if any('qupath' in file.lower() and file.endswith('.jar') for file in files):
+        if any("qupath" in file.lower() and file.endswith(".jar") for file in files):
             return str(Path(root).parent.parent)
     return None
 
@@ -368,10 +368,10 @@ def setup_qupath(qupath_home=None):
     if existing_qupath_home:
         return existing_qupath_home
 
-    print('Downloading')
+    print("Downloading")
     # URL and name of QuPath tarball
     qupath_url = "https://github.com/qupath/qupath/releases/download/v0.3.0/QuPath-0.3.0-Linux.tar.xz"
-    qupath_tar_name = 'QuPath-0.3.0-Linux.tar.xz'
+    qupath_tar_name = "QuPath-0.3.0-Linux.tar.xz"
     tar_path = download_from_url(qupath_url, qupath_home, qupath_tar_name)
 
     # Extract QuPath if the tarball was downloaded
