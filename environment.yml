@@ -10,7 +10,7 @@ dependencies:
     - scipy==1.7.3
     - scikit-image==0.18.3
     - matplotlib==3.5.1
-    - openjdk==8.0.152
+    # - openjdk==8.0.152
     - pytorch==1.10.1
     - h5py==3.1.0
     - dask==2021.12.0
@@ -24,8 +24,9 @@ dependencies:
         - protobuf==3.20.1
         - deepcell==0.11.0
         - opencv-contrib-python==4.5.3.56
-        - openslide-python==1.1.2
+        - openslide-python==1.2.0
         - scanpy==1.8.2
         - anndata==0.7.8
         - tqdm==4.62.3
         - loguru==0.5.3
+        - JPype1==1.4.1
