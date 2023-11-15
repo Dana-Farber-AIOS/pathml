@@ -104,16 +104,19 @@ jobs:
     #     verbose: true
 
     - name: Test other modules with pytest and generate coverage
+      shell: bash -l {0}
       run: |
         coverage run -m pytest -m "not slow and not exclude"
         coverage xml -o coverage_others.xml
 
     - name: Test tile_stitcher with pytest and generate coverage
+      shell: bash -l {0}
       run: |
-        coverage run -m pytest -m tests/preprocessing_tests/test_tilestitcher.py
+        coverage run -m pytest tests/preprocessing_tests/test_tilestitcher.py
         coverage xml -o coverage_tilestitcher.xml
         
     - name: Combine coverage data
+      shell: bash -l {0}
       run: |
         coverage combine coverage_tilestitcher.xml coverage_others.xml
         coverage xml -o coverage_combined.xml
