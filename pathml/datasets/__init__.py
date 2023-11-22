@@ -5,3 +5,4 @@ License: GNU GPL 2.0
 
 from .deepfocus import DeepFocusDataModule
 from .pannuke import PanNukeDataModule
+from .datasets import TileDataset, EntityDataset
