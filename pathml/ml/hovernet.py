@@ -9,7 +9,7 @@ import numpy as np
 import torch
 from loguru import logger
 from matplotlib.colors import TABLEAU_COLORS
-from scipy.ndimage.morphology import binary_fill_holes
+from scipy.ndimage import binary_fill_holes
 from skimage.segmentation import watershed
 from torch import nn
 from torch.nn import functional as F

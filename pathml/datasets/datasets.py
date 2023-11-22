@@ -3,30 +3,20 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
+import copy
+import os
+import warnings
+from glob import glob
+from typing import Callable, List, Optional, Tuple
+
 import h5py
 import numpy as np
-import os
 import torch
-from torch_geometric.data import Data
-from torch.utils.data import Dataset
-import copy
-import warnings
-from pathlib import Path
-from copy import deepcopy
-from typing import Any, Callable, List, Optional, Tuple, Union
-import cv2
-import torchvision
-from torchvision import transforms
-from scipy.stats import skew
-from skimage.feature import greycomatrix, greycoprops
-from skimage.filters.rank import entropy as Entropy
 from skimage.measure import regionprops
-from skimage.morphology import disk
-from sklearn.metrics.pairwise import euclidean_distances
-from tqdm.auto import tqdm
-from glob import glob
+from torchvision import transforms
 
 from pathml.graph.utils import HACTPairData
+
 
 class TileDataset(torch.utils.data.Dataset):
     """
@@ -40,7 +30,6 @@ class TileDataset(torch.utils.data.Dataset):
         - ``slide_labels`` is a dict
 
     This is designed to be wrapped in a PyTorch DataLoader for feeding tiles into ML models.
-
     Note that label dictionaries are not standardized, as users are free to store whatever labels they want.
     For that reason, PyTorch cannot automatically stack labels into batches.
     When creating a DataLoader from a TileDataset, it may therefore be necessary to create a custom ``collate_fn`` to
@@ -104,10 +93,9 @@ class TileDataset(torch.utils.data.Dataset):
         return im, masks, labels, self.slide_level_labels
 
 
-
 class EntityDataset(torch.utils.data.Dataset):
     """
-    Torch Geometric Dataset class for storing cell and tissue graphs. Each item returns a 
+    Torch Geometric Dataset class for storing cell and tissue graphs. Each item returns a
     pathml.graph.utils.HACTPairData object.
 
     Args:
@@ -115,41 +103,43 @@ class EntityDataset(torch.utils.data.Dataset):
         tissue_dir (str): Path to folder containing tissue graphs
         assign_dir (str): Path to folder containing assignment matrices
     """
-    
+
     def __init__(self, cell_dir, tissue_dir, assign_dir):
-        
-        self.cell_graphs = glob(os.path.join(cell_dir, '*.pt') )
-        self.tissue_graphs = glob(os.path.join(tissue_dir, '*.pt') )
-        self.assigns = glob(os.path.join(assign_dir, '*.pt') )
-        
+        self.cell_graphs = glob(os.path.join(cell_dir, "*.pt"))
+        self.tissue_graphs = glob(os.path.join(tissue_dir, "*.pt"))
+        self.assigns = glob(os.path.join(assign_dir, "*.pt"))
+
     def __len__(self):
         return len(self.cell_graphs)
-    
+
     def __getitem__(self, index):
         cell_graph = torch.load(self.cell_graphs[index])
         tissue_graph = torch.load(self.tissue_graphs[index])
         assignment = torch.load(self.assigns[index])
-        data = HACTPairData(x_cell = cell_graph.node_features, 
-                        edge_index_cell = cell_graph.edge_index, 
-                        x_tissue = tissue_graph.node_features, 
-                        edge_index_tissue = tissue_graph.edge_index, 
-                        assignment = assignment[1,:], 
-                        target = cell_graph['target'])
+        data = HACTPairData(
+            x_cell=cell_graph.node_features,
+            edge_index_cell=cell_graph.edge_index,
+            x_tissue=tissue_graph.node_features,
+            edge_index_tissue=tissue_graph.edge_index,
+            assignment=assignment[1, :],
+            target=cell_graph["target"],
+        )
         return data
+
 
 class InstanceMapPatchDataset(torch.utils.data.Dataset):
     """
     Create a dataset for a given image and extracted instance map with desired patches
-    of (patch_size, patch_size, 3). 
+    of (patch_size, patch_size, 3).
     Args:
         image (np.ndarray): RGB input image.
         instance map (np.ndarray): Extracted instance map.
         entity (str): Entity to be processed. Must be one of 'cell' or 'tissue'. Defaults to 'cell'.
         patch_size (int): Desired size of patch.
-        threshold (float): Threshold for processing a patch or not. 
+        threshold (float): Threshold for processing a patch or not.
         resize_size (int): Desired resized size to input the network. If None, no resizing is done and the
                            patches of size patch_size are provided to the network. Defaults to None.
-        fill_value (Optional[int]): Value to fill outside the instance maps. Defaults to 255. 
+        fill_value (Optional[int]): Value to fill outside the instance maps. Defaults to 255.
         mean (list[float], optional): Channel-wise mean for image normalization.
         std (list[float], optional): Channel-wise std for image normalization.
         transform (Callable): Transform to apply. Defaults to None.
@@ -160,9 +150,9 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
         self,
         image,
         instance_map,
-        entity = 'cell',
-        patch_size = 64,
-        threshold = 0.2, 
+        entity="cell",
+        patch_size=64,
+        threshold=0.2,
         resize_size: int = None,
         fill_value: Optional[int] = 255,
         mean: Optional[List[float]] = None,
@@ -180,9 +170,9 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
         self.resize_size = resize_size
         self.mean = mean
         self.std = std
-        
+
         self.patch_size_2 = int(self.patch_size // 2)
-        
+
         self.image = np.pad(
             self.image,
             (
@@ -190,18 +180,21 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
                 (self.patch_size_2, self.patch_size_2),
                 (0, 0),
             ),
-            mode='constant',
-            constant_values = self.fill_value
+            mode="constant",
+            constant_values=self.fill_value,
         )
         self.instance_map = np.pad(
             self.instance_map,
-            ((self.patch_size_2, self.patch_size_2), (self.patch_size_2, self.patch_size_2)),
+            (
+                (self.patch_size_2, self.patch_size_2),
+                (self.patch_size_2, self.patch_size_2),
+            ),
             mode="constant",
             constant_values=0,
         )
-        
+
         self.threshold = int(self.patch_size * self.patch_size * threshold)
-        
+
         self.warning_threshold = 0.75
 
         basic_transforms = [transforms.ToPILImage()]
@@ -213,13 +206,15 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
         if self.mean is not None and self.std is not None:
             basic_transforms.append(transforms.Normalize(self.mean, self.std))
         self.dataset_transform = transforms.Compose(basic_transforms)
-        
-        if self.entity == 'cell':
+
+        if self.entity == "cell":
             self._precompute_cell()
-        elif self.entity == 'tissue':
+        elif self.entity == "tissue":
             self._precompute_tissue()
-    
-    def _add_patch(self, center_x: int, center_y: int, instance_index: int, region_count: int) -> None:
+
+    def _add_patch(
+        self, center_x: int, center_y: int, instance_index: int, region_count: int
+    ) -> None:
         """
         Extract and include patch information.
         Args:
@@ -229,8 +224,8 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
             region_count (int): Region count indicates the location of the patch wrt. the list of patch coords.
         """
         mask = self.instance_map[
-            center_y - self.patch_size_2: center_y + self.patch_size_2,
-            center_x - self.patch_size_2: center_x + self.patch_size_2
+            center_y - self.patch_size_2 : center_y + self.patch_size_2,
+            center_x - self.patch_size_2 : center_x + self.patch_size_2,
         ]
         overlap = np.sum(mask == instance_index)
         if overlap > self.threshold:
@@ -245,7 +240,7 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
         Extract patch from image.
         Args:
             loc (list): Top-left (x,y) coordinate of a patch.
-            region_id (int): Index of the region being processed. Defaults to None. 
+            region_id (int): Index of the region being processed. Defaults to None.
         """
         min_x = loc[0]
         min_y = loc[1]
@@ -258,20 +253,27 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
             instance_mask = ~(self.instance_map[min_y:max_y, min_x:max_x] == region_id)
             patch[instance_mask, :] = self.fill_value
         return patch
-    
+
     def _get_patch_cell(self, loc, region_id):
         min_y, min_x = loc
-        patch = self.image[min_y:min_y+self.patch_size, min_x:min_x+self.patch_size,:]
-        
+        patch = self.image[
+            min_y : min_y + self.patch_size, min_x : min_x + self.patch_size, :
+        ]
+
         if self.with_instance_masking:
-            instance_mask = ~(self.instance_map[min_y:min_y+self.patch_size, min_x:min_x+self.patch_size] == region_id)
-            patch[instance_mask,:] = self.fill_value
-        
+            instance_mask = ~(
+                self.instance_map[
+                    min_y : min_y + self.patch_size, min_x : min_x + self.patch_size
+                ]
+                == region_id
+            )
+            patch[instance_mask, :] = self.fill_value
+
         return patch
-    
+
     def _precompute_cell(self):
         """Precompute instance-wise patch information for all cell instances in the input image."""
-        
+
         self.entities = regionprops(self.instance_map)
         self.patch_coordinates = []
         self.patch_overlap = []
@@ -280,14 +282,16 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
 
         for region_count, region in enumerate(self.entities):
             min_y, min_x, max_y, max_x = region.bbox
-            coords = region.coords
 
             cy, cx = region.centroid
             cy, cx = int(cy), int(cx)
 
-            coord = [cy-self.patch_size_2, cx-self.patch_size_2]
+            coord = [cy - self.patch_size_2, cx - self.patch_size_2]
 
-            instance_mask = self.instance_map[coord[0]:coord[0]+self.patch_size, coord[1]:coord[1]+self.patch_size]
+            instance_mask = self.instance_map[
+                coord[0] : coord[0] + self.patch_size,
+                coord[1] : coord[1] + self.patch_size,
+            ]
             overlap = np.sum(instance_mask == region.label)
             if overlap >= self.threshold:
                 self.patch_coordinates.append(coord)
@@ -297,15 +301,15 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
 
     def _precompute_tissue(self):
         """Precompute instance-wise patch information for all tissue instances in the input image."""
-        
+
         self.patch_coordinates = []
         self.patch_region_count = []
         self.patch_instance_ids = []
         self.patch_overlap = []
-        
+
         self.entities = regionprops(self.instance_map)
         self.stride = self.patch_size
-        
+
         for region_count, region in enumerate(self.entities):
 
             # Extract centroid
@@ -316,7 +320,7 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
             # Extract bounding box
             min_y, min_x, max_y, max_x = region.bbox
 
-            # Extract patch information around the centroid patch 
+            # Extract patch information around the centroid patch
             # quadrant 1 (includes centroid patch)
             y_ = copy.deepcopy(center_y)
             while y_ >= min_y:
@@ -360,10 +364,8 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
         )
         if np.mean(self.patch_overlap) < self.warning_threshold:
             warnings.warn("Provided patch size is large")
-            warnings.warn(
-                "Suggestion: Reduce patch size to include relevant context.")
-    
-    
+            warnings.warn("Suggestion: Reduce patch size to include relevant context.")
+
     def __getitem__(self, index: int) -> Tuple[torch.Tensor, int]:
         """
         Loads an image for a given patch index.
@@ -372,17 +374,20 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
         Returns:
             Tuple[torch.Tensor, int]: image as tensor, instance_index.
         """
-        
-        if self.entity == 'cell':
-            patch = self._get_patch_cell(self.patch_coordinates[index],
-                                           self.patch_instance_ids[index])
-        elif self.entity == 'tissue':
-            patch = self._get_patch_tissue(self.patch_coordinates[index],
-                                           self.patch_instance_ids[index])
-        
+
+        if self.entity == "cell":
+            patch = self._get_patch_cell(
+                self.patch_coordinates[index], self.patch_instance_ids[index]
+            )
+        elif self.entity == "tissue":
+            patch = self._get_patch_tissue(
+                self.patch_coordinates[index], self.patch_instance_ids[index]
+            )
+        else:
+            raise ValueError("Invalid value for entity. Expected 'cell' or 'tissue', got '{}'.".format(entity))
+            
         patch = self.dataset_transform(patch)
         return patch, self.patch_region_count[index]
-        
 
     def __len__(self) -> int:
         """

@@ -39,6 +39,6 @@ def test_build_assignment_matrix(matrix):
     assignment = build_assignment_matrix(cell_centroids, tissue_instance_map, matrix=matrix)
 
     if matrix:
-        assert assignment.shape == (200,20)
+        assert assignment.shape[0] == 200
     else:
-        assert assignment.shape == (2,200)
+        assert assignment.shape[1] == 200

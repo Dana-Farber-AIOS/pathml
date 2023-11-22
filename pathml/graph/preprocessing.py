@@ -1,93 +1,100 @@
-from abc import abstractmethod
-from typing import Any, Optional, Tuple, Union, Dict
 import math
 import sys
+from abc import abstractmethod
 from pathlib import Path
+from typing import Any, Dict, Optional, Tuple, Union
+
 import cv2
 import h5py
-import numpy as np
-from skimage.color.colorconv import rgb2hed
-try:
-    from skimage import graph
-    graph.RAG
-except:
-    from skimage.future import graph
-from skimage.segmentation import slic
+import networkx as nx
 import numpy as np
 import pandas as pd
 import torch
+from skimage.color.colorconv import rgb2hed
+from skimage.future import graph
 from skimage.measure import regionprops
+from skimage.segmentation import slic
 from sklearn.neighbors import kneighbors_graph
-import networkx as nx
 
 from pathml.graph.utils import Graph, two_hop
 
 
+class GraphFeatureExtractor:
+    """
+    Extracts features from a networkx graph object.
+    """
 
-class GraphFeatureExtractor():
-    """
-    Extracts features from a networkx graph object. 
-    """
-    def __init__(
-        self,
-        use_weight = False,
-        alpha = 0.85
-    ):
+    def __init__(self, use_weight=False, alpha=0.85):
         """
         Args:
             use_weight (bool, optional): Whether to use edge weights for feature computation. Defaults to False.
-            alpha (float, optional): Alpha value for personalized page-rank. Defaults to 0.85. 
+            alpha (float, optional): Alpha value for personalized page-rank. Defaults to 0.85.
         """
         self.use_weight = use_weight
-        self.feature_dict = {} 
+        self.feature_dict = {}
         self.alpha = alpha
 
-    def get_stats(self, dct, prefix = 'add_pre'):
-        local_dict={}
+    def get_stats(self, dct, prefix="add_pre"):
+        local_dict = {}
         lst = list(dct.values())
-        local_dict[f'{prefix}_mean'] = np.mean(lst)
-        local_dict[f'{prefix}_median'] = np.median(lst)
-        local_dict[f'{prefix}_max'] = np.max(lst)
-        local_dict[f'{prefix}_min'] = np.min(lst)
-        local_dict[f'{prefix}_sum'] = np.sum(lst)
-        local_dict[f'{prefix}_std'] = np.std(lst)
+        local_dict[f"{prefix}_mean"] = np.mean(lst)
+        local_dict[f"{prefix}_median"] = np.median(lst)
+        local_dict[f"{prefix}_max"] = np.max(lst)
+        local_dict[f"{prefix}_min"] = np.min(lst)
+        local_dict[f"{prefix}_sum"] = np.sum(lst)
+        local_dict[f"{prefix}_std"] = np.std(lst)
         return local_dict
-    
+
     def process(self, G):
         if self.use_weight:
-            weight = nx.get_edge_attributes(G,'weight')
+            weight = nx.get_edge_attributes(G, "weight")
         else:
             weight = None
-        
-        self.feature_dict['diameter'] = nx.diameter(G)
-        self.feature_dict['radius'] = nx.radius(G)
-        self.feature_dict['assortativity_degree'] = nx.degree_assortativity_coefficient(G)
-        self.feature_dict['density'] = nx.density(G)
-        self.feature_dict['transitivity_undir'] = nx.transitivity(G)
-        
-        self.feature_dict.update(self.get_stats(nx.hits(G)[0], prefix='hubs'))
-        self.feature_dict.update(self.get_stats(nx.hits(G)[1], prefix='authorities'))
-        self.feature_dict.update(self.get_stats(nx.constraint(G, weight=weight), prefix='constraint'))
-        self.feature_dict.update(self.get_stats(nx.core_number(G), prefix='coreness'))
-        self.feature_dict.update(self.get_stats(nx.eigenvector_centrality(G, weight = weight), prefix='egvec_centr'))
-        self.feature_dict.update(self.get_stats({node:val for (node, val) in G.degree(weight=weight)}, prefix='degree'))
-        self.feature_dict.update(self.get_stats(nx.pagerank(G, alpha=self.alpha), prefix='personalized_pgrank'))
+
+        self.feature_dict["diameter"] = nx.diameter(G)
+        self.feature_dict["radius"] = nx.radius(G)
+        self.feature_dict["assortativity_degree"] = nx.degree_assortativity_coefficient(
+            G
+        )
+        self.feature_dict["density"] = nx.density(G)
+        self.feature_dict["transitivity_undir"] = nx.transitivity(G)
+
+        self.feature_dict.update(self.get_stats(nx.hits(G)[0], prefix="hubs"))
+        self.feature_dict.update(self.get_stats(nx.hits(G)[1], prefix="authorities"))
+        self.feature_dict.update(
+            self.get_stats(nx.constraint(G, weight=weight), prefix="constraint")
+        )
+        self.feature_dict.update(self.get_stats(nx.core_number(G), prefix="coreness"))
+        self.feature_dict.update(
+            self.get_stats(
+                nx.eigenvector_centrality(G, weight=weight), prefix="egvec_centr"
+            )
+        )
+        self.feature_dict.update(
+            self.get_stats(
+                {node: val for (node, val) in G.degree(weight=weight)}, prefix="degree"
+            )
+        )
+        self.feature_dict.update(
+            self.get_stats(
+                nx.pagerank(G, alpha=self.alpha), prefix="personalized_pgrank"
+            )
+        )
 
         return self.feature_dict
 
 
-
-class BaseGraphBuilder():
+class BaseGraphBuilder:
     """
     Base interface class for graph building.
     """
 
     def __init__(
-            self,
-            nr_annotation_classes: int = 5,
-            annotation_background_class: Optional[int] = None,
-            add_loc_feats: bool = False,
-            **kwargs: Any
+        self,
+        nr_annotation_classes: int = 5,
+        annotation_background_class: Optional[int] = None,
+        add_loc_feats: bool = False,
+        **kwargs: Any,
     ) -> None:
         """
         Base Graph Builder constructor.
@@ -108,7 +115,7 @@ class BaseGraphBuilder():
         instance_map: np.ndarray,
         features: torch.Tensor,
         annotation: Optional[np.ndarray] = None,
-        target = None
+        target=None,
     ):
         """Generates a graph from a given instance_map and features
         Args:
@@ -129,24 +136,25 @@ class BaseGraphBuilder():
         self.centroids = self._get_node_centroids(instance_map)
 
         # add node content
-        node_features =  self._compute_node_features(features, image_size)
-        
+        node_features = self._compute_node_features(features, image_size)
+
         if annotation is not None:
             node_labels = self._compute_node_labels(instance_map, annotation)
-        else: node_labels = None
+        else:
+            node_labels = None
 
         # build edges
         edges = self._build_topology(instance_map)
-        
-        return Graph(node_centroids=self.centroids, 
-                     node_features=node_features, 
-                     edge_index=edges,
-                     node_labels=node_labels,
-                     target = torch.tensor(target))
 
-    def _get_node_centroids(
-            self, instance_map: np.ndarray
-    ):
+        return Graph(
+            node_centroids=self.centroids,
+            node_features=node_features,
+            edge_index=edges,
+            node_labels=node_labels,
+            target=torch.tensor(target),
+        )
+
+    def _get_node_centroids(self, instance_map: np.ndarray):
         """Get the centroids of the graphs
         Args:
             instance_map (np.ndarray): Instance map depicting tissue components
@@ -164,9 +172,7 @@ class BaseGraphBuilder():
         return torch.tensor(centroids)
 
     def _compute_node_features(
-            self,
-            features: torch.Tensor,
-            image_size: Tuple[int, int]
+        self, features: torch.Tensor, image_size: Tuple[int, int]
     ) -> None:
         """Set the provided node features
         Args:
@@ -178,7 +184,7 @@ class BaseGraphBuilder():
             features = torch.FloatTensor(features)
         if not self.add_loc_feats:
             return features
-        elif (self.add_loc_feats and image_size is not None):
+        elif self.add_loc_feats and image_size is not None:
             # compute normalized centroid features
 
             normalized_centroids = torch.empty_like(self.centroids)  # (x, y)
@@ -186,18 +192,15 @@ class BaseGraphBuilder():
             normalized_centroids[:, 1] = self.centroids[:, 1] / image_size[1]
 
             if features.ndim == 3:
-                normalized_centroids = normalized_centroids \
-                    .unsqueeze(dim=1) \
-                    .repeat(1, features.shape[1], 1)
+                normalized_centroids = normalized_centroids.unsqueeze(dim=1).repeat(
+                    1, features.shape[1], 1
+                )
                 concat_dim = 2
             elif features.ndim == 2:
                 concat_dim = 1
 
             concat_features = torch.cat(
-                (
-                    features,
-                    normalized_centroids
-                ),
+                (features, normalized_centroids),
                 dim=concat_dim,
             )
             return concat_features
@@ -208,9 +211,7 @@ class BaseGraphBuilder():
 
     @abstractmethod
     def _set_node_labels(
-            self,
-            instance_map: np.ndarray,
-            annotation: np.ndarray
+        self, instance_map: np.ndarray, annotation: np.ndarray
     ) -> None:
         """Set the node labels of the graphs
         Args:
@@ -219,17 +220,15 @@ class BaseGraphBuilder():
         """
 
     @abstractmethod
-    def _build_topology(
-            self,
-            instance_map: np.ndarray
-    ) -> None:
+    def _build_topology(self, instance_map: np.ndarray) -> None:
         """Generate the graph topology from the provided instance_map
         Args:
             instance_map (np.array): Instance map depicting tissue components
             centroids (np.array): Node centroids
             graph (dgl.DGLGraph): Graph to add the edges
         """
-        
+
+
 class KNNGraphBuilder(BaseGraphBuilder):
     """
     k-Nearest Neighbors Graph class for graph building.
@@ -244,30 +243,28 @@ class KNNGraphBuilder(BaseGraphBuilder):
         self.k = k
         self.thresh = thresh
         super().__init__(**kwargs)
-    
+
     def _set_node_labels(
-            self,
-            instance_map: np.ndarray,
-            annotation: np.ndarray) -> None:
+        self, instance_map: np.ndarray, annotation: np.ndarray
+    ) -> None:
         """Set the node labels of the graphs using annotation"""
         regions = regionprops(instance_map)
-        assert annotation.shape[0] == len(regions), \
-            "Number of annotations do not match number of nodes"
+        assert annotation.shape[0] == len(
+            regions
+        ), "Number of annotations do not match number of nodes"
         return torch.FloatTensor(annotation.astype(float))
 
-    def _build_topology(
-            self,
-            instance_map: np.ndarray
-    ) -> None:
+    def _build_topology(self, instance_map: np.ndarray) -> None:
         """Build topology using (thresholded) kNN"""
-        
+
         # build kNN adjacency
         adjacency = kneighbors_graph(
             self.centroids,
             self.k,
             mode="distance",
             include_self=False,
-            metric="euclidean").toarray()
+            metric="euclidean",
+        ).toarray()
 
         # filter edges that are too far (ie larger than thresh)
         if self.thresh is not None:
@@ -275,6 +272,7 @@ class KNNGraphBuilder(BaseGraphBuilder):
 
         edge_list = torch.tensor(np.array(np.nonzero(adjacency)))
         return edge_list
+
 
 class RAGGraphBuilder(BaseGraphBuilder):
     """
@@ -285,7 +283,7 @@ class RAGGraphBuilder(BaseGraphBuilder):
         """Create a graph builder that uses a provided kernel size to detect connectivity
         Args:
             kernel_size (int, optional): Size of the kernel to detect connectivity. Defaults to 5.
-            hops (int, optional): Number of hops in a multi-hop neighbourhood. Defaults to 1. 
+            hops (int, optional): Number of hops in a multi-hop neighbourhood. Defaults to 1.
         """
         assert hops > 0 and isinstance(
             hops, int
@@ -294,10 +292,8 @@ class RAGGraphBuilder(BaseGraphBuilder):
         self.hops = hops
         super().__init__(**kwargs)
 
-    def _build_topology(
-            self,
-            instance_map: np.ndarray) -> None:
-        
+    def _build_topology(self, instance_map: np.ndarray) -> None:
+
         """Create the graph topology from the instance connectivty in the instance_map"""
         regions = regionprops(instance_map)
         instance_ids = torch.empty(len(regions), dtype=torch.uint8)
@@ -315,13 +311,13 @@ class RAGGraphBuilder(BaseGraphBuilder):
             adjacency[instance_id, idx] = 1
 
         edge_list = torch.tensor(np.array(np.nonzero(adjacency)))
-        
+
         for _ in range(self.hops - 1):
             edge_list = two_hop(edge_list, self.num_nodes)
         return edge_list
-    
 
-class SuperpixelExtractor():
+
+class SuperpixelExtractor:
     """Helper class to extract superpixels from images"""
 
     def __init__(
@@ -379,17 +375,14 @@ class SuperpixelExtractor():
         """
         original_height, original_width, _ = input_image.shape
         if self.downsampling_factor != 1:
-            input_image = self._downsample(
-                input_image, self.downsampling_factor)
+            input_image = self._downsample(input_image, self.downsampling_factor)
             if tissue_mask is not None:
-                tissue_mask = self._downsample(
-                    tissue_mask, self.downsampling_factor)
+                tissue_mask = self._downsample(tissue_mask, self.downsampling_factor)
         superpixels = self._extract_superpixels(
             image=input_image, tissue_mask=tissue_mask
         )
         if self.downsampling_factor != 1:
-            superpixels = self._upsample(
-                superpixels, original_height, original_width)
+            superpixels = self._upsample(superpixels, original_height, original_width)
         return superpixels
 
     @abstractmethod
@@ -422,10 +415,7 @@ class SuperpixelExtractor():
         return downsampled_image
 
     @staticmethod
-    def _upsample(
-            image: np.ndarray,
-            new_height: int,
-            new_width: int) -> np.ndarray:
+    def _upsample(image: np.ndarray, new_height: int, new_width: int) -> np.ndarray:
         """Upsample an input image to a speficied new height and width
         Args:
             image (np.array): Input tensor
@@ -477,11 +467,7 @@ class SLICSuperpixelExtractor(SuperpixelExtractor):
             nr_superpixels = min(nr_superpixels, self.max_nr_superpixels)
         return nr_superpixels
 
-    def _extract_superpixels(
-            self,
-            image: np.ndarray,
-            *args,
-            **kwargs) -> np.ndarray:
+    def _extract_superpixels(self, image: np.ndarray, *args, **kwargs) -> np.ndarray:
         """Perform the superpixel extraction
         Args:
             image (np.array): Input tensor
@@ -579,7 +565,7 @@ class MergedSuperpixelExtractor(SuperpixelExtractor):
 
         # Merge superpixels within tissue region
         g = self._generate_graph(input_image, initial_superpixels)
-        
+
         merged_superpixels = graph.merge_hierarchical(
             initial_superpixels,
             g,
@@ -642,11 +628,9 @@ class MergedSuperpixelExtractor(SuperpixelExtractor):
         """
         original_height, original_width, _ = input_image.shape
         if self.downsampling_factor is not None and self.downsampling_factor != 1:
-            input_image = self._downsample(
-                input_image, self.downsampling_factor)
+            input_image = self._downsample(input_image, self.downsampling_factor)
             if tissue_mask is not None:
-                tissue_mask = self._downsample(
-                    tissue_mask, self.downsampling_factor)
+                tissue_mask = self._downsample(tissue_mask, self.downsampling_factor)
         merged_superpixels, initial_superpixels = self._extract_superpixels(
             input_image, tissue_mask
         )
@@ -659,11 +643,7 @@ class MergedSuperpixelExtractor(SuperpixelExtractor):
             )
         return merged_superpixels, initial_superpixels
 
-    def process_and_save(
-            self,
-            *args: Any,
-            output_name: str,
-            **kwargs: Any) -> Any:
+    def process_and_save(self, *args: Any, output_name: str, **kwargs: Any) -> Any:
         """Process and save in the provided path as as .h5 file
         Args:
             output_name (str): Name of output file
@@ -676,7 +656,8 @@ class MergedSuperpixelExtractor(SuperpixelExtractor):
             try:
                 with h5py.File(superpixel_output_path, "r") as input_file:
                     merged_superpixels, initial_superpixels = self._get_outputs(
-                        input_file=input_file)
+                        input_file=input_file
+                    )
             except OSError as e:
                 print(
                     f"\n\nCould not read from {superpixel_output_path}!\n\n",
@@ -684,12 +665,11 @@ class MergedSuperpixelExtractor(SuperpixelExtractor):
                     flush=True,
                 )
                 print(
-                    f"\n\nCould not read from {superpixel_output_path}!\n\n",
-                    flush=True)
+                    f"\n\nCould not read from {superpixel_output_path}!\n\n", flush=True
+                )
                 raise e
         else:
-            merged_superpixels, initial_superpixels = self.process(
-                *args, **kwargs)
+            merged_superpixels, initial_superpixels = self.process(*args, **kwargs)
             try:
                 with h5py.File(superpixel_output_path, "w") as output_file:
                     self._set_outputs(
@@ -698,18 +678,14 @@ class MergedSuperpixelExtractor(SuperpixelExtractor):
                     )
             except OSError as e:
                 print(
-                    f"\n\nCould not write to {superpixel_output_path}!\n\n",
-                    flush=True)
+                    f"\n\nCould not write to {superpixel_output_path}!\n\n", flush=True
+                )
                 raise e
         return merged_superpixels, initial_superpixels
 
 
 class ColorMergedSuperpixelExtractor(MergedSuperpixelExtractor):
-    def __init__(
-            self,
-            w_hist: float = 0.5,
-            w_mean: float = 0.5,
-            **kwargs) -> None:
+    def __init__(self, w_hist: float = 0.5, w_mean: float = 0.5, **kwargs) -> None:
         """Superpixel merger based on color attibutes taken from the HACT-Net Implementation
         Args:
             w_hist (float, optional): Weight of the histogram features for merging. Defaults to 0.5.
@@ -768,24 +744,19 @@ class ColorMergedSuperpixelExtractor(MergedSuperpixelExtractor):
 
         for n in g:
             g.nodes[n]["mean"] = g.nodes[n]["x"] / g.nodes[n]["N"]
-            g.nodes[n]["mean"] = g.nodes[n]["mean"] / \
-                np.linalg.norm(g.nodes[n]["mean"])
+            g.nodes[n]["mean"] = g.nodes[n]["mean"] / np.linalg.norm(g.nodes[n]["mean"])
 
             g.nodes[n]["y"] = np.delete(g.nodes[n]["y"], 0, axis=0)
-            g.nodes[n]["r"] = self._color_features_per_channel(
-                g.nodes[n]["y"][:, 0])
-            g.nodes[n]["g"] = self._color_features_per_channel(
-                g.nodes[n]["y"][:, 1])
-            g.nodes[n]["b"] = self._color_features_per_channel(
-                g.nodes[n]["y"][:, 2])
+            g.nodes[n]["r"] = self._color_features_per_channel(g.nodes[n]["y"][:, 0])
+            g.nodes[n]["g"] = self._color_features_per_channel(g.nodes[n]["y"][:, 1])
+            g.nodes[n]["b"] = self._color_features_per_channel(g.nodes[n]["y"][:, 2])
 
             g.nodes[n]["r"] = g.nodes[n]["r"] / np.linalg.norm(g.nodes[n]["r"])
             g.nodes[n]["g"] = g.nodes[n]["r"] / np.linalg.norm(g.nodes[n]["g"])
             g.nodes[n]["b"] = g.nodes[n]["r"] / np.linalg.norm(g.nodes[n]["b"])
 
         for x, y, d in g.edges(data=True):
-            diff_mean = np.linalg.norm(
-                g.nodes[x]["mean"] - g.nodes[y]["mean"]) / 2
+            diff_mean = np.linalg.norm(g.nodes[x]["mean"] - g.nodes[y]["mean"]) / 2
 
             diff_r = np.linalg.norm(g.nodes[x]["r"] - g.nodes[y]["r"]) / 2
             diff_g = np.linalg.norm(g.nodes[x]["g"] - g.nodes[y]["g"]) / 2
@@ -801,16 +772,11 @@ class ColorMergedSuperpixelExtractor(MergedSuperpixelExtractor):
     def _weighting_function(
         self, graph: graph.RAG, src: int, dst: int, n: int
     ) -> Dict[str, Any]:
-        diff_mean = np.linalg.norm(
-            graph.nodes[dst]["mean"] -
-            graph.nodes[n]["mean"])
+        diff_mean = np.linalg.norm(graph.nodes[dst]["mean"] - graph.nodes[n]["mean"])
 
-        diff_r = np.linalg.norm(
-            graph.nodes[dst]["r"] - graph.nodes[n]["r"]) / 2
-        diff_g = np.linalg.norm(
-            graph.nodes[dst]["g"] - graph.nodes[n]["g"]) / 2
-        diff_b = np.linalg.norm(
-            graph.nodes[dst]["b"] - graph.nodes[n]["b"]) / 2
+        diff_r = np.linalg.norm(graph.nodes[dst]["r"] - graph.nodes[n]["r"]) / 2
+        diff_g = np.linalg.norm(graph.nodes[dst]["g"] - graph.nodes[n]["g"]) / 2
+        diff_b = np.linalg.norm(graph.nodes[dst]["b"] - graph.nodes[n]["b"]) / 2
         diff_hist = (diff_r + diff_g + diff_b) / 3
 
         diff = self.w_hist * diff_hist + self.w_mean * diff_mean
@@ -820,8 +786,7 @@ class ColorMergedSuperpixelExtractor(MergedSuperpixelExtractor):
     def _merging_function(self, graph: graph.RAG, src: int, dst: int) -> None:
         graph.nodes[dst]["x"] += graph.nodes[src]["x"]
         graph.nodes[dst]["N"] += graph.nodes[src]["N"]
-        graph.nodes[dst]["mean"] = graph.nodes[dst]["x"] / \
-            graph.nodes[dst]["N"]
+        graph.nodes[dst]["mean"] = graph.nodes[dst]["x"] / graph.nodes[dst]["N"]
         graph.nodes[dst]["mean"] = graph.nodes[dst]["mean"] / np.linalg.norm(
             graph.nodes[dst]["mean"]
         )
@@ -848,5 +813,3 @@ class ColorMergedSuperpixelExtractor(MergedSuperpixelExtractor):
         graph.nodes[dst]["b"] = graph.nodes[dst]["r"] / np.linalg.norm(
             graph.nodes[dst]["b"]
         )
-        
-

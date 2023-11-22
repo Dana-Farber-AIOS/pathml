@@ -4,13 +4,14 @@ License: GNU GPL 2.0
 """
 
 import numpy as np
-from tqdm import tqdm
-from sklearn.utils.class_weight import compute_class_weight
 
 # Utilities for ML module
 import torch
+from sklearn.utils.class_weight import compute_class_weight
 from torch.nn import functional as F
 from torch_geometric.utils import degree
+from tqdm import tqdm
+
 
 def broadcast(src, other, dim):
     if dim < 0:
@@ -23,7 +24,8 @@ def broadcast(src, other, dim):
     src = src.expand(other.size())
     return src
 
-def scatter_sum(src, index, dim, out = None, dim_size = None) -> torch.Tensor:
+
+def scatter_sum(src, index, dim, out=None, dim_size=None) -> torch.Tensor:
     index = broadcast(index, src, dim)
     if out is None:
         size = list(src.size())
@@ -37,28 +39,30 @@ def scatter_sum(src, index, dim, out = None, dim_size = None) -> torch.Tensor:
         return out.scatter_add_(dim, index, src)
     else:
         return out.scatter_add_(dim, index, src)
-    
+
 
 def get_degree_histogram(loader, edge_index_str, x_str):
     deg_histogram = torch.zeros(1, dtype=torch.long)
     for data in tqdm(loader):
-        d = degree(data[edge_index_str][1], num_nodes=data[x_str].shape[0],
-                   dtype=torch.long)
+        d = degree(
+            data[edge_index_str][1], num_nodes=data[x_str].shape[0], dtype=torch.long
+        )
         d_bincount = torch.bincount(d, minlength=deg_histogram.numel())
         if d_bincount.size(0) > deg_histogram.size(0):
-            d_bincount[:deg_histogram.size(0)] += deg_histogram
+            d_bincount[: deg_histogram.size(0)] += deg_histogram
             deg_histogram = d_bincount
         else:
             assert d_bincount.size(0) == deg_histogram.size(0)
             deg_histogram += d_bincount
     return deg_histogram
 
+
 def get_class_weights(loader):
     ys = []
     for data in tqdm(loader):
         ys.append(data.target.numpy())
     ys = np.array(ys).ravel()
-    weights = compute_class_weight('balanced', classes = np.unique(ys), y=np.array(ys))
+    weights = compute_class_weight("balanced", classes=np.unique(ys), y=np.array(ys))
     return weights
 
 

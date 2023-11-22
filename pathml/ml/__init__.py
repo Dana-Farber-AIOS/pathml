@@ -4,6 +4,6 @@ License: GNU GPL 2.0
 """
 
 from .dataset import TileDataset
-from .models.hovernet import HoVerNet, loss_hovernet, post_process_batch_hovernet
 from .layers import GNNLayer
 from .models.hactnet import HACTNet
+from .models.hovernet import HoVerNet, loss_hovernet, post_process_batch_hovernet
