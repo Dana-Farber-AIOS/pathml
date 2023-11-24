@@ -50,7 +50,7 @@ def _remove_modules(model, last_layer):
         last_layer (str): Last layer to keep in the model.
 
     Returns:
-        nn.Module: Model without pruned modules.
+        Model (nn.Module) without pruned modules.
     """
     modules = [n for n, _ in model.named_children()]
     modules_to_remove = modules[modules.index(last_layer) + 1 :]
@@ -76,6 +76,9 @@ class DeepPatchFeatureExtractor:
                                patches of size patch_size are provided to the network. Defaults to None.
         with_instance_masking (bool): If pixels outside instance should be masked. Defaults to False.
         extraction_layer (Optional[str]): Name of the network module from where the features are extracted.
+
+    Returns:
+        Tensor of features computed for each entity
     """
 
     def __init__(
@@ -99,8 +102,7 @@ class DeepPatchFeatureExtractor:
         self.threshold = threshold
         self.with_instance_masking = with_instance_masking
         self.entity = entity
-        cuda = torch.cuda.is_available()
-        self.device = torch.device("cuda:0" if cuda else "cpu")
+        self.device = device
 
         if architecture.endswith(".pth"):
             model = self._get_local_model(path=architecture)
@@ -117,11 +119,8 @@ class DeepPatchFeatureExtractor:
 
     @staticmethod
     def _validate_model(model: nn.Module) -> None:
-        """
-        Raise an error if the model does not have the required attributes.
-        Args:
-            model (nn.Module): A PyTorch model.
-        """
+        """Raise an error if the model does not have the required attributes."""
+        
         if not isinstance(model, torchvision.models.resnet.ResNet):
             if not hasattr(model, "classifier"):
                 raise ValueError(
@@ -136,14 +135,7 @@ class DeepPatchFeatureExtractor:
                 )
 
     def _get_num_features(self, model: nn.Module, patch_size: int) -> int:
-        """
-        Get the number of features of a given model.
-        Args:
-            model (nn.Module): A PyTorch model.
-            patch_size (int): Desired size of patch.
-        Returns:
-            int: Number of output features.
-        """
+        """Get the number of features of a given model."""
         dummy_patch = torch.zeros(1, 3, self.resize_size, self.resize_size).to(
             self.device
         )
@@ -151,24 +143,12 @@ class DeepPatchFeatureExtractor:
         return features.shape[-1]
 
     def _get_local_model(self, path: str) -> nn.Module:
-        """
-        Load a model from a local path.
-        Args:
-            path (str): Path to the model.
-        Returns:
-            nn.Module: A PyTorch model.
-        """
+        """Load a model from a local path."""
         model = torch.load(path, map_location=self.device)
         return model
 
     def _get_torchvision_model(self, architecture: str) -> nn.Module:
-        """
-        Returns a torchvision model from a given architecture string.
-        Args:
-            architecture (str): Torchvision model description.
-        Returns:
-            nn.Module: A pretrained pytorch model.
-        """
+        """Returns a torchvision model from a given architecture string."""
 
         module = importlib.import_module("torchvision.models")
         model_class = getattr(module, architecture)
@@ -178,13 +158,8 @@ class DeepPatchFeatureExtractor:
 
     @staticmethod
     def _remove_layers(model: nn.Module, extraction_layer=None) -> nn.Module:
-        """
-        Returns the model without the unused layers to get embeddings.
-        Args:
-            model (nn.Module): Classification model.
-        Returns:
-            nn.Module: Embedding model.
-        """
+        """Returns the model without the unused layers to get embeddings."""
+        
         if hasattr(model, "model"):
             model = model.model
             if extraction_layer is not None:
@@ -209,13 +184,7 @@ class DeepPatchFeatureExtractor:
 
     @staticmethod
     def _preprocess_architecture(architecture: str) -> str:
-        """
-        Preprocess the architecture string to avoid characters that are not allowed as paths.
-        Args:
-            architecture (str): Unprocessed architecture name.
-        Returns:
-            str: Architecture name to use for the save path.
-        """
+        """Preprocess the architecture string to avoid characters that are not allowed as paths."""
         if architecture.endswith(".pth"):
             return f"Local({architecture.replace('/', '_')})"
         else:
@@ -223,13 +192,17 @@ class DeepPatchFeatureExtractor:
 
     def _collate_patches(self, batch):
         """Patch collate function"""
+        
         instance_indices = [item[1] for item in batch]
         patches = [item[0] for item in batch]
         patches = torch.stack(patches)
         return instance_indices, patches
 
     def process(self, input_image, instance_map):
+        """Main processing function that takes in an input image and an instance map and returns features for all 
+        entities in the instance map"""
 
+        # Create a pathml.datasets.datasets.InstanceMapPatchDataset class 
         image_dataset = InstanceMapPatchDataset(
             image=input_image,
             instance_map=instance_map,
@@ -243,6 +216,7 @@ class DeepPatchFeatureExtractor:
             with_instance_masking=self.with_instance_masking,
         )
 
+        # Create a torch DataLoader
         image_loader = DataLoader(
             image_dataset,
             shuffle=False,
@@ -251,6 +225,7 @@ class DeepPatchFeatureExtractor:
             collate_fn=self._collate_patches,
         )
 
+        # Initialize feature tensor
         features = torch.zeros(
             size=(len(image_dataset.entities), self.num_features),
             dtype=torch.float32,
@@ -258,11 +233,18 @@ class DeepPatchFeatureExtractor:
         )
         embeddings = {}
 
+        # Get features for batches of patches and add to feature tensor
         for instance_indices, patches in tqdm(image_loader, total=len(image_loader)):
+
+            # Send to device
             patches = patches.to(self.device)
+
+            # Inference mode
             with torch.no_grad():
                 emb = self.model(patches).squeeze()
             for j, key in enumerate(instance_indices):
+
+                # If entity already exists, add features on top of previous features
                 if key in embeddings:
                     embeddings[key][0] += emb[j]
                     embeddings[key][1] += 1

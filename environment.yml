@@ -1,30 +1,30 @@
 name: pathml
 
 channels:
-    - conda-forge
     - pytorch
+    - conda-forge
 
 dependencies:
     - pip==21.3.1
-    - numpy==1.19.5
+    - numpy==1.22.4 # orig = 1.19.5
     - scipy==1.7.3
     - scikit-image==0.18.3
     - matplotlib==3.5.1
     - openjdk==8.0.152
-    - pytorch==1.13.1
-    - torchvision==0.14.1
+    - pytorch==1.13.1 # orig = 1.10.1
+    - torchvision==0.14.1 # orig no req
     - h5py==3.1.0
     - dask==2021.12.0
     - pydicom==2.2.2
-    - pytest==6.2.5
+    - pytest==7.4.0 # orig = 6.2.5
     - pre-commit==2.16.0
     - coverage==5.5
-    - networkx=3.1
+    - networkx==3.1
     - pip:
         - python-bioformats==4.0.0
         - python-javabridge==4.0.0
-        - protobuf==3.20.2
-        - deepcell==0.11.0
+        - protobuf==3.20.3
+        - deepcell==0.12.7 # orig = 0.11.0
         - onnx==1.14.0
         - onnxruntime==1.15.1
         - opencv-contrib-python==4.5.3.56
@@ -33,4 +33,5 @@ dependencies:
         - anndata==0.7.8
         - tqdm==4.62.3
         - loguru==0.5.3
+        - pandas==1.5.2 # orig no req
         - torch-geometric==2.3.1

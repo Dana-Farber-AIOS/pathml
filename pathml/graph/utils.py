@@ -15,9 +15,17 @@ MAX_NR_PIXELS = 50000000
 
 
 class Graph(Data):
-    """Constructs pytorch-geometric data object for saving and loading"""
+    """Constructs pytorch-geometric data object for saving and loading
 
-    def __init__(self, node_centroids, node_features, edge_index, node_labels, target):
+    Args:
+        node_centroids (torch.tensor): Coordinates of the centers of each entity (cell or tissue) in the graph
+        node_features (torch.tensor): Computed features of each entity (cell or tissue) in the graph
+        edge_index (torch.tensor): Edge index in sparse format between nodes in the graph
+        node_labels  (torch.tensor): Node labels of each entity (cell or tissue) in the graph. Defaults to None.
+        target (torch.tensor): Target label if used in a supervised setting. Defaults to None. 
+    """
+
+    def __init__(self, node_centroids, node_features, edge_index, node_labels=None, target=None):
         super().__init__()
         self.node_centroids = node_centroids
         self.node_features = node_features
@@ -35,7 +43,16 @@ class Graph(Data):
 
 
 class HACTPairData(Data):
-    """Constructs pytorch-geometric data object for handling both cell and tissue data"""
+    """Constructs pytorch-geometric data object for handling both cell and tissue data
+
+    Args:
+        x_cell (torch.tensor): Computed features of each cell in the graph
+        edge_index_cell (torch.tensor): Edge index in sparse format between nodes in the cell graph
+        x_tissue (torch.tensor): Computed features of each tissue in the graph
+        edge_index_tissue (torch.tensor): Edge index in sparse format between nodes in the tissue graph
+        assignment (torch.tensor): Assigment matrix that contains mapping between cells and tissues. 
+        target (torch.tensor): Target label if used in a supervised setting.
+    """
 
     def __init__(
         self, x_cell, edge_index_cell, x_tissue, edge_index_tissue, assignment, target
@@ -139,6 +156,10 @@ def get_full_instance_map(wsi, patch_size, mask_name="cell"):
         wsi (pathml.core.SlideData): Normalized WSI object with detected cells in the 'masks' slot
         patch_size (int): Patch size used for cell detection
         mask_name (str): Name of the mask slot storing the detected cells. Defaults to 'cell'.
+
+    Returns:
+        The image in np.unint8 format, the instance map for the entity and the instance centroids for each entity in 
+        the instance map as numpy arrays.
     """
 
     x = math.ceil(wsi.shape[0] / patch_size) * patch_size
@@ -173,6 +194,9 @@ def build_assignment_matrix(low_level_centroids, high_level_map, matrix=False):
         low_level_centroids (numpy.array): The low-level centroid coordinates in x-y plane
         high-level map (numpy.array): The high-level map returned from regionprops
         matrix (bool): Whether to return in a matrix format. If True, returns a N*L matrix where N is the number of low-level instances and L is the number of high-level instances. If False, returns this mapping in sparse format. Defaults to False.
+
+    Returns:
+        The assignment matrix as a numpy array. 
     """
 
     low_level_centroids = low_level_centroids.astype(int)
