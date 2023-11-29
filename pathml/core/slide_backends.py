@@ -890,7 +890,6 @@ class DICOMBackend(SlideBackend):
         """
         assert level == 0 or level is None, "dicom does not support levels"
         for i in range(self.n_frames):
-
             if not pad:
                 # skip frame if it's in the last column
                 if i % self.n_cols == (self.n_cols - 1):

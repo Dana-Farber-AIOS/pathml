@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+# ijview: a script for displaying an image file in ImageJ
+#         using the Bio-Formats Importer plugin
+
+# Required JARs: bioformats_package.jar, ij.jar
+
+
+RESOLVED_PATH=$(readlink -f "$0" 2>/dev/null \
+  || perl -MCwd -le 'print Cwd::abs_path(shift)' "$0" 2>/dev/null \
+  || echo "$0")
+BF_DIR=$(dirname $RESOLVED_PATH)
+
+source "$BF_DIR/config.sh"
+
+if [ -z "$BF_DEVEL" ]
+then
+  # Developer environment variable unset; add JAR libraries to classpath.
+  if [ -e "$BF_JAR_DIR/ij.jar" ]
+  then
+    BF_CP="$BF_JAR_DIR/ij.jar"
+  else
+    # Libraries not found; issue an error
+    echo "Required JAR libraries not found. Please download:"
+    echo "  ij.jar"
+    echo "from:"
+    echo "  https://imagej.nih.gov/ij/upgrade/"
+    echo "and place in the same directory as the command line tools."
+    echo ""
+    exit 3
+  fi
+  if [ -e "$BF_JAR_DIR/bio-formats_plugins.jar" ]
+  then
+    BF_CP="$BF_CP:$BF_JAR_DIR/bio-formats_plugins.jar"
+  elif [ -e "$BF_JAR_DIR/bioformats_package.jar" ]
+  then
+    # Libraries not found; issue an error
+    echo "Required JAR libraries not found. Please download:"
+    echo "  bioformats_package.jar"
+    echo "from:"
+    echo "  https://www.openmicroscopy.org/bio-formats/downloads"
+    echo "and place in the same directory as the command line tools."
+    echo ""
+    exit 4
+  fi
+fi
+
+BF_PROG=loci.plugins.in.Importer \
+  BF_CP="$BF_CP" "$BF_DIR/bf.sh" "$@"

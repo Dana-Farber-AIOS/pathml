@@ -3,6 +3,12 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
+import os
+import shutil
+import tempfile
+from pathlib import Path
+from unittest.mock import mock_open, patch
+
 import cv2
 import numpy as np
 import pytest
@@ -17,12 +23,14 @@ from pathml.utils import (
     _pad_or_crop_1d,
     contour_centroid,
     download_from_url,
+    find_qupath_home,
     normalize_matrix_cols,
     normalize_matrix_rows,
     pad_or_crop,
     parse_file_size,
     plot_mask,
     segmentation_lines,
+    setup_qupath,
     sort_points_clockwise,
     upsample_array,
 )
@@ -41,6 +49,51 @@ def test_download_from_url(tmp_path):
     download_from_url(url=url, download_dir=d, name="testfile")
     file1 = open(d / "testfile", "r")
     assert file1.readline() == "format: Aperio SVS\n"
+
+
+# Test successful download
+def test_successful_download(tmp_path):
+    url = "http://example.com/testfile.txt"
+    download_dir = tmp_path / "downloads"
+    file_content = b"Sample file content"
+    with patch(
+        "urllib.request.urlopen", mock_open(read_data=file_content)
+    ) as mocked_url_open, patch("builtins.open", mock_open()) as mocked_file:
+        download_from_url(url, download_dir, "downloaded_file.txt")
+
+        mocked_url_open.assert_called_with(url)
+        mocked_file.assert_called_with(
+            os.path.join(download_dir, "downloaded_file.txt"), "wb"
+        )
+
+
+# Test skipping download for existing file
+def test_skip_existing_download(tmp_path):
+    url = "http://example.com/testfile.txt"
+    download_dir = tmp_path / "downloads"
+    download_dir.mkdir(parents=True, exist_ok=True)  # Ensure directory exists
+    existing_file = download_dir / "existing_file.txt"
+    existing_file.touch()  # Create an empty file
+
+    with patch("urllib.request.urlopen", mock_open()) as mocked_url_open:
+        download_from_url(url, download_dir, "existing_file.txt")
+
+        mocked_url_open.assert_not_called()
+
+
+# Test download with default filename
+def test_download_default_filename(tmp_path):
+    url = "http://example.com/testfile.txt"
+    download_dir = tmp_path / "downloads"
+    file_content = b"Sample file content for default"
+
+    with patch(
+        "urllib.request.urlopen", mock_open(read_data=file_content)
+    ) as mocked_url_open, patch("builtins.open", mock_open()) as mocked_file:
+        download_from_url(url, download_dir)
+
+        mocked_url_open.assert_called_with(url)
+        mocked_file.assert_called_with(os.path.join(download_dir, "testfile.txt"), "wb")
 
 
 @pytest.fixture(scope="module")
@@ -196,3 +249,52 @@ def test_normalize_matrix_rows(random_50_50):
 def test_normalize_matrix_cols(random_50_50):
     a = normalize_matrix_cols(random_50_50)
     assert np.all(np.isclose(np.linalg.norm(a, axis=0), 1.0))
+
+
+def test_find_existing_qupath_home(tmp_path):
+    # Create a mock QuPath directory structure
+    qupath_dir = tmp_path / "qupath"
+    qupath_dir.mkdir(parents=True)
+    qupath_jar = qupath_dir / "qupath.jar"
+    qupath_jar.touch()
+
+    # Test if the function finds the QuPath home correctly
+    qupath_home = find_qupath_home(str(tmp_path))
+    assert qupath_home == str(qupath_dir.parent.parent)
+
+
+def test_no_qupath_home_found(tmp_path):
+    # Test with a directory without QuPath JAR
+    qupath_home = find_qupath_home(str(tmp_path))
+    assert qupath_home is None
+
+
+def test_find_qupath_home():
+    # Create a temporary directory
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Case 1: QuPath jar is present
+        os.makedirs(Path(temp_dir) / "qupath")
+        open(Path(temp_dir) / "qupath/qupath.jar", "a").close()
+        assert find_qupath_home(temp_dir) is not None
+
+        # Cleanup
+        shutil.rmtree(Path(temp_dir) / "qupath")
+
+        # Case 2: QuPath jar is not present
+        assert find_qupath_home(temp_dir) is None
+
+
+@patch("builtins.print")  # To suppress print statements in the test
+def test_setup_qupath(mock_print):
+    with tempfile.TemporaryDirectory() as temp_dir:
+        qupath_home = Path(temp_dir) / "qupath"
+
+        # Simulate the environment before QuPath installation
+        expected_path = (
+            qupath_home / "QuPath"
+        )  # Update according to the actual behavior of setup_qupath
+        assert setup_qupath(str(qupath_home)) == str(expected_path)
+        print(setup_qupath(str(qupath_home)))
+        print(str(expected_path))
+        # Test when QuPath is already installed
+        assert setup_qupath(str(qupath_home)) == str(expected_path)
