@@ -8,15 +8,10 @@ dependencies:
     - pip==21.3.1
     - numpy==1.22.4 # orig = 1.19.5
     - scipy==1.7.3
-    - scikit-image==0.18.3
+    - scikit-image==0.22.0
     - matplotlib==3.5.1
-<<<<<<< HEAD
-    - openjdk==8.0.152
+    - openjdk==17.0.9
     - pytorch==1.13.1 # orig = 1.10.1
-=======
-    # - openjdk==8.0.152
-    - pytorch==1.10.1
->>>>>>> tilestitching-dev2
     - h5py==3.1.0
     - dask==2021.12.0
     - pydicom==2.2.2
@@ -37,9 +32,6 @@ dependencies:
         - anndata==0.7.8
         - tqdm==4.62.3
         - loguru==0.5.3
-<<<<<<< HEAD
         - pandas==1.5.2 # orig no req
         - torch-geometric==2.3.1
-=======
         - JPype1==1.4.1
->>>>>>> tilestitching-dev2

@@ -11,8 +11,8 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import torch
+from skimage import graph
 from skimage.color.colorconv import rgb2hed
-from skimage.future import graph
 from skimage.measure import regionprops
 from skimage.segmentation import slic
 from sklearn.neighbors import kneighbors_graph
