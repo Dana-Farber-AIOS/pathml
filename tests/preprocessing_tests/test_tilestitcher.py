@@ -3,7 +3,7 @@ import os
 import subprocess
 import tempfile
 import zipfile
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 import javabridge
 import jpype
@@ -97,6 +97,48 @@ def test_parse_region(mocked_tifffile, tile_stitcher):
     region = tile_stitcher.parseRegion(filename)
     assert region is not None
     assert isinstance(region, tile_stitcher.ImageRegion)
+
+
+# @pytest.mark.exclude
+# @patch("pathml.preprocessing.tilestitcher.tifffile")
+# def test_parse_region_missing_tags(mocked_tifffile, tile_stitcher):
+#     # Mock tifffile to return None for required tags
+#     mocked_tifffile.return_value.__enter__.return_value.pages[0].tags.get.side_effect = [
+#         None,  # XPosition missing
+#         None,  # YPosition missing
+#         None,  # XResolution missing
+#         None,  # YResolution missing
+#     ]
+
+#     # Test filename
+#     filename = "tests/testdata/tilestitching_testdata/nonexistent_tags.tif"
+
+#     # Call the parseRegion function
+#     region = tile_stitcher.parseRegion(filename)
+
+#     # Assert that the function returns None due to missing tags
+#     assert region is None
+
+
+@pytest.mark.exclude
+@patch("pathml.preprocessing.tilestitcher.tifffile.TiffFile")
+@patch("pathml.preprocessing.tilestitcher.TileStitcher.checkTIFF")
+def test_parse_region_exception(mocked_check_tiff, mocked_tiff_file, tile_stitcher):
+    # Mock the checkTIFF method to always return True
+    mocked_check_tiff.return_value = True
+
+    # Mock the TiffFile to raise a FileNotFoundError when used
+    mocked_tiff_file.side_effect = FileNotFoundError(
+        "Error: File not found dummy_file.tif"
+    )
+    filename = "dummy_file.tif"
+
+    # Expect FileNotFoundError to be raised
+    with pytest.raises(FileNotFoundError) as exc_info:
+        tile_stitcher.parseRegion(filename)
+
+    # Assert that the exception message matches what we expect
+    assert str(exc_info.value) == "Error: File not found dummy_file.tif"
 
 
 @pytest.mark.exclude
@@ -441,3 +483,121 @@ def test_write_pyramidal_image_server(tile_stitcher, sample_files):
 
     downsamples = None
     tile_stitcher._write_pyramidal_image_server(server, file_jpype, downsamples)
+
+
+@pytest.mark.exclude
+def test_set_environment_paths_without_java_path(tile_stitcher):
+    with patch.dict(os.environ, {}, clear=True):
+        with patch.object(
+            tile_stitcher, "get_system_java_home", return_value="/dummy/java/home"
+        ):
+            tile_stitcher.__init__(
+                qupath_jarpath=[], java_path=None, memory="40g", bfconvert_dir="./"
+            )
+            assert "JAVA_HOME" in os.environ
+            assert os.environ["JAVA_HOME"] == "/dummy/java/home"
+
+
+@pytest.mark.exclude
+def test_setup_bfconvert_permission_error_on_directory_creation(tile_stitcher):
+    with patch("os.path.exists", return_value=False):
+        with patch("os.makedirs", side_effect=PermissionError("Permission denied")):
+            with pytest.raises(PermissionError) as exc_info:
+                tile_stitcher.setup_bfconvert("/fake/path")
+            assert "Permission denied: Cannot create directory" in str(exc_info.value)
+
+
+@pytest.mark.exclude
+def test_setup_bfconvert_bad_zip_file(tile_stitcher, mock_tools_dir):
+    with patch("os.path.exists", return_value=False):
+        with patch("urllib.request.urlretrieve"):
+            with patch(
+                "zipfile.ZipFile", side_effect=zipfile.BadZipFile("Invalid ZIP file")
+            ):
+                with pytest.raises(zipfile.BadZipFile):
+                    tile_stitcher.setup_bfconvert(str(mock_tools_dir))
+
+
+@pytest.mark.exclude
+def test_setup_bfconvert_permission_error_on_chmod(
+    tile_stitcher, mock_tools_dir, tmp_path
+):
+    dummy_bfconvert = tmp_path / "bfconvert"
+    dummy_bfconvert.touch()
+    dummy_bf_sh = tmp_path / "bf.sh"
+    dummy_bf_sh.touch()
+
+    tile_stitcher.bfconvert_path = str(dummy_bfconvert)
+    tile_stitcher.bf_sh_path = str(dummy_bf_sh)
+
+    with patch("os.path.exists", return_value=True):
+        with patch("os.stat", return_value=os.stat(dummy_bf_sh)):
+            with patch("os.chmod", side_effect=PermissionError("Permission denied")):
+                with pytest.raises(PermissionError):
+                    tile_stitcher.setup_bfconvert(str(mock_tools_dir))
+
+
+@pytest.mark.exclude
+def test_set_environment_paths_without_java_path_exception(tile_stitcher):
+    with patch.dict(os.environ, {}, clear=True):
+        with patch.object(tile_stitcher, "get_system_java_home", return_value=""):
+            with pytest.raises(EnvironmentError) as exc_info:
+                tile_stitcher.set_environment_paths()
+            assert "JAVA_HOME not found" in str(exc_info.value)
+
+
+@pytest.mark.exclude
+def test_get_system_java_home_failure(tile_stitcher):
+    with patch("subprocess.getoutput", side_effect=Exception("Command failed")):
+        result = tile_stitcher.get_system_java_home()
+        assert result == ""
+
+
+@pytest.mark.exclude
+def test_collect_tif_files_invalid_input(tile_stitcher):
+    invalid_input = 123  # not a string or list
+    result = tile_stitcher._collect_tif_files(invalid_input)
+    assert result == []
+
+
+@pytest.mark.exclude
+def test_check_tiff_io_error(tile_stitcher):
+    with patch("builtins.open", side_effect=IOError("IO error occurred")):
+        with pytest.raises(IOError):
+            tile_stitcher.checkTIFF("invalid_file.tif")
+
+
+@pytest.mark.exclude
+def test_start_jvm_exception(tile_stitcher):
+    with patch("jpype.isJVMStarted", return_value=False):
+        with patch("jpype.startJVM", side_effect=Exception("JVM start error")):
+            with pytest.raises(SystemExit) as exc_info:
+                tile_stitcher._start_jvm()
+            assert exc_info.type == SystemExit
+
+
+@pytest.mark.exclude
+def test_import_qupath_classes_exception(tile_stitcher):
+    with patch("jpype.JPackage", side_effect=Exception("Import error")):
+        with pytest.raises(RuntimeError) as exc_info:
+            tile_stitcher._import_qupath_classes()
+        assert "Failed to import QuPath classes" in str(exc_info.value)
+
+
+@pytest.mark.exclude
+@patch("builtins.open", mock_open(read_data=b"non TIFF data"))
+def test_parse_region_invalid_tiff(tile_stitcher):
+    non_tiff_file = "non_tiff_file.txt"
+    assert tile_stitcher.parseRegion(non_tiff_file) is None
+
+
+@pytest.mark.exclude
+def test_run_image_stitching_with_empty_input(tile_stitcher, sample_files):
+    # Mocking an empty input scenario
+    with patch.object(tile_stitcher, "_collect_tif_files", return_value=[]):
+        # Output file
+        output_file = "output.ome.tif"
+        # Running the stitching method
+        tile_stitcher.run_image_stitching(sample_files, output_file)
+        # Assertions to check if the method returns early as expected
+        # (You can use mocks to assert that certain methods were not called)

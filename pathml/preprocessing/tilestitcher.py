@@ -281,6 +281,7 @@ class TileStitcher:
             except Exception as e:
                 print(f"Error occurred while parsing {file}: {e}")
                 traceback.print_exc()
+                raise
         else:
             print(f"{file} is not a valid TIFF file")
 
