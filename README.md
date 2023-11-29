@@ -138,6 +138,7 @@ on accessing the container, e.g. for mounting volumes to access files on a local
 To get PathML running in a Colab environment:
 
 ````
+import os
 !pip install openslide-python
 !apt-get install openslide-tools
 !apt-get install openjdk-8-jdk-headless -qq > /dev/null
