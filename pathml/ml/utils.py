@@ -13,19 +13,28 @@ from torch_geometric.utils import degree
 from tqdm import tqdm
 
 
-def broadcast(src, other, dim):
-    if dim < 0:
-        dim = other.dim() + dim
-    if src.dim() == 1:
-        for _ in range(0, dim):
-            src = src.unsqueeze(0)
-    for _ in range(src.dim(), other.dim()):
-        src = src.unsqueeze(-1)
-    src = src.expand(other.size())
-    return src
+def scatter_sum(src, index, dim, out=None, dim_size=None):
+    """
+    Reduces all values from the :attr:`src` tensor into :attr:`out` at the
+    indices specified in the :attr:`index` tensor along a given axis
+    :attr:`dim`.
 
+    For each value in :attr:`src`, its output index is specified by its index
+    in :attr:`src` for dimensions outside of :attr:`dim` and by the
+    corresponding value in :attr:`index` for dimension :attr:`dim`.
+    The applied reduction is defined via the :attr:`reduce` argument.
 
-def scatter_sum(src, index, dim, out=None, dim_size=None) -> torch.Tensor:
+    Args:
+        src: The source tensor.
+        index: The indices of elements to scatter.
+        dim: The axis along which to index. Default is -1.
+        out: The destination tensor.
+        dim_size: If `out` is not given, automatically create output with size `dim_size` at dimension `dim`.
+
+    Reference:
+        https://pytorch-scatter.readthedocs.io/en/latest/_modules/torch_scatter/scatter.html#scatter
+    """
+
     index = broadcast(index, src, dim)
     if out is None:
         size = list(src.size())
@@ -41,7 +50,26 @@ def scatter_sum(src, index, dim, out=None, dim_size=None) -> torch.Tensor:
         return out.scatter_add_(dim, index, src)
 
 
+def broadcast(src, other, dim):
+    """
+    Broadcast tensors to match output tensor dimension.
+    """
+    if dim < 0:
+        dim = other.dim() + dim
+    if src.dim() == 1:
+        for _ in range(0, dim):
+            src = src.unsqueeze(0)
+    for _ in range(src.dim(), other.dim()):
+        src = src.unsqueeze(-1)
+    src = src.expand(other.size())
+    return src
+
+
 def get_degree_histogram(loader, edge_index_str, x_str):
+    """
+    Returns the degree histogram to be used as input for the `deg` argument in `PNAConv`.
+    """
+
     deg_histogram = torch.zeros(1, dtype=torch.long)
     for data in tqdm(loader):
         d = degree(
@@ -58,6 +86,10 @@ def get_degree_histogram(loader, edge_index_str, x_str):
 
 
 def get_class_weights(loader):
+    """
+    Returns the per-class weights to be used in weighted loss functions.
+    """
+
     ys = []
     for data in tqdm(loader):
         ys.append(data.target.numpy())

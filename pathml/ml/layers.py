@@ -1,3 +1,8 @@
+"""
+Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
+License: GNU GPL 2.0
+"""
+
 import importlib
 
 import torch
@@ -10,14 +15,17 @@ class GNNLayer(nn.Module):
     GNN layer for processing graph structures.
 
     Args:
-        layer (str): Type of torch_geometric GNN layer to be used. See https://pytorch-geometric.readthedocs.io/en/latest/modules/nn.html#convolutional-layers for all available options.
+        layer (str): Type of torch_geometric GNN layer to be used.
+            See https://pytorch-geometric.readthedocs.io/en/latest/modules/nn.html#convolutional-layers for
+            all available options.
         in_channels (int): Number of input features supplied to the model.
         hidden_channels (int): Number of hidden channels used in each layer of the GNN model.
         num_layers (int): Number of message-passing layers in the model.
         out_channels (int): Number of output features returned by the model.
         readout_op (str): Readout operation to summarize features from each layer. Supports 'lstm' and 'concat'.
         readout_type (str): Type of readout to aggregate node embeddings. Supports 'mean'.
-        kwargs (dict): Extra layer-specific arguments. Must have required keyword arguments of layer from https://pytorch-geometric.readthedocs.io/en/latest/modules/nn.html#convolutional-layers.
+        kwargs (dict): Extra layer-specific arguments. Must have required keyword arguments of layer from
+            https://pytorch-geometric.readthedocs.io/en/latest/modules/nn.html#convolutional-layers.
     """
 
     def __init__(
@@ -37,9 +45,11 @@ class GNNLayer(nn.Module):
         self.readout_type = readout_type
         self.readout_op = readout_op
 
+        # Import user-specified GNN layer from pytorch-geometric
         conv_module = importlib.import_module("torch_geometric.nn.conv")
         module = getattr(conv_module, layer)
 
+        # Make multi-layered GNN using imported GNN layer
         self.convs.append(module(in_channels, hidden_channels, **kwargs))
         self.batch_norms.append(nn.BatchNorm1d(hidden_channels))
         for _ in range(1, num_layers - 1):
@@ -49,6 +59,7 @@ class GNNLayer(nn.Module):
         self.convs.append(module(hidden_channels, out_channels, **kwargs))
         self.batch_norms.append(nn.BatchNorm1d(out_channels))
 
+        # Define readout operation if using LSTM readout
         if readout_op == "lstm":
             self.lstm = nn.LSTM(
                 out_channels,

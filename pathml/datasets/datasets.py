@@ -7,13 +7,12 @@ import copy
 import os
 import warnings
 from glob import glob
-from typing import Callable, List, Optional, Tuple
 
 import h5py
 import numpy as np
 import torch
 from skimage.measure import regionprops
-from torchvision import transforms
+from skimage.transform import resize
 
 from pathml.graph.utils import HACTPairData
 
@@ -108,17 +107,17 @@ class EntityDataset(torch.utils.data.Dataset):
         self.cell_dir = cell_dir
         self.tissue_dir = tissue_dir
         self.assign_dir = assign_dir
-        
+
         if self.cell_dir is not None:
             if not os.path.exists(cell_dir):
                 raise FileNotFoundError(f"Directory not found: {self.cell_dir}")
             self.cell_graphs = glob(os.path.join(cell_dir, "*.pt"))
-        
+
         if self.tissue_dir is not None:
             if not os.path.exists(tissue_dir):
                 raise FileNotFoundError(f"Directory not found: {self.tissue_dir}")
             self.tissue_graphs = glob(os.path.join(tissue_dir, "*.pt"))
-            
+
         if self.assign_dir is not None:
             if not os.path.exists(assign_dir):
                 raise FileNotFoundError(f"Directory not found: {self.assign_dir}")
@@ -133,20 +132,26 @@ class EntityDataset(torch.utils.data.Dataset):
         if self.cell_dir is not None:
             cell_graph = torch.load(self.cell_graphs[index])
             target = cell_graph["target"]
-            
+
         if self.tissue_dir is not None:
             tissue_graph = torch.load(self.tissue_graphs[index])
             target = tissue_graph["target"]
 
         if self.assign_dir is not None:
             assignment = torch.load(self.assigns[index])
-        
+
         # Create pathml.graph.utils.HACTPairData object with prvided objects
         data = HACTPairData(
             x_cell=cell_graph.node_features if self.cell_dir is not None else None,
-            edge_index_cell=cell_graph.edge_index if self.cell_dir is not None else None,
-            x_tissue=tissue_graph.node_features if self.tissue_dir is not None else None,
-            edge_index_tissue=tissue_graph.edge_index if self.tissue_dir is not None else None,
+            edge_index_cell=cell_graph.edge_index
+            if self.cell_dir is not None
+            else None,
+            x_tissue=tissue_graph.node_features
+            if self.tissue_dir is not None
+            else None,
+            edge_index_tissue=tissue_graph.edge_index
+            if self.tissue_dir is not None
+            else None,
             assignment=assignment[1, :] if self.assign_dir is not None else None,
             target=target,
         )
@@ -178,11 +183,12 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
         entity="cell",
         patch_size=64,
         threshold=0.2,
-        resize_size = None,
-        fill_value = 255,
-        mean = None,
-        std = None,
-        with_instance_masking = False):
+        resize_size=None,
+        fill_value=255,
+        mean=None,
+        std=None,
+        with_instance_masking=False,
+    ):
 
         self.image = image
         self.instance_map = instance_map
@@ -217,20 +223,34 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
         )
 
         self.threshold = int(self.patch_size * self.patch_size * threshold)
-
         self.warning_threshold = 0.75
 
-        basic_transforms = [transforms.ToPILImage()]
-        if self.resize_size is not None:
-            basic_transforms.append(transforms.Resize(self.resize_size))
-        basic_transforms.append(transforms.ToTensor())
-        if self.mean is not None and self.std is not None:
-            basic_transforms.append(transforms.Normalize(self.mean, self.std))
-        self.dataset_transform = transforms.Compose(basic_transforms)
+        try:
+            from torchvision import transforms
 
-        if self.entity not in ['cell', 'tissue']:
-            raise ValueError("Invalid value for entity. Expected 'cell' or 'tissue', got '{}'.".format(self.entity))
-        
+            self.use_torchvision = True
+        except ImportError:
+            raise warnings.warn(
+                "Torchvision is not installed, using base modules for resizing patches and skipping normalization"
+            )
+            self.use_torchvision = False
+
+        if self.use_torchvision:
+            basic_transforms = [transforms.ToPILImage()]
+            if self.resize_size is not None:
+                basic_transforms.append(transforms.Resize(self.resize_size))
+            basic_transforms.append(transforms.ToTensor())
+            if self.mean is not None and self.std is not None:
+                basic_transforms.append(transforms.Normalize(self.mean, self.std))
+            self.dataset_transform = transforms.Compose(basic_transforms)
+
+        if self.entity not in ["cell", "tissue"]:
+            raise ValueError(
+                "Invalid value for entity. Expected 'cell' or 'tissue', got '{}'.".format(
+                    self.entity
+                )
+            )
+
         if self.entity == "cell":
             self._precompute_cell()
         elif self.entity == "tissue":
@@ -239,7 +259,7 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
     def _add_patch(self, center_x, center_y, instance_index, region_count):
         """Extract and include patch information."""
 
-        # Get a patch for each entity in the instance map 
+        # Get a patch for each entity in the instance map
         mask = self.instance_map[
             center_y - self.patch_size_2 : center_y + self.patch_size_2,
             center_x - self.patch_size_2 : center_x + self.patch_size_2,
@@ -256,7 +276,7 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
             self.patch_instance_ids.append(instance_index)
             self.patch_overlap.append(overlap)
 
-    def _get_patch_tissue(self, loc, region_id = None):
+    def _get_patch_tissue(self, loc, region_id=None):
         """Extract tissue patches from image."""
 
         # Get bounding box of given location
@@ -386,7 +406,7 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
 
     def _warning(self):
         """Check patch coverage statistics to identify if provided patch size includes too much background."""
-        
+
         self.patch_overlap = np.array(self.patch_overlap) / (
             self.patch_size * self.patch_size
         )
@@ -406,9 +426,19 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
                 self.patch_coordinates[index], self.patch_instance_ids[index]
             )
         else:
-            raise ValueError("Invalid value for entity. Expected 'cell' or 'tissue', got '{}'.".format(entity))
-            
-        patch = self.dataset_transform(patch)
+            raise ValueError(
+                "Invalid value for entity. Expected 'cell' or 'tissue', got '{}'.".format(
+                    self.entity
+                )
+            )
+
+        if self.use_torchvision:
+            patch = self.dataset_transform(patch)
+        else:
+            patch = patch / 255.0 if patch.max() > 1 else patch
+            patch = resize(patch, (self.resize_size, self.resize_size))
+            patch = torch.from_numpy(patch).permute(2, 0, 1).float()
+
         return patch, self.patch_region_count[index]
 
     def __len__(self):

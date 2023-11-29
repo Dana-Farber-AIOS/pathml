@@ -7,7 +7,6 @@ import importlib
 
 import numpy as np
 import torch
-import torchvision
 from torch import nn
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
@@ -67,9 +66,9 @@ class DeepPatchFeatureExtractor:
     Args:
         patch_size (int): Desired size of patch.
         batch_size (int): Desired size of batch.
-        architecture (str): String of architecture. According to torchvision.models syntax.
+        architecture (str): String of architecture. According to torchvision.models syntax or path to local model.
         entity (str): Entity to be processed. Must be one of 'cell' or 'tissue'. Defaults to 'cell'.
-        device (torch.device): Torch Device.
+        device (torch.device): Torch Device used for inference.
         fill_value (Optional[int]): Value to fill outside the instance maps. Defaults to 255.
         threshold (float): Threshold for processing a patch or not.
         resize_size (int): Desired resized size to input the network. If None, no resizing is done and the
@@ -107,7 +106,15 @@ class DeepPatchFeatureExtractor:
         if architecture.endswith(".pth"):
             model = self._get_local_model(path=architecture)
         else:
-            model = self._get_torchvision_model(architecture).to(self.device)
+            try:
+                global torchvision
+                import torchvision
+
+                model = self._get_torchvision_model(architecture).to(self.device)
+            except (ImportError, ModuleNotFoundError):
+                raise Exception(
+                    "Using online models require torchvision to be installed"
+                )
 
         self.normalizer_mean = [0.485, 0.456, 0.406]
         self.normalizer_std = [0.229, 0.224, 0.225]
@@ -120,7 +127,7 @@ class DeepPatchFeatureExtractor:
     @staticmethod
     def _validate_model(model: nn.Module) -> None:
         """Raise an error if the model does not have the required attributes."""
-        
+
         if not isinstance(model, torchvision.models.resnet.ResNet):
             if not hasattr(model, "classifier"):
                 raise ValueError(
@@ -159,7 +166,7 @@ class DeepPatchFeatureExtractor:
     @staticmethod
     def _remove_layers(model: nn.Module, extraction_layer=None) -> nn.Module:
         """Returns the model without the unused layers to get embeddings."""
-        
+
         if hasattr(model, "model"):
             model = model.model
             if extraction_layer is not None:
@@ -192,17 +199,17 @@ class DeepPatchFeatureExtractor:
 
     def _collate_patches(self, batch):
         """Patch collate function"""
-        
+
         instance_indices = [item[1] for item in batch]
         patches = [item[0] for item in batch]
         patches = torch.stack(patches)
         return instance_indices, patches
 
     def process(self, input_image, instance_map):
-        """Main processing function that takes in an input image and an instance map and returns features for all 
+        """Main processing function that takes in an input image and an instance map and returns features for all
         entities in the instance map"""
 
-        # Create a pathml.datasets.datasets.InstanceMapPatchDataset class 
+        # Create a pathml.datasets.datasets.InstanceMapPatchDataset class
         image_dataset = InstanceMapPatchDataset(
             image=input_image,
             instance_map=instance_map,

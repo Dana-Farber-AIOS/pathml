@@ -1,11 +1,12 @@
+"""
+Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
+License: GNU GPL 2.0
+"""
+
 import math
-import sys
 from abc import abstractmethod
-from pathlib import Path
-from typing import Any, Dict, Optional, Tuple, Union
 
 import cv2
-import h5py
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -99,9 +100,10 @@ class BaseGraphBuilder:
     def __init__(
         self,
         nr_annotation_classes: int = 5,
-        annotation_background_class = None,
-        add_loc_feats= False,
-        **kwargs):
+        annotation_background_class=None,
+        add_loc_feats=False,
+        **kwargs,
+    ):
         """Base Graph Builder constructor."""
         self.nr_annotation_classes = nr_annotation_classes
         self.annotation_background_class = annotation_background_class
@@ -109,11 +111,8 @@ class BaseGraphBuilder:
         super().__init__(**kwargs)
 
     def process(  # type: ignore[override]
-        self,
-        instance_map,
-        features,
-        annotation,
-        target=None):
+        self, instance_map, features, annotation=None, target=None
+    ):
         """Generates a graph from a given instance_map and features"""
         # add nodes
         self.num_nodes = features.shape[0]
@@ -187,8 +186,7 @@ class BaseGraphBuilder:
             )
 
     @abstractmethod
-    def _set_node_labels(
-        self, instance_map, annotation):
+    def _set_node_labels(self, instance_map, annotation):
         """Set the node labels of the graphs"""
 
     @abstractmethod
@@ -210,13 +208,12 @@ class KNNGraphBuilder(BaseGraphBuilder):
 
     def __init__(self, k: int = 5, thresh: int = None, **kwargs) -> None:
         """Create a graph builder that uses the (thresholded) kNN algorithm to define the graph topology."""
-        
+
         self.k = k
         self.thresh = thresh
         super().__init__(**kwargs)
 
-    def _set_node_labels(
-        self, instance_map, annotation):
+    def _set_node_labels(self, instance_map, annotation):
         """Set the node labels of the graphs using annotation"""
         regions = regionprops(instance_map)
         assert annotation.shape[0] == len(
@@ -246,7 +243,7 @@ class KNNGraphBuilder(BaseGraphBuilder):
 
 class RAGGraphBuilder(BaseGraphBuilder):
     """
-    Region Adjacency Graph builder class. 
+    Region Adjacency Graph builder class.
 
     Args:
         kernel_size (int, optional): Size of the kernel to detect connectivity. Defaults to 5.
@@ -254,7 +251,7 @@ class RAGGraphBuilder(BaseGraphBuilder):
 
     Returns:
         A pathml.graph.utils.Graph object containing node and edge information.
-    
+
     """
 
     def __init__(self, kernel_size: int = 3, hops: int = 1, **kwargs) -> None:
@@ -268,7 +265,7 @@ class RAGGraphBuilder(BaseGraphBuilder):
 
     def _build_topology(self, instance_map: np.ndarray) -> None:
         """Create the graph topology from the instance connectivty in the instance_map"""
-        
+
         regions = regionprops(instance_map)
         instance_ids = torch.empty(len(regions), dtype=torch.uint8)
 
@@ -294,37 +291,36 @@ class RAGGraphBuilder(BaseGraphBuilder):
 class SuperpixelExtractor:
     """Helper class to extract superpixels from images
 
-     Args:
-        nr_superpixels (None, int): The number of super pixels before any merging.
-        superpixel_size (None, int): The size of super pixels before any merging.
-        max_nr_superpixels (int, optional): Upper bound for the number of super pixels.
-                                            Useful when providing a superpixel size.
-        blur_kernel_size (float, optional): Size of the blur kernel. Defaults to 0.
-        compactness (int, optional): Compactness of the superpixels. Defaults to 30.
-        max_iterations (int, optional): Number of iterations of the slic algorithm. Defaults to 10.
-        threshold (float, optional): Connectivity threshold. Defaults to 0.03.
-        connectivity (int, optional): Connectivity for merging graph. Defaults to 2.
-        downsampling_factor (int, optional): Downsampling factor from the input image
-                                             resolution. Defaults to 1.
+    Args:
+       nr_superpixels (None, int): The number of super pixels before any merging.
+       superpixel_size (None, int): The size of super pixels before any merging.
+       max_nr_superpixels (int, optional): Upper bound for the number of super pixels.
+                                           Useful when providing a superpixel size.
+       blur_kernel_size (float, optional): Size of the blur kernel. Defaults to 0.
+       compactness (int, optional): Compactness of the superpixels. Defaults to 30.
+       max_iterations (int, optional): Number of iterations of the slic algorithm. Defaults to 10.
+       threshold (float, optional): Connectivity threshold. Defaults to 0.03.
+       connectivity (int, optional): Connectivity for merging graph. Defaults to 2.
+       downsampling_factor (int, optional): Downsampling factor from the input image
+                                            resolution. Defaults to 1.
     """
-    
 
     def __init__(
         self,
         nr_superpixels: int = None,
         superpixel_size: int = None,
-        max_nr_superpixels= None,
-        blur_kernel_size= 1,
-        compactness = 20,
-        max_iterations = 10,
-        threshold = 0.03,
-        connectivity = 2,
-        color_space = "rgb",
-        downsampling_factor= 1,
+        max_nr_superpixels=None,
+        blur_kernel_size=1,
+        compactness=20,
+        max_iterations=10,
+        threshold=0.03,
+        connectivity=2,
+        color_space="rgb",
+        downsampling_factor=1,
         **kwargs,
     ) -> None:
         """Abstract class that extracts superpixels from RGB Images"""
-        
+
         assert (nr_superpixels is None and superpixel_size is not None) or (
             nr_superpixels is not None and superpixel_size is None
         ), "Provide value for either nr_superpixels or superpixel_size"
@@ -340,8 +336,7 @@ class SuperpixelExtractor:
         self.downsampling_factor = downsampling_factor
         super().__init__(**kwargs)
 
-    def process(  # type: ignore[override]
-        self, input_image, tissue_mask= None):
+    def process(self, input_image, tissue_mask=None):  # type: ignore[override]
         """Return the superpixels of a given input image"""
         original_height, original_width, _ = input_image.shape
         if self.downsampling_factor != 1:
@@ -356,9 +351,7 @@ class SuperpixelExtractor:
         return superpixels
 
     @abstractmethod
-    def _extract_superpixels(
-        self, image, tissue_mask= None
-    ):
+    def _extract_superpixels(self, image, tissue_mask=None):
         """Perform the superpixel extraction"""
 
     @staticmethod
@@ -418,7 +411,7 @@ class SLICSuperpixelExtractor(SuperpixelExtractor):
 
 class MergedSuperpixelExtractor(SuperpixelExtractor):
     """Use the SLIC algorithm to extract superpixels and a merging function to merge superpixels"""
-    
+
     def __init__(self, **kwargs):
         """Extract superpixels with the SLIC algorithm and then merge"""
         super().__init__(**kwargs)
@@ -448,11 +441,7 @@ class MergedSuperpixelExtractor(SuperpixelExtractor):
         )
         return superpixels
 
-    def _merge_superpixels(
-        self,
-        input_image,
-        initial_superpixels,
-        tissue_mask= None):
+    def _merge_superpixels(self, input_image, initial_superpixels, tissue_mask=None):
         """Merge the initial superpixels to return merged superpixels"""
         if tissue_mask is not None:
             # Remove superpixels belonging to background or having < 10% tissue
@@ -494,21 +483,18 @@ class MergedSuperpixelExtractor(SuperpixelExtractor):
         return merged_superpixels
 
     @abstractmethod
-    def _generate_graph(
-        self, input_image, superpixels):
+    def _generate_graph(self, input_image, superpixels):
         """Generate a graph based on the input image and initial superpixel segmentation."""
 
     @abstractmethod
-    def _weighting_function(
-        self, graph, src, dst, n):
+    def _weighting_function(self, graph, src, dst, n):
         """Handle merging of nodes of a region boundary region adjacency graph."""
 
     @abstractmethod
     def _merging_function(self, graph, src, dst):
         """Call back called before merging 2 nodes."""
 
-    def _extract_superpixels(
-        self, image, tissue_mask= None):
+    def _extract_superpixels(self, image, tissue_mask=None):
         """Perform superpixel extraction"""
         initial_superpixels = self._extract_initial_superpixels(image)
         merged_superpixels = self._merge_superpixels(
@@ -517,8 +503,7 @@ class MergedSuperpixelExtractor(SuperpixelExtractor):
 
         return merged_superpixels, initial_superpixels
 
-    def process(  # type: ignore[override]
-        self, input_image, tissue_mask=None):
+    def process(self, input_image, tissue_mask=None):  # type: ignore[override]
         """Return the superpixels of a given input image"""
         original_height, original_width, _ = input_image.shape
         if self.downsampling_factor is not None and self.downsampling_factor != 1:
@@ -544,6 +529,7 @@ class ColorMergedSuperpixelExtractor(MergedSuperpixelExtractor):
         w_hist (float, optional): Weight of the histogram features for merging. Defaults to 0.5.
         w_mean (float, optional): Weight of the mean features for merging. Defaults to 0.5.
     """
+
     def __init__(self, w_hist: float = 0.5, w_mean: float = 0.5, **kwargs):
         self.w_hist = w_hist
         self.w_mean = w_mean
@@ -554,8 +540,7 @@ class ColorMergedSuperpixelExtractor(MergedSuperpixelExtractor):
         hist, _ = np.histogram(img_ch, bins=np.arange(0, 257, 64))  # 8 bins
         return hist
 
-    def _generate_graph(
-        self, input_image, superpixels):
+    def _generate_graph(self, input_image, superpixels):
         """Construct RAG graph using initial superpixel instance map"""
         g = graph.RAG(superpixels, connectivity=self.connectivity)
         if 0 in g.nodes:
@@ -611,8 +596,7 @@ class ColorMergedSuperpixelExtractor(MergedSuperpixelExtractor):
 
         return g
 
-    def _weighting_function(
-        self, graph, src, dst, n):
+    def _weighting_function(self, graph, src, dst, n):
         diff_mean = np.linalg.norm(graph.nodes[dst]["mean"] - graph.nodes[n]["mean"])
 
         diff_r = np.linalg.norm(graph.nodes[dst]["r"] - graph.nodes[n]["r"]) / 2

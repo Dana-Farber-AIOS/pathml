@@ -1,3 +1,8 @@
+"""
+Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
+License: GNU GPL 2.0
+"""
+
 import importlib
 import math
 import os
@@ -22,10 +27,12 @@ class Graph(Data):
         node_features (torch.tensor): Computed features of each entity (cell or tissue) in the graph
         edge_index (torch.tensor): Edge index in sparse format between nodes in the graph
         node_labels  (torch.tensor): Node labels of each entity (cell or tissue) in the graph. Defaults to None.
-        target (torch.tensor): Target label if used in a supervised setting. Defaults to None. 
+        target (torch.tensor): Target label if used in a supervised setting. Defaults to None.
     """
 
-    def __init__(self, node_centroids, node_features, edge_index, node_labels=None, target=None):
+    def __init__(
+        self, node_centroids, node_features, edge_index, node_labels=None, target=None
+    ):
         super().__init__()
         self.node_centroids = node_centroids
         self.node_features = node_features
@@ -50,7 +57,7 @@ class HACTPairData(Data):
         edge_index_cell (torch.tensor): Edge index in sparse format between nodes in the cell graph
         x_tissue (torch.tensor): Computed features of each tissue in the graph
         edge_index_tissue (torch.tensor): Edge index in sparse format between nodes in the tissue graph
-        assignment (torch.tensor): Assigment matrix that contains mapping between cells and tissues. 
+        assignment (torch.tensor): Assigment matrix that contains mapping between cells and tissues.
         target (torch.tensor): Target label if used in a supervised setting.
     """
 
@@ -158,7 +165,7 @@ def get_full_instance_map(wsi, patch_size, mask_name="cell"):
         mask_name (str): Name of the mask slot storing the detected cells. Defaults to 'cell'.
 
     Returns:
-        The image in np.unint8 format, the instance map for the entity and the instance centroids for each entity in 
+        The image in np.unint8 format, the instance map for the entity and the instance centroids for each entity in
         the instance map as numpy arrays.
     """
 
@@ -193,10 +200,12 @@ def build_assignment_matrix(low_level_centroids, high_level_map, matrix=False):
     Args:
         low_level_centroids (numpy.array): The low-level centroid coordinates in x-y plane
         high-level map (numpy.array): The high-level map returned from regionprops
-        matrix (bool): Whether to return in a matrix format. If True, returns a N*L matrix where N is the number of low-level instances and L is the number of high-level instances. If False, returns this mapping in sparse format. Defaults to False.
+        matrix (bool): Whether to return in a matrix format. If True, returns a N*L matrix where N is the number of low-level
+            instances and L is the number of high-level instances. If False, returns this mapping in sparse format.
+            Defaults to False.
 
     Returns:
-        The assignment matrix as a numpy array. 
+        The assignment matrix as a numpy array.
     """
 
     low_level_centroids = low_level_centroids.astype(int)
@@ -217,10 +226,11 @@ def build_assignment_matrix(low_level_centroids, high_level_map, matrix=False):
 def compute_histogram(input_array: np.ndarray, nr_values: int) -> np.ndarray:
     """Calculates a histogram of a matrix of the values from 0 up to (excluding) nr_values
     Args:
-        x (np.array): Input tensor
+        x (np.array): Input tensor.
         nr_values (int): Possible values. From 0 up to (exclusing) nr_values.
+
     Returns:
-        np.array: Output tensor
+        np.array: Output tensor.
     """
     output_array = np.empty(nr_values, dtype=int)
     for i in range(nr_values):
@@ -229,12 +239,12 @@ def compute_histogram(input_array: np.ndarray, nr_values: int) -> np.ndarray:
 
 
 def two_hop(edge_index, num_nodes):
-    """Calculates the two-hop graph
+    """Calculates the two-hop graph.
     Args:
-        edge_index (torch.tensor): The edge index in sparse form of the graph
-        num_nodes (int): maximum number of nodes
+        edge_index (torch.tensor): The edge index in sparse form of the graph.
+        num_nodes (int): maximum number of nodes.
     Returns:
-        torch.tensor: Output edge index tensor
+        torch.tensor: Output edge index tensor.
     """
     adj = to_torch_csr_tensor(edge_index, size=(num_nodes, num_nodes))
     edge_index2, _ = to_edge_index(adj @ adj)
