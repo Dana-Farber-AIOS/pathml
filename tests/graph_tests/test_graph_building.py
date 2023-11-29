@@ -7,13 +7,14 @@ import numpy as np
 import pytest
 import torch
 from skimage.draw import ellipse
-from skimage.measure import regionprops, label
+from skimage.measure import label, regionprops
 
 from pathml.graph import KNNGraphBuilder, RAGGraphBuilder
 
+
 def make_fake_instance_maps(num, image_size, ellipse_height, ellipse_width):
     img = np.zeros(image_size)
-    
+
     # Draw n ellipses
     for i in range(num):
         # Random center for each ellipse
@@ -21,29 +22,34 @@ def make_fake_instance_maps(num, image_size, ellipse_height, ellipse_width):
         center_y = np.random.randint(ellipse_height, image_size[0] - ellipse_height)
 
         # Coordinates for the ellipse
-        rr, cc = ellipse(center_y, center_x, ellipse_height, ellipse_width, shape=image_size)
-        
+        rr, cc = ellipse(
+            center_y, center_x, ellipse_height, ellipse_width, shape=image_size
+        )
+
         # Draw the ellipse
         img[rr, cc] = 1
 
     label_img = label(img.astype(int))
-    
+
     return label_img
+
 
 @pytest.mark.parametrize("k", [1, 10, 50])
 @pytest.mark.parametrize("thresh", [0, 10, 200])
 @pytest.mark.parametrize("add_loc_feats", [True, False])
 def test_knn_graph_building(k, thresh, add_loc_feats):
     image_size = (1024, 2048)
-    
-    instance_map = make_fake_instance_maps(num=100, image_size=image_size, ellipse_height=10, ellipse_width=8)
+
+    instance_map = make_fake_instance_maps(
+        num=100, image_size=image_size, ellipse_height=10, ellipse_width=8
+    )
     regions = regionprops(instance_map)
 
     features = torch.randn(len(regions), 512)
 
     graph_builder = KNNGraphBuilder(k=k, thresh=thresh, add_loc_feats=add_loc_feats)
-    
-    graph = graph_builder.process(instance_map, features, target = 1)
+
+    graph = graph_builder.process(instance_map, features, target=1)
 
     assert graph.node_centroids.shape == (len(regions), 2)
     assert graph.edge_index.shape[0] == 2
@@ -58,15 +64,19 @@ def test_knn_graph_building(k, thresh, add_loc_feats):
 @pytest.mark.parametrize("add_loc_feats", [True, False])
 def test_rag_graph_building(kernel_size, hops, add_loc_feats):
     image_size = (1024, 2048)
-    
-    instance_map = make_fake_instance_maps(num=100, image_size=image_size, ellipse_height=10, ellipse_width=8)
+
+    instance_map = make_fake_instance_maps(
+        num=100, image_size=image_size, ellipse_height=10, ellipse_width=8
+    )
     regions = regionprops(instance_map)
 
     features = torch.randn(len(regions), 512)
 
-    graph_builder = RAGGraphBuilder(kernel_size=kernel_size, hops=hops, add_loc_feats=add_loc_feats)
-    
-    graph = graph_builder.process(instance_map, features, target = 1)
+    graph_builder = RAGGraphBuilder(
+        kernel_size=kernel_size, hops=hops, add_loc_feats=add_loc_feats
+    )
+
+    graph = graph_builder.process(instance_map, features, target=1)
 
     assert graph.node_centroids.shape == (len(regions), 2)
     assert graph.edge_index.shape[0] == 2
