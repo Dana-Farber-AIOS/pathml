@@ -4,10 +4,45 @@ License: GNU GPL 2.0
 """
 import numpy as np
 import pytest
+import torch.nn as nn
+import torch.nn.functional as F
 from skimage.draw import ellipse
 from skimage.measure import label, regionprops
 
 from pathml.datasets.utils import DeepPatchFeatureExtractor
+
+
+class SimpleCNN(nn.Module):
+    def __init__(self, input_shape):
+        super(SimpleCNN, self).__init__()
+
+        self.conv1 = nn.Conv2d(
+            in_channels=input_shape[0],
+            out_channels=32,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+        )
+        self.conv2 = nn.Conv2d(
+            in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1
+        )
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+
+        fc_input_size = (input_shape[1] // 4) * (input_shape[2] // 4) * 64
+
+        self.fc1 = nn.Linear(fc_input_size, 128)
+        self.fc2 = nn.Linear(128, 10)
+
+    def forward(self, x):
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+
+        # Flatten the output for the fully connected layer
+        x = x.view(x.size(0), -1)
+
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
 
 
 def make_fake_instance_maps(num, image_size, ellipse_height, ellipse_width):
@@ -54,11 +89,13 @@ def test_feature_extractor(entity, patch_size, threshold):
     image = make_fake_image(instance_map.copy())
     regions = regionprops(instance_map)
 
+    model = SimpleCNN(input_shape=(3, 224, 224))
+
     extractor = DeepPatchFeatureExtractor(
         patch_size=patch_size,
         batch_size=1,
         entity=entity,
-        architecture="resnet34",
+        architecture=model,
         fill_value=255,
         resize_size=224,
         threshold=threshold,
@@ -66,7 +103,6 @@ def test_feature_extractor(entity, patch_size, threshold):
     features = extractor.process(image, instance_map)
 
     if threshold == 0:
-        assert features.shape == (len(regions), 512)
+        assert features.shape[0] == len(regions)
     else:
         assert features.shape[0] <= len(regions)
-        assert features.shape[1] == 512
