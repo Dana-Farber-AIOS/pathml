@@ -66,18 +66,19 @@ class DeepPatchFeatureExtractor:
     Args:
         patch_size (int): Desired size of patch.
         batch_size (int): Desired size of batch.
-        architecture (str): String of architecture. According to torchvision.models syntax or path to local model.
+        architecture (str or nn.Module): String of architecture. According to torchvision.models syntax, path to local model or nn.Module class directly.
         entity (str): Entity to be processed. Must be one of 'cell' or 'tissue'. Defaults to 'cell'.
         device (torch.device): Torch Device used for inference.
-        fill_value (Optional[int]): Value to fill outside the instance maps. Defaults to 255.
+        fill_value (int): Value to fill outside the instance maps. Defaults to 255.
         threshold (float): Threshold for processing a patch or not.
-        resize_size (int): Desired resized size to input the network. If None, no resizing is done and the
-                               patches of size patch_size are provided to the network. Defaults to None.
+        resize_size (int): Desired resized size to input the network. If None, no resizing is done and
+            the patches of size patch_size are provided to the network. Defaults to None.
         with_instance_masking (bool): If pixels outside instance should be masked. Defaults to False.
-        extraction_layer (Optional[str]): Name of the network module from where the features are extracted.
+        extraction_layer (str): Name of the network module from where the features are
+            extracted.
 
     Returns:
-        Tensor of features computed for each entity
+        Tensor of features computed for each entity.
     """
 
     def __init__(
@@ -92,7 +93,7 @@ class DeepPatchFeatureExtractor:
         resize_size=224,
         with_instance_masking=False,
         extraction_layer=None,
-    ) -> None:
+    ):
 
         self.fill_value = fill_value
         self.patch_size = patch_size
@@ -103,14 +104,20 @@ class DeepPatchFeatureExtractor:
         self.entity = entity
         self.device = device
 
-        if architecture.endswith(".pth"):
+        if isinstance(architecture, nn.Module):
+            self.model = architecture.to(self.device)
+        elif architecture.endswith(".pth"):
             model = self._get_local_model(path=architecture)
+            self._validate_model(model)
+            self.model = self._remove_layers(model, extraction_layer)
         else:
             try:
                 global torchvision
                 import torchvision
 
                 model = self._get_torchvision_model(architecture).to(self.device)
+                self._validate_model(model)
+                self.model = self._remove_layers(model, extraction_layer)
             except (ImportError, ModuleNotFoundError):
                 raise Exception(
                     "Using online models require torchvision to be installed"
@@ -119,13 +126,11 @@ class DeepPatchFeatureExtractor:
         self.normalizer_mean = [0.485, 0.456, 0.406]
         self.normalizer_std = [0.229, 0.224, 0.225]
 
-        self._validate_model(model)
-        self.model = self._remove_layers(model, extraction_layer)
-        self.num_features = self._get_num_features(model, patch_size)
+        self.num_features = self._get_num_features(patch_size)
         self.model.eval()
 
     @staticmethod
-    def _validate_model(model: nn.Module) -> None:
+    def _validate_model(model):
         """Raise an error if the model does not have the required attributes."""
 
         if not isinstance(model, torchvision.models.resnet.ResNet):
@@ -141,20 +146,20 @@ class DeepPatchFeatureExtractor:
                     + ' "features" or "model".'
                 )
 
-    def _get_num_features(self, model: nn.Module, patch_size: int) -> int:
+    def _get_num_features(self, patch_size):
         """Get the number of features of a given model."""
         dummy_patch = torch.zeros(1, 3, self.resize_size, self.resize_size).to(
             self.device
         )
-        features = model(dummy_patch)
+        features = self.model(dummy_patch)
         return features.shape[-1]
 
-    def _get_local_model(self, path: str) -> nn.Module:
+    def _get_local_model(self, path):
         """Load a model from a local path."""
         model = torch.load(path, map_location=self.device)
         return model
 
-    def _get_torchvision_model(self, architecture: str) -> nn.Module:
+    def _get_torchvision_model(self, architecture):
         """Returns a torchvision model from a given architecture string."""
 
         module = importlib.import_module("torchvision.models")
@@ -164,7 +169,7 @@ class DeepPatchFeatureExtractor:
         return model
 
     @staticmethod
-    def _remove_layers(model: nn.Module, extraction_layer=None) -> nn.Module:
+    def _remove_layers(model, extraction_layer=None):
         """Returns the model without the unused layers to get embeddings."""
 
         if hasattr(model, "model"):
@@ -190,7 +195,7 @@ class DeepPatchFeatureExtractor:
         return model
 
     @staticmethod
-    def _preprocess_architecture(architecture: str) -> str:
+    def _preprocess_architecture(architecture):
         """Preprocess the architecture string to avoid characters that are not allowed as paths."""
         if architecture.endswith(".pth"):
             return f"Local({architecture.replace('/', '_')})"
