@@ -36,4 +36,3 @@ dependencies:
         - torch-geometric==2.3.1
         - JPype1==1.4.1
         - torchvision==0.14.1
-        - spams
