@@ -10,8 +10,14 @@ import cv2
 import networkx as nx
 import numpy as np
 import pandas as pd
+import skimage
 import torch
-from skimage import graph
+
+if skimage.__version__ < "0.22.0":
+    from skimage.future import graph
+else:
+    from skimage import graph
+
 from skimage.color.colorconv import rgb2hed
 from skimage.measure import regionprops
 from skimage.segmentation import slic
@@ -206,7 +212,7 @@ class KNNGraphBuilder(BaseGraphBuilder):
         A pathml.graph.utils.Graph object containing node and edge information.
     """
 
-    def __init__(self, k: int = 5, thresh: int = None, **kwargs) -> None:
+    def __init__(self, k=5, thresh=None, **kwargs):
         """Create a graph builder that uses the (thresholded) kNN algorithm to define the graph topology."""
 
         self.k = k
@@ -254,7 +260,7 @@ class RAGGraphBuilder(BaseGraphBuilder):
 
     """
 
-    def __init__(self, kernel_size: int = 3, hops: int = 1, **kwargs) -> None:
+    def __init__(self, kernel_size=3, hops=1, **kwargs):
         """Create a graph builder that uses a provided kernel size to detect connectivity"""
         assert hops > 0 and isinstance(
             hops, int
@@ -263,7 +269,7 @@ class RAGGraphBuilder(BaseGraphBuilder):
         self.hops = hops
         super().__init__(**kwargs)
 
-    def _build_topology(self, instance_map: np.ndarray) -> None:
+    def _build_topology(self, instance_map):
         """Create the graph topology from the instance connectivty in the instance_map"""
 
         regions = regionprops(instance_map)
@@ -318,7 +324,7 @@ class SuperpixelExtractor:
         color_space="rgb",
         downsampling_factor=1,
         **kwargs,
-    ) -> None:
+    ):
         """Abstract class that extracts superpixels from RGB Images"""
 
         assert (nr_superpixels is None and superpixel_size is not None) or (
@@ -398,14 +404,20 @@ class SLICSuperpixelExtractor(SuperpixelExtractor):
         if self.color_space == "hed":
             image = rgb2hed(image)
         nr_superpixels = self._get_nr_superpixels(image)
-        superpixels = slic(
-            image,
-            sigma=self.blur_kernel_size,
-            n_segments=nr_superpixels,
-            max_num_iter=self.max_iterations,
-            compactness=self.compactness,
-            start_label=1,
-        )
+
+        slic_args = {
+            "image": image,
+            "sigma": self.blur_kernel_size,
+            "n_segments": nr_superpixels,
+            "compactness": self.compactness,
+            "start_label": 1,
+        }
+        if skimage.__version__ < "0.22.0":
+            slic_args["max_iter"] = self.max_iterations
+        else:
+            slic_args["max_num_iter"] = self.max_iterations
+
+        superpixels = slic(**slic_args)
         return superpixels
 
 
@@ -431,14 +443,20 @@ class MergedSuperpixelExtractor(SuperpixelExtractor):
     def _extract_initial_superpixels(self, image):
         """Extract initial superpixels using SLIC"""
         nr_superpixels = self._get_nr_superpixels(image)
-        superpixels = slic(
-            image,
-            sigma=self.blur_kernel_size,
-            n_segments=nr_superpixels,
-            compactness=self.compactness,
-            max_num_iter=self.max_iterations,
-            start_label=1,
-        )
+
+        slic_args = {
+            "image": image,
+            "sigma": self.blur_kernel_size,
+            "n_segments": nr_superpixels,
+            "compactness": self.compactness,
+            "start_label": 1,
+        }
+        if skimage.__version__ < "0.22.0":
+            slic_args["max_iter"] = self.max_iterations
+        else:
+            slic_args["max_num_iter"] = self.max_iterations
+
+        superpixels = slic(**slic_args)
         return superpixels
 
     def _merge_superpixels(self, input_image, initial_superpixels, tissue_mask=None):
