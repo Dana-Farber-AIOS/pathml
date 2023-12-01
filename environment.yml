@@ -1,4 +1,4 @@
-name: pathml
+name: pathml_3.8
 
 channels:
     - pytorch
@@ -8,7 +8,7 @@ dependencies:
     - pip==21.3.1
     - numpy==1.22.4 # orig = 1.19.5
     - scipy==1.7.3
-    - scikit-image==0.18.3
+    - scikit-image==0.22.0 # orig 0.18.3
     - matplotlib==3.5.1
     - openjdk==8.0.152
     - pytorch==1.13.1 # orig = 1.10.1

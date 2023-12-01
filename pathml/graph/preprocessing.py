@@ -11,8 +11,8 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import torch
+from skimage import graph
 from skimage.color.colorconv import rgb2hed
-from skimage.future import graph
 from skimage.measure import regionprops
 from skimage.segmentation import slic
 from sklearn.neighbors import kneighbors_graph
@@ -402,7 +402,7 @@ class SLICSuperpixelExtractor(SuperpixelExtractor):
             image,
             sigma=self.blur_kernel_size,
             n_segments=nr_superpixels,
-            max_iter=self.max_iterations,
+            max_num_iter=self.max_iterations,
             compactness=self.compactness,
             start_label=1,
         )
@@ -436,7 +436,7 @@ class MergedSuperpixelExtractor(SuperpixelExtractor):
             sigma=self.blur_kernel_size,
             n_segments=nr_superpixels,
             compactness=self.compactness,
-            max_iter=self.max_iterations,
+            max_num_iter=self.max_iterations,
             start_label=1,
         )
         return superpixels
