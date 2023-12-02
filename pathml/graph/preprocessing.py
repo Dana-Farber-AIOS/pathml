@@ -13,7 +13,7 @@ import pandas as pd
 import skimage
 import torch
 
-if skimage.__version__ < "0.22.0":
+if skimage.__version__ < "0.20.0":
     from skimage.future import graph
 else:
     from skimage import graph
@@ -412,7 +412,7 @@ class SLICSuperpixelExtractor(SuperpixelExtractor):
             "compactness": self.compactness,
             "start_label": 1,
         }
-        if skimage.__version__ < "0.22.0":
+        if skimage.__version__ < "0.20.0":
             slic_args["max_iter"] = self.max_iterations
         else:
             slic_args["max_num_iter"] = self.max_iterations
@@ -451,7 +451,7 @@ class MergedSuperpixelExtractor(SuperpixelExtractor):
             "compactness": self.compactness,
             "start_label": 1,
         }
-        if skimage.__version__ < "0.22.0":
+        if skimage.__version__ < "0.20.0":
             slic_args["max_iter"] = self.max_iterations
         else:
             slic_args["max_num_iter"] = self.max_iterations
