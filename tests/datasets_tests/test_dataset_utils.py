@@ -71,8 +71,8 @@ def make_fake_image(instance_map):
     image = instance_map[:, :, None]
     image[image > 0] = 1
     noised_image = (
-        np.random.rand(instance_map.shape[0], instance_map.shape[1], 3) * image * 255
-    )
+        np.random.rand(instance_map.shape[0], instance_map.shape[1], 3) * 0.15 + image
+    ) * 255
 
     return noised_image.astype("uint8")
 
@@ -81,6 +81,7 @@ def make_fake_image(instance_map):
 @pytest.mark.parametrize("entity", ["cell", "tissue"])
 @pytest.mark.parametrize("threshold", [0, 0.1, 0.8])
 def test_feature_extractor(entity, patch_size, threshold):
+
     image_size = (256, 256)
 
     instance_map = make_fake_instance_maps(
@@ -96,6 +97,37 @@ def test_feature_extractor(entity, patch_size, threshold):
         batch_size=1,
         entity=entity,
         architecture=model,
+        fill_value=255,
+        resize_size=224,
+        threshold=threshold,
+    )
+    features = extractor.process(image, instance_map)
+
+    if threshold == 0:
+        assert features.shape[0] == len(regions)
+    else:
+        assert features.shape[0] <= len(regions)
+
+
+@pytest.mark.parametrize("patch_size", [1, 64, 128])
+@pytest.mark.parametrize("entity", ["cell", "tissue"])
+@pytest.mark.parametrize("threshold", [0, 0.1, 0.8])
+def test_feature_extractor_torchvision(entity, patch_size, threshold):
+    pytest.importorskip("torchvision")
+
+    image_size = (256, 256)
+
+    instance_map = make_fake_instance_maps(
+        num=20, image_size=image_size, ellipse_height=20, ellipse_width=8
+    )
+    image = make_fake_image(instance_map.copy())
+    regions = regionprops(instance_map)
+
+    extractor = DeepPatchFeatureExtractor(
+        patch_size=patch_size,
+        batch_size=1,
+        entity=entity,
+        architecture="resnet34",
         fill_value=255,
         resize_size=224,
         threshold=threshold,

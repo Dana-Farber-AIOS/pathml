@@ -230,7 +230,7 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
 
             self.use_torchvision = True
         except ImportError:
-            raise warnings.warn(
+            print(
                 "Torchvision is not installed, using base modules for resizing patches and skipping normalization"
             )
             self.use_torchvision = False
