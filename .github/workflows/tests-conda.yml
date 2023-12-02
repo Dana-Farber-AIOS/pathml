@@ -64,7 +64,7 @@ jobs:
       
     - name: Install python-spams
       shell: bash -l {0}      
-      run: pip install python-spams
+      run: pip install spams
       
     - name: disk usage
       shell: bash -l {0}
