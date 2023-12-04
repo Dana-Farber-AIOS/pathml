@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+# bfconvert: a script for converting image files between formats
+
+# Required JARs: bioformats_package.jar
+
+RESOLVED_PATH=$(readlink -f "$0" 2>/dev/null \
+  || perl -MCwd -le 'print Cwd::abs_path(shift)' "$0" 2>/dev/null \
+  || echo "$0")
+BF_DIR=$(dirname $RESOLVED_PATH)
+
+BF_PROG=loci.formats.tools.ImageConverter "$BF_DIR/bf.sh" "$@"
