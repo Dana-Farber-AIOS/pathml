@@ -78,20 +78,41 @@ def test_start_jvm(mocked_jvm, tile_stitcher):
     mocked_jvm.assert_called()
 
 
+# @pytest.mark.exclude
+# @patch("pathml.preprocessing.tilestitcher.tifffile")
+# def test_parse_region(mocked_tifffile, tile_stitcher):
+#     # Mock the return values
+#     mocked_tifffile.return_value.__enter__.return_value.pages[
+#         0
+#     ].tags.get.side_effect = [
+#         MagicMock(value=(0, 1)),  # XPosition
+#         MagicMock(value=(0, 1)),  # YPosition
+#         MagicMock(value=(1, 1)),  # XResolution
+#         MagicMock(value=(1, 1)),  # YResolution
+#         MagicMock(value=100),  # ImageLength
+#         MagicMock(value=100),  # ImageWidth
+#     ]
+#     # filename = "tests/testdata/MISI3542i_M3056_3_Panel1_Scan1_[10530,40933]_component_data.tif"
+#     filename = "tests/testdata/tilestitching_testdata/MISI3542i_W21-04143_bi016966_M394_OVX_LM_Scan1_[14384,29683]_component_data.tif"
+#     region = tile_stitcher.parseRegion(filename)
+#     assert region is not None
+#     assert isinstance(region, tile_stitcher.ImageRegion)
+
+
 @pytest.mark.exclude
-@patch("pathml.preprocessing.tilestitcher.tifffile")
-def test_parse_region(mocked_tifffile, tile_stitcher):
+# @patch("pathml.preprocessing.tilestitcher.tifffile")
+def test_parse_region(tile_stitcher):
     # Mock the return values
-    mocked_tifffile.return_value.__enter__.return_value.pages[
-        0
-    ].tags.get.side_effect = [
-        MagicMock(value=(0, 1)),  # XPosition
-        MagicMock(value=(0, 1)),  # YPosition
-        MagicMock(value=(1, 1)),  # XResolution
-        MagicMock(value=(1, 1)),  # YResolution
-        MagicMock(value=100),  # ImageLength
-        MagicMock(value=100),  # ImageWidth
-    ]
+    # mocked_tifffile.return_value.__enter__.return_value.pages[
+    #     0
+    # ].tags.get.side_effect = [
+    #     MagicMock(value=(0, 1)),  # XPosition
+    #     MagicMock(value=(0, 1)),  # YPosition
+    #     MagicMock(value=(1, 1)),  # XResolution
+    #     MagicMock(value=(1, 1)),  # YResolution
+    #     MagicMock(value=100),  # ImageLength
+    #     MagicMock(value=100),  # ImageWidth
+    # ]
     # filename = "tests/testdata/MISI3542i_M3056_3_Panel1_Scan1_[10530,40933]_component_data.tif"
     filename = "tests/testdata/tilestitching_testdata/MISI3542i_W21-04143_bi016966_M394_OVX_LM_Scan1_[14384,29683]_component_data.tif"
     region = tile_stitcher.parseRegion(filename)
