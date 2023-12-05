@@ -34,4 +34,8 @@ dependencies:
         - loguru==0.5.3
         - pandas==1.5.2 # orig no req
         - torch-geometric==2.3.1
+<<<<<<< HEAD
         - jpype1
+=======
+        - jpype1
+>>>>>>> 2da44a3b200f3b8bd8f1bb766e30bc847619dcdf
