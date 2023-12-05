@@ -78,25 +78,25 @@ def test_start_jvm(mocked_jvm, tile_stitcher):
     mocked_jvm.assert_called()
 
 
-# @pytest.mark.exclude
-# @patch("pathml.preprocessing.tilestitcher.tifffile")
-# def test_parse_region(mocked_tifffile, tile_stitcher):
-#     # Mock the return values
-#     mocked_tifffile.return_value.__enter__.return_value.pages[
-#         0
-#     ].tags.get.side_effect = [
-#         MagicMock(value=(0, 1)),  # XPosition
-#         MagicMock(value=(0, 1)),  # YPosition
-#         MagicMock(value=(1, 1)),  # XResolution
-#         MagicMock(value=(1, 1)),  # YResolution
-#         MagicMock(value=100),  # ImageLength
-#         MagicMock(value=100),  # ImageWidth
-#     ]
-#     # filename = "tests/testdata/MISI3542i_M3056_3_Panel1_Scan1_[10530,40933]_component_data.tif"
-#     filename = "tests/testdata/tilestitching_testdata/MISI3542i_W21-04143_bi016966_M394_OVX_LM_Scan1_[14384,29683]_component_data.tif"
-#     region = tile_stitcher.parseRegion(filename)
-#     assert region is not None
-#     assert isinstance(region, tile_stitcher.ImageRegion)
+@pytest.mark.exclude
+@patch("pathml.preprocessing.tilestitcher.tifffile")
+def test_parse_region(mocked_tifffile, tile_stitcher):
+    # Mock the return values
+    # mocked_tifffile.return_value.__enter__.return_value.pages[
+    #     0
+    # ].tags.get.side_effect = [
+    #     MagicMock(value=(0, 1)),  # XPosition
+    #     MagicMock(value=(0, 1)),  # YPosition
+    #     MagicMock(value=(1, 1)),  # XResolution
+    #     MagicMock(value=(1, 1)),  # YResolution
+    #     MagicMock(value=100),  # ImageLength
+    #     MagicMock(value=100),  # ImageWidth
+    # ]
+    # filename = "tests/testdata/MISI3542i_M3056_3_Panel1_Scan1_[10530,40933]_component_data.tif"
+    filename = "tests/testdata/tilestitching_testdata/MISI3542i_W21-04143_bi016966_M394_OVX_LM_Scan1_[14384,29683]_component_data.tif"
+    region = tile_stitcher.parseRegion(filename)
+    assert region is not None
+    assert isinstance(region, tile_stitcher.ImageRegion)
 
 
 # @pytest.mark.exclude
@@ -488,22 +488,22 @@ def test_integration_stitching(tile_stitcher, sample_files):
         # Add more assertions here if you have additional methods or behaviors to verify
 
 
-# @pytest.mark.exclude
-# def test_write_pyramidal_image_server(tile_stitcher, sample_files):
-#     infiles = tile_stitcher._collect_tif_files(sample_files)
-#     fileout, file_jpype = tile_stitcher._get_outfile(
-#         "tests/testdata/tilestitching_testdata/output_temp"
-#     )
-#     downsamples = [1]
-#     if not infiles or not file_jpype:
-#         return
+@pytest.mark.exclude
+def test_write_pyramidal_image_server(tile_stitcher, sample_files):
+    infiles = tile_stitcher._collect_tif_files(sample_files)
+    fileout, file_jpype = tile_stitcher._get_outfile(
+        "tests/testdata/tilestitching_testdata/output_temp"
+    )
+    downsamples = [1]
+    if not infiles or not file_jpype:
+        return
 
-#     server = tile_stitcher.parse_regions(infiles)
-#     server = tile_stitcher.ImageServers.pyramidalize(server)
-#     tile_stitcher._write_pyramidal_image_server(server, file_jpype, downsamples)
+    server = tile_stitcher.parse_regions(infiles)
+    server = tile_stitcher.ImageServers.pyramidalize(server)
+    tile_stitcher._write_pyramidal_image_server(server, file_jpype, downsamples)
 
-#     downsamples = None
-#     tile_stitcher._write_pyramidal_image_server(server, file_jpype, downsamples)
+    downsamples = None
+    tile_stitcher._write_pyramidal_image_server(server, file_jpype, downsamples)
 
 
 @pytest.mark.exclude
