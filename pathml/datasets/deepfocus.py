@@ -133,7 +133,8 @@ class DeepFocusDataset(Dataset):
             self.Y = self.datah5["Y"][183601:203999]
 
     def __len__(self):
-        return len(self.datah5["X"])
+        # return len(self.datah5["X"])
+        return len(self.X)
 
     def __getitem__(self, index: int):
         img = self.datah5["X"][index]

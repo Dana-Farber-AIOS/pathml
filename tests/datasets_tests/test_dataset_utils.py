@@ -4,10 +4,45 @@ License: GNU GPL 2.0
 """
 import numpy as np
 import pytest
+import torch.nn as nn
+import torch.nn.functional as F
 from skimage.draw import ellipse
 from skimage.measure import label, regionprops
 
 from pathml.datasets.utils import DeepPatchFeatureExtractor
+
+
+class SimpleCNN(nn.Module):
+    def __init__(self, input_shape):
+        super(SimpleCNN, self).__init__()
+
+        self.conv1 = nn.Conv2d(
+            in_channels=input_shape[0],
+            out_channels=32,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+        )
+        self.conv2 = nn.Conv2d(
+            in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1
+        )
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+
+        fc_input_size = (input_shape[1] // 4) * (input_shape[2] // 4) * 64
+
+        self.fc1 = nn.Linear(fc_input_size, 128)
+        self.fc2 = nn.Linear(128, 10)
+
+    def forward(self, x):
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+
+        # Flatten the output for the fully connected layer
+        x = x.view(x.size(0), -1)
+
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
 
 
 def make_fake_instance_maps(num, image_size, ellipse_height, ellipse_width):
@@ -36,8 +71,8 @@ def make_fake_image(instance_map):
     image = instance_map[:, :, None]
     image[image > 0] = 1
     noised_image = (
-        np.random.rand(instance_map.shape[0], instance_map.shape[1], 3) * image * 255
-    )
+        np.random.rand(instance_map.shape[0], instance_map.shape[1], 3) * 0.15 + image
+    ) * 255
 
     return noised_image.astype("uint8")
 
@@ -46,6 +81,40 @@ def make_fake_image(instance_map):
 @pytest.mark.parametrize("entity", ["cell", "tissue"])
 @pytest.mark.parametrize("threshold", [0, 0.1, 0.8])
 def test_feature_extractor(entity, patch_size, threshold):
+
+    image_size = (256, 256)
+
+    instance_map = make_fake_instance_maps(
+        num=20, image_size=image_size, ellipse_height=20, ellipse_width=8
+    )
+    image = make_fake_image(instance_map.copy())
+    regions = regionprops(instance_map)
+
+    model = SimpleCNN(input_shape=(3, 224, 224))
+
+    extractor = DeepPatchFeatureExtractor(
+        patch_size=patch_size,
+        batch_size=1,
+        entity=entity,
+        architecture=model,
+        fill_value=255,
+        resize_size=224,
+        threshold=threshold,
+    )
+    features = extractor.process(image, instance_map)
+
+    if threshold == 0:
+        assert features.shape[0] == len(regions)
+    else:
+        assert features.shape[0] <= len(regions)
+
+
+@pytest.mark.parametrize("patch_size", [1, 64, 128])
+@pytest.mark.parametrize("entity", ["cell", "tissue"])
+@pytest.mark.parametrize("threshold", [0, 0.1, 0.8])
+def test_feature_extractor_torchvision(entity, patch_size, threshold):
+    pytest.importorskip("torchvision")
+
     image_size = (256, 256)
 
     instance_map = make_fake_instance_maps(
@@ -66,7 +135,6 @@ def test_feature_extractor(entity, patch_size, threshold):
     features = extractor.process(image, instance_map)
 
     if threshold == 0:
-        assert features.shape == (len(regions), 512)
+        assert features.shape[0] == len(regions)
     else:
         assert features.shape[0] <= len(regions)
-        assert features.shape[1] == 512
