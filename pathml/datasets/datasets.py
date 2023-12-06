@@ -223,7 +223,7 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
         )
 
         self.threshold = int(self.patch_size * self.patch_size * threshold)
-        self.warning_threshold = 0.75
+        self.warning_threshold = 0.50
 
         try:
             from torchvision import transforms
@@ -255,6 +255,8 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
             self._precompute_cell()
         elif self.entity == "tissue":
             self._precompute_tissue()
+
+        self._warning()
 
     def _add_patch(self, center_x, center_y, instance_index, region_count):
         """Extract and include patch information."""

@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 import torch
 
-from pathml.ml import hovernet
+from pathml.ml.models import hovernet
 
 
 def fake_hovernet_inputs(n_classes, batch_size=2):

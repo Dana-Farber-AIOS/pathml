@@ -2,13 +2,8 @@
 Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
-
-import importlib
 import math
-import os
 
-import matplotlib.pyplot as plt
-import networkx as nx
 import numpy as np
 import torch
 from skimage.measure import label, regionprops
@@ -87,74 +82,6 @@ class HACTPairData(Data):
             return super().__inc__(key, value, *args, **kwargs)
 
 
-def dynamic_import_from(source_file: str, class_name: str):
-    """Do a from source_file import class_name dynamically
-
-    Args:
-        source_file (str): Where to import from
-        class_name (str): What to import
-    Returns:
-        Any: The class to be imported
-    """
-    module = importlib.import_module(source_file)
-    return getattr(module, class_name)
-
-
-def _valid_image(nr_pixels):
-    """
-    Checks if image does not exceed maximum number of pixels or exceeds minimum number of pixels.
-
-    Args:
-        nr_pixels (int): Number of pixels in given image
-    """
-
-    if nr_pixels > MIN_NR_PIXELS and nr_pixels < MAX_NR_PIXELS:
-        return True
-    return False
-
-
-def plot_graph_on_image(graph, image):
-    """
-    Plots a given graph on the original WSI image
-
-    Args:
-        graph (torch.tensor): Graph as an sparse edge index
-        image (numpy.array): Input image
-    """
-
-    from torch_geometric.utils.convert import to_networkx
-
-    pos = graph.node_centroids.numpy()
-    G = to_networkx(graph, to_undirected=True)
-    plt.imshow(image)
-    nx.draw(G, pos, node_size=25)
-    plt.show()
-
-
-def _exists(cg_out, tg_out, assign_out, overwrite):
-    """
-    Checks if given input files exist or not
-
-    Args:
-        cg_out (str): Cell graph file
-        tg_out (str): Tissue graph file
-        assign_out (str): Assignment matrix file
-        overwrite (bool): Whether to overwrite files or not. If true, this function return false and files are
-                          overwritten.
-    """
-
-    if overwrite:
-        return False
-    else:
-        if (
-            os.path.isfile(cg_out)
-            and os.path.isfile(tg_out)
-            and os.path.isfile(assign_out)
-        ):
-            return True
-        return False
-
-
 def get_full_instance_map(wsi, patch_size, mask_name="cell"):
     """
     Generates and returns the normalized image, cell instance map and cell centroids from pathml SlideData object
@@ -221,21 +148,6 @@ def build_assignment_matrix(low_level_centroids, high_level_map, matrix=False):
         sparse_matrix = np.nonzero(assignment_matrix)
         return np.array(sparse_matrix)
     return assignment_matrix
-
-
-def compute_histogram(input_array: np.ndarray, nr_values: int) -> np.ndarray:
-    """Calculates a histogram of a matrix of the values from 0 up to (excluding) nr_values
-    Args:
-        x (np.array): Input tensor.
-        nr_values (int): Possible values. From 0 up to (exclusing) nr_values.
-
-    Returns:
-        np.array: Output tensor.
-    """
-    output_array = np.empty(nr_values, dtype=int)
-    for i in range(nr_values):
-        output_array[i] = (input_array == i).sum()
-    return output_array
 
 
 def two_hop(edge_index, num_nodes):

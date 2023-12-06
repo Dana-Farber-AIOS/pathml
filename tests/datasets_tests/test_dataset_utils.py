@@ -80,7 +80,8 @@ def make_fake_image(instance_map):
 @pytest.mark.parametrize("patch_size", [1, 64, 128])
 @pytest.mark.parametrize("entity", ["cell", "tissue"])
 @pytest.mark.parametrize("threshold", [0, 0.1, 0.8])
-def test_feature_extractor(entity, patch_size, threshold):
+@pytest.mark.parametrize("with_instance_masking", [True, False])
+def test_feature_extractor(entity, patch_size, threshold, with_instance_masking):
 
     image_size = (256, 256)
 
@@ -100,6 +101,7 @@ def test_feature_extractor(entity, patch_size, threshold):
         fill_value=255,
         resize_size=224,
         threshold=threshold,
+        with_instance_masking=with_instance_masking,
     )
     features = extractor.process(image, instance_map)
 
