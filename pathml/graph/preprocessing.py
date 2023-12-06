@@ -56,7 +56,12 @@ class GraphFeatureExtractor:
 
     def process(self, G):
         if self.use_weight:
-            weight = nx.get_edge_attributes(G, "weight")
+            if "weight" in list(list(G.edges(data=True))[0][-1].keys()):
+                weight = "weight"
+            else:
+                raise ValueError(
+                    "No edge attribute called 'weight' when use_weight is True"
+                )
         else:
             weight = None
 

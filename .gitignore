@@ -33,3 +33,6 @@ scratch.ipynb
 
 # dask
 dask-worker-space/
+
+# tile stitching files
+tools/*
