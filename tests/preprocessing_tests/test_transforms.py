@@ -245,3 +245,34 @@ def test_segmentMIF_repr():
     from pathml.preprocessing.transforms import SegmentMIF
 
     repr(SegmentMIF(nuclear_channel=0, cytoplasm_channel=1))
+
+
+def test_collapse_runs_codex_repr():
+    z_value = 2
+    collapse_runs_codex = CollapseRunsCODEX(z=z_value)
+    assert repr(collapse_runs_codex) == f"CollapseRunsCODEX(z={z_value})"
+
+
+@pytest.mark.parametrize("z_value", [0, 1, 2])  # Example z-values
+def test_collapse_runs_codex(tileCODEX, z_value):
+    # Assuming tileCODEX is a pre-prepared CODEX tile for testing
+    t = CollapseRunsCODEX(z=z_value)
+    orig_im = tileCODEX.image
+
+    # Manual calculation of expected result
+    expected_image = orig_im[:, :, z_value, :]
+    combined_channels = orig_im.shape[3] * orig_im.shape[4]
+    expected_image = expected_image.reshape(
+        orig_im.shape[0], orig_im.shape[1], combined_channels
+    )
+
+    # Apply transformation
+    t.apply(tileCODEX)
+
+    # Assert conditions
+    assert np.array_equal(
+        tileCODEX.image, expected_image
+    ), "Image transformation did not match expected result"
+    assert (
+        len(tileCODEX.image.shape) == 3
+    ), "Transformed image does not have correct shape"

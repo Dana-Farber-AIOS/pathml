@@ -100,3 +100,24 @@ def anndata():
     """
     adata = sc.datasets.pbmc3k_processed()
     return adata
+
+
+@pytest.fixture
+def tileCODEX():
+    """
+    Example of pathml.core.Tile representation of CODEX image.
+    """
+    # Set dimensions for the mock CODEX image
+    x_dim, y_dim, z_dim, c_dim, t_dim = 100, 100, 3, 4, 5  # Example dimensions
+
+    # Create a mock CODEX image
+    codex_image = np.random.rand(x_dim, y_dim, z_dim, c_dim, t_dim)
+
+    # Create and return a Tile object
+    tile = Tile(
+        image=codex_image,
+        coords=(0, 0),
+        slide_type=types.CODEX,  # Assuming 'CODEX' is a valid type
+        # Additional properties like masks and labels can be added as needed
+    )
+    return tile
