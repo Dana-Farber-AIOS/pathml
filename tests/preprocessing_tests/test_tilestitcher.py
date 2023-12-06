@@ -99,27 +99,6 @@ def test_parse_region(mocked_tifffile, tile_stitcher):
     assert isinstance(region, tile_stitcher.ImageRegion)
 
 
-# @pytest.mark.exclude
-# @patch("pathml.preprocessing.tilestitcher.tifffile")
-# def test_parse_region_missing_tags(mocked_tifffile, tile_stitcher):
-#     # Mock tifffile to return None for required tags
-#     mocked_tifffile.return_value.__enter__.return_value.pages[0].tags.get.side_effect = [
-#         None,  # XPosition missing
-#         None,  # YPosition missing
-#         None,  # XResolution missing
-#         None,  # YResolution missing
-#     ]
-
-#     # Test filename
-#     filename = "tests/testdata/tilestitching_testdata/nonexistent_tags.tif"
-
-#     # Call the parseRegion function
-#     region = tile_stitcher.parseRegion(filename)
-
-#     # Assert that the function returns None due to missing tags
-#     assert region is None
-
-
 @pytest.mark.exclude
 @patch("pathml.preprocessing.tilestitcher.tifffile.TiffFile")
 @patch("pathml.preprocessing.tilestitcher.TileStitcher.checkTIFF")

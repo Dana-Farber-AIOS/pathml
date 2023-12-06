@@ -56,7 +56,12 @@ class GraphFeatureExtractor:
 
     def process(self, G):
         if self.use_weight:
-            weight = nx.get_edge_attributes(G, "weight")
+            if "weight" in list(list(G.edges(data=True))[0][-1].keys()):
+                weight = "weight"
+            else:
+                raise ValueError(
+                    "No edge attribute called 'weight' when use_weight is True"
+                )
         else:
             weight = None
 
@@ -133,7 +138,7 @@ class BaseGraphBuilder:
         node_features = self._compute_node_features(features, image_size)
 
         if annotation is not None:
-            node_labels = self._compute_node_labels(instance_map, annotation)
+            node_labels = self._set_node_labels(instance_map, annotation)
         else:
             node_labels = None
 
@@ -225,7 +230,7 @@ class KNNGraphBuilder(BaseGraphBuilder):
         assert annotation.shape[0] == len(
             regions
         ), "Number of annotations do not match number of nodes"
-        return torch.FloatTensor(annotation.astype(float))
+        return annotation
 
     def _build_topology(self, instance_map):
         """Build topology using (thresholded) kNN"""
@@ -268,6 +273,14 @@ class RAGGraphBuilder(BaseGraphBuilder):
         self.kernel_size = kernel_size
         self.hops = hops
         super().__init__(**kwargs)
+
+    def _set_node_labels(self, instance_map, annotation):
+        """Set the node labels of the graphs using annotation"""
+        regions = regionprops(instance_map)
+        assert annotation.shape[0] == len(
+            regions
+        ), "Number of annotations do not match number of nodes"
+        return annotation
 
     def _build_topology(self, instance_map):
         """Create the graph topology from the instance connectivty in the instance_map"""

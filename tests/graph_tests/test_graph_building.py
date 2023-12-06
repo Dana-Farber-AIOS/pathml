@@ -37,7 +37,8 @@ def make_fake_instance_maps(num, image_size, ellipse_height, ellipse_width):
 @pytest.mark.parametrize("k", [1, 10, 50])
 @pytest.mark.parametrize("thresh", [0, 10, 200])
 @pytest.mark.parametrize("add_loc_feats", [True, False])
-def test_knn_graph_building(k, thresh, add_loc_feats):
+@pytest.mark.parametrize("add_node_labels", [True, False])
+def test_knn_graph_building(k, thresh, add_loc_feats, add_node_labels):
     image_size = (1024, 2048)
 
     instance_map = make_fake_instance_maps(
@@ -46,23 +47,33 @@ def test_knn_graph_building(k, thresh, add_loc_feats):
     regions = regionprops(instance_map)
 
     features = torch.randn(len(regions), 512)
+    if add_node_labels:
+        annotation = torch.randn(len(regions), 4)
+    else:
+        annotation = None
 
     graph_builder = KNNGraphBuilder(k=k, thresh=thresh, add_loc_feats=add_loc_feats)
 
-    graph = graph_builder.process(instance_map, features, target=1)
+    graph = graph_builder.process(
+        instance_map, features, annotation=annotation, target=1
+    )
 
     assert graph.node_centroids.shape == (len(regions), 2)
     assert graph.edge_index.shape[0] == 2
     if add_loc_feats:
-        assert graph.node_features.shape == (len(regions), 514)
+        assert graph.node_features.shape == (len(regions), 512 + 2)
     else:
         assert graph.node_features.shape == (len(regions), 512)
+
+    if add_node_labels:
+        assert graph.node_labels.shape == (len(regions), 4)
 
 
 @pytest.mark.parametrize("kernel_size", [1, 3, 10])
 @pytest.mark.parametrize("hops", [1, 2, 5])
 @pytest.mark.parametrize("add_loc_feats", [True, False])
-def test_rag_graph_building(kernel_size, hops, add_loc_feats):
+@pytest.mark.parametrize("add_node_labels", [True, False])
+def test_rag_graph_building(kernel_size, hops, add_loc_feats, add_node_labels):
     image_size = (1024, 2048)
 
     instance_map = make_fake_instance_maps(
@@ -71,12 +82,18 @@ def test_rag_graph_building(kernel_size, hops, add_loc_feats):
     regions = regionprops(instance_map)
 
     features = torch.randn(len(regions), 512)
+    if add_node_labels:
+        annotation = torch.randn(len(regions), 4)
+    else:
+        annotation = None
 
     graph_builder = RAGGraphBuilder(
         kernel_size=kernel_size, hops=hops, add_loc_feats=add_loc_feats
     )
 
-    graph = graph_builder.process(instance_map, features, target=1)
+    graph = graph_builder.process(
+        instance_map, features, annotation=annotation, target=1
+    )
 
     assert graph.node_centroids.shape == (len(regions), 2)
     assert graph.edge_index.shape[0] == 2
@@ -84,3 +101,6 @@ def test_rag_graph_building(kernel_size, hops, add_loc_feats):
         assert graph.node_features.shape == (len(regions), 514)
     else:
         assert graph.node_features.shape == (len(regions), 512)
+
+    if add_node_labels:
+        assert graph.node_labels.shape == (len(regions), 4)
