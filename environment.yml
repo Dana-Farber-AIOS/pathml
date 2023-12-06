@@ -6,11 +6,11 @@ channels:
 
 dependencies:
     - pip==21.3.1
-    - numpy==1.22.4 # orig = 1.19.5
-    - scipy==1.7.3
-    - scikit-image==0.18.3
+    - numpy # orig = 1.19.5
+    - scipy # orig = 1.7.3
+    - scikit-image # orig 0.18.3
     - matplotlib==3.5.1
-    - openjdk==8.0.152
+    - openjdk<=18.0.0
     - pytorch==1.13.1 # orig = 1.10.1
     - h5py==3.1.0
     - dask==2021.12.0
@@ -34,3 +34,4 @@ dependencies:
         - loguru==0.5.3
         - pandas==1.5.2 # orig no req
         - torch-geometric==2.3.1
+        - jpype1
