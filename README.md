@@ -1,6 +1,6 @@
 🤖🔬 **PathML: Tools for computational pathology**
 
-[![Downloads](https://pepy.tech/badge/pathml)](https://pepy.tech/project/pathml)
+[![Downloads](https://static.pepy.tech/badge/pathml)](https://pepy.tech/project/pathml)
 [![Documentation Status](https://readthedocs.org/projects/pathml/badge/?version=latest)](https://pathml.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/Dana-Farber-AIOS/pathml/branch/master/graph/badge.svg?token=UHSQPTM28Y)](https://codecov.io/gh/Dana-Farber-AIOS/pathml)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
@@ -138,6 +138,7 @@ on accessing the container, e.g. for mounting volumes to access files on a local
 To get PathML running in a Colab environment:
 
 ````
+import os
 !pip install openslide-python
 !apt-get install openslide-tools
 !apt-get install openjdk-8-jdk-headless -qq > /dev/null

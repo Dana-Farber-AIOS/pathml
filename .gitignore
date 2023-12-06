@@ -12,6 +12,9 @@ docs/build/
 # data
 data/
 
+#tools
+tools/
+
 # files created by matplotlib testing suite
 result_images/
 
@@ -33,3 +36,6 @@ scratch.ipynb
 
 # dask
 dask-worker-space/
+
+# tile stitching files
+tools/*
