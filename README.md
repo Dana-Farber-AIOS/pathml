@@ -47,23 +47,28 @@ Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
 
 ## Installation option 1: pip install
 
-Create conda environment:
+Create conda environment, this step is common to all platforms (Linux, Mac, Windows):
 ````
 conda create --name pathml python=3.8
 conda activate pathml
 ````
 
-Install external dependencies (Linux) with [Apt](https://ubuntu.com/server/docs/package-management):
+Install external dependencies (for Linux) with [Apt](https://ubuntu.com/server/docs/package-management):
 ````
 sudo apt-get install openslide-tools g++ gcc libblas-dev liblapack-dev
 ````
 
-Install external dependencies (MacOS) with [Brew](www.brew.sh):
+Install external dependencies (for MacOS) with [Brew](https://www.brew.sh):
 ````
 brew install openslide
 ````
 
-Install [OpenJDK 8](https://openjdk.java.net/):
+Install external dependencies (for Windows) with [vcpkg](https://vcpkg.io/en/):
+````
+vcpkg install openslide
+````
+
+Install [OpenJDK 8](https://openjdk.java.net/), this step is common to all platforms (Linux, Mac, Windows):
 ````
 conda install openjdk==8.0.152
 ````
