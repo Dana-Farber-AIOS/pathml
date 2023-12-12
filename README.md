@@ -148,6 +148,9 @@ os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-8-openjdk-amd64"
 !pip install pathml
 ````
 
+PathML Tutorials we published in Google Colab
+1. [PathML Tutorial Colab #1 - Load an SVS image in PathML and see the image descriptors](https://colab.research.google.com/drive/12ICBsJLCvuubTqb42-Wr5k-2EVDPbbNQ#scrollTo=Qog8Y6wARMgW)
+
 *Thanks to all of our open-source collaborators for helping maintain these installation instructions!*  
 *Please open an issue for any bugs or other problems during installation process.*
 
