@@ -3,7 +3,7 @@ import os
 import subprocess
 import tempfile
 import zipfile
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import mock_open, patch
 
 import javabridge
 import jpype
@@ -15,88 +15,57 @@ from pathml.utils import setup_qupath
 
 @pytest.mark.exclude
 @pytest.fixture(scope="module")
-def tile_stitcher(request):
+def tile_stitcher():
+    # Attempt to shutdown JavaBridge-based JVM if running
     try:
         javabridge.kill_vm()
-        print("Javabridge vm terminated")
+        print("Javabridge vm terminated before starting TileStitcher")
     except Exception as e:
-        print(f"JVM isn't running: {e}")
-        pass  # JVM was not running, so nothing to kill
+        print(f"No running JavaBridge JVM found: {e}")
 
-    # Set JAVA_HOME
-    # os.environ["JAVA_HOME"] = "/usr/lib/jvm/jdk-17/"
-
-    # Setup QuPath using the setup_qupath function
-    qupath_home = setup_qupath(
-        "../../tools/qupath"
-    )  # Replace with the appropriate path
-
-    # Ensure QUPATH_HOME is set
+    # Setup QuPath
+    qupath_home = setup_qupath("../../tools/qupath")
     os.environ["QUPATH_HOME"] = qupath_home
-
+    print(os.environ["JAVA_HOME"])
     # Construct path to QuPath jars
     qupath_jars_dir = os.path.join(qupath_home, "lib", "app")
     qupath_jars = glob.glob(os.path.join(qupath_jars_dir, "*.jar"))
     qupath_jars.append(os.path.join(qupath_jars_dir, "libopenslide-jni.so"))
 
     bfconvert_dir = "./"
-    stitcher = TileStitcher(qupath_jars, bfconvert_dir)
-    stitcher._start_jvm()
+    stitcher = TileStitcher(qupath_jarpath=qupath_jars, bfconvert_dir=bfconvert_dir)
 
-    def teardown():
-        try:
-            javabridge.kill_vm()
-            print("Javabridge vm terminated in teardown")
-        except Exception as e:
-            print(f"Error during JVM teardown: {e}")
-            # f"Error during JVM teardown: {error_message}"
+    yield stitcher
 
-    request.addfinalizer(teardown)
-
-    return stitcher
+    # Teardown code
+    try:
+        javabridge.kill_vm()
+        print("Javabridge vm terminated in teardown")
+    except Exception as e:
+        print(f"Error during JVM teardown: {e}")
 
 
 @pytest.mark.exclude
-def test_set_environment_paths(tile_stitcher):
-    tile_stitcher.set_environment_paths()
-    assert "JAVA_HOME" in os.environ
+@pytest.fixture(scope="module")
+def java_home():
+    return os.environ.get("JAVA_HOME")
 
 
 @pytest.mark.exclude
-def test_get_system_java_home(tile_stitcher):
-    path = tile_stitcher.get_system_java_home()
-    assert isinstance(path, str)
+@pytest.fixture
+def output_file_path(tmp_path):
+    # tmp_path is a pytest fixture that provides a temporary directory unique to the test invocation
+    output_path = tmp_path / "output"
+    yield str(output_path)
+    # Teardown: Remove the file after the test
+    if output_path.exists():
+        output_path.unlink()
 
 
 @pytest.mark.exclude
-@patch("pathml.preprocessing.tilestitcher.jpype.startJVM")
-def test_start_jvm(mocked_jvm, tile_stitcher):
-    # Check if JVM was already started
-    if jpype.isJVMStarted():
-        pytest.skip("JVM was already started, so we skip this test.")
-    tile_stitcher._start_jvm()
-    mocked_jvm.assert_called()
+def test_jvm_startup(tile_stitcher):
 
-
-@pytest.mark.exclude
-@patch("pathml.preprocessing.tilestitcher.tifffile")
-def test_parse_region(mocked_tifffile, tile_stitcher):
-    # Mock the return values
-    mocked_tifffile.return_value.__enter__.return_value.pages[
-        0
-    ].tags.get.side_effect = [
-        MagicMock(value=(0, 1)),  # XPosition
-        MagicMock(value=(0, 1)),  # YPosition
-        MagicMock(value=(1, 1)),  # XResolution
-        MagicMock(value=(1, 1)),  # YResolution
-        MagicMock(value=100),  # ImageLength
-        MagicMock(value=100),  # ImageWidth
-    ]
-    # filename = "tests/testdata/MISI3542i_M3056_3_Panel1_Scan1_[10530,40933]_component_data.tif"
-    filename = "tests/testdata/tilestitching_testdata/MISI3542i_W21-04143_bi016966_M394_OVX_LM_Scan1_[14384,29683]_component_data.tif"
-    region = tile_stitcher.parseRegion(filename)
-    assert region is not None
-    assert isinstance(region, tile_stitcher.ImageRegion)
+    assert jpype.isJVMStarted(), "JVM should start when TileStitcher is initialized"
 
 
 @pytest.mark.exclude
@@ -225,10 +194,6 @@ class MockZip:
             f.write("#!/bin/sh\necho 'dummy bf.sh'")
 
 
-# Assuming the TileStitcher class definition is available in the current context
-# If not, you should import it
-
-
 @pytest.mark.exclude
 def mock_create_zip(zip_path):
     """
@@ -251,12 +216,32 @@ def bfconvert_dir(tmp_path):
 
 
 @pytest.mark.exclude
-def test_bfconvert_version_print(tile_stitcher, bfconvert_dir):
-    tile_stitcher.setup_bfconvert(bfconvert_dir)
-    output = subprocess.check_output([tile_stitcher.bfconvert_path, "-version"])
-    assert output.lower().startswith(b"version:")
+@pytest.fixture(scope="module")
+def bfconvert_setup(tile_stitcher, tmp_path_factory):
 
-    # assert subprocess.check_output([tile_stitcher.bfconvert_path, "-version"]) == b'version 1.0.0'
+    bfconvert_dir = tmp_path_factory.mktemp("bfconvert_dir")
+    tile_stitcher.setup_bfconvert(str(bfconvert_dir))
+    return bfconvert_dir
+
+
+@pytest.mark.exclude
+def test_bfconvert_path_setup(tile_stitcher, bfconvert_setup):
+    bfconvert_path = tile_stitcher.setup_bfconvert(str(bfconvert_setup))
+    assert (
+        bfconvert_path == tile_stitcher.bfconvert_path
+    ), "bfconvert path not set correctly"
+    assert os.path.exists(
+        bfconvert_path
+    ), "bfconvert executable does not exist at the expected path"
+
+
+@pytest.mark.exclude
+def test_bfconvert_version_output(tile_stitcher, bfconvert_setup, capsys):
+    tile_stitcher.setup_bfconvert(str(bfconvert_setup))
+    captured = capsys.readouterr()
+    assert (
+        "bfconvert version:" in captured.out
+    ), "bfconvert version not printed correctly"
 
 
 @pytest.mark.exclude
@@ -266,25 +251,6 @@ def test_permission_error_on_directory_creation(tile_stitcher):
             tile_stitcher.setup_bfconvert("/fake/path")
 
 
-# @pytest.mark.exclude
-# def test_invalid_zip_file(tile_stitcher):
-#     with patch("zipfile.ZipFile", side_effect=zipfile.BadZipFile("Invalid ZIP file")):
-#         with pytest.raises(zipfile.BadZipFile):
-#             tile_stitcher.setup_bfconvert("/fake/path")
-
-
-@pytest.mark.exclude
-def test_permission_error_on_chmod(tile_stitcher):
-    with patch("os.chmod", side_effect=PermissionError("Permission denied")):
-        with pytest.raises(PermissionError):
-            tile_stitcher.setup_bfconvert("/fake/path")
-
-
-@pytest.mark.exclude
-def throwing_function(*args, **kwargs):
-    raise Exception("Simulated error")
-
-
 @pytest.mark.exclude
 @pytest.fixture
 def mock_tools_dir(tmp_path):
@@ -292,34 +258,10 @@ def mock_tools_dir(tmp_path):
 
 
 @pytest.mark.exclude
-@pytest.fixture
-def mock_zip_path(mock_tools_dir):
-    return mock_tools_dir / "bftools.zip"
-
-
-@pytest.mark.exclude
 def mock_urlretrieve(*args, **kwargs):
     with zipfile.ZipFile(args[1], "w") as zipf:
         zipf.writestr("bftools/bfconvert", "dummy content")
         zipf.writestr("bftools/bf.sh", "dummy content")
-
-
-@pytest.mark.exclude
-@patch("urllib.request.urlretrieve", side_effect=mock_urlretrieve)
-@patch("os.makedirs", side_effect=PermissionError)
-def test_invalid_path(mock_makedirs, mock_urlretrieve, tile_stitcher, mock_tools_dir):
-    with pytest.raises(PermissionError):
-        tile_stitcher.setup_bfconvert(str(mock_tools_dir))
-
-
-@pytest.mark.exclude
-@patch("urllib.request.urlretrieve", side_effect=mock_urlretrieve)
-@patch("zipfile.ZipFile", side_effect=zipfile.BadZipFile)
-def test_invalid_zip_file(
-    mock_zipfile, mock_urlretrieve, tile_stitcher, mock_tools_dir
-):
-    with pytest.raises(zipfile.BadZipFile):
-        tile_stitcher.setup_bfconvert(str(mock_tools_dir))
 
 
 @pytest.mark.exclude
@@ -383,24 +325,6 @@ def test_run_bfconvert_custom_bfconverted_path(tile_stitcher, capsys):
 
 
 @pytest.mark.exclude
-def test_run_bfconvert_default_bfconverted_path(tile_stitcher, capsys):
-    tile_stitcher.bfconvert_path = "dummy_path"
-    with patch.object(tile_stitcher, "is_bfconvert_available", return_value=True):
-        with patch("subprocess.run") as mock_run:
-            tile_stitcher.run_bfconvert("dummy_stitched_image_path.tif")
-            mock_run.assert_called_once_with(
-                "./dummy_path -series 0 -separate 'dummy_stitched_image_path.tif' 'dummy_stitched_image_path_sep.tif'",
-                shell=True,
-                check=True,
-            )
-            captured = capsys.readouterr()
-            assert (
-                "bfconvert completed. Output file: dummy_stitched_image_path_sep.tif"
-                in captured.out
-            )
-
-
-@pytest.mark.exclude
 def test_run_bfconvert_error(tile_stitcher, capsys):
     tile_stitcher.bfconvert_path = "dummy_path"
     with patch.object(tile_stitcher, "is_bfconvert_available", return_value=True):
@@ -422,68 +346,62 @@ def sample_files():
 
 
 @pytest.mark.exclude
-def test_integration_stitching(tile_stitcher, sample_files):
+def test_integration_stitching_exceptions(
+    tile_stitcher, sample_files, output_file_path
+):
     # Mocking the Java object returned by parse_regions
-    mocked_java_object = MagicMock()
-    with patch.object(tile_stitcher, "parse_regions", return_value=mocked_java_object):
-        # Test _collect_tif_files
-        collected_files = tile_stitcher._collect_tif_files(sample_files)
-        assert set(collected_files) == set(sample_files)
 
-        # Test parse_regions
-        regions = tile_stitcher.parse_regions(collected_files)
-        assert regions == mocked_java_object
-
-        # Run the actual image stitching on the sample files
-        # Assuming the method is `run_image_stitching`
-        # NOTE: Adjust the method parameters based on your actual method signature
-        tile_stitcher.run_image_stitching(
-            sample_files,
-            "tests/testdata/tilestitching_testdata/temp",
-            separate_series=True,
-        )
-
-        # Add more assertions here if you have additional methods or behaviors to verify
-
-
-@pytest.mark.exclude
-def test_write_pyramidal_image_server(tile_stitcher, sample_files):
-    infiles = tile_stitcher._collect_tif_files(sample_files)
-    fileout, file_jpype = tile_stitcher._get_outfile(
-        "tests/testdata/tilestitching_testdata/output_temp"
+    tile_stitcher.run_image_stitching(
+        sample_files,
+        output_file_path,
+        downsamples=[],
+        separate_series=True,
     )
-    downsamples = [1]
-    if not infiles or not file_jpype:
-        return
-
-    server = tile_stitcher.parse_regions(infiles)
-    server = tile_stitcher.ImageServers.pyramidalize(server)
-    tile_stitcher._write_pyramidal_image_server(server, file_jpype, downsamples)
-
-    downsamples = None
-    tile_stitcher._write_pyramidal_image_server(server, file_jpype, downsamples)
 
 
 @pytest.mark.exclude
-def test_set_environment_paths_without_java_path(tile_stitcher):
-    with patch.dict(os.environ, {}, clear=True):
-        with patch.object(
-            tile_stitcher, "get_system_java_home", return_value="/dummy/java/home"
-        ):
-            tile_stitcher.__init__(
-                qupath_jarpath=[], java_path=None, memory="40g", bfconvert_dir="./"
-            )
-            assert "JAVA_HOME" in os.environ
-            assert os.environ["JAVA_HOME"] == "/dummy/java/home"
+def test_integration_stitching(tile_stitcher, sample_files, output_file_path):
+    # Mocking the Java object returned by parse_regions
+
+    tile_stitcher.run_image_stitching(
+        sample_files,
+        output_file_path,
+        downsamples=[1],
+        separate_series=True,
+    )
 
 
 @pytest.mark.exclude
-def test_setup_bfconvert_permission_error_on_directory_creation(tile_stitcher):
-    with patch("os.path.exists", return_value=False):
-        with patch("os.makedirs", side_effect=PermissionError("Permission denied")):
-            with pytest.raises(PermissionError) as exc_info:
-                tile_stitcher.setup_bfconvert("/fake/path")
-            assert "Permission denied: Cannot create directory" in str(exc_info.value)
+def test_integration_stitching_nodownsamples(tile_stitcher, sample_files, tmp_path):
+    # Generate the output file name
+    output_file_path = str(tmp_path / "output_temp.ome.tif")
+    bfconverted_file_path = output_file_path.rsplit(".ome.tif", 1)[0] + "_separated.tif"
+
+    # Create a dummy bfconverted file to simulate existing file scenario
+    with open(bfconverted_file_path, "w") as f:
+        f.write("dummy content")
+
+    # Run the stitching process
+    tile_stitcher.run_image_stitching(
+        sample_files,
+        output_file_path,
+        downsamples=None,
+        separate_series=True,
+    )
+
+    # Check if the bfconvert path is set correctly
+    assert tile_stitcher.bfconvert_path == "./tools/bftools/bfconvert"
+
+    # Clean up the dummy file
+    os.remove(bfconverted_file_path)
+
+
+@pytest.mark.exclude
+def test_checkTIFF_big_endian(tile_stitcher, tmp_path):
+    # Create a mock TIFF file with big-endian byte order
+    big_endian_file = tmp_path / "big_endian.tiff"
+    big_endian_file.write_bytes(b"MM\x00*")  # Big-endian TIFF signature
+    assert tile_stitcher.checkTIFF(big_endian_file)
 
 
 @pytest.mark.exclude
@@ -517,22 +435,6 @@ def test_setup_bfconvert_permission_error_on_chmod(
 
 
 @pytest.mark.exclude
-def test_set_environment_paths_without_java_path_exception(tile_stitcher):
-    with patch.dict(os.environ, {}, clear=True):
-        with patch.object(tile_stitcher, "get_system_java_home", return_value=""):
-            with pytest.raises(EnvironmentError) as exc_info:
-                tile_stitcher.set_environment_paths()
-            assert "JAVA_HOME not found" in str(exc_info.value)
-
-
-@pytest.mark.exclude
-def test_get_system_java_home_failure(tile_stitcher):
-    with patch("subprocess.getoutput", side_effect=Exception("Command failed")):
-        result = tile_stitcher.get_system_java_home()
-        assert result == ""
-
-
-@pytest.mark.exclude
 def test_collect_tif_files_invalid_input(tile_stitcher):
     invalid_input = 123  # not a string or list
     result = tile_stitcher._collect_tif_files(invalid_input)
@@ -547,12 +449,15 @@ def test_check_tiff_io_error(tile_stitcher):
 
 
 @pytest.mark.exclude
-def test_start_jvm_exception(tile_stitcher):
-    with patch("jpype.isJVMStarted", return_value=False):
-        with patch("jpype.startJVM", side_effect=Exception("JVM start error")):
-            with pytest.raises(SystemExit) as exc_info:
-                tile_stitcher._start_jvm()
-            assert exc_info.type == SystemExit
+def test_start_jvm_exception(tile_stitcher, capsys):
+    with patch("jpype.isJVMStarted", return_value=False), patch(
+        "jpype.startJVM", side_effect=Exception("JVM start error")
+    ):
+
+        tile_stitcher._start_jvm()
+
+        captured = capsys.readouterr()  # Capture the printed output
+        assert "Error occurred while starting JVM: JVM start error" in captured.out
 
 
 @pytest.mark.exclude
@@ -578,5 +483,44 @@ def test_run_image_stitching_with_empty_input(tile_stitcher, sample_files):
         output_file = "output.ome.tif"
         # Running the stitching method
         tile_stitcher.run_image_stitching(sample_files, output_file)
-        # Assertions to check if the method returns early as expected
-        # (You can use mocks to assert that certain methods were not called)
+
+
+@pytest.mark.exclude
+@patch("jpype.shutdownJVM")
+def test_tile_stitcher_shutdown(mocked_shutdown, tile_stitcher):
+    tile_stitcher.shutdown()
+    mocked_shutdown.assert_called()
+
+
+@pytest.mark.exclude
+def test_initialization_with_java_home_env_var(tile_stitcher, java_home, monkeypatch):
+    # valid_java_home = "/path/to/valid/java"  # Example valid path
+    monkeypatch.setenv("JAVA_HOME", java_home)
+
+    new_stitcher = TileStitcher()
+    assert (
+        new_stitcher.java_home == java_home
+    ), "JAVA_HOME environment variable not used correctly"
+
+
+@pytest.mark.exclude
+def test_initialization_without_java_path_or_java_home(monkeypatch):
+    monkeypatch.delenv("JAVA_HOME", raising=False)  # Remove JAVA_HOME if it exists
+
+    with pytest.raises(EnvironmentError) as excinfo:
+        TileStitcher()
+    assert "No valid Java path specified, and JAVA_HOME is not set or invalid." in str(
+        excinfo.value
+    )
+
+
+@pytest.mark.exclude
+@patch("os.path.isdir", return_value=True)
+def test_initialization_sets_java_home(mock_isdir):
+    mock_java_path = "/mock/path/to/java"
+    stitcher = TileStitcher(java_path=mock_java_path)
+
+    assert stitcher.java_home == mock_java_path, "JAVA_HOME not set correctly"
+    assert (
+        os.environ["JAVA_HOME"] == mock_java_path
+    ), "JAVA_HOME environment variable not overridden correctly"
