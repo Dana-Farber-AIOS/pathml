@@ -1,23 +1,23 @@
 Inference API
-======
+=============
 
 Base Inference Class
----------
+--------------------
 
 .. autoapiclass:: pathml.inference.InferenceBase
 
 Inference Class
----------
+---------------
 
 .. autoapiclass:: pathml.inference.Inference
 
 HaloAI Inference Class
----------
+----------------------
 
 .. autoapiclass:: pathml.inference.HaloAIInference
 
 RemoteTestHoverNet Class
----------
+------------------------
 
 .. autoapiclass:: pathml.inference.RemoteTestHoverNet
 
