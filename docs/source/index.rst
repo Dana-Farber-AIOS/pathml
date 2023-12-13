@@ -48,6 +48,12 @@ Cornell Medicine.
 
 .. toctree::
    :maxdepth: 2
+   :caption: Inference
+
+   inference
+
+.. toctree::
+   :maxdepth: 2
    :caption: Examples
 
    examples/link_loading_images
