@@ -186,7 +186,10 @@ class Inference(InferenceBase):
 
     Args:
         model_path (str): path to ONNX model w/o initializers,
-        input_name (str): name of the input the ONNX model accepts
+        input_name (str): name of the input the ONNX model accepts, default = "data" 
+        num_classes (int): number of classes you are predicting
+        model_type (str): type of model, e.g. "segmentation"
+        local (bool): True if the model is stored locally, default = "True" 
     """
 
     def __init__(
@@ -293,9 +296,11 @@ class HaloAIInference(Inference):
 
 
     Args:
-        model_path (str): path to ONNX model w/o initializers,
-        num_classes (int): number of classes in the data,
-        input_name (str): name of the input the ONNX model accepts
+        model_path (str): path to HaloAI ONNX model w/o initializers,
+        input_name (str): name of the input the ONNX model accepts, default = "data" 
+        num_classes (int): number of classes you are predicting
+        model_type (str): type of model, e.g. "segmentation"
+        local (bool): True if the model is stored locally, default = "True" 
     """
 
     def __init__(
@@ -334,8 +339,11 @@ class RemoteTestHoverNet(Inference):
     TIAToolbox as an end-to-end library for advanced tissue image analytics. Communications medicine. 2022 Sep 24;2(1):120.
 
     Args:
-        model_path (str): temp file name to download onnx from huggingface,
-        input_name (str): name of the input the ONNX model accepts
+        model_path (str): temp file name to download onnx from huggingface, do not change
+        input_name (str): name of the input the ONNX model accepts, default = "data", do not change
+        num_classes (int): number of classes you are predicting, do not change
+        model_type (str): type of model, e.g. "segmentation", do not change
+        local (bool): True if the model is stored locally, default = "True", do not change
     """
 
     def __init__(

@@ -56,6 +56,7 @@ Cornell Medicine.
    examples/link_multiplex_if
    examples/link_codex
    examples/link_train_hovernet
+   examples/link_workflow_Inference
    examples/link_gallery
 
 .. toctree::
@@ -67,6 +68,7 @@ Cornell Medicine.
    api_datasets_reference
    api_ml_reference
    api_utils_reference
+   api_inference_reference
 
 .. toctree::
    :maxdepth: 2
