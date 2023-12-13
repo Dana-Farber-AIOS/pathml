@@ -35,8 +35,9 @@ There are several ways to install `PathML`:
 1. `pip install` from PyPI (**recommended for users**)
 2. Clone repo to local machine and install from source (recommended for developers/contributors)
 3. Use the PathML Docker container
+4. Install in Google Colab
 
-Options (1) and (2) require that you first install all external dependencies:
+Options (1), (2), and (4) require that you first install all external dependencies:
 * openslide
 * JDK 8
 
@@ -155,7 +156,7 @@ os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-8-openjdk-amd64"
 
 PathML Tutorials we published in Google Colab
 1. [PathML Tutorial Colab #1 - Load an SVS image in PathML and see the image descriptors](https://colab.research.google.com/drive/12ICBsJLCvuubTqb42-Wr5k-2EVDPbbNQ#scrollTo=Qog8Y6wARMgW)
-2. [Now that you have PathML installed, all our other examples would work too]() - Only make sure you select an appropriately size backend or VM in CoLab (i.e., RAM, CPU, Disk, and GPU if necessary) 
+2. [Now that you have PathML installed, all our other examples would work too](https://github.com/Dana-Farber-AIOS/pathml#3-examples) - Only make sure you select an appropriately size backend or VM in CoLab (i.e., RAM, CPU, Disk, and GPU if necessary) 
 
 *Thanks to all of our open-source collaborators for helping maintain these installation instructions!*  
 *Please open an issue for any bugs or other problems during installation process.*
