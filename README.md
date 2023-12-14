@@ -19,14 +19,22 @@ Imaging datasets in cancer research are growing exponentially in both quantity a
 | master | ![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg?branch=master) |
 | dev    | ![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg?branch=dev) |
 
+Please note that the :construction: `dev` branch is under active development, with experimental features, bug fixes, and refactors that may happen at any time! 
+Stable versions are available as tagged releases on GitHub, or as versioned releases on PyPI
+
+📖 **Official Documentation**
+
+View the official [PathML Documentation on readthedocs](https://pathml.readthedocs.io/en/latest/)**
+
+🔥 **Examples! Examples! Examples!**
+
+[↴ Jump to the gallery of examples below](https://github.com/Dana-Farber-AIOS/pathml#3-examples)
+
+<br>
+
 <img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/logo.png width="300"> 
 
 <img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/overview.png width="750">
-
-📖 **View the official [PathML Documentation on readthedocs](https://pathml.readthedocs.io/en/latest/)**
-
-:construction: the `dev` branch is under active development, with experimental features, bug fixes, and refactors that may happen at any time! 
-Stable versions are available as tagged releases on GitHub, or as versioned releases on PyPI
 
 # 1. Installation
 
@@ -156,7 +164,7 @@ os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-8-openjdk-amd64"
 
 PathML Tutorials we published in Google Colab
 1. [PathML Tutorial Colab #1 - Load an SVS image in PathML and see the image descriptors](https://colab.research.google.com/drive/12ICBsJLCvuubTqb42-Wr5k-2EVDPbbNQ#scrollTo=Qog8Y6wARMgW)
-2. [Now that you have PathML installed, all our other examples would work too](https://github.com/Dana-Farber-AIOS/pathml#3-examples) - Only make sure you select an appropriately size backend or VM in CoLab (i.e., RAM, CPU, Disk, and GPU if necessary) 
+2. [Now that you have PathML installed, all our other examples would work too](https://github.com/Dana-Farber-AIOS/pathml#3-examples) - Only make sure you select an appropriately sized backend or VM in CoLab (i.e., RAM, CPU, Disk, and GPU if necessary) 
 
 *Thanks to all of our open-source collaborators for helping maintain these installation instructions!*  
 *Please open an issue for any bugs or other problems during installation process.*
@@ -232,24 +240,7 @@ Now that you are all set with ``PathML`` installation, let's get started with so
 </table>
 
 
-# 4. Contributing
-
-``PathML`` is an open source project. Consider contributing to benefit the entire community!
-
-There are many ways to contribute to `PathML`, including:
-
-* Submitting bug reports
-* Submitting feature requests
-* Writing documentation and examples
-* Fixing bugs
-* Writing code for new features
-* Sharing workflows
-* Sharing trained model parameters
-* Sharing ``PathML`` with colleagues, students, etc.
-
-See [contributing](https://github.com/Dana-Farber-AIOS/pathml/blob/master/CONTRIBUTING.rst) for more details.
-
-# 5. Citing
+# 4. Citing & known uses
 
 If you use ``PathML`` please cite:
 
@@ -271,7 +262,7 @@ So far, **PathML** was referenced in 20+ manuscripts:
 -   [J. Linares et al. **Molecular Cell** 2021](https://doi.org/10.1016/j.molcel.2021.08.039)
 -   the list continues [**here** **🔗**](https://scholar.google.com/scholar?oi=bibs&hl=en&cites=1157052756975292108)
 
-# 6. Users
+# 5. Users
 
 <table style="border: 0px !important;"><tr><td>This is where in the world our most enthusiastic supporters are located:
    <br/><br/>
@@ -285,6 +276,24 @@ and this is where they work:
 </table>
 
 Source: https://ossinsight.io/analyze/Dana-Farber-AIOS/pathml#people
+
+# 6. Contributing
+
+``PathML`` is an open source project. Consider contributing to benefit the entire community!
+
+There are many ways to contribute to `PathML`, including:
+
+* Submitting bug reports
+* Submitting feature requests
+* Writing documentation and examples
+* Fixing bugs
+* Writing code for new features
+* Sharing workflows
+* Sharing trained model parameters
+* Sharing ``PathML`` with colleagues, students, etc.
+
+See [contributing](https://github.com/Dana-Farber-AIOS/pathml/blob/master/CONTRIBUTING.rst) for more details.
+
 
 # 7. License
 
