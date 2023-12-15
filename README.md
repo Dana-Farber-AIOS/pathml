@@ -38,12 +38,29 @@ There are several ways to install `PathML`:
 
 Options (1) and (2) require that you first install all external dependencies:
 * openslide
-* JDK 8
+* JDK 17
 
 We recommend using conda for environment management. 
 Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
 
 *Note: these instructions are for Linux. Commands may be different for other platforms.*
+
+### Updating Conda and Using libmamba
+
+Recent versions of Conda have integrated `libmamba`, a faster dependency solver. To benefit from this improvement, first ensure your Conda is updated:
+
+````
+conda update -n base conda
+````
+
+Then, to install and set the new `libmamba` solver, run:
+
+````
+conda install -n base conda-libmamba-solver
+conda config --set solver libmamba
+````
+
+Please refer to [this Anaconda blog post](https://www.anaconda.com/blog/a-faster-conda-for-a-growing-community).
 
 ## Installation option 1: pip install
 
@@ -63,9 +80,9 @@ Install external dependencies (MacOS) with [Brew](www.brew.sh):
 brew install openslide
 ````
 
-Install [OpenJDK 8](https://openjdk.java.net/):
+Install [OpenJDK 17](https://openjdk.java.net/):
 ````
-conda install openjdk==8.0.152
+conda install -c conda-forge 'openjdk==17.0.9'
 ````
 
 Optionally install CUDA (instructions [here](#CUDA))
