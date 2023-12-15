@@ -158,9 +158,9 @@ To get PathML running in a Colab environment:
 import os
 !pip install openslide-python
 !apt-get install openslide-tools
-!apt-get install openjdk-8-jdk-headless -qq > /dev/null
-os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-8-openjdk-amd64"
-!update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
+!apt-get install openjdk-17-jdk-headless -qq > /dev/null
+os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-17-openjdk-amd64"
+!update-alternatives --set java /usr/lib/jvm/java-17-openjdk-amd64/bin/java
 !java -version
 !pip install pathml
 ````
