@@ -352,6 +352,16 @@ def _test_log(msg):
 
 
 def find_qupath_home(start_path):
+    """
+    Search for the QuPath home directory by looking for .jar files within the given start path.
+
+    Args:
+        start_path (str): The starting directory path from which to begin the search.
+
+    Returns:
+        str or None: The absolute path of the QuPath home directory if found; otherwise, None.
+    """
+
     for root, dirs, files in os.walk(start_path):
         if any("qupath" in file.lower() and file.endswith(".jar") for file in files):
             return str(Path(root).parent.parent)
@@ -359,6 +369,20 @@ def find_qupath_home(start_path):
 
 
 def setup_qupath(qupath_home=None):
+    """
+    Set up the QuPath environment by downloading and extracting it if not already installed.
+
+    This function checks for an existing QuPath installation in the specified directory.
+    If not found, it downloads QuPath from its official release page and extracts it.
+
+    Args:
+        qupath_home (str, optional): The directory path where QuPath is or will be installed.
+                                     Defaults to '~/tools/qupath' if None.
+
+    Returns:
+        str: The path to the QuPath home directory after setting it up.
+    """
+
     default_path = str(Path.home() / "tools/qupath")
     qupath_home = qupath_home if qupath_home is not None else default_path
     Path(qupath_home).mkdir(parents=True, exist_ok=True)
