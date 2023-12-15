@@ -25,7 +25,7 @@ class TileStitcher:
     https://gist.github.com/petebankhead/b5a86caa333de1fdcff6bdee72a20abe.
     It requires QuPath and JDK to be installed prior to use.
 
-    Attributes:
+    Args:
         qupath_jarpath (list): Paths to QuPath JAR files.
         java_path (str): Path to Java installation.
         memory (str): Memory allocation for the JVM.
