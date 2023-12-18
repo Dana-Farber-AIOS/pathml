@@ -131,6 +131,7 @@ class InferenceBase(Transforms.Transform):
     def set_name(self, name):
         """
         Sets the "name" parameter in the model card. 
+
         Args:
             name (str): Name for the model
         """
@@ -139,6 +140,7 @@ class InferenceBase(Transforms.Transform):
     def set_num_classes(self, num):
         """
         Sets the "num_classes" parameter in the model card. 
+
         Args:
             num (int): Number of classes your model predicts
         """       
@@ -147,6 +149,7 @@ class InferenceBase(Transforms.Transform):
     def set_model_type(self, model_type):
         """
         Sets the "model_type" parameter in the model card. 
+
         Args:
             model_type (str): Type of model, e.g. "segmentation"
         """  
@@ -155,6 +158,7 @@ class InferenceBase(Transforms.Transform):
     def set_notes(self, note):
         """
         Sets the "notes" parameter in the model card. 
+
         Args:
             note (str): Any extra information you want to put in the model card
         """  
@@ -162,7 +166,8 @@ class InferenceBase(Transforms.Transform):
 
     def set_model_input_notes(self, note):
         """
-        Sets the "model_input_notes" parameter in the model card. 
+        Sets the "model_input_notes" parameter in the model card.
+
         Args:
             note (str): Comments on the model input
         """  
@@ -171,6 +176,7 @@ class InferenceBase(Transforms.Transform):
     def set_model_output_notes(self, note):
         """
         Sets the "model_output_notes" parameter in the model card. 
+
         Args:
             note (str): Comments on the model output
         """  
@@ -179,6 +185,7 @@ class InferenceBase(Transforms.Transform):
     def set_citation(self, citation):
         """
         Sets the "citation" parameter in the model card. 
+        
         Args:
             citation (str): Citation for the model
         """  
