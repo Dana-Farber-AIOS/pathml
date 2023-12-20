@@ -16,6 +16,7 @@ from loguru import logger
 
 import pathml.core
 import pathml.preprocessing.pipeline
+from pathml.core.h5managers import h5pathManager
 from pathml.core.slide_types import SlideType
 
 
@@ -181,7 +182,7 @@ class SlideData:
         if _load_from_h5path:
             # populate the SlideData object from existing h5path file
             with h5py.File(filepath, "r") as f:
-                self.h5manager = pathml.core.h5managers.h5pathManager(h5path=f)
+                self.h5manager = h5pathManager(h5path=f)
             self.name = self.h5manager.h5["fields"].attrs["name"]
             self.labels = {
                 key: val
@@ -198,7 +199,7 @@ class SlideData:
             if slide_type:
                 self.slide_type = SlideType(**slide_type)
         else:
-            self.h5manager = pathml.core.h5managers.h5pathManager(slidedata=self)
+            self.h5manager = h5pathManager(slidedata=self)
 
         self.masks = pathml.core.Masks(h5manager=self.h5manager, masks=masks)
         self.tiles = pathml.core.Tiles(h5manager=self.h5manager, tiles=tiles)
