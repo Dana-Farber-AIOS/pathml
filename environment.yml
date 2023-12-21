@@ -22,8 +22,8 @@ dependencies:
     - pip:
         - python-bioformats
         - python-javabridge
-        - protobuf
-        - deepcell
+        - protobuf==3.20.3
+        - deepcell==0.12.7
         - onnx
         - onnxruntime
         - opencv-contrib-python
