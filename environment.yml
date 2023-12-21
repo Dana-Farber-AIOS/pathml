@@ -5,33 +5,33 @@ channels:
     - conda-forge
 
 dependencies:
-    - pip==23.3.1
-    - numpy # orig = 1.19.5
-    - scipy # orig = 1.7.3
-    - scikit-image # orig = 0.18.3
-    - matplotlib==3.8.2 # orig = 3.5.1
-    - openjdk<=18.0.0 # (no installed version specified)
-    - pytorch # (no installed version specified)
-    - h5py==3.10.0 # orig = 3.1.0
-    - dask==2023.11.0 # orig = 2021.12.0
-    - pydicom==2.4.3 # orig = 2.2.2
-    - pytest==7.4.3 # orig = 6.2.5
-    - pre-commit==3.5.0 # orig = 2.16.0
-    - coverage==7.3.2 # orig = 5.5
-    - networkx==3.1
+    - pip
+    - numpy
+    - scipy
+    - scikit-image
+    - matplotlib
+    - openjdk
+    - pytorch
+    - h5py
+    - dask
+    - pydicom
+    - pytest
+    - pre-commit
+    - coverage
+    - networkx
     - pip:
-        - python-bioformats==4.0.7 # orig = 4.0.0
-        - python-javabridge==4.0.3 # orig = 4.0.0
-        - protobuf==3.20.3
-        - deepcell==0.12.7 # orig = 0.11.0
-        - onnx==1.14.0
-        - onnxruntime==1.15.1
-        - opencv-contrib-python==4.8.1.78 # orig = 4.5.3.56
-        - openslide-python==1.3.1 # orig = 1.2.0
-        - scanpy==1.9.6 # orig = 1.8.2
-        - anndata==0.10.3 # orig = 0.7.8
-        - tqdm==4.66.1 # orig = 4.62.3
-        - loguru==0.7.2 # orig = 0.5.3
-        - pandas==2.1.3 # orig no req
-        - torch-geometric==2.3.1
-        - jpype1==1.4.1 # orig = 1.4.1
+        - python-bioformats
+        - python-javabridge
+        - protobuf
+        - deepcell
+        - onnx
+        - onnxruntime
+        - opencv-contrib-python
+        - openslide-python
+        - scanpy
+        - anndata
+        - tqdm
+        - loguru
+        - pandas
+        - torch-geometric
+        - jpype1
