@@ -10,7 +10,7 @@ dependencies:
     - scipy
     - scikit-image
     - matplotlib
-    - openjdk
+    - openjdk<=18.0.0
     - pytorch
     - h5py
     - dask
