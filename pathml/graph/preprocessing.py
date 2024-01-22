@@ -81,7 +81,8 @@ class GraphFeatureExtractor:
         self.feature_dict.update(self.get_stats(nx.core_number(G), prefix="coreness"))
         self.feature_dict.update(
             self.get_stats(
-                nx.eigenvector_centrality(G, weight=weight), prefix="egvec_centr"
+                nx.eigenvector_centrality(G, weight=weight, max_iter=500),
+                prefix="egvec_centr",
             )
         )
         self.feature_dict.update(
@@ -669,3 +670,45 @@ class ColorMergedSuperpixelExtractor(MergedSuperpixelExtractor):
         graph.nodes[dst]["b"] = graph.nodes[dst]["r"] / np.linalg.norm(
             graph.nodes[dst]["b"]
         )
+
+
+class CentroidGraphBuilder:
+    def __init__(self, centroids):
+        """
+        Constructor for CentroidGraphBuilder.
+        Args:
+            centroids (np.ndarray): An array of centroid coordinates of shape (N, 2).
+        """
+        self.centroids = centroids
+
+    def build_knn_graph(self, k=5):
+        """
+        Build a K-Nearest Neighbors graph from the centroids.
+        Args:
+            k (int): The number of nearest neighbors to connect.
+        Returns:
+            nx.Graph: A NetworkX graph representing the KNN graph.
+        """
+        knn = kneighbors_graph(self.centroids, k, mode="distance").astype("float32")
+        nnz = knn.nonzero()
+        nedges = np.array(nnz).T.shape[0]
+        edges_and_weights = np.hstack(
+            [np.transpose(nnz), np.reshape(knn.toarray()[nnz], (nedges, 1))]
+        )
+        knn_graph = nx.Graph()
+        for i, j, weight in edges_and_weights:
+            knn_graph.add_edge(i, j, weight=weight)
+
+        return knn_graph
+
+    def build_knn_mst_graph(self, k=5):
+        """
+        Build a Minimum Spanning Tree based on the K-Nearest Neighbors graph.
+        Args:
+            k (int): The number of nearest neighbors to consider in the KNN graph.
+        Returns:
+            nx.Graph: A NetworkX graph representing the KNN-MST graph.
+        """
+        knn_graph = self.build_knn_graph(k)
+        mst_graph = nx.minimum_spanning_tree(knn_graph, weight="weight")
+        return mst_graph

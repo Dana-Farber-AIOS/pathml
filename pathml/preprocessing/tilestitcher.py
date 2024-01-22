@@ -8,7 +8,6 @@ import glob
 import os
 import platform
 import subprocess
-import sys
 import traceback
 import urllib
 import zipfile
@@ -18,42 +17,154 @@ import tifffile
 
 
 class TileStitcher:
+
     """
+    A Python class for stitching tiled images, specifically designed for spectrally unmixed images in a pyramidal OME-TIFF format.
 
-    This class serves as a Python implementation of a script originally authored by Pete Bankhead,
-    available at https://gist.github.com/petebankhead/b5a86caa333de1fdcff6bdee72a20abe
-    The original script is designed to stitch spectrally unmixed images into a pyramidal OME-TIFF format.
+    This class is a Python implementation of Pete Bankhead's script for image stitching, available at available at
+    https://gist.github.com/petebankhead/b5a86caa333de1fdcff6bdee72a20abe.
+    It requires QuPath and JDK to be installed prior to use.
 
-    Make sure QuPath and JDK are installed before using this class.
-
+    Args:
+        qupath_jarpath (list): Paths to QuPath JAR files.
+        java_path (str): Path to Java installation.
+        memory (str): Memory allocation for the JVM.
+        bfconvert_dir (str): Directory for Bio-Formats conversion tools.
     """
 
     def __init__(
         self, qupath_jarpath=[], java_path=None, memory="40g", bfconvert_dir="./"
     ):
-        """
-        Initialize the TileStitcher by setting up the Java Virtual Machine and QuPath environment.
-        """
-        self.bfconvert_path = self.setup_bfconvert(bfconvert_dir)
 
-        if java_path:
-            os.environ["JAVA_HOME"] = java_path
-        else:
-            self.set_environment_paths()
-            print("Setting Environment Paths")
+        """
+        Initialize the TileStitcher class with given parameters and start the JVM.
 
-        # print(qupath_jarpath)
+        Args:
+            qupath_jarpath (list): List of paths to QuPath JAR files.
+            java_path (str, optional): Path to Java installation. If not provided, JAVA_HOME is used.
+            memory (str, optional): Memory allocation for JVM. Defaults to "40g".
+            bfconvert_dir (str, optional): Directory for Bio-Formats conversion tools. Defaults to "./".
+        """
+
         self.classpath = os.pathsep.join(qupath_jarpath)
         self.memory = memory
+        self.bfconvert_dir = bfconvert_dir
+
+        if java_path and os.path.isdir(java_path):
+            # Override JAVA_HOME with the provided Java path
+            os.environ["JAVA_HOME"] = java_path
+            self.java_home = java_path
+            print(f"Java path set and JAVA_HOME overridden to: {java_path}")
+        elif "JAVA_HOME" in os.environ and os.path.isdir(os.environ["JAVA_HOME"]):
+            self.java_home = os.environ["JAVA_HOME"]
+            print("Using JAVA_HOME from environment variables.")
+        else:
+            # If neither java_path nor JAVA_HOME is set, raise an error
+            raise EnvironmentError(
+                "No valid Java path specified, and JAVA_HOME is not set or invalid."
+            )
+
         self._start_jvm()
 
     def __del__(self):
-        """Ensure the JVM is shutdown when the object is deleted."""
-
         if jpype.isJVMStarted():
             jpype.shutdownJVM()
+            print("JVM successfully shutdown")
+
+    def _start_jvm(self):
+        """Start the Java Virtual Machine and import necessary QuPath classes."""
+        if not jpype.isJVMStarted():
+            try:
+                # Set memory usage and classpath for the JVM
+                memory_usage = f"-Xmx{self.memory}"
+                class_path_option = f"-Djava.class.path={self.classpath}"
+
+                # Fetch the path to the JVM
+                jvm_path = jpype.getDefaultJVMPath()
+
+                jvm_version = jpype.getJVMVersion()
+                # Try to start the JVM with the specified options
+                jpype.startJVM(memory_usage, class_path_option)
+
+                if jvm_version[0] <= 17:
+
+                    print(
+                        "Warning: This Java version might not be fully compatible with some QuPath libraries. Java 17 is recommended."
+                    )
+
+                self._import_qupath_classes()
+
+                print(f"Using JVM version: {jvm_version} from {jvm_path}")
+
+            except Exception as e:
+                print(f"Error occurred while starting JVM: {e}")
+                # sys.exit(1)
+            else:
+                print("JVM started successfully")
+        else:
+            print("JVM was already started")
+
+    def _import_qupath_classes(self):
+        """Import necessary QuPath classes after starting JVM."""
+
+        try:
+            print("Importing required qupath classes")
+            self.ImageServerProvider = jpype.JPackage(
+                "qupath.lib.images.servers"
+            ).ImageServerProvider
+            self.ImageServers = jpype.JPackage("qupath.lib.images.servers").ImageServers
+            self.SparseImageServer = jpype.JPackage(
+                "qupath.lib.images.servers"
+            ).SparseImageServer
+            self.OMEPyramidWriter = jpype.JPackage(
+                "qupath.lib.images.writers.ome"
+            ).OMEPyramidWriter
+            self.ImageRegion = jpype.JPackage("qupath.lib.regions").ImageRegion
+            self.ImageIO = jpype.JPackage("javax.imageio").ImageIO
+            self.BaselineTIFFTagSet = jpype.JPackage(
+                "javax.imageio.plugins.tiff"
+            ).BaselineTIFFTagSet
+            self.TIFFDirectory = jpype.JPackage(
+                "javax.imageio.plugins.tiff"
+            ).TIFFDirectory
+            self.BufferedImage = jpype.JPackage("java.awt.image").BufferedImage
+
+        except Exception as e:
+            raise RuntimeError(f"Failed to import QuPath classes: {e}")
+
+    def _collect_tif_files(self, input):
+
+        """
+        Collect .tif files from a given directory path or list.
+
+        Args:
+            input (str or list): A directory path or a list of .tif files.
+
+        Returns:
+            list: A list of .tif file paths.
+        """
+
+        if isinstance(input, str) and os.path.isdir(input):
+            return glob.glob(os.path.join(input, "**/*.tif"), recursive=True)
+        elif isinstance(input, list):
+            return [file for file in input if file.endswith(".tif")]
+        else:
+            print(
+                f"Input must be a directory path or list of .tif files. Received: {input}"
+            )
+            return []
 
     def setup_bfconvert(self, bfconvert_dir):
+        """
+        Set up Bio-Formats conversion tool (bfconvert) in the given directory.
+
+        Args:
+            bfconvert_dir (str): Directory path for setting up bfconvert.
+
+        Returns:
+            str: Path to the bfconvert tool.
+        """
+
         setup_dir = bfconvert_dir
         parent_dir = os.path.dirname(setup_dir)
         tools_dir = os.path.join(parent_dir, "tools")
@@ -114,143 +225,34 @@ class TileStitcher:
 
         return self.bfconvert_path
 
-    def set_environment_paths(self):
-        """
-        Set the JAVA_HOME path based on the OS type.
-        If the path is not found in the predefined paths dictionary, the function tries
-        to automatically find the JAVA_HOME path from the system.
-        """
-        print("Setting Environment Paths")
-        if "JAVA_HOME" in os.environ and os.environ["JAVA_HOME"]:
-            # If JAVA_HOME is already set by the user, use that.
-            print("Java Home is already set")
-            return
-
-        # Try to get the JAVA_HOME from the echo command
-        java_home = self.get_system_java_home()
-        if not java_home:
-            raise EnvironmentError(
-                "JAVA_HOME not found. Please set it before proceeding or provide it explicitly."
-            )
-
-        print(f"Setting Java path to {java_home}")
-        os.environ["JAVA_HOME"] = java_home
-
-    def get_system_java_home(self):
-        """
-        Try to automatically find the JAVA_HOME path from the system.
-        Return it if found, otherwise return an empty string.
-        """
-        try:
-            # Execute the echo command to get the JAVA_HOME
-            java_home = subprocess.getoutput("echo $JAVA_HOME").strip()
-            if not java_home:
-                raise EnvironmentError("Unable to retrieve JAVA_HOME from the system.")
-            return java_home
-        except Exception as e:
-            print("Error retrieving JAVA_HOME from the system", e)
-            return ""
-
-    def run_image_stitching(
-        self, infiles, fileout, downsamples=[1, 8], separate_series=False
-    ):
-        """
-        Perform image stitching on the provided TIFF files and output a stitched OME-TIFF image.
-        """
-        try:
-            infiles = self._collect_tif_files(infiles)
-            fileout, file_jpype = self._get_outfile(fileout)
-
-            if not infiles or not file_jpype:
-                return
-
-            server = self.parse_regions(infiles)
-            server = self.ImageServers.pyramidalize(server)
-            self._write_pyramidal_image_server(server, file_jpype, downsamples)
-
-            server.close()
-            print(f"Image stitching completed. Output file: {file_jpype}")
-
-            if separate_series:
-                self.run_bfconvert(fileout)
-
-        except Exception as e:
-            print(f"Error running image stitching: {e}")
-            traceback.print_exc()
-
-    def _start_jvm(self):
-        """Start the Java Virtual Machine and import necessary QuPath classes."""
-        if not jpype.isJVMStarted():
-            try:
-                # Set memory usage and classpath for the JVM
-                memory_usage = f"-Xmx{self.memory}"
-                class_path_option = "-Djava.class.path=%s" % self.classpath
-
-                # Try to start the JVM with the specified options
-                jpype.startJVM(memory_usage, class_path_option)
-
-                print(f"Using JVM version: {jpype.getJVMVersion()}")
-
-                # Import necessary QuPath classes
-                self._import_qupath_classes()
-
-            except Exception as e:
-                # Catch any exception that occurs during JVM startup and print the traceback
-                print(f"Error occurred while starting JVM: {e}")
-                traceback.print_exc()
-                sys.exit(1)
-            else:
-                print("JVM started successfully")
-        else:
-            print("JVM was already started")
-
-    def _import_qupath_classes(self):
-        """Import necessary QuPath classes after starting JVM."""
-
-        try:
-            print("Importing required qupath classes")
-            self.ImageServerProvider = jpype.JPackage(
-                "qupath.lib.images.servers"
-            ).ImageServerProvider
-            self.ImageServers = jpype.JPackage("qupath.lib.images.servers").ImageServers
-            self.SparseImageServer = jpype.JPackage(
-                "qupath.lib.images.servers"
-            ).SparseImageServer
-            self.OMEPyramidWriter = jpype.JPackage(
-                "qupath.lib.images.writers.ome"
-            ).OMEPyramidWriter
-            self.ImageRegion = jpype.JPackage("qupath.lib.regions").ImageRegion
-            self.ImageIO = jpype.JPackage("javax.imageio").ImageIO
-            self.BaselineTIFFTagSet = jpype.JPackage(
-                "javax.imageio.plugins.tiff"
-            ).BaselineTIFFTagSet
-            self.TIFFDirectory = jpype.JPackage(
-                "javax.imageio.plugins.tiff"
-            ).TIFFDirectory
-            self.BufferedImage = jpype.JPackage("java.awt.image").BufferedImage
-
-        except Exception as e:
-            raise RuntimeError(f"Failed to import QuPath classes: {e}")
-
-    def _collect_tif_files(self, input):
-        """Collect .tif files from the input directory or list."""
-        if isinstance(input, str) and os.path.isdir(input):
-            return glob.glob(os.path.join(input, "**/*.tif"), recursive=True)
-        elif isinstance(input, list):
-            return [file for file in input if file.endswith(".tif")]
-        else:
-            print(
-                f"Input must be a directory path or list of .tif files. Received: {input}"
-            )
-            return []
-
     def _get_outfile(self, fileout):
-        """Get the output file object for the stitched image."""
+        """
+        Prepare the output file for the stitched image.
+
+        Args:
+            fileout (str): Path of the output file.
+
+        Returns:
+            tuple: A tuple containing the output file path and its Java file object.
+        """
+
         if not fileout.endswith(".ome.tif"):
             fileout += ".ome.tif"
         return fileout, jpype.JClass("java.io.File")(fileout)
 
     def parseRegion(self, file, z=0, t=0):
+        """
+        Parse an image region from a given TIFF file.
+
+        Args:
+            file (str): Path to the TIFF file.
+            z (int, optional): Z-position of the image. Defaults to 0.
+            t (int, optional): Time point of the image. Defaults to 0.
+
+        Returns:
+            ImageRegion: An ImageRegion object representing the parsed region.
+        """
+
         if self.checkTIFF(file):
             try:
                 # Extract the image region coordinates and dimensions from the TIFF tags
@@ -287,6 +289,18 @@ class TileStitcher:
 
     # Define a function to check if a file is a valid TIFF file
     def checkTIFF(self, file):
+        """
+        Check if a given file is a valid TIFF file.
+
+        This method reads the first few bytes of the file to determine if it conforms to TIFF specifications.
+
+        Args:
+            file (str): Path to the file to be checked.
+
+        Returns:
+            bool: True if the file is a valid TIFF file, False otherwise.
+        """
+
         try:
             with open(file, "rb") as f:
                 bytes = f.read(4)
@@ -309,10 +323,32 @@ class TileStitcher:
 
     # Define a helper function to convert two bytes to a short integer
     def toShort(self, b1, b2):
+        """
+        Convert two bytes to a short integer.
+
+        This helper function is used for interpreting the binary data in file headers, particularly for TIFF files.
+
+        Args:
+            b1 (byte): The first byte.
+            b2 (byte): The second byte.
+
+        Returns:
+            int: The short integer represented by the two bytes.
+        """
         return (b1 << 8) + b2
 
     # Define a function to parse TIFF file metadata and extract the image region
     def parse_regions(self, infiles):
+        """
+        Parse image regions from a list of TIFF files and build a sparse image server.
+
+        Args:
+            infiles (list): List of paths to TIFF files.
+
+        Returns:
+            SparseImageServer: A server containing the parsed image regions.
+        """
+
         builder = self.SparseImageServer.Builder()
         for f in infiles:
             try:
@@ -334,7 +370,15 @@ class TileStitcher:
         return builder.build()
 
     def _write_pyramidal_image_server(self, server, fileout, downsamples):
-        """Convert the parsed image regions into a pyramidal image server and write to file."""
+        """
+        Convert the parsed image regions into a pyramidal image server and write the output to a file.
+
+        Args:
+            server (SparseImageServer): The image server containing the stitched image regions.
+            fileout (java.io.File): The output file object where the stitched image will be written.
+            downsamples (list): A list of downsample levels to use in the pyramidal image server.
+        """
+
         # Convert the parsed regions into a pyramidal image server and write to file
 
         try:
@@ -351,26 +395,91 @@ class TileStitcher:
             )
         except Exception as e:
             print(f"Error writing pyramidal image server to file {fileout}: {e}")
+            # traceback.print_exc()
+            raise
+
+    def run_image_stitching(
+        self, input_dir, output_filename, downsamples=[1, 8], separate_series=False
+    ):
+        """
+        Perform image stitching on the provided TIFF files and output a stitched OME-TIFF image.
+
+        Args:
+            input_dir (str): Directory containing the input TIFF files.
+            output_filename (str): Filename for the output stitched image.
+            downsamples (list, optional): List of downsample levels. Defaults to [1, 8].
+            separate_series (bool, optional): Whether to separate the series. Defaults to False.
+        """
+
+        try:
+            infiles = self._collect_tif_files(input_dir)
+            output_file, file_jpype = self._get_outfile(output_filename)
+
+            if not infiles or not file_jpype:
+                return
+
+            server = self.parse_regions(infiles)
+            server = self.ImageServers.pyramidalize(server)
+            self._write_pyramidal_image_server(server, file_jpype, downsamples)
+
+            server.close()
+            print(f"Image stitching completed. Output file: {file_jpype}")
+
+            if separate_series:
+                print("Separating Series")
+                self.bfconvert_path = self.setup_bfconvert(self.bfconvert_dir)
+                self.run_bfconvert(output_file)
+
+        except Exception as e:
+            print(f"Error running image stitching: {e}")
             traceback.print_exc()
 
-    def run_bfconvert(self, stitched_image_path, bfconverted_path=None):
+    def run_bfconvert(
+        self, stitched_image_path, bfconverted_path=None, delete_original=True
+    ):
+        """
+        Run the Bio-Formats conversion tool on a stitched image.
+
+        Args:
+            stitched_image_path (str): Path to the stitched image.
+            bfconverted_path (str, optional): Path for the converted image. If None, a default path is generated.
+            delete_original (bool): If True, delete the original stitched image after conversion.
+
+        """
+
         if not self.is_bfconvert_available():
             print("bfconvert command not available. Skipping bfconvert step.")
             return
 
         if not bfconverted_path:
-            base_path, ext = os.path.splitext(stitched_image_path)
-            bfconverted_path = f"{base_path}_sep.tif"
+            base_path = stitched_image_path.rsplit(".ome.tif", 1)[0]
+            bfconverted_path = f"{base_path}_separated.ome.tif"
 
         bfconvert_command = f"./{self.bfconvert_path} -series 0 -separate '{stitched_image_path}' '{bfconverted_path}'"
 
-        try:
-            subprocess.run(bfconvert_command, shell=True, check=True)
-            print(f"bfconvert completed. Output file: {bfconverted_path}")
-        except subprocess.CalledProcessError:
-            print("Error running bfconvert command.")
+        # Check if the file already exists and remove it to avoid prompting
+        if not os.path.exists(bfconverted_path):
+            # Run bfconvert command
+            try:
+                subprocess.run(bfconvert_command, shell=True, check=True)
+                print(f"bfconvert completed. Output file: {bfconverted_path}")
+
+                # Delete the original stitched image if requested
+                if delete_original:
+                    os.remove(stitched_image_path)
+                    print(f"Original stitched image deleted: {stitched_image_path}")
+
+            except subprocess.CalledProcessError:
+                print("Error running bfconvert command.")
 
     def is_bfconvert_available(self):
+        """
+        Check if the bfconvert tool is available.
+
+        Returns:
+            bool: True if bfconvert is available, False otherwise.
+        """
+
         try:
             result = subprocess.run(
                 [f"./{self.bfconvert_path}", "-version"],
@@ -383,3 +492,12 @@ class TileStitcher:
                 return False
         except FileNotFoundError:
             return False
+
+    def shutdown(self):
+        """
+        Shut down the Java Virtual Machine (JVM) if it's running.
+        """
+
+        if jpype.isJVMStarted():
+            jpype.shutdownJVM()
+            print("JVM successfully shutdown")

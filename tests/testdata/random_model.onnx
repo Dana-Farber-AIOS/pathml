@@ -1,0 +1,23 @@
+pytorch2.0.0:ÿ
+‘
+data
+conv.weight
+	conv.bias3
+/conv/Conv"Conv*
+	dilations@@ *
+group *
+kernel_shape@@ *
+pads@@@@ *
+strides@@ 	torch_jit*…Bconv.weightJlÚã>½¦=ãŒ*½…&¬=R¼N¹½Qp€=R·.¾p&r½Dè2>Ì4Å=d2#½İS½é‡?>˜ä<}2r½ù).<|V~;Â¾±ı@½HE8¾@Ó>ÅLô½/¶/>Ëñ~½Æ…Ë¼s.¾*B	conv.biasJ œA¾Z 
+data
+
+
+
+ô
+ôb
+3
+
+
+
+ô
+ôB

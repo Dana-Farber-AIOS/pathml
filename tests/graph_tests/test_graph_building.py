@@ -8,8 +8,10 @@ import pytest
 import torch
 from skimage.draw import ellipse
 from skimage.measure import label, regionprops
+from sklearn.metrics import pairwise_distances
 
 from pathml.graph import KNNGraphBuilder, RAGGraphBuilder
+from pathml.graph.preprocessing import CentroidGraphBuilder
 
 
 def make_fake_instance_maps(num, image_size, ellipse_height, ellipse_width):
@@ -104,3 +106,37 @@ def test_rag_graph_building(kernel_size, hops, add_loc_feats, add_node_labels):
 
     if add_node_labels:
         assert graph.node_labels.shape == (len(regions), 4)
+
+
+def test_centroid_graph_builder_initialization():
+    centroids = np.array([[0, 0], [1, 1], [2, 2]])
+    builder = CentroidGraphBuilder(centroids)
+    assert np.array_equal(builder.centroids, centroids)
+
+
+def test_knn_graph_construction():
+    centroids = np.array([[0, 0], [1, 1], [2, 2]])
+    builder = CentroidGraphBuilder(centroids)
+    knn_graph = builder.build_knn_graph(k=2)
+    assert len(knn_graph.nodes) == 3
+    assert len(knn_graph.edges) == 3  # This depends on the value of k
+
+
+def test_mst_graph_construction():
+    centroids = np.array([[0, 0], [1, 1], [2, 2]])
+    builder = CentroidGraphBuilder(centroids)
+    mst_graph = builder.build_knn_mst_graph(k=2)
+    assert len(mst_graph.nodes) == 3
+    assert len(mst_graph.edges) <= len(builder.build_knn_graph(k=2).edges)
+
+
+def test_edge_weights():
+    centroids = np.array([[0, 0], [1, 1], [2, 2]])
+    builder = CentroidGraphBuilder(centroids)
+    knn_graph = builder.build_knn_graph(k=2)
+    distances = pairwise_distances(centroids)
+
+    # Ensure the indices in the graph correspond to those in the centroids array
+    for u, v, data in knn_graph.edges(data=True):
+        weight = data["weight"]
+        assert np.isclose(weight, distances[int(u)][int(v)], atol=1e-6)

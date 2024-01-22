@@ -29,3 +29,13 @@ Transforms
 .. autoapiclass:: pathml.preprocessing.RescaleIntensity    
 .. autoapiclass:: pathml.preprocessing.HistogramEqualization
 .. autoapiclass:: pathml.preprocessing.AdaptiveHistogramEqualization
+
+
+TileStitching
+-------------
+This section covers the `TileStitcher` class, which is specialized for stitching tiled images, particularly useful in digital pathology.
+
+.. autoapiclass:: pathml.preprocessing.tilestitcher.TileStitcher
+   :members: run_image_stitching, shutdown
+   :show-inheritance:
+   
