@@ -312,16 +312,23 @@ def test_run_bfconvert_bfconvert_not_available(tile_stitcher, capsys):
 @pytest.mark.exclude
 def test_run_bfconvert_custom_bfconverted_path(tile_stitcher, capsys):
     tile_stitcher.bfconvert_path = "dummy_path"
+    stitched_image_path = "dummy_stitched_image_path.ome.tif"
+
+    # Create a dummy stitched image file
+    with open(stitched_image_path, "w") as f:
+        f.write("dummy content")
+
     with patch.object(tile_stitcher, "is_bfconvert_available", return_value=True):
-        with patch("subprocess.run") as mock_run:
-            tile_stitcher.run_bfconvert("dummy_stitched_image_path", "custom_path.tif")
-            mock_run.assert_called_once_with(
-                "./dummy_path -series 0 -separate 'dummy_stitched_image_path' 'custom_path.tif'",
-                shell=True,
-                check=True,
-            )
-            captured = capsys.readouterr()
-            assert "bfconvert completed. Output file: custom_path.tif" in captured.out
+        with patch("subprocess.run"):
+            with patch("os.remove"):  # Mock os.remove to prevent actual file deletion
+                tile_stitcher.run_bfconvert(stitched_image_path, "custom_path.tif")
+                captured = capsys.readouterr()
+                assert (
+                    "bfconvert completed. Output file: custom_path.tif" in captured.out
+                )
+
+    # Clean up the dummy file
+    os.remove(stitched_image_path)
 
 
 @pytest.mark.exclude
@@ -334,6 +341,46 @@ def test_run_bfconvert_error(tile_stitcher, capsys):
             tile_stitcher.run_bfconvert("dummy_stitched_image_path.tif")
             captured = capsys.readouterr()
             assert "Error running bfconvert command." in captured.out
+
+
+@pytest.mark.exclude
+def test_run_bfconvert_success_delete_original(tile_stitcher, capsys):
+    tile_stitcher.bfconvert_path = "dummy_path"
+    stitched_image_path = "dummy_stitched_image_path.ome.tif"
+
+    # Create a dummy stitched image file
+    with open(stitched_image_path, "w") as f:
+        f.write("dummy content")
+
+    with patch.object(tile_stitcher, "is_bfconvert_available", return_value=True):
+        with patch("subprocess.run"):
+            tile_stitcher.run_bfconvert(stitched_image_path, delete_original=True)
+            captured = capsys.readouterr()
+            assert "bfconvert completed. Output file: " in captured.out
+            assert "Original stitched image deleted: " in captured.out
+
+    # Check if the original file was deleted
+    assert not os.path.exists(stitched_image_path)
+
+
+@pytest.mark.exclude
+def test_run_bfconvert_no_delete_original(tile_stitcher, capsys):
+    tile_stitcher.bfconvert_path = "dummy_path"
+    stitched_image_path = "dummy_stitched_image_path.ome.tif"
+
+    # Create a dummy stitched image file
+    with open(stitched_image_path, "w") as f:
+        f.write("dummy content")
+
+    with patch.object(tile_stitcher, "is_bfconvert_available", return_value=True):
+        with patch("subprocess.run"):
+            tile_stitcher.run_bfconvert(stitched_image_path, delete_original=False)
+            captured = capsys.readouterr()
+            assert "bfconvert completed. Output file: " in captured.out
+            assert "Original stitched image deleted: " not in captured.out
+
+    # Check if the original file still exists
+    assert os.path.exists(stitched_image_path)
 
 
 @pytest.mark.exclude

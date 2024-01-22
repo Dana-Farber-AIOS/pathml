@@ -434,13 +434,16 @@ class TileStitcher:
             print(f"Error running image stitching: {e}")
             traceback.print_exc()
 
-    def run_bfconvert(self, stitched_image_path, bfconverted_path=None):
+    def run_bfconvert(
+        self, stitched_image_path, bfconverted_path=None, delete_original=True
+    ):
         """
         Run the Bio-Formats conversion tool on a stitched image.
 
         Args:
             stitched_image_path (str): Path to the stitched image.
             bfconverted_path (str, optional): Path for the converted image. If None, a default path is generated.
+            delete_original (bool): If True, delete the original stitched image after conversion.
 
         """
 
@@ -450,21 +453,24 @@ class TileStitcher:
 
         if not bfconverted_path:
             base_path = stitched_image_path.rsplit(".ome.tif", 1)[0]
-            bfconverted_path = f"{base_path}_separated.tif"
+            bfconverted_path = f"{base_path}_separated.ome.tif"
 
         bfconvert_command = f"./{self.bfconvert_path} -series 0 -separate '{stitched_image_path}' '{bfconverted_path}'"
 
         # Check if the file already exists and remove it to avoid prompting
         if not os.path.exists(bfconverted_path):
-
+            # Run bfconvert command
             try:
                 subprocess.run(bfconvert_command, shell=True, check=True)
                 print(f"bfconvert completed. Output file: {bfconverted_path}")
+
+                # Delete the original stitched image if requested
+                if delete_original:
+                    os.remove(stitched_image_path)
+                    print(f"Original stitched image deleted: {stitched_image_path}")
+
             except subprocess.CalledProcessError:
                 print("Error running bfconvert command.")
-        else:
-
-            print("File already exists")
 
     def is_bfconvert_available(self):
         """
