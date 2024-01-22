@@ -233,7 +233,7 @@ Now that you are all set with ``PathML`` installation, let's get started with so
 
 </td>                                                                                                                             
         <td>
-<img src="https://github.com/Dana-Farber-AIOS/pathml/assets/25375373/502c9e69-e988-4d61-b50f-0d6bfc8af251" width="1000px">
+<img src="https://github.com/Dana-Farber-AIOS/pathml/assets/25375373/502c9e69-e988-4d61-b50f-0d6bfc8af251" width="1000px" />
 
    </td>
 </tr>
