@@ -740,7 +740,13 @@ def _post_process_single_hovernet(
 
 
 def post_process_batch_hovernet(
-    outputs, n_classes, small_obj_size_thresh=10, kernel_size=21, h=0.5, k=0.5
+    outputs,
+    n_classes,
+    small_obj_size_thresh=10,
+    kernel_size=21,
+    h=0.5,
+    k=0.5,
+    return_nc_out_preds=False,
 ):
     """
     Post-process HoVer-Net outputs to get a final predicted mask.
@@ -770,29 +776,28 @@ def post_process_batch_hovernet(
 
             Each pixel is labelled from 0 to n, where n is the number of individual nuclei detected. 0 pixels indicate
             background. Pixel values i indicate that the pixel belongs to the ith nucleus.
+
+    Modified previous method to output nc_out_preds.
     """
 
-    assert len(outputs) in {2, 3}, (
-        f"outputs has size {len(outputs)}. Must have size 2 (for segmentation) or 3 (for "
-        f"classification)"
-    )
-    if n_classes is None:
-        np_out, hv_out = outputs
-        # send ouputs to cpu
-        np_out = np_out.detach().cpu()
-        hv_out = hv_out.detach().cpu()
-        classification = False
-    else:
-        assert len(outputs) == 3, (
-            f"n_classes={n_classes} but outputs has {len(outputs)} elements. Expecting a list "
-            f"of length 3, one for each of np, hv, and nc branches"
-        )
-        np_out, hv_out, nc_out = outputs
-        # send ouputs to cpu
-        np_out = np_out.detach().cpu()
-        hv_out = hv_out.detach().cpu()
-        nc_out = nc_out.detach().cpu()
-        classification = True
+    # Check if outputs are tensors and convert to NumPy if so
+    if isinstance(outputs[0], torch.Tensor):
+        outputs = [
+            output.detach().cpu() if output.requires_grad else output.cpu()
+            for output in outputs
+        ]
+
+    assert len(outputs) in {
+        2,
+        3,
+    }, "outputs must have size 2 (for segmentation) or 3 (for classification)"
+
+    np_out, hv_out = outputs[:2]
+
+    # Check if classification is needed
+    classification = n_classes is not None and len(outputs) == 3
+    if classification:
+        nc_out = outputs[2]
 
     batchsize = hv_out.shape[0]
     # first get the nucleus detection preds
@@ -807,17 +812,15 @@ def post_process_batch_hovernet(
     if classification:
         # need to do last step of majority vote
         # get the pixel-level class predictions from the logits
-        nc_out_preds = F.softmax(nc_out, dim=1).argmax(dim=1)
-
-        out_classification = np.zeros_like(nc_out.numpy(), dtype=np.uint8)
+        nc_out_preds = F.softmax(nc_out, dim=1).argmax(dim=1).numpy()
+        out_classification = np.zeros_like(nc_out, dtype=np.uint8)
 
         for batch_ix, nuc_preds in enumerate(out_detection_list):
             # get labels of nuclei from nucleus detection
             nucleus_labels = list(np.unique(nuc_preds))
             if 0 in nucleus_labels:
-                nucleus_labels.remove(0)  # 0 is background
+                nucleus_labels.remove(0)
             nucleus_class_preds = nc_out_preds[batch_ix, ...]
-
             out_class_preds_single = out_classification[batch_ix, ...]
 
             # for each nucleus, get the class predictions for the pixels and take a vote
@@ -830,7 +833,10 @@ def post_process_batch_hovernet(
 
             out_classification[batch_ix, ...] = out_class_preds_single
 
-        return out_detection, out_classification
+        if return_nc_out_preds:
+            return out_detection, out_classification, nc_out_preds
+        else:
+            return out_detection, out_classification
     else:
         return out_detection
 
@@ -896,3 +902,84 @@ def _vis_outputs_single(
                 x, y = segmentation_lines(nuclei_mask.astype(np.uint8))
                 ax.scatter(x, y, color=palette[i], marker=".", s=markersize)
     ax.axis("off")
+
+
+def extract_nuclei_info(pred_inst, pred_type=None):
+    """
+    Extract centroids, type, and probability of the type for each cell in the nuclei mask.
+
+    This function is adapted from the Hover-Net post-processing implementation.
+    Original source: https://github.com/vqdang/hover_net/blob/14c5996fa61ede4691e87905775e8f4243da6a62/models/hovernet/post_proc.py#L94
+
+    Args:
+        pred_inst (np.ndarray): Instance mask of nuclei.
+        pred_type (np.ndarray): Optional type mask for nuclei.
+
+    Returns:
+        dict: Information about each cell, including centroid, type, and probability.
+    """
+
+    inst_id_list = np.unique(pred_inst)[1:]  # exclude background
+    inst_info_dict = {}
+
+    for inst_id in inst_id_list:
+        inst_map = pred_inst == inst_id
+        inst_moment = cv2.moments(inst_map.astype(np.uint8))
+
+        if inst_moment["m00"] == 0:
+            continue
+
+        inst_centroid = [
+            inst_moment["m10"] / inst_moment["m00"],
+            inst_moment["m01"] / inst_moment["m00"],
+        ]
+
+        inst_info = {"centroid": inst_centroid, "type": None, "prob": None}
+        inst_info_dict[inst_id] = inst_info
+
+        if pred_type is not None:
+            inst_type = pred_type[inst_map]
+            type_list, type_pixels = np.unique(inst_type, return_counts=True)
+            type_list = sorted(
+                zip(type_list, type_pixels), key=lambda x: x[1], reverse=True
+            )
+
+            inst_type = type_list[0][0]
+            if inst_type == 0 and len(type_list) > 1:
+                inst_type = type_list[1][0]
+
+            type_dict = {v[0]: v[1] for v in type_list}
+            type_prob = type_dict[inst_type] / (np.sum(inst_map) + 1.0e-6)
+
+            inst_info_dict[inst_id]["type"] = int(inst_type)
+            inst_info_dict[inst_id]["prob"] = float(type_prob)
+
+    return inst_info_dict
+
+
+def group_centroids_by_type(cell_dict, prob_threshold):
+    """
+    Group centroids by cell type for cells above a certain probability threshold.
+
+    Args:
+        cell_dict (dict): Dictionary containing cell information.
+        prob_threshold (float): Minimum probability threshold for a cell to be considered.
+
+    Returns:
+        dict: A dictionary with cell types as keys and lists of centroids as values.
+    """
+    if not isinstance(cell_dict, dict):
+        raise ValueError("cell_dict must be a dictionary.")
+    if not isinstance(prob_threshold, (float, int)) or prob_threshold < 0:
+        raise ValueError("prob_threshold must be a non-negative number.")
+
+    grouped_centroids = {}
+
+    for cell_info in cell_dict.values():
+        if cell_info["prob"] >= prob_threshold:
+            cell_type = cell_info["type"]
+            if cell_type not in grouped_centroids:
+                grouped_centroids[cell_type] = []
+            grouped_centroids[cell_type].append(cell_info["centroid"])
+
+    return grouped_centroids
