@@ -25,6 +25,8 @@ from pathml.ml.models.hovernet import (
     _post_process_single_hovernet,
     _vis_outputs_single,
     compute_hv_map,
+    extract_nuclei_info,
+    group_centroids_by_type,
     loss_hovernet,
     post_process_batch_hovernet,
     remove_small_objs,
@@ -62,4 +64,6 @@ __all__ = [
     "_post_process_single_hovernet",
     "post_process_batch_hovernet",
     "_vis_outputs_single",
+    "extract_nuclei_info",
+    "group_centroids_by_type",
 ]

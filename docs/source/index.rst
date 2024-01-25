@@ -64,6 +64,7 @@ Cornell Medicine.
    examples/link_train_hovernet
    examples/link_workflow_Inference
    examples/link_gallery
+   examples/link_tile_stitching
 
 .. toctree::
    :maxdepth: 2

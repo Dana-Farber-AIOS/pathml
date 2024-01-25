@@ -19,18 +19,33 @@ import tifffile
 class TileStitcher:
 
     """
+    A Python class for stitching tiled images, specifically designed for spectrally unmixed images in a pyramidal OME-TIFF format.
 
-    This class serves as a Python implementation of a script originally authored by Pete Bankhead,
-    available at https://gist.github.com/petebankhead/b5a86caa333de1fdcff6bdee72a20abe
-    The original script is designed to stitch spectrally unmixed images into a pyramidal OME-TIFF format.
+    This class is a Python implementation of Pete Bankhead's script for image stitching, available at available at
+    https://gist.github.com/petebankhead/b5a86caa333de1fdcff6bdee72a20abe.
+    It requires QuPath and JDK to be installed prior to use.
 
-    Make sure QuPath and JDK are installed before using this class.
-
+    Args:
+        qupath_jarpath (list): Paths to QuPath JAR files.
+        java_path (str): Path to Java installation.
+        memory (str): Memory allocation for the JVM.
+        bfconvert_dir (str): Directory for Bio-Formats conversion tools.
     """
 
     def __init__(
         self, qupath_jarpath=[], java_path=None, memory="40g", bfconvert_dir="./"
     ):
+
+        """
+        Initialize the TileStitcher class with given parameters and start the JVM.
+
+        Args:
+            qupath_jarpath (list): List of paths to QuPath JAR files.
+            java_path (str, optional): Path to Java installation. If not provided, JAVA_HOME is used.
+            memory (str, optional): Memory allocation for JVM. Defaults to "40g".
+            bfconvert_dir (str, optional): Directory for Bio-Formats conversion tools. Defaults to "./".
+        """
+
         self.classpath = os.pathsep.join(qupath_jarpath)
         self.memory = memory
         self.bfconvert_dir = bfconvert_dir
@@ -118,7 +133,17 @@ class TileStitcher:
             raise RuntimeError(f"Failed to import QuPath classes: {e}")
 
     def _collect_tif_files(self, input):
-        """Collect .tif files from the input directory or list."""
+
+        """
+        Collect .tif files from a given directory path or list.
+
+        Args:
+            input (str or list): A directory path or a list of .tif files.
+
+        Returns:
+            list: A list of .tif file paths.
+        """
+
         if isinstance(input, str) and os.path.isdir(input):
             return glob.glob(os.path.join(input, "**/*.tif"), recursive=True)
         elif isinstance(input, list):
@@ -130,6 +155,16 @@ class TileStitcher:
             return []
 
     def setup_bfconvert(self, bfconvert_dir):
+        """
+        Set up Bio-Formats conversion tool (bfconvert) in the given directory.
+
+        Args:
+            bfconvert_dir (str): Directory path for setting up bfconvert.
+
+        Returns:
+            str: Path to the bfconvert tool.
+        """
+
         setup_dir = bfconvert_dir
         parent_dir = os.path.dirname(setup_dir)
         tools_dir = os.path.join(parent_dir, "tools")
@@ -191,12 +226,33 @@ class TileStitcher:
         return self.bfconvert_path
 
     def _get_outfile(self, fileout):
-        """Get the output file object for the stitched image."""
+        """
+        Prepare the output file for the stitched image.
+
+        Args:
+            fileout (str): Path of the output file.
+
+        Returns:
+            tuple: A tuple containing the output file path and its Java file object.
+        """
+
         if not fileout.endswith(".ome.tif"):
             fileout += ".ome.tif"
         return fileout, jpype.JClass("java.io.File")(fileout)
 
     def parseRegion(self, file, z=0, t=0):
+        """
+        Parse an image region from a given TIFF file.
+
+        Args:
+            file (str): Path to the TIFF file.
+            z (int, optional): Z-position of the image. Defaults to 0.
+            t (int, optional): Time point of the image. Defaults to 0.
+
+        Returns:
+            ImageRegion: An ImageRegion object representing the parsed region.
+        """
+
         if self.checkTIFF(file):
             try:
                 # Extract the image region coordinates and dimensions from the TIFF tags
@@ -233,6 +289,18 @@ class TileStitcher:
 
     # Define a function to check if a file is a valid TIFF file
     def checkTIFF(self, file):
+        """
+        Check if a given file is a valid TIFF file.
+
+        This method reads the first few bytes of the file to determine if it conforms to TIFF specifications.
+
+        Args:
+            file (str): Path to the file to be checked.
+
+        Returns:
+            bool: True if the file is a valid TIFF file, False otherwise.
+        """
+
         try:
             with open(file, "rb") as f:
                 bytes = f.read(4)
@@ -255,10 +323,32 @@ class TileStitcher:
 
     # Define a helper function to convert two bytes to a short integer
     def toShort(self, b1, b2):
+        """
+        Convert two bytes to a short integer.
+
+        This helper function is used for interpreting the binary data in file headers, particularly for TIFF files.
+
+        Args:
+            b1 (byte): The first byte.
+            b2 (byte): The second byte.
+
+        Returns:
+            int: The short integer represented by the two bytes.
+        """
         return (b1 << 8) + b2
 
     # Define a function to parse TIFF file metadata and extract the image region
     def parse_regions(self, infiles):
+        """
+        Parse image regions from a list of TIFF files and build a sparse image server.
+
+        Args:
+            infiles (list): List of paths to TIFF files.
+
+        Returns:
+            SparseImageServer: A server containing the parsed image regions.
+        """
+
         builder = self.SparseImageServer.Builder()
         for f in infiles:
             try:
@@ -280,7 +370,15 @@ class TileStitcher:
         return builder.build()
 
     def _write_pyramidal_image_server(self, server, fileout, downsamples):
-        """Convert the parsed image regions into a pyramidal image server and write to file."""
+        """
+        Convert the parsed image regions into a pyramidal image server and write the output to a file.
+
+        Args:
+            server (SparseImageServer): The image server containing the stitched image regions.
+            fileout (java.io.File): The output file object where the stitched image will be written.
+            downsamples (list): A list of downsample levels to use in the pyramidal image server.
+        """
+
         # Convert the parsed regions into a pyramidal image server and write to file
 
         try:
@@ -305,8 +403,14 @@ class TileStitcher:
     ):
         """
         Perform image stitching on the provided TIFF files and output a stitched OME-TIFF image.
+
+        Args:
+            input_dir (str): Directory containing the input TIFF files.
+            output_filename (str): Filename for the output stitched image.
+            downsamples (list, optional): List of downsample levels. Defaults to [1, 8].
+            separate_series (bool, optional): Whether to separate the series. Defaults to False.
         """
-        print("Separating Series", separate_series)
+
         try:
             infiles = self._collect_tif_files(input_dir)
             output_file, file_jpype = self._get_outfile(output_filename)
@@ -330,30 +434,52 @@ class TileStitcher:
             print(f"Error running image stitching: {e}")
             traceback.print_exc()
 
-    def run_bfconvert(self, stitched_image_path, bfconverted_path=None):
+    def run_bfconvert(
+        self, stitched_image_path, bfconverted_path=None, delete_original=True
+    ):
+        """
+        Run the Bio-Formats conversion tool on a stitched image.
+
+        Args:
+            stitched_image_path (str): Path to the stitched image.
+            bfconverted_path (str, optional): Path for the converted image. If None, a default path is generated.
+            delete_original (bool): If True, delete the original stitched image after conversion.
+
+        """
+
         if not self.is_bfconvert_available():
             print("bfconvert command not available. Skipping bfconvert step.")
             return
 
         if not bfconverted_path:
             base_path = stitched_image_path.rsplit(".ome.tif", 1)[0]
-            bfconverted_path = f"{base_path}_separated.tif"
+            bfconverted_path = f"{base_path}_separated.ome.tif"
 
         bfconvert_command = f"./{self.bfconvert_path} -series 0 -separate '{stitched_image_path}' '{bfconverted_path}'"
 
         # Check if the file already exists and remove it to avoid prompting
         if not os.path.exists(bfconverted_path):
-
+            # Run bfconvert command
             try:
                 subprocess.run(bfconvert_command, shell=True, check=True)
                 print(f"bfconvert completed. Output file: {bfconverted_path}")
+
+                # Delete the original stitched image if requested
+                if delete_original:
+                    os.remove(stitched_image_path)
+                    print(f"Original stitched image deleted: {stitched_image_path}")
+
             except subprocess.CalledProcessError:
                 print("Error running bfconvert command.")
-        else:
-
-            print("File already exists")
 
     def is_bfconvert_available(self):
+        """
+        Check if the bfconvert tool is available.
+
+        Returns:
+            bool: True if bfconvert is available, False otherwise.
+        """
+
         try:
             result = subprocess.run(
                 [f"./{self.bfconvert_path}", "-version"],
@@ -368,6 +494,10 @@ class TileStitcher:
             return False
 
     def shutdown(self):
+        """
+        Shut down the Java Virtual Machine (JVM) if it's running.
+        """
+
         if jpype.isJVMStarted():
             jpype.shutdownJVM()
             print("JVM successfully shutdown")
