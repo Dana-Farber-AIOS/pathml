@@ -3,6 +3,7 @@ import os
 import subprocess
 import tempfile
 import zipfile
+from pathlib import Path
 from unittest.mock import mock_open, patch
 
 import javabridge
@@ -87,6 +88,59 @@ def test_parse_region_exception(mocked_check_tiff, mocked_tiff_file, tile_stitch
 
     # Assert that the exception message matches what we expect
     assert str(exc_info.value) == "Error: File not found dummy_file.tif"
+
+
+@pytest.mark.exclude
+@pytest.mark.parametrize(
+    "memory, expected_memory_option",
+    [
+        ("512m", "-Xmx512m"),
+        ("1g", "-Xmx1g"),
+        ("2048m", "-Xmx2048m"),
+        # Add more memory options if needed
+    ],
+)
+def test_format_jvm_options_memory(memory, expected_memory_option, tile_stitcher):
+    result = tile_stitcher.format_jvm_options([], memory)
+    assert result[0] == expected_memory_option
+
+
+@pytest.mark.exclude
+@pytest.mark.parametrize(
+    "qupath_jars, system_type, expected_classpath",
+    [
+        # Non-Windows paths
+        (
+            ["/path/to/jar1.jar", "/path/to/jar2.jar"],
+            "Linux",
+            "-Djava.class.path=/path/to/jar1.jar;/path/to/jar2.jar",
+        ),
+        (
+            ["/path/with multiple/spaces jar.jar", "/another/path.jar"],
+            "Linux",
+            "-Djava.class.path=/path/with multiple/spaces jar.jar;/another/path.jar",
+        ),
+        # Windows paths
+        (
+            ["C:\\path\\to\\jar1.jar", "C:\\path with space\\jar2.jar"],
+            "Windows",
+            '-Djava.class.path=C:\\path\\to\\jar1.jar;"C:\\path with space\\jar2.jar"',
+        ),
+        (
+            ["C:/mixed/slashes\\jar1.jar", "C:/mixed with space\\slashes jar2.jar"],
+            "Windows",
+            '-Djava.class.path=C:\\mixed\\slashes\\jar1.jar;"C:\\mixed with space\\slashes jar2.jar"',
+        ),
+        # Add more path variations if needed
+    ],
+)
+def test_format_jvm_options_classpath(
+    qupath_jars, system_type, expected_classpath, tile_stitcher
+):
+    with patch("platform.system", return_value=system_type):
+        # This will simulate the behavior as if the platform is the specified system_type
+        result = tile_stitcher.format_jvm_options(qupath_jars, "512m")
+        assert result[1] == expected_classpath
 
 
 @pytest.mark.exclude
@@ -227,8 +281,8 @@ def bfconvert_setup(tile_stitcher, tmp_path_factory):
 @pytest.mark.exclude
 def test_bfconvert_path_setup(tile_stitcher, bfconvert_setup):
     bfconvert_path = tile_stitcher.setup_bfconvert(str(bfconvert_setup))
-    assert (
-        bfconvert_path == tile_stitcher.bfconvert_path
+    assert str(bfconvert_path) == str(
+        tile_stitcher.bfconvert_path
     ), "bfconvert path not set correctly"
     assert os.path.exists(
         bfconvert_path
@@ -437,7 +491,7 @@ def test_integration_stitching_nodownsamples(tile_stitcher, sample_files, tmp_pa
     )
 
     # Check if the bfconvert path is set correctly
-    assert tile_stitcher.bfconvert_path == "./tools/bftools/bfconvert"
+    assert str(tile_stitcher.bfconvert_path) == str(Path("tools/bftools/bfconvert"))
 
     # Clean up the dummy file
     os.remove(bfconverted_file_path)
@@ -452,6 +506,7 @@ def test_checkTIFF_big_endian(tile_stitcher, tmp_path):
 
 
 @pytest.mark.exclude
+@pytest.mark.skipif(os.name == "nt", reason="chmod not used in windows")
 def test_setup_bfconvert_bad_zip_file(tile_stitcher, mock_tools_dir):
     with patch("os.path.exists", return_value=False):
         with patch("urllib.request.urlretrieve"):
