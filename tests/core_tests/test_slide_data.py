@@ -11,7 +11,14 @@ import pytest
 from dask.distributed import Client
 
 import pathml
-from pathml.core import HESlide, MultiparametricSlide, SlideData, Tile, CODEXSlide, IHCSlide
+from pathml.core import (
+    CODEXSlide,
+    HESlide,
+    IHCSlide,
+    MultiparametricSlide,
+    SlideData,
+    Tile,
+)
 from pathml.core.slide_data import infer_backend
 from pathml.preprocessing import BoxBlur, Pipeline
 
@@ -79,14 +86,16 @@ def test_multiparametric(multiparametric_slide):
     assert isinstance(multiparametric_slide, SlideData)
     assert multiparametric_slide.slide_type == pathml.types.IF
 
-    
+
 @pytest.fixture
 def ihc_slide_path():
     return "tests/testdata/small_HE.svs"
 
+
 @pytest.fixture
 def codex_slide_path():
     return "tests/testdata/small_vectra.qptiff"
+
 
 def test_ihc_slide_creation(ihc_slide_path):
     slide = IHCSlide(ihc_slide_path)
@@ -94,13 +103,13 @@ def test_ihc_slide_creation(ihc_slide_path):
     assert slide.slide_type == pathml.types.IHC
     # Assuming 'backend' needs to be explicitly passed for IHCSlide, otherwise, test its default if applicable
 
+
 def test_codex_slide_creation_with_default_backend(codex_slide_path):
     slide = CODEXSlide(codex_slide_path)
     assert isinstance(slide, SlideData)
     assert slide.slide_type == pathml.types.CODEX
     assert slide.backend == "bioformats"
 
-    
 
 @pytest.mark.parametrize("shape", [500, (500, 400)])
 @pytest.mark.parametrize("stride", [None, 1000])

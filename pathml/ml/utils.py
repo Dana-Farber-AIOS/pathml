@@ -97,6 +97,7 @@ def get_class_weights(loader):
     weights = compute_class_weight("balanced", classes=np.unique(ys), y=np.array(ys))
     return weights
 
+
 # Potential Typop
 # def center_crop_im_batch(batch, dims, batch_order="BCHW"):
 #     """
@@ -135,6 +136,7 @@ def get_class_weights(loader):
 
 #     return batch_cropped
 
+
 def center_crop_im_batch(batch, dims, batch_order="BCHW"):
     """
     Center crop images in a batch.
@@ -171,6 +173,7 @@ def center_crop_im_batch(batch, dims, batch_order="BCHW"):
             raise Exception("Input batch order not valid")
 
     return batch_cropped
+
 
 def dice_loss(true, logits, eps=1e-3):
     """

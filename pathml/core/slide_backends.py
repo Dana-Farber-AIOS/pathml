@@ -269,7 +269,7 @@ class BioFormatsBackend(SlideBackend):
         # disable verbose JVM logging if possible
         try:
             _init_logger()
-        except JavaException: # pragma: no cover
+        except JavaException:  # pragma: no cover
             pass
         # java maximum array size of 2GB constrains image size
         ImageReader = bioformats.formatreader.make_image_reader_class()

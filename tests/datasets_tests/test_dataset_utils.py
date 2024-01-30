@@ -2,6 +2,8 @@
 Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
+import importlib.util
+
 import numpy as np
 import pytest
 import torch.nn as nn
@@ -10,7 +12,6 @@ from skimage.draw import ellipse
 from skimage.measure import label, regionprops
 
 from pathml.datasets.utils import DeepPatchFeatureExtractor
-import importlib.util
 
 
 def requires_torchvision(func):
@@ -117,6 +118,7 @@ def test_feature_extractor(entity, patch_size, threshold, with_instance_masking)
         assert features.shape[0] == len(regions)
     else:
         assert features.shape[0] <= len(regions)
+
 
 @requires_torchvision
 @pytest.mark.parametrize("patch_size", [1, 64, 128])
