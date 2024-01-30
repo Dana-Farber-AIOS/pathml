@@ -75,19 +75,19 @@ conda activate pathml
 
 ### Platform-Specific External Dependencies
 
-#### Linux
+#### Install external dependencies (Linux) with [Apt](https://ubuntu.com/server/docs/package-management):
 ````
 sudo apt-get install openslide-tools g++ gcc libblas-dev liblapack-dev
 ````
 
-#### macOS
+#### Install external dependencies (MacOS) with [Brew](www.brew.sh):
 ````
 brew install openslide
 ````
 
 #### Windows
 
-##### Option A: Using vcpkg
+##### Option A: Install with [vcpkg](https://vcpkg.io/en/):
 ````
 vcpkg install openslide
 ````
