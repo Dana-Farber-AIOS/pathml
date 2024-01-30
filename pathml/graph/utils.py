@@ -26,7 +26,13 @@ class Graph(Data):
     """
 
     def __init__(
-        self, node_centroids, node_features, edge_index, node_labels=None, target=None
+        self,
+        node_centroids,
+        edge_index,
+        node_features=None,
+        node_labels=None,
+        edge_features=None,
+        target=None,
     ):
         super().__init__()
         self.node_centroids = node_centroids
@@ -34,6 +40,7 @@ class Graph(Data):
         self.edge_index = edge_index
         self.node_labels = node_labels
         self.target = target
+        self.edge_features = edge_features
 
     def __inc__(self, key, value, *args, **kwargs):
         if key == "edge_index":

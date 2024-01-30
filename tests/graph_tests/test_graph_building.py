@@ -8,10 +8,9 @@ import pytest
 import torch
 from skimage.draw import ellipse
 from skimage.measure import label, regionprops
-from sklearn.metrics import pairwise_distances
 
 from pathml.graph import KNNGraphBuilder, RAGGraphBuilder
-from pathml.graph.preprocessing import CentroidGraphBuilder
+from pathml.graph.preprocessing import MSTGraphBuilder
 
 
 def make_fake_instance_maps(num, image_size, ellipse_height, ellipse_width):
@@ -40,49 +39,95 @@ def make_fake_instance_maps(num, image_size, ellipse_height, ellipse_width):
 @pytest.mark.parametrize("thresh", [0, 10, 200])
 @pytest.mark.parametrize("add_loc_feats", [True, False])
 @pytest.mark.parametrize("add_node_labels", [True, False])
-def test_knn_graph_building(k, thresh, add_loc_feats, add_node_labels):
-    image_size = (1024, 2048)
+@pytest.mark.parametrize("return_networkx", [True, False])
+@pytest.mark.parametrize("use_centroids", [True, False])
+def test_knn_graph_building(
+    k, thresh, add_loc_feats, add_node_labels, return_networkx, use_centroids
+):
 
-    instance_map = make_fake_instance_maps(
-        num=100, image_size=image_size, ellipse_height=10, ellipse_width=8
-    )
-    regions = regionprops(instance_map)
+    if not use_centroids:
+        image_size = (1024, 2048)
 
-    features = torch.randn(len(regions), 512)
-    if add_node_labels:
-        annotation = torch.randn(len(regions), 4)
+        instance_map = make_fake_instance_maps(
+            num=100, image_size=image_size, ellipse_height=10, ellipse_width=8
+        )
+        regions = regionprops(instance_map)
+        features = torch.randn(len(regions), 512)
+        num_nodes = len(regions)
+
+        if add_node_labels:
+            annotation = torch.randn(len(regions), 4)
+        else:
+            annotation = None
+
+        graph_builder = KNNGraphBuilder(
+            k=k,
+            thresh=thresh,
+            add_loc_feats=add_loc_feats,
+            return_networkx=return_networkx,
+        )
+
+        graph = graph_builder.process(
+            instance_map, features, annotation=annotation, target=1
+        )
+
+    elif use_centroids:
+        centroids = torch.randn(100, 2)
+        features = torch.randn(100, 512)
+        if add_node_labels:
+            annotation = torch.randn(100, 4)
+        else:
+            annotation = None
+        num_nodes = 100
+
+        graph_builder = KNNGraphBuilder(
+            k=k,
+            thresh=thresh,
+            add_loc_feats=add_loc_feats,
+            return_networkx=return_networkx,
+        )
+
+        graph = graph_builder.process_with_centroids(
+            centroids,
+            features,
+            annotation=annotation,
+            image_size=(1000, 1000),
+            target=1,
+        )
+
+    if return_networkx:
+        assert len(graph.nodes) == num_nodes
+        if add_loc_feats:
+            assert len(graph.nodes[0]["node_features"]) == 514
+        else:
+            assert len(graph.nodes[0]["node_features"]) == 512
     else:
-        annotation = None
+        assert graph.node_centroids.shape == (num_nodes, 2)
+        assert graph.edge_index.shape[0] == 2
+        if add_loc_feats:
+            assert graph.node_features.shape == (num_nodes, 512 + 2)
+        else:
+            assert graph.node_features.shape == (num_nodes, 512)
 
-    graph_builder = KNNGraphBuilder(k=k, thresh=thresh, add_loc_feats=add_loc_feats)
-
-    graph = graph_builder.process(
-        instance_map, features, annotation=annotation, target=1
-    )
-
-    assert graph.node_centroids.shape == (len(regions), 2)
-    assert graph.edge_index.shape[0] == 2
-    if add_loc_feats:
-        assert graph.node_features.shape == (len(regions), 512 + 2)
-    else:
-        assert graph.node_features.shape == (len(regions), 512)
-
-    if add_node_labels:
-        assert graph.node_labels.shape == (len(regions), 4)
+        if add_node_labels:
+            assert graph.node_labels.shape == (num_nodes, 4)
 
 
 @pytest.mark.parametrize("kernel_size", [1, 3, 10])
 @pytest.mark.parametrize("hops", [1, 2, 5])
 @pytest.mark.parametrize("add_loc_feats", [True, False])
 @pytest.mark.parametrize("add_node_labels", [True, False])
-def test_rag_graph_building(kernel_size, hops, add_loc_feats, add_node_labels):
+@pytest.mark.parametrize("return_networkx", [True, False])
+def test_rag_graph_building(
+    kernel_size, hops, add_loc_feats, add_node_labels, return_networkx
+):
     image_size = (1024, 2048)
 
     instance_map = make_fake_instance_maps(
         num=100, image_size=image_size, ellipse_height=10, ellipse_width=8
     )
     regions = regionprops(instance_map)
-
+    num_nodes = len(regions)
     features = torch.randn(len(regions), 512)
     if add_node_labels:
         annotation = torch.randn(len(regions), 4)
@@ -90,53 +135,107 @@ def test_rag_graph_building(kernel_size, hops, add_loc_feats, add_node_labels):
         annotation = None
 
     graph_builder = RAGGraphBuilder(
-        kernel_size=kernel_size, hops=hops, add_loc_feats=add_loc_feats
+        kernel_size=kernel_size,
+        hops=hops,
+        add_loc_feats=add_loc_feats,
+        return_networkx=return_networkx,
     )
 
     graph = graph_builder.process(
         instance_map, features, annotation=annotation, target=1
     )
 
-    assert graph.node_centroids.shape == (len(regions), 2)
-    assert graph.edge_index.shape[0] == 2
-    if add_loc_feats:
-        assert graph.node_features.shape == (len(regions), 514)
+    if return_networkx:
+        assert len(graph.nodes) == num_nodes
+        if add_loc_feats:
+            assert len(graph.nodes[0]["node_features"]) == 514
+        else:
+            assert len(graph.nodes[0]["node_features"]) == 512
     else:
-        assert graph.node_features.shape == (len(regions), 512)
+        assert graph.node_centroids.shape == (num_nodes, 2)
+        assert graph.edge_index.shape[0] == 2
+        if add_loc_feats:
+            assert graph.node_features.shape == (num_nodes, 512 + 2)
+        else:
+            assert graph.node_features.shape == (num_nodes, 512)
 
-    if add_node_labels:
-        assert graph.node_labels.shape == (len(regions), 4)
-
-
-def test_centroid_graph_builder_initialization():
-    centroids = np.array([[0, 0], [1, 1], [2, 2]])
-    builder = CentroidGraphBuilder(centroids)
-    assert np.array_equal(builder.centroids, centroids)
-
-
-def test_knn_graph_construction():
-    centroids = np.array([[0, 0], [1, 1], [2, 2]])
-    builder = CentroidGraphBuilder(centroids)
-    knn_graph = builder.build_knn_graph(k=2)
-    assert len(knn_graph.nodes) == 3
-    assert len(knn_graph.edges) == 3  # This depends on the value of k
+        if add_node_labels:
+            assert graph.node_labels.shape == (num_nodes, 4)
 
 
-def test_mst_graph_construction():
-    centroids = np.array([[0, 0], [1, 1], [2, 2]])
-    builder = CentroidGraphBuilder(centroids)
-    mst_graph = builder.build_knn_mst_graph(k=2)
-    assert len(mst_graph.nodes) == 3
-    assert len(mst_graph.edges) <= len(builder.build_knn_graph(k=2).edges)
+@pytest.mark.parametrize("k", [1, 10, 50])
+@pytest.mark.parametrize("thresh", [0, 10, 200])
+@pytest.mark.parametrize("add_loc_feats", [True, False])
+@pytest.mark.parametrize("add_node_labels", [True, False])
+@pytest.mark.parametrize("return_networkx", [True, False])
+@pytest.mark.parametrize("use_centroids", [True, False])
+def test_mst_graph_building(
+    k, thresh, add_loc_feats, add_node_labels, return_networkx, use_centroids
+):
 
+    if not use_centroids:
+        image_size = (1024, 2048)
 
-def test_edge_weights():
-    centroids = np.array([[0, 0], [1, 1], [2, 2]])
-    builder = CentroidGraphBuilder(centroids)
-    knn_graph = builder.build_knn_graph(k=2)
-    distances = pairwise_distances(centroids)
+        instance_map = make_fake_instance_maps(
+            num=100, image_size=image_size, ellipse_height=10, ellipse_width=8
+        )
+        regions = regionprops(instance_map)
+        features = torch.randn(len(regions), 512)
+        num_nodes = len(regions)
 
-    # Ensure the indices in the graph correspond to those in the centroids array
-    for u, v, data in knn_graph.edges(data=True):
-        weight = data["weight"]
-        assert np.isclose(weight, distances[int(u)][int(v)], atol=1e-6)
+        if add_node_labels:
+            annotation = torch.randn(len(regions), 4)
+        else:
+            annotation = None
+
+        graph_builder = MSTGraphBuilder(
+            k=k,
+            thresh=thresh,
+            add_loc_feats=add_loc_feats,
+            return_networkx=return_networkx,
+        )
+
+        graph = graph_builder.process(
+            instance_map, features, annotation=annotation, target=1
+        )
+
+    elif use_centroids:
+        centroids = torch.randn(100, 2)
+        features = torch.randn(100, 512)
+        if add_node_labels:
+            annotation = torch.randn(100, 4)
+        else:
+            annotation = None
+        num_nodes = 100
+
+        graph_builder = KNNGraphBuilder(
+            k=k,
+            thresh=thresh,
+            add_loc_feats=add_loc_feats,
+            return_networkx=return_networkx,
+        )
+
+        graph = graph_builder.process_with_centroids(
+            centroids,
+            features,
+            annotation=annotation,
+            image_size=(1000, 1000),
+            target=1,
+        )
+
+    if return_networkx:
+        assert len(graph.nodes) == num_nodes
+        if add_loc_feats:
+            assert len(graph.nodes[0]["node_features"]) == 514
+        else:
+            assert len(graph.nodes[0]["node_features"]) == 512
+    else:
+        assert graph.node_centroids.shape == (num_nodes, 2)
+        assert graph.edge_index.shape[0] == 2
+        if add_loc_feats:
+            assert graph.node_features.shape == (num_nodes, 512 + 2)
+        else:
+            assert graph.node_features.shape == (num_nodes, 512)
+
+        if add_node_labels:
+            assert graph.node_labels.shape == (num_nodes, 4)

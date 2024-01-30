@@ -22,6 +22,7 @@ from skimage.color.colorconv import rgb2hed
 from skimage.measure import regionprops
 from skimage.segmentation import slic
 from sklearn.neighbors import kneighbors_graph
+from torch_geometric.utils.convert import from_networkx, to_networkx
 
 from pathml.graph.utils import Graph, two_hop
 
@@ -105,8 +106,10 @@ class BaseGraphBuilder:
     Args:
         nr_annotation_classes (int): Number of classes in annotation. Used only if setting node labels.
         annotation_background_class (int): Background class label in annotation. Used only if setting node labels.
-        add_loc_feats (bool): Flag to include location-based features (ie normalized centroids) in node feature representation.
-                              Defaults to False.
+        add_loc_feats (bool): Flag to include location-based features (ie normalized centroids) in node feature
+                              representation. Defaults to False.
+        return_networkx (bool): Whether to return as a networkx graph object. Deafults to returning a Pytorvh Geometric
+                                Data object.
     """
 
     def __init__(
@@ -114,16 +117,18 @@ class BaseGraphBuilder:
         nr_annotation_classes: int = 5,
         annotation_background_class=None,
         add_loc_feats=False,
+        return_networkx=False,
         **kwargs,
     ):
         """Base Graph Builder constructor."""
         self.nr_annotation_classes = nr_annotation_classes
         self.annotation_background_class = annotation_background_class
         self.add_loc_feats = add_loc_feats
+        self.return_networkx = return_networkx
         super().__init__(**kwargs)
 
     def process(  # type: ignore[override]
-        self, instance_map, features, annotation=None, target=None
+        self, instance_map, features=None, annotation=None, target=None
     ):
         """Generates a graph from a given instance_map and features"""
         # add nodes
@@ -136,23 +141,114 @@ class BaseGraphBuilder:
         self.centroids = self._get_node_centroids(instance_map)
 
         # add node content
-        node_features = self._compute_node_features(features, image_size)
+        if features is not None:
+            node_features = self._compute_node_features(features, image_size)
+        else:
+            node_features = None
 
         if annotation is not None:
-            node_labels = self._set_node_labels(instance_map, annotation)
+            node_labels = self._set_node_labels(annotation, self.centroids.shape[0])
         else:
             node_labels = None
 
         # build edges
         edges = self._build_topology(instance_map)
 
-        return Graph(
+        # compute edge features
+        edge_features = self._compute_edge_features(edges)
+
+        # make torch geometric data object
+        graph = Graph(
+            node_centroids=self.centroids,
+            node_features=node_features,
+            edge_index=edges,
+            edge_features=edge_features,
+            node_labels=node_labels,
+            target=torch.tensor(target) if target is not None else None,
+        )
+
+        if self.return_networkx:
+
+            node_attrs = [
+                "node_centroids",
+                "node_features" if node_features is not None else None,
+                "node_labels" if node_labels is not None else None,
+            ]
+            node_attrs = list(filter(lambda item: item is not None, node_attrs))
+
+            edge_attrs = ["edge_features" if edge_features is not None else None]
+            edge_attrs = list(filter(lambda item: item is not None, edge_attrs))
+
+            graph_attrs = ["target" if target is not None else None]
+            graph_attrs = list(filter(lambda item: item is not None, graph_attrs))
+
+            return to_networkx(
+                graph,
+                node_attrs=node_attrs,
+                edge_attrs=edge_attrs,
+                graph_attrs=graph_attrs,
+            )
+        else:
+            return graph
+
+    def process_with_centroids(
+        self, centroids, features=None, image_size=None, annotation=None, target=None
+    ):
+        """Generates a graph from a given node centroids and features"""
+
+        self.centroids = centroids
+
+        # add nodes
+        self.num_nodes = self.centroids.shape[0]
+
+        # add node content
+        if features is not None:
+            node_features = self._compute_node_features(features, image_size)
+        else:
+            node_features = None
+
+        if annotation is not None:
+            node_labels = self._set_node_labels(annotation, self.num_nodes)
+        else:
+            node_labels = None
+
+        # build edges
+        edges = self._build_topology(None)
+
+        # compute edge features
+        edge_features = self._compute_edge_features(edges)
+
+        # make torch geometric data object
+        graph = Graph(
             node_centroids=self.centroids,
             node_features=node_features,
             edge_index=edges,
             node_labels=node_labels,
-            target=torch.tensor(target),
+            target=torch.tensor(target) if target is not None else None,
         )
+
+        if self.return_networkx:
+            node_attrs = [
+                "node_centroids",
+                "node_features" if node_features is not None else None,
+                "node_labels" if node_labels is not None else None,
+            ]
+            node_attrs = list(filter(lambda item: item is not None, node_attrs))
+
+            edge_attrs = ["edge_features" if edge_features is not None else None]
+            edge_attrs = list(filter(lambda item: item is not None, edge_attrs))
+
+            graph_attrs = ["target" if target is not None else None]
+            graph_attrs = list(filter(lambda item: item is not None, graph_attrs))
+
+            return to_networkx(
+                graph,
+                node_attrs=node_attrs,
+                edge_attrs=edge_attrs,
+                graph_attrs=graph_attrs,
+            )
+        else:
+            return graph
 
     def _get_node_centroids(self, instance_map):
         """Get the centroids of the graphs"""
@@ -202,6 +298,10 @@ class BaseGraphBuilder:
         """Set the node labels of the graphs"""
 
     @abstractmethod
+    def _compute_edge_features(self, edges):
+        """Set the provided edge features"""
+
+    @abstractmethod
     def _build_topology(self, instance_map):
         """Generate the graph topology from the provided instance_map"""
 
@@ -225,11 +325,10 @@ class KNNGraphBuilder(BaseGraphBuilder):
         self.thresh = thresh
         super().__init__(**kwargs)
 
-    def _set_node_labels(self, instance_map, annotation):
+    def _set_node_labels(self, annotation, num_nodes):
         """Set the node labels of the graphs using annotation"""
-        regions = regionprops(instance_map)
-        assert annotation.shape[0] == len(
-            regions
+        assert (
+            annotation.shape[0] == num_nodes
         ), "Number of annotations do not match number of nodes"
         return annotation
 
@@ -275,16 +374,18 @@ class RAGGraphBuilder(BaseGraphBuilder):
         self.hops = hops
         super().__init__(**kwargs)
 
-    def _set_node_labels(self, instance_map, annotation):
+    def _set_node_labels(self, annotation, num_nodes):
         """Set the node labels of the graphs using annotation"""
-        regions = regionprops(instance_map)
-        assert annotation.shape[0] == len(
-            regions
+        assert (
+            annotation.shape[0] == num_nodes
         ), "Number of annotations do not match number of nodes"
         return annotation
 
     def _build_topology(self, instance_map):
         """Create the graph topology from the instance connectivty in the instance_map"""
+
+        if instance_map is None:
+            raise ValueError("Instance map cannot be None for RAG Graph Building")
 
         regions = regionprops(instance_map)
         instance_ids = torch.empty(len(regions), dtype=torch.uint8)
@@ -305,6 +406,66 @@ class RAGGraphBuilder(BaseGraphBuilder):
 
         for _ in range(self.hops - 1):
             edge_list = two_hop(edge_list, self.num_nodes)
+        return edge_list
+
+
+class MSTGraphBuilder(BaseGraphBuilder):
+    """
+    Minimum Spanning Tree Graph class for graph building.
+
+    Args:
+        k (int, optional): Number of neighbors. Defaults to 5.
+        thresh (int, optional): Maximum allowed distance between 2 nodes. Defaults to None (no thresholding).
+
+    Returns:
+        A pathml.graph.utils.Graph object containing node and edge information.
+    """
+
+    def __init__(self, k=5, thresh=None, **kwargs):
+        """Create a graph builder that uses the (thresholded) kNN algorithm to define the graph topology."""
+
+        self.k = k
+        self.thresh = thresh
+        super().__init__(**kwargs)
+
+    def _set_node_labels(self, annotation, num_nodes):
+        """Set the node labels of the graphs using annotation"""
+        assert (
+            annotation.shape[0] == num_nodes
+        ), "Number of annotations do not match number of nodes"
+        return annotation
+
+    def _build_topology(self, annotation):
+        """Build topology using (thresholded) kNN"""
+
+        # build kNN adjacency
+        adjacency = kneighbors_graph(
+            self.centroids,
+            self.k,
+            mode="distance",
+            include_self=False,
+            metric="euclidean",
+        ).toarray()
+
+        # filter edges that are too far (ie larger than thresh)
+        if self.thresh is not None:
+            adjacency[adjacency > self.thresh] = 0
+
+        adjacency_nz = adjacency.nonzero()
+        num_edges = np.array(adjacency_nz).T.shape[0]
+        edges_and_weights = np.hstack(
+            [
+                np.transpose(adjacency_nz),
+                np.reshape(adjacency[adjacency_nz], (num_edges, 1)),
+            ]
+        )
+        knn_graph = nx.Graph()
+        for i, j, weight in edges_and_weights:
+            knn_graph.add_edge(i, j, weight=weight)
+
+        mst_graph = nx.minimum_spanning_tree(knn_graph, weight="weight")
+        graph = from_networkx(mst_graph)
+        edge_list = graph.edge_index
         return edge_list
 
 
