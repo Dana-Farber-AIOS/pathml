@@ -743,7 +743,7 @@ class StainNormalizationHE(Transform):
         """
         try:
             import spams
-        except (ImportError, ModuleNotFoundError):
+        except (ImportError, ModuleNotFoundError):  # pragma: no cover
             raise Exception("Vahadane method requires `spams` package to be installed")
         # convert to Optical Density (OD) space
         image_OD = RGB_to_OD(image)
@@ -847,7 +847,7 @@ class StainNormalizationHE(Transform):
         """
         try:
             import spams
-        except (ImportError, ModuleNotFoundError):
+        except (ImportError, ModuleNotFoundError):  # pragma: no cover
             raise Exception("Vahadane method requires `spams` package to be installed")
         image_OD = RGB_to_OD(image).reshape(-1, 3)
 
@@ -1193,7 +1193,7 @@ class LabelArtifactTileHE(Transform):
             tile.labels = {self.label_name: label}
 
 
-class DeconvolveMIF(Transform):
+class DeconvolveMIF(Transform):  # pragma: no cover
     """
     NOTE: This function is WIP and untested.
 

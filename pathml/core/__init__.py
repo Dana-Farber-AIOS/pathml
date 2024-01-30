@@ -3,6 +3,7 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
+from .h5managers import h5pathManager
 from .masks import Masks
 from .slide_backends import BioFormatsBackend, DICOMBackend, OpenSlideBackend
 from .slide_data import (
