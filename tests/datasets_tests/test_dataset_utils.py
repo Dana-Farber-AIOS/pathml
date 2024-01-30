@@ -10,6 +10,14 @@ from skimage.draw import ellipse
 from skimage.measure import label, regionprops
 
 from pathml.datasets.utils import DeepPatchFeatureExtractor
+import importlib.util
+
+
+def requires_torchvision(func):
+    """Decorator to skip tests that require torchvision."""
+    torchvision_installed = importlib.util.find_spec("torchvision") is not None
+    reason = "torchvision is required"
+    return pytest.mark.skipif(not torchvision_installed, reason=reason)(func)
 
 
 class SimpleCNN(nn.Module):
@@ -110,12 +118,12 @@ def test_feature_extractor(entity, patch_size, threshold, with_instance_masking)
     else:
         assert features.shape[0] <= len(regions)
 
-
+@requires_torchvision
 @pytest.mark.parametrize("patch_size", [1, 64, 128])
 @pytest.mark.parametrize("entity", ["cell", "tissue"])
 @pytest.mark.parametrize("threshold", [0, 0.1, 0.8])
 def test_feature_extractor_torchvision(entity, patch_size, threshold):
-    pytest.importorskip("torchvision")
+    # pytest.importorskip("torchvision")
 
     image_size = (256, 256)
 
