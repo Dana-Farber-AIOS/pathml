@@ -28,6 +28,7 @@ Imaging datasets in cancer research are growing exponentially in both quantity a
 :construction: the `dev` branch is under active development, with experimental features, bug fixes, and refactors that may happen at any time! 
 Stable versions are available as tagged releases on GitHub, or as versioned releases on PyPI
 
+
 # Installation
 
 There are several ways to install `PathML`:
@@ -37,7 +38,7 @@ There are several ways to install `PathML`:
 3. Use the PathML Docker container
 
 Options (1) and (2) require that you first install all external dependencies:
-* openslide
+* OpenSlide
 * JDK 17
 
 We recommend using conda for environment management. 
@@ -64,30 +65,75 @@ Please refer to [this Anaconda blog post](https://www.anaconda.com/blog/a-faster
 
 ## Installation option 1: pip install
 
+### Common Steps
+
 Create conda environment:
 ````
-conda create --name pathml python=3.8
+conda create --name pathml python=3.9
 conda activate pathml
 ````
 
-Install external dependencies (Linux) with [Apt](https://ubuntu.com/server/docs/package-management):
+### Platform-Specific External Dependencies
+
+#### Linux
 ````
 sudo apt-get install openslide-tools g++ gcc libblas-dev liblapack-dev
 ````
 
-Install external dependencies (MacOS) with [Brew](www.brew.sh):
+#### macOS
 ````
 brew install openslide
 ````
 
-Install [OpenJDK 17](https://openjdk.java.net/):
+#### Windows
+
+##### Option A: Using vcpkg
 ````
-conda install -c conda-forge 'openjdk==17.0.9'
+vcpkg install openslide
 ````
 
-Optionally install CUDA (instructions [here](#CUDA))
+##### Option B: Using Pre-built OpenSlide Binaries (Alternative)
+For Windows users, an alternative to using `vcpkg` is to download and use pre-built OpenSlide binaries. This method is recommended if you prefer a quicker setup.
 
-Install `PathML` from PyPI:
+1. Download the OpenSlide Windows binaries from the [OpenSlide Downloads](https://openslide.org/download/) page.
+2. Extract the archive to your desired location, e.g., `C:\OpenSlide\`.
+
+**Importing PathML in Windows:**
+
+Insert the following code snippet at the beginning of your Python script or Jupyter notebook before importing PathML. This code sets up the DLL directory for OpenSlide, ensuring that the library is properly loaded:
+
+```python
+
+# The path can also be read from a config file, etc.
+OPENSLIDE_PATH = r'c:\path\to\openslide-win64\bin'
+
+import os
+if hasattr(os, 'add_dll_directory'):
+    # Windows-specific setup
+    with os.add_dll_directory(OPENSLIDE_PATH):
+        import openslide
+else:
+    # For other OSes, this step is not needed
+    import openslide
+
+# Now you can proceed with using PathML
+import pathml
+
+```
+This code snippet ensures that the OpenSlide DLLs are correctly found by Python on Windows systems. Replace c:\path\to\openslide-win64\bin with the actual path where you extracted the OpenSlide binaries.
+
+If you encounter any DLL load failures, verify that the OpenSlide `bin` directory is correctly added to your `PATH`.
+
+### Install OpenJDK 17
+````
+conda install -c conda-forge 'openjdk<=18.0'
+````
+
+### Optionally install CUDA
+
+[Follow instructions here](#CUDA)
+
+### Install `PathML` from PyPI
 ````
 pip install pathml
 ````
