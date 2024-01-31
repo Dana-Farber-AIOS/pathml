@@ -66,7 +66,7 @@ class DeepPatchFeatureExtractor:
     Args:
         patch_size (int): Desired size of patch.
         batch_size (int): Desired size of batch.
-        architecture (str or nn.Module): String of architecture. According to torchvision.models syntax, path to local model or nn.Module class directly.
+        architecture (str or nn.Module): String of architecture. According to torchvision.models syntax, or nn.Module class directly.
         entity (str): Entity to be processed. Must be one of 'cell' or 'tissue'. Defaults to 'cell'.
         device (torch.device): Torch Device used for inference.
         fill_value (int): Value to fill outside the instance maps. Defaults to 255.
@@ -105,11 +105,11 @@ class DeepPatchFeatureExtractor:
         self.device = device
 
         if isinstance(architecture, nn.Module):
-            self.model = architecture.to(self.device)
-        elif architecture.endswith(".pth"):
-            model = self._get_local_model(path=architecture)
-            self._validate_model(model)
-            self.model = self._remove_layers(model, extraction_layer)
+            model = architecture.to(self.device)
+            if extraction_layer is not None:
+                self.model = _remove_modules(model, extraction_layer)
+            else:
+                self.model = model
         else:
             try:
                 global torchvision
@@ -154,11 +154,6 @@ class DeepPatchFeatureExtractor:
         features = self.model(dummy_patch)
         return features.shape[-1]
 
-    def _get_local_model(self, path):
-        """Load a model from a local path."""
-        model = torch.load(path, map_location=self.device)
-        return model
-
     def _get_torchvision_model(self, architecture):
         """Returns a torchvision model from a given architecture string."""
 
@@ -193,14 +188,6 @@ class DeepPatchFeatureExtractor:
                 # remove all layers in the feature extractor after the extraction layer
                 model.features = _remove_modules(model.features, extraction_layer)
         return model
-
-    @staticmethod
-    def _preprocess_architecture(architecture):
-        """Preprocess the architecture string to avoid characters that are not allowed as paths."""
-        if architecture.endswith(".pth"):
-            return f"Local({architecture.replace('/', '_')})"
-        else:
-            return architecture
 
     def _collate_patches(self, batch):
         """Patch collate function"""

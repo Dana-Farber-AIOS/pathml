@@ -5,15 +5,69 @@ License: GNU GPL 2.0
 
 import numpy as np
 import pytest
+import torch
 from skimage.draw import ellipse
 from skimage.measure import label
+from torch_geometric.loader import DataLoader
 
 import pathml
 from pathml.core import SlideData
-from pathml.graph import build_assignment_matrix
+from pathml.graph import Graph, HACTPairData, build_assignment_matrix
 from pathml.graph.utils import get_full_instance_map
 from pathml.preprocessing import Pipeline
 from pathml.preprocessing.transforms import Transform
+
+
+@pytest.mark.parametrize("batch_size", [1, 8, 32])
+def test_pathml_graph(batch_size):
+
+    edge_index = torch.tensor([[0, 1, 1, 2], [1, 0, 2, 1]], dtype=torch.long)
+    node_centroids = torch.randn(3, 2)
+    node_features = torch.randn(3, 2)
+
+    graph_obj = Graph(
+        edge_index=edge_index,
+        node_centroids=node_centroids,
+        node_features=node_features,
+    )
+    loader = DataLoader([graph_obj] * batch_size, batch_size=batch_size)
+    batch = next(iter(loader))
+
+    assert batch.node_centroids.shape == (batch_size * 3, 2)
+    assert batch.node_features.shape == (batch_size * 3, 2)
+    assert batch.edge_index.shape == (2, batch_size * 4)
+    assert batch.batch.shape == (batch_size * 3,)
+
+
+@pytest.mark.parametrize("batch_size", [1, 8, 32])
+def test_pathml_hactnet_graph(batch_size):
+
+    edge_index = torch.tensor([[0, 1, 1, 2], [1, 0, 2, 1]], dtype=torch.long)
+    node_features = torch.randn(3, 2)
+
+    x_cell = node_features
+    edge_index_cell = edge_index
+    x_tissue = node_features
+    edge_index_tissue = edge_index
+    assignment = edge_index
+    target = torch.tensor([2])
+
+    graph_obj = HACTPairData(
+        x_cell=x_cell,
+        edge_index_cell=edge_index_cell,
+        x_tissue=x_tissue,
+        edge_index_tissue=edge_index_tissue,
+        assignment=assignment,
+        target=target,
+    )
+    loader = DataLoader([graph_obj] * batch_size, batch_size=batch_size)
+    batch = next(iter(loader))
+
+    assert batch.x_cell.shape == (batch_size * 3, 2)
+    assert batch.x_tissue.shape == (batch_size * 3, 2)
+
+    assert batch.edge_index_cell.shape == (2, batch_size * 4)
+    assert batch.edge_index_tissue.shape == (2, batch_size * 4)
 
 
 def make_fake_instance_maps(num, image_size, ellipse_height, ellipse_width):

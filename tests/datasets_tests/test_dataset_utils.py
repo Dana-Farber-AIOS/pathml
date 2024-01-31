@@ -90,7 +90,10 @@ def make_fake_image(instance_map):
 @pytest.mark.parametrize("entity", ["cell", "tissue"])
 @pytest.mark.parametrize("threshold", [0, 0.1, 0.8])
 @pytest.mark.parametrize("with_instance_masking", [True, False])
-def test_feature_extractor(entity, patch_size, threshold, with_instance_masking):
+@pytest.mark.parametrize("extraction_layer", [None, "fc1"])
+def test_feature_extractor(
+    entity, patch_size, threshold, with_instance_masking, extraction_layer
+):
 
     image_size = (256, 256)
 
@@ -111,6 +114,7 @@ def test_feature_extractor(entity, patch_size, threshold, with_instance_masking)
         resize_size=224,
         threshold=threshold,
         with_instance_masking=with_instance_masking,
+        extraction_layer=extraction_layer,
     )
     features = extractor.process(image, instance_map)
 
@@ -124,7 +128,8 @@ def test_feature_extractor(entity, patch_size, threshold, with_instance_masking)
 @pytest.mark.parametrize("patch_size", [1, 64, 128])
 @pytest.mark.parametrize("entity", ["cell", "tissue"])
 @pytest.mark.parametrize("threshold", [0, 0.1, 0.8])
-def test_feature_extractor_torchvision(entity, patch_size, threshold):
+@pytest.mark.parametrize("extraction_layer", [None, "fc"])
+def test_feature_extractor_torchvision(entity, patch_size, threshold, extraction_layer):
     # pytest.importorskip("torchvision")
 
     image_size = (256, 256)
@@ -143,6 +148,43 @@ def test_feature_extractor_torchvision(entity, patch_size, threshold):
         fill_value=255,
         resize_size=224,
         threshold=threshold,
+        extraction_layer=extraction_layer,
+    )
+    features = extractor.process(image, instance_map)
+
+    if threshold == 0:
+        assert features.shape[0] == len(regions)
+    else:
+        assert features.shape[0] <= len(regions)
+
+
+@requires_torchvision
+@pytest.mark.parametrize("patch_size", [64, 128])
+@pytest.mark.parametrize("entity", ["cell", "tissue"])
+@pytest.mark.parametrize("threshold", [0.8])
+@pytest.mark.parametrize("extraction_layer", [None, "12"])
+def test_feature_extractor_torchvision_no_resnet(
+    entity, patch_size, threshold, extraction_layer
+):
+    # pytest.importorskip("torchvision")
+
+    image_size = (256, 256)
+
+    instance_map = make_fake_instance_maps(
+        num=20, image_size=image_size, ellipse_height=20, ellipse_width=8
+    )
+    image = make_fake_image(instance_map.copy())
+    regions = regionprops(instance_map)
+
+    extractor = DeepPatchFeatureExtractor(
+        patch_size=patch_size,
+        batch_size=1,
+        entity=entity,
+        architecture="mobilenet_v3_small",
+        fill_value=255,
+        resize_size=224,
+        threshold=threshold,
+        extraction_layer=extraction_layer,
     )
     features = extractor.process(image, instance_map)
 

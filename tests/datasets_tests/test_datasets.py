@@ -1,15 +1,16 @@
 import os
+import shutil
 import tempfile
 
 import h5py
 import numpy as np
 import pytest
 import torch
-from torch_geometric.utils import erdos_renyi_graph
+
+from pathml.datasets.datasets import EntityDataset, TileDataset
 
 # Assuming TileDataset is in pathml.ml, adjust the import as necessary
-from pathml.datasets.datasets import TileDataset
-from pathml.graph.utils import HACTPairData
+from pathml.graph import Graph
 
 
 @pytest.fixture
@@ -112,20 +113,66 @@ def test_tile_dataset_with_masks(create_test_h5_file):
     assert masks.shape[0] > 0, "There should be at least one mask"
 
 
-def fake_hactnet_inputs():
-    """fake batch of input for HACTNet"""
-    cell_features = torch.rand(200, 256)
-    cell_edge_index = erdos_renyi_graph(200, 0.2, directed=False)
-    tissue_features = torch.rand(20, 256)
-    tissue_edge_index = erdos_renyi_graph(20, 0.2, directed=False)
-    target = torch.tensor([1, 2])
-    assignment = torch.randint(low=0, high=20, size=(200,)).long()
-    data = HACTPairData(
-        x_cell=cell_features,
-        edge_index_cell=cell_edge_index,
-        x_tissue=tissue_features,
-        edge_index_tissue=tissue_edge_index,
-        assignment=assignment,
-        target=target,
+def fake_graph_inputs():
+
+    edge_index = torch.tensor([[0, 1, 1, 2], [1, 0, 2, 1]], dtype=torch.long)
+    node_centroids = torch.randn(3, 2)
+    node_features = torch.randn(3, 2)
+
+    graph_obj = Graph(
+        edge_index=edge_index,
+        node_centroids=node_centroids,
+        node_features=node_features,
     )
-    return data
+    assignment = assignment = torch.randint(low=0, high=3, size=(3, 2)).long()
+
+    return graph_obj, graph_obj, assignment
+
+
+@pytest.fixture
+def create_test_graph_file():
+    """
+    Fixture to create a temporary h5 file simulating the output of SlideData processing.
+    This file will serve as input for testing TileDataset.
+    """
+    graphs_path = tempfile.mkdtemp()
+    os.makedirs(os.path.join(graphs_path, "cell_graphs", "train"), exist_ok=True)
+    os.makedirs(os.path.join(graphs_path, "tissue_graphs", "train"), exist_ok=True)
+    os.makedirs(
+        os.path.join(graphs_path, "assignment_matrices", "train"), exist_ok=True
+    )
+
+    cell_graph, tissue_graph, assignment = fake_graph_inputs()
+
+    torch.save(
+        cell_graph, os.path.join(graphs_path, "cell_graphs", "train", "example.pt")
+    )
+    torch.save(
+        tissue_graph, os.path.join(graphs_path, "tissue_graphs", "train", "example.pt")
+    )
+    torch.save(
+        assignment,
+        os.path.join(graphs_path, "assignment_matrices", "train", "example.pt"),
+    )
+
+    yield graphs_path
+    os.remove(os.path.join(graphs_path, "cell_graphs", "train", "example.pt"))
+    os.remove(os.path.join(graphs_path, "tissue_graphs", "train", "example.pt"))
+    os.remove(os.path.join(graphs_path, "assignment_matrices", "train", "example.pt"))
+    shutil.rmtree(graphs_path)
+
+
+def test_entity_dataset(create_test_graph_file):
+
+    graphs_path = create_test_graph_file
+    train_dataset = EntityDataset(
+        os.path.join(graphs_path, "cell_graphs/train/"),
+        os.path.join(graphs_path, "tissue_graphs/train/"),
+        os.path.join(graphs_path, "assignment_matrices/train/"),
+    )
+    batch = train_dataset[0]
+
+    assert batch.x_cell.shape == (3, 2)
+    assert batch.x_tissue.shape == (3, 2)
+    assert batch.edge_index_cell.shape == (2, 4)
+    assert batch.edge_index_tissue.shape == (2, 4)
