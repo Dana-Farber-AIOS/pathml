@@ -151,15 +151,15 @@ class EntityDataset(torch.utils.data.Dataset):
         # Create pathml.graph.utils.HACTPairData object with prvided objects
         data = HACTPairData(
             x_cell=cell_graph.node_features if self.cell_dir is not None else None,
-            edge_index_cell=cell_graph.edge_index
-            if self.cell_dir is not None
-            else None,
-            x_tissue=tissue_graph.node_features
-            if self.tissue_dir is not None
-            else None,
-            edge_index_tissue=tissue_graph.edge_index
-            if self.tissue_dir is not None
-            else None,
+            edge_index_cell=(
+                cell_graph.edge_index if self.cell_dir is not None else None
+            ),
+            x_tissue=(
+                tissue_graph.node_features if self.tissue_dir is not None else None
+            ),
+            edge_index_tissue=(
+                tissue_graph.edge_index if self.tissue_dir is not None else None
+            ),
             assignment=assignment[1, :] if self.assign_dir is not None else None,
             target=target,
         )

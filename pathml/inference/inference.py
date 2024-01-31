@@ -130,7 +130,7 @@ class InferenceBase(Transforms.Transform):
 
     def set_name(self, name):
         """
-        Sets the "name" parameter in the model card. 
+        Sets the "name" parameter in the model card.
 
         Args:
             name (str): Name for the model
@@ -139,29 +139,29 @@ class InferenceBase(Transforms.Transform):
 
     def set_num_classes(self, num):
         """
-        Sets the "num_classes" parameter in the model card. 
+        Sets the "num_classes" parameter in the model card.
 
         Args:
             num (int): Number of classes your model predicts
-        """       
+        """
         self.model_card["num_classes"] = num
 
     def set_model_type(self, model_type):
         """
-        Sets the "model_type" parameter in the model card. 
+        Sets the "model_type" parameter in the model card.
 
         Args:
             model_type (str): Type of model, e.g. "segmentation"
-        """  
+        """
         self.model_card["model_type"] = model_type
 
     def set_notes(self, note):
         """
-        Sets the "notes" parameter in the model card. 
+        Sets the "notes" parameter in the model card.
 
         Args:
             note (str): Any extra information you want to put in the model card
-        """  
+        """
         self.model_card["notes"] = note
 
     def set_model_input_notes(self, note):
@@ -170,25 +170,25 @@ class InferenceBase(Transforms.Transform):
 
         Args:
             note (str): Comments on the model input
-        """  
+        """
         self.model_card["model_input_notes"] = note
 
     def set_model_output_notes(self, note):
         """
-        Sets the "model_output_notes" parameter in the model card. 
+        Sets the "model_output_notes" parameter in the model card.
 
         Args:
             note (str): Comments on the model output
-        """  
+        """
         self.model_card["model_output_notes"] = note
 
     def set_citation(self, citation):
         """
-        Sets the "citation" parameter in the model card. 
-        
+        Sets the "citation" parameter in the model card.
+
         Args:
             citation (str): Citation for the model
-        """  
+        """
         self.model_card["citation"] = citation
 
     def reshape(self, image):
@@ -229,10 +229,10 @@ class Inference(InferenceBase):
 
     Args:
         model_path (str): path to ONNX model w/o initializers,
-        input_name (str): name of the input the ONNX model accepts, default = "data" 
+        input_name (str): name of the input the ONNX model accepts, default = "data"
         num_classes (int): number of classes you are predicting
         model_type (str): type of model, e.g. "segmentation"
-        local (bool): True if the model is stored locally, default = "True" 
+        local (bool): True if the model is stored locally, default = "True"
     """
 
     def __init__(
@@ -340,10 +340,10 @@ class HaloAIInference(Inference):
 
     Args:
         model_path (str): path to HaloAI ONNX model w/o initializers,
-        input_name (str): name of the input the ONNX model accepts, default = "data" 
+        input_name (str): name of the input the ONNX model accepts, default = "data"
         num_classes (int): number of classes you are predicting
         model_type (str): type of model, e.g. "segmentation"
-        local (bool): True if the model is stored locally, default = "True" 
+        local (bool): True if the model is stored locally, default = "True"
     """
 
     def __init__(

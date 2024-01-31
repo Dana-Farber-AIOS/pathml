@@ -3,7 +3,6 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-
 import glob
 import os
 import platform
@@ -19,7 +18,6 @@ import tifffile
 
 
 class TileStitcher:
-
     """
     A Python class for stitching tiled images, specifically designed for spectrally unmixed images in a pyramidal OME-TIFF format.
 
@@ -37,7 +35,6 @@ class TileStitcher:
     def __init__(
         self, qupath_jarpath=[], java_path=None, memory="40g", bfconvert_dir="./"
     ):
-
         """
         Initialize the TileStitcher class with given parameters and start the JVM.
 
@@ -155,7 +152,6 @@ class TileStitcher:
         return memory_option, class_path_option
 
     def _collect_tif_files(self, input):
-
         """
         Collect .tif files from a given directory path or list.
 
