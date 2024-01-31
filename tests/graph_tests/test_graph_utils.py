@@ -19,16 +19,21 @@ from pathml.preprocessing.transforms import Transform
 
 
 @pytest.mark.parametrize("batch_size", [1, 8, 32])
-def test_pathml_graph(batch_size):
+@pytest.mark.parametrize("include_target", [True, False])
+def test_pathml_graph(batch_size, include_target):
 
     edge_index = torch.tensor([[0, 1, 1, 2], [1, 0, 2, 1]], dtype=torch.long)
     node_centroids = torch.randn(3, 2)
     node_features = torch.randn(3, 2)
 
+    if include_target:
+        target = torch.tensor([1])
+
     graph_obj = Graph(
         edge_index=edge_index,
         node_centroids=node_centroids,
         node_features=node_features,
+        target=target if include_target else None,
     )
     loader = DataLoader([graph_obj] * batch_size, batch_size=batch_size)
     batch = next(iter(loader))
