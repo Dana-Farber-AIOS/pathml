@@ -74,7 +74,11 @@ jobs:
     - name: Install python-spams
       shell: bash -l {0}      
       run: pip install spams
-      
+    
+    - name: Install torchvision
+      shell: bash -l {0}
+      run: pip install torchvision==0.14.1
+    
     - name: disk usage
       shell: bash -l {0}
       run: |
