@@ -48,6 +48,12 @@ Cornell Medicine.
 
 .. toctree::
    :maxdepth: 2
+   :caption: Inference
+
+   inference
+
+.. toctree::
+   :maxdepth: 2
    :caption: Examples
 
    examples/link_loading_images
@@ -56,6 +62,7 @@ Cornell Medicine.
    examples/link_multiplex_if
    examples/link_codex
    examples/link_train_hovernet
+   examples/link_workflow_Inference
    examples/link_gallery
    examples/link_tile_stitching
 
@@ -68,6 +75,7 @@ Cornell Medicine.
    api_datasets_reference
    api_ml_reference
    api_utils_reference
+   api_inference_reference
 
 .. toctree::
    :maxdepth: 2
