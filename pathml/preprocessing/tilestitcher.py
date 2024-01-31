@@ -8,9 +8,11 @@ import glob
 import os
 import platform
 import subprocess
+import sys
 import traceback
 import urllib
 import zipfile
+from pathlib import Path
 
 import jpype
 import tifffile
@@ -49,7 +51,7 @@ class TileStitcher:
         self.classpath = os.pathsep.join(qupath_jarpath)
         self.memory = memory
         self.bfconvert_dir = bfconvert_dir
-
+        self.shell = sys.platform != "linux"
         if java_path and os.path.isdir(java_path):
             # Override JAVA_HOME with the provided Java path
             os.environ["JAVA_HOME"] = java_path
@@ -82,9 +84,9 @@ class TileStitcher:
                 # Fetch the path to the JVM
                 jvm_path = jpype.getDefaultJVMPath()
 
-                jvm_version = jpype.getJVMVersion()
                 # Try to start the JVM with the specified options
                 jpype.startJVM(memory_usage, class_path_option)
+                jvm_version = jpype.getJVMVersion()
 
                 if jvm_version[0] <= 17:
 
@@ -132,6 +134,26 @@ class TileStitcher:
         except Exception as e:
             raise RuntimeError(f"Failed to import QuPath classes: {e}")
 
+    @staticmethod
+    def format_jvm_options(qupath_jars, memory):
+        # Format the memory setting
+        memory_option = f"-Xmx{memory}"
+
+        # Format the classpath
+        formatted_classpath = []
+        for path in qupath_jars:
+            if platform.system() == "Windows":
+                # Convert forward slashes to backslashes and wrap paths with spaces in quotes
+                path = path.replace("/", "\\")
+                if " " in path:
+                    path = f'"{path}"'
+            formatted_classpath.append(path)
+
+        # Join the classpath entries with a semicolon
+        class_path_option = "-Djava.class.path=" + ";".join(formatted_classpath)
+
+        return memory_option, class_path_option
+
     def _collect_tif_files(self, input):
 
         """
@@ -165,12 +187,17 @@ class TileStitcher:
             str: Path to the bfconvert tool.
         """
 
-        setup_dir = bfconvert_dir
-        parent_dir = os.path.dirname(setup_dir)
-        tools_dir = os.path.join(parent_dir, "tools")
-        self.bfconvert_path = os.path.join(tools_dir, "bftools", "bfconvert")
+        tools_dir = Path(bfconvert_dir).parent / "tools"
+        bftools_dir = tools_dir / "bftools"
+        self.bfconvert_path = bftools_dir / "bfconvert"
+
         self.bf_sh_path = os.path.join(tools_dir, "bftools", "bf.sh")
+
         print(self.bfconvert_path, self.bf_sh_path)
+
+        print(
+            f"bfconvert_dir: {bfconvert_dir}, tools_dir: {tools_dir}, bfconvert_path: {self.bfconvert_path}"
+        )
 
         # Ensure the tools directory exists
         try:
@@ -212,9 +239,18 @@ class TileStitcher:
             except PermissionError:
                 raise PermissionError("Permission denied: Cannot chmod files")
 
+        # try:
+        #     version_output = subprocess.check_output([str(self.bfconvert_path), "-version"],shell=True)
+        #     print(f"bfconvert version: {version_output.decode('utf-8').strip()}")
+        # except subprocess.CalledProcessError as e:
+        #     print(f"Failed to get bfconvert version: {e.output.decode()}")
+
         # Print bfconvert version
         try:
-            version_output = subprocess.check_output([self.bfconvert_path, "-version"])
+
+            version_output = subprocess.check_output(
+                [str(self.bfconvert_path), "-version"], shell=self.shell
+            )
             print(f"bfconvert version: {version_output.decode('utf-8').strip()}")
         except subprocess.CalledProcessError:
             raise subprocess.CalledProcessError(
@@ -456,12 +492,22 @@ class TileStitcher:
             bfconverted_path = f"{base_path}_separated.ome.tif"
 
         bfconvert_command = f"./{self.bfconvert_path} -series 0 -separate '{stitched_image_path}' '{bfconverted_path}'"
+        print("Bfconvert Command: ", bfconvert_command)
+
+        bfconvert_command = [
+            str(self.bfconvert_path),
+            "-series",
+            "0",
+            "-separate",
+            str(stitched_image_path),
+            str(bfconverted_path),
+        ]
 
         # Check if the file already exists and remove it to avoid prompting
         if not os.path.exists(bfconverted_path):
             # Run bfconvert command
             try:
-                subprocess.run(bfconvert_command, shell=True, check=True)
+                subprocess.run(bfconvert_command, shell=self.shell, check=True)
                 print(f"bfconvert completed. Output file: {bfconverted_path}")
 
                 # Delete the original stitched image if requested
@@ -473,23 +519,15 @@ class TileStitcher:
                 print("Error running bfconvert command.")
 
     def is_bfconvert_available(self):
-        """
-        Check if the bfconvert tool is available.
-
-        Returns:
-            bool: True if bfconvert is available, False otherwise.
-        """
 
         try:
             result = subprocess.run(
-                [f"./{self.bfconvert_path}", "-version"],
+                [str(self.bfconvert_path), "-version"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                shell=self.shell,
             )
-            if result.returncode == 0:
-                return True
-            else:
-                return False
+            return result.returncode == 0
         except FileNotFoundError:
             return False
 

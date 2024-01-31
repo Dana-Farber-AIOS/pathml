@@ -26,7 +26,7 @@ try:
     import bioformats
     import javabridge
     from bioformats.metadatatools import createOMEXMLMetadata
-except ImportError:
+except ImportError:  # pragma: no cover
     logger.exception("Unable to import bioformats, javabridge")
     raise Exception(
         "Installation of PathML not complete. Please install openjdk8, bioformats, and javabridge:\nconda install openjdk==8.0.152\npip install javabridge==1.0.19 python-bioformats==4.0.0\nFor detailed installation instructions, please see https://github.com/Dana-Farber-AIOS/pathml/"
@@ -269,7 +269,7 @@ class BioFormatsBackend(SlideBackend):
         # disable verbose JVM logging if possible
         try:
             _init_logger()
-        except JavaException:
+        except JavaException:  # pragma: no cover
             pass
         # java maximum array size of 2GB constrains image size
         ImageReader = bioformats.formatreader.make_image_reader_class()

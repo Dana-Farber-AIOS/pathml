@@ -98,6 +98,45 @@ def get_class_weights(loader):
     return weights
 
 
+# Potential Typop
+# def center_crop_im_batch(batch, dims, batch_order="BCHW"):
+#     """
+#     Center crop images in a batch.
+
+#     Args:
+#         batch: The batch of images to be cropped
+#         dims: Amount to be cropped (tuple for H, W)
+#     """
+#     assert (
+#         batch.ndim == 4
+#     ), f"ERROR input shape is {batch.shape} - expecting a batch with 4 dimensions total"
+#     assert (
+#         len(dims) == 2
+#     ), f"ERROR input cropping dims is {dims} - expecting a tuple with 2 elements total"
+#     assert batch_order in {
+#         "BHCW",
+#         "BCHW",
+#     }, f"ERROR input batch order {batch_order} not recognized. Must be one of 'BHCW' or 'BCHW'"
+
+#     if dims == (0, 0):
+#         # no cropping necessary in this case
+#         batch_cropped = batch
+#     else:
+#         crop_t = dims[0] // 2
+#         crop_b = dims[0] - crop_t
+#         crop_l = dims[1] // 2
+#         crop_r = dims[1] - crop_l
+
+#         if batch_order == "BHWC":
+#             batch_cropped = batch[:, crop_t:-crop_b, crop_l:-crop_r, :]
+#         elif batch_order == "BCHW":
+#             batch_cropped = batch[:, :, crop_t:-crop_b, crop_l:-crop_r]
+#         else:
+#             raise Exception("Input batch order not valid")
+
+#     return batch_cropped
+
+
 def center_crop_im_batch(batch, dims, batch_order="BCHW"):
     """
     Center crop images in a batch.
@@ -113,9 +152,9 @@ def center_crop_im_batch(batch, dims, batch_order="BCHW"):
         len(dims) == 2
     ), f"ERROR input cropping dims is {dims} - expecting a tuple with 2 elements total"
     assert batch_order in {
-        "BHCW",
+        "BHWC",
         "BCHW",
-    }, f"ERROR input batch order {batch_order} not recognized. Must be one of 'BHCW' or 'BCHW'"
+    }, f"ERROR input batch order {batch_order} not recognized. Must be one of 'BHWC' or 'BCHW'"
 
     if dims == (0, 0):
         # no cropping necessary in this case
