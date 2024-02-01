@@ -2,6 +2,7 @@
 Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
+
 import math
 
 import numpy as np
@@ -44,7 +45,7 @@ class Graph(Data):
 
     def __inc__(self, key, value, *args, **kwargs):
         if key == "edge_index":
-            return self.node_features.size(0)
+            return self.node_centroids.size(0)
         elif key == "target":
             return 0
         else:

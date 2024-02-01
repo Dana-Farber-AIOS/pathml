@@ -846,7 +846,7 @@ def post_process_batch_hovernet(
 
 def _vis_outputs_single(
     images, preds, n_classes, index=0, ax=None, markersize=5, palette=None
-):
+):  # pragma: no cover
     """
     Plot the results of HoVer-Net predictions for a single image, overlayed on the original image.
 

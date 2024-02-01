@@ -128,14 +128,22 @@ class EntityDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, index):
 
+        target = None
+
         # Load cell graphs, tissue graphs and assignments if they are provided
         if self.cell_dir is not None:
             cell_graph = torch.load(self.cell_graphs[index])
-            target = cell_graph["target"]
+            if hasattr(cell_graph, "target"):
+                target = cell_graph["target"]
+            else:
+                target = None
 
         if self.tissue_dir is not None:
             tissue_graph = torch.load(self.tissue_graphs[index])
-            target = tissue_graph["target"]
+            if hasattr(tissue_graph, "target"):
+                target = tissue_graph["target"]
+            else:
+                target = None
 
         if self.assign_dir is not None:
             assignment = torch.load(self.assigns[index])
@@ -143,15 +151,15 @@ class EntityDataset(torch.utils.data.Dataset):
         # Create pathml.graph.utils.HACTPairData object with prvided objects
         data = HACTPairData(
             x_cell=cell_graph.node_features if self.cell_dir is not None else None,
-            edge_index_cell=cell_graph.edge_index
-            if self.cell_dir is not None
-            else None,
-            x_tissue=tissue_graph.node_features
-            if self.tissue_dir is not None
-            else None,
-            edge_index_tissue=tissue_graph.edge_index
-            if self.tissue_dir is not None
-            else None,
+            edge_index_cell=(
+                cell_graph.edge_index if self.cell_dir is not None else None
+            ),
+            x_tissue=(
+                tissue_graph.node_features if self.tissue_dir is not None else None
+            ),
+            edge_index_tissue=(
+                tissue_graph.edge_index if self.tissue_dir is not None else None
+            ),
             assignment=assignment[1, :] if self.assign_dir is not None else None,
             target=target,
         )

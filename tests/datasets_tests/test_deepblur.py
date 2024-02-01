@@ -38,7 +38,7 @@ def test_incomplete_fails(create_incomplete_deepfocus_data):
     shutil.rmtree(target_dir)
 
 
-def check_deepfocus_data_urls():
+def test_check_deepfocus_data_urls():
     # make sure that the urls for the pannuke data are still valid!
     url = "https://zenodo.org/record/1134848/files/outoffocus2017_patches5Classification.h5"
     r = urllib.request.urlopen(url)
@@ -49,6 +49,21 @@ def check_deepfocus_data_urls():
 def check_wrong_path_download_false_fails():
     with pytest.raises(AssertionError):
         DeepFocusDataModule(data_dir="wrong/path/to/pannuke", download=False)
+
+
+def test_deepfocusdatamodule_with_incorrect_integrity(create_incomplete_deepfocus_data):
+    # The `create_incomplete_deepfocus_data` fixture is used to setup the data directory
+    data_dir = create_incomplete_deepfocus_data
+
+    # Attempt to initialize the DeepFocusDataModule with the setup data directory.
+    # Since the data does not pass the integrity check, it should raise an AssertionError.
+    with pytest.raises(AssertionError) as excinfo:
+        DeepFocusDataModule(str(data_dir), batch_size=4, shuffle=False, download=False)
+
+    assert (
+        "download is False but data directory does not exist or md5 checksum failed"
+        in str(excinfo.value)
+    )
 
 
 # TODO: How to test datamodule arguments if checksum without downloading the full dataset?
