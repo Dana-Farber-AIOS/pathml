@@ -5,7 +5,6 @@ channels:
   - pytorch
 
 dependencies:
-  - python=3.9
   - pip==23.3.2
   - numpy==1.23.5
   - scipy<=1.11.4
