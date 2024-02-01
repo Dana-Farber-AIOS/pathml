@@ -10,6 +10,7 @@ from pathlib import Path
 from unittest.mock import mock_open, patch
 
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from matplotlib.testing.decorators import check_figures_equal
@@ -29,6 +30,7 @@ from pathml.utils import (
     pad_or_crop,
     parse_file_size,
     plot_mask,
+    plot_segmentation,
     segmentation_lines,
     setup_qupath,
     sort_points_clockwise,
@@ -249,6 +251,20 @@ def test_normalize_matrix_rows(random_50_50):
 def test_normalize_matrix_cols(random_50_50):
     a = normalize_matrix_cols(random_50_50)
     assert np.all(np.isclose(np.linalg.norm(a, axis=0), 1.0))
+
+
+def test_plot_segmentation():
+    ax = plt.gca()
+
+    masks = np.zeros((3, 12, 12), dtype=np.uint8)
+    masks[0, 4:8, 4:8] = 1
+    masks[1, 1:3, 1:3] = 2
+    masks[2, 8:11, 8:11] = 3
+
+    palette = None
+    markersize = 5
+
+    plot_segmentation(ax, masks, palette, markersize)
 
 
 def test_find_existing_qupath_home(tmp_path):

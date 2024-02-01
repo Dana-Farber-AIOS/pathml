@@ -118,11 +118,13 @@ def fake_graph_inputs():
     edge_index = torch.tensor([[0, 1, 1, 2], [1, 0, 2, 1]], dtype=torch.long)
     node_centroids = torch.randn(3, 2)
     node_features = torch.randn(3, 2)
+    target = torch.tensor([1])
 
     graph_obj = Graph(
         edge_index=edge_index,
         node_centroids=node_centroids,
         node_features=node_features,
+        target=target,
     )
     assignment = assignment = torch.randint(low=0, high=3, size=(3, 2)).long()
 
@@ -176,3 +178,4 @@ def test_entity_dataset(create_test_graph_file):
     assert batch.x_tissue.shape == (3, 2)
     assert batch.edge_index_cell.shape == (2, 4)
     assert batch.edge_index_tissue.shape == (2, 4)
+    assert len(train_dataset) == 1

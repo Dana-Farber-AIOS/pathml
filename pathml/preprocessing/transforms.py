@@ -649,7 +649,7 @@ class StainNormalizationHE(Transform):
         if stain_estimation_method.lower() == "vahadane":
             try:
                 import spams  # noqa: F401
-            except (ImportError, ModuleNotFoundError):
+            except (ImportError, ModuleNotFoundError):  # pragma: no cover
                 raise Exception(
                     "Vahadane method requires `spams` package to be installed"
                 )
@@ -711,7 +711,7 @@ class StainNormalizationHE(Transform):
             stain_matrix = self._estimate_stain_vectors_macenko(image)
         elif self.stain_estimation_method == "vahadane":
             stain_matrix = self._estimate_stain_vectors_vahadane(image)
-        else:
+        else:  # pragma: no cover
             raise Exception(
                 f"Error: input stain estimation method {self.stain_estimation_method} must be one of 'macenko' or 'vahadane'"
             )
@@ -790,7 +790,7 @@ class StainNormalizationHE(Transform):
         # get top 2 PCs. PCs are eigenvectors of covariance matrix
         try:
             _, v = np.linalg.eigh(np.cov(OD.T))
-        except np.linalg.LinAlgError as err:
+        except np.linalg.LinAlgError as err:  # pragma: no cover
             logger.exception(f"Error in computing eigenvectors: {err}")
             raise
         pcs = v[:, 1:3]
@@ -892,7 +892,7 @@ class StainNormalizationHE(Transform):
                 -self.stain_matrix_target_od[:, 1].reshape(-1, 1)
                 @ pixel_intensities[:, 1].reshape(-1, 1).T
             )
-        else:
+        else:  # pragma: no cover
             raise Exception(
                 f"Error: input target {self.target} is invalid. Must be one of 'normalize', 'eosin', 'hematoxylin'"
             )
@@ -1337,7 +1337,7 @@ class SegmentMIF(Transform):
         if model.lower() == "mesmer":
             try:
                 from deepcell.applications import Mesmer  # noqa: F401
-            except ImportError:
+            except ImportError:  # pragma: no cover
                 logger.warning(
                     "The Mesmer model in SegmentMIF requires extra libraries to be installed.\nYou can install these via pip using:\npip install deepcell"
                 )
@@ -1349,7 +1349,7 @@ class SegmentMIF(Transform):
             """from cellpose import models
             self.model = models.Cellpose(gpu=self.gpu, model_type='cyto')"""
             raise NotImplementedError("Cellpose model not currently supported")
-        else:
+        else:  # pragma: no cover
             raise ValueError("currently only supports mesmer model")
 
     def __repr__(self):
@@ -1362,7 +1362,7 @@ class SegmentMIF(Transform):
         if len(img.shape) not in [3, 4]:
             raise ValueError(
                 f"input image has shape {img.shape}. supported image shapes are x,y,c or batch,x,y,c. Did you forget to apply 'CollapseRuns*()' transform?"
-            )
+            )  # pragma: no cover
         if len(img.shape) == 3:
             img = np.expand_dims(img, axis=0)
         nuc_cytoplasm = np.stack(
@@ -1398,7 +1398,7 @@ class SegmentMIF(Transform):
             )
             del model
             return cell_segmentation_predictions, nuclear_segmentation_predictions
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(f"model={self.model} currently not supported.")
 
     def apply(self, tile):
