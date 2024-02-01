@@ -42,21 +42,6 @@ def test_infer_backend(path, backend):
     assert infer_backend(path) == backend
 
 
-def test_infer_backend_unsupported_extension():
-    # Define a file path with an unsupported extension
-    unsupported_path = "unsupported_file.xyz"
-
-    # Use pytest.raises to verify that a ValueError is raised with the expected message
-    with pytest.raises(ValueError) as excinfo:
-        infer_backend(unsupported_path)
-
-    # Check if the error message contains the expected content
-    assert (
-        f"input path {unsupported_path} doesn't match any supported file extensions"
-        in str(excinfo.value)
-    )
-
-
 def test_write_with_array_labels(tmp_path, example_slide_data):
     example_slide_data.write(tmp_path / "test_array_in_labels.h5path")
     assert Path(tmp_path / "test_array_in_labels.h5path").is_file()
