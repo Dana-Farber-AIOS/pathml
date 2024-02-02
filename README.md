@@ -24,7 +24,7 @@ Stable versions are available as tagged releases on GitHub, or as versioned rele
 
 📖 **Official Documentation**
 
-View the official [PathML Documentation on readthedocs](https://pathml.readthedocs.io/en/latest/)**
+View the official [PathML Documentation on readthedocs](https://pathml.readthedocs.io/en/latest/)
 
 🔥 **Examples! Examples! Examples!**
 
