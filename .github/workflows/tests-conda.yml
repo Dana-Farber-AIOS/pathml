@@ -81,7 +81,7 @@ jobs:
 
     - name: Install DeepCell
       shell: bash -l {0}
-      run: pip install deepcell<=0.12.7
+      run: pip install deepcell==0.12.7
 
     - name: disk usage
       shell: bash -l {0}
