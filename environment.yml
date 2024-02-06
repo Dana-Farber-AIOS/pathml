@@ -6,10 +6,10 @@ channels:
 
 dependencies:
   - pip==23.3.2
-  - numpy
-  - scipy
-  - scikit-image
-  - matplotlib==3.5.1
+  - numpy==1.23.5
+  - scipy<=1.11.4
+  - scikit-image<=0.22.0
+  - matplotlib<=3.8.2
   - openjdk<=18.0.0
   - pytorch==2.1.2
   - h5py==3.10.0
