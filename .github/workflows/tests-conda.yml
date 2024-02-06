@@ -79,6 +79,10 @@ jobs:
       shell: bash -l {0}
       run: pip install torchvision==0.14.1
 
+    - name: Install DeepCell
+      shell: bash -l {0}
+      run: pip install deepcell<=0.12.7
+
     - name: disk usage
       shell: bash -l {0}
       run: |

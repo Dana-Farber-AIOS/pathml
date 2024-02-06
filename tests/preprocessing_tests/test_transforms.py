@@ -125,6 +125,15 @@ def test_superpix_interp(tileHE, region_size, n_iter):
 def test_stain_normalization_he(tileHE, method, target):
     t = StainNormalizationHE(target=target, stain_estimation_method=method)
     orig_im = tileHE.image
+    t.fit_to_reference(orig_im)
+    assert t.stain_matrix_target_od.shape == (3, 2)
+
+
+@pytest.mark.parametrize("target", ["normalize", "hematoxylin", "eosin"])
+@pytest.mark.parametrize("method", ["vahadane", "macenko"])
+def test_stain_normalization_he_fit(tileHE, method, target):
+    t = StainNormalizationHE(target=target, stain_estimation_method=method)
+    orig_im = tileHE.image
     t.apply(tileHE)
     if method == "vahadane":
         # theres an element of randomness in vahadane implementation, haven't been able to figure
