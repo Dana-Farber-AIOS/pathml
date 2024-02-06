@@ -85,6 +85,15 @@ jobs:
       run: |
         sudo df -h
         sudo du -h
+        
+    - name: free disk space
+      run: |
+        sudo swapoff -a
+        sudo rm -f /swapfile
+        sudo apt clean
+        docker rmi $(docker image ls -aq)
+        sudo df -h
+        sudo du -h
 
     # - name: Check Coverage Command
     #   run: |
