@@ -53,6 +53,7 @@ jobs:
         mamba --version
         echo "Checking the available disk space..."
         df -h
+        
     - name: Install dependencies with mamba
       shell: bash -l {0}
       run: mamba env update --file environment.yml --name pathml
@@ -78,10 +79,6 @@ jobs:
     - name: Install torchvision
       shell: bash -l {0}
       run: pip install torchvision==0.14.1
-
-    - name: Install DeepCell
-      shell: bash -l {0}
-      run: pip install deepcell
 
     - name: disk usage
       shell: bash -l {0}
