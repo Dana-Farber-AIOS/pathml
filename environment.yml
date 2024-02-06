@@ -6,10 +6,10 @@ channels:
 
 dependencies:
   - pip==23.3.2
-  - numpy==1.23.5
-  - scipy<=1.11.4
-  - scikit-image<=0.22.0
-  - matplotlib<=3.8.2
+  - numpy
+  - scipy
+  - scikit-image
+  - matplotlib==3.5.1
   - openjdk<=18.0.0
   - pytorch==2.1.2
   - h5py==3.10.0
@@ -23,9 +23,9 @@ dependencies:
       - python-bioformats==4.0.7
       - python-javabridge==4.0.3
       - protobuf==3.20.3
-      - deepcell<=0.12.7
-      - onnx==1.15.0
-      - onnxruntime==1.16.3
+      # - deepcell<=0.12.7
+      - onnx==1.14.0
+      - onnxruntime==1.15.1
       - opencv-contrib-python==4.8.1.78
       - openslide-python==1.3.1
       - scanpy==1.9.6
@@ -33,5 +33,5 @@ dependencies:
       - tqdm==4.66.1
       - loguru==0.7.2
       - pandas<=2.1.4
-      - torch-geometric==2.4.0
+      - torch-geometric==2.3.1
       - jpype1==1.4.1
