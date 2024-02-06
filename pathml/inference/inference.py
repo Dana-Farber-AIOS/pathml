@@ -411,9 +411,9 @@ class RemoteTestHoverNet(Inference):
         self.model_card["model_type"] = self.model_type
         self.model_card["name"] = "Tiabox HoverNet Test"
         self.model_card["model_input_notes"] = "Accepts tiles of 256 x 256"
-        self.model_card["citation"] = (
-            "Pocock J, Graham S, Vu QD, Jahanifar M, Deshpande S, Hadjigeorghiou G, Shephard A, Bashir RM, Bilal M, Lu W, Epstein D. TIAToolbox as an end-to-end library for advanced tissue image analytics. Communications medicine. 2022 Sep 24;2(1):120."
-        )
+        self.model_card[
+            "citation"
+        ] = "Pocock J, Graham S, Vu QD, Jahanifar M, Deshpande S, Hadjigeorghiou G, Shephard A, Bashir RM, Bilal M, Lu W, Epstein D. TIAToolbox as an end-to-end library for advanced tissue image analytics. Communications medicine. 2022 Sep 24;2(1):120."
 
     def __repr__(self):
         return "Class to handle remote TIAToolBox HoverNet test ONNX. See model card for citation."
