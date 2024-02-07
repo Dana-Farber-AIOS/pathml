@@ -28,16 +28,31 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
           check-latest: true
+
+      - name: Check JAVA_HOME
+        shell: bash -l {0}
+        run: |
+          echo "JAVA_HOME is set to $JAVA_HOME"
+          echo "Java Path:"
+          which java
+          echo "Java Version:"
+          java -version
+
       - name: Setup Miniconda
         uses: conda-incubator/setup-miniconda@v3
         with:
           auto-update-conda: true
           miniforge-version: latest
           use-mamba: true
-          python-version: ${{ matrix.python-version }}
+          # python-version: ${{ matrix.python-version }}
           activate-environment: pathml
           environment-file: environment.yml
           channels: conda-forge
+
+      - name: Display Python version
+        shell: bash -l {0}
+        run: |
+          python --version
 
       - name: Conda info
         shell: bash -l {0}
