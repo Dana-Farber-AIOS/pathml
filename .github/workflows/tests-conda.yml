@@ -45,7 +45,7 @@ jobs:
           miniforge-version: latest
           use-mamba: true
           activate-environment: pathml
-          environment-file: ${{ github.workspace }}/.github/ci-environments/env-py${{ matrix.python-version == '3.10' && '310' || matrix.python-version == '3.9' && '39' || '38' }}.yml
+          environment-file: .github/ci-environments/env-py${{ matrix.python-version == '3.10' && '310' || matrix.python-version == '3.9' && '39' || '38' }}.yml
           channels: conda-forge
 
       - name: Display Python version
