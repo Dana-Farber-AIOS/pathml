@@ -8,7 +8,6 @@ import os
 import platform
 import subprocess
 import sys
-import traceback
 import urllib
 import zipfile
 from pathlib import Path
@@ -39,8 +38,8 @@ class TileStitcher:
         Initialize the TileStitcher class with given parameters and start the JVM.
 
         Args:
-            qupath_jarpath (list): List of paths to QuPath JAR files.
-            java_path (str, optional): Path to Java installation. If not provided, JAVA_HOME is used.
+            qupath_jarpath (list): Paths to QuPath JAR files.
+            java_path (str, optional): Path to Java installation. Uses JAVA_HOME if not provided.
             memory (str, optional): Memory allocation for JVM. Defaults to "40g".
             bfconvert_dir (str, optional): Directory for Bio-Formats conversion tools. Defaults to "./".
         """
@@ -48,66 +47,56 @@ class TileStitcher:
         self.classpath = os.pathsep.join(qupath_jarpath)
         self.memory = memory
         self.bfconvert_dir = bfconvert_dir
-        self.shell = sys.platform != "linux"
-        if java_path and os.path.isdir(java_path):
-            # Override JAVA_HOME with the provided Java path
-            os.environ["JAVA_HOME"] = java_path
-            self.java_home = java_path
-            print(f"Java path set and JAVA_HOME overridden to: {java_path}")
-        elif "JAVA_HOME" in os.environ and os.path.isdir(os.environ["JAVA_HOME"]):
-            self.java_home = os.environ["JAVA_HOME"]
-            print("Using JAVA_HOME from environment variables.")
-        else:
-            # If neither java_path nor JAVA_HOME is set, raise an error
-            raise EnvironmentError(
-                "No valid Java path specified, and JAVA_HOME is not set or invalid."
-            )
+        self.shell = sys.platform not in ["linux", "darwin"]
+        self.java_home = self._set_java_home(java_path)
 
         self._start_jvm()
 
     def __del__(self):
         if jpype.isJVMStarted():
             jpype.shutdownJVM()
-            print("JVM successfully shutdown")
+            print("JVM successfully shutdown.")
+
+    def _set_java_home(self, java_path):
+        if java_path and os.path.isdir(java_path):
+            os.environ["JAVA_HOME"] = java_path
+            print(f"Java path set and JAVA_HOME overridden to: {java_path}")
+            return java_path
+        elif "JAVA_HOME" in os.environ and os.path.isdir(os.environ["JAVA_HOME"]):
+            return os.environ["JAVA_HOME"]
+        else:
+            raise JVMInitializationError(
+                "No valid Java path specified, and JAVA_HOME is not set or invalid."
+            )
 
     def _start_jvm(self):
         """Start the Java Virtual Machine and import necessary QuPath classes."""
         if not jpype.isJVMStarted():
             try:
-                # Set memory usage and classpath for the JVM
-                memory_usage = f"-Xmx{self.memory}"
-                class_path_option = f"-Djava.class.path={self.classpath}"
-
-                # Fetch the path to the JVM
-                jvm_path = jpype.getDefaultJVMPath()
-
-                # Try to start the JVM with the specified options
-                jpype.startJVM(memory_usage, class_path_option)
-                jvm_version = jpype.getJVMVersion()
-
-                if jvm_version[0] <= 17:
-
-                    print(
-                        "Warning: This Java version might not be fully compatible with some QuPath libraries. Java 17 is recommended."
-                    )
-
-                self._import_qupath_classes()
-
-                print(f"Using JVM version: {jvm_version} from {jvm_path}")
-
+                jpype.startJVM(
+                    jpype.getDefaultJVMPath(),
+                    f"-Xmx{self.memory}",
+                    f"-Djava.class.path={self.classpath}",
+                    convertStrings=False,
+                )
+                print(
+                    f"Using JVM version: {jpype.getJVMVersion()} from {jpype.getDefaultJVMPath()}"
+                )
+            except jpype.JVMNotFoundException as e:  # pragma: no cover
+                raise JVMInitializationError(f"Failed to find JVM: {e}")
             except Exception as e:
-                print(f"Error occurred while starting JVM: {e}")
-                # sys.exit(1)
-            else:
-                print("JVM started successfully")
+                raise JVMInitializationError(f"Unexpected error starting JVM: {e}")
         else:
-            print("JVM was already started")
+            print("JVM was already started.")
+
+        self._import_qupath_classes()
 
     def _import_qupath_classes(self):
         """Import necessary QuPath classes after starting JVM."""
 
         try:
-            print("Importing required qupath classes")
+            print("Importing required QuPath classes")
+            # QuPath class imports
             self.ImageServerProvider = jpype.JPackage(
                 "qupath.lib.images.servers"
             ).ImageServerProvider
@@ -127,28 +116,17 @@ class TileStitcher:
                 "javax.imageio.plugins.tiff"
             ).TIFFDirectory
             self.BufferedImage = jpype.JPackage("java.awt.image").BufferedImage
-
         except Exception as e:
-            raise RuntimeError(f"Failed to import QuPath classes: {e}")
+            raise QuPathClassImportError(f"Failed to import QuPath classes: {e}")
 
     @staticmethod
     def format_jvm_options(qupath_jars, memory):
-        # Format the memory setting
         memory_option = f"-Xmx{memory}"
-
-        # Format the classpath
-        formatted_classpath = []
-        for path in qupath_jars:
-            if platform.system() == "Windows":
-                # Convert forward slashes to backslashes and wrap paths with spaces in quotes
-                path = path.replace("/", "\\")
-                if " " in path:
-                    path = f'"{path}"'
-            formatted_classpath.append(path)
-
-        # Join the classpath entries with a semicolon
-        class_path_option = "-Djava.class.path=" + ";".join(formatted_classpath)
-
+        formatted_classpath = [
+            path.replace("/", "\\") if platform.system() == "Windows" else path
+            for path in qupath_jars
+        ]
+        class_path_option = "-Djava.class.path=" + os.pathsep.join(formatted_classpath)
         return memory_option, class_path_option
 
     def _collect_tif_files(self, input):
@@ -161,16 +139,19 @@ class TileStitcher:
         Returns:
             list: A list of .tif file paths.
         """
-
         if isinstance(input, str) and os.path.isdir(input):
             return glob.glob(os.path.join(input, "**/*.tif"), recursive=True)
         elif isinstance(input, list):
-            return [file for file in input if file.endswith(".tif")]
+            valid_files = [file for file in input if file.endswith(".tif")]
+            if not valid_files:
+                raise FileCollectionError(
+                    "No valid .tif files found in the provided list."
+                )
+            return valid_files
         else:
-            print(
-                f"Input must be a directory path or list of .tif files. Received: {input}"
+            raise FileCollectionError(
+                f"Invalid input for collecting .tif files: {input}"
             )
-            return []
 
     def setup_bfconvert(self, bfconvert_dir):
         """
@@ -182,80 +163,51 @@ class TileStitcher:
         Returns:
             str: Path to the bfconvert tool.
         """
-
         tools_dir = Path(bfconvert_dir).parent / "tools"
         bftools_dir = tools_dir / "bftools"
-        self.bfconvert_path = bftools_dir / "bfconvert"
 
-        self.bf_sh_path = os.path.join(tools_dir, "bftools", "bf.sh")
+        self.bfconvert_path = Path(bftools_dir) / "bfconvert"
+        self.bf_sh_path = Path(tools_dir) / "bftools" / "bf.sh"
 
-        print(self.bfconvert_path, self.bf_sh_path)
-
-        print(
-            f"bfconvert_dir: {bfconvert_dir}, tools_dir: {tools_dir}, bfconvert_path: {self.bfconvert_path}"
-        )
-
-        # Ensure the tools directory exists
         try:
-            if not os.path.exists(tools_dir):
-                os.makedirs(tools_dir)
-        except PermissionError:
-            raise PermissionError(
-                f"Permission denied: Cannot create directory {tools_dir}"
-            )
+            if not tools_dir.exists():
+                tools_dir.mkdir(parents=True, exist_ok=True)
 
-        # If bftools folder does not exist, check for bftools.zip or download it
-        if not os.path.exists(os.path.join(tools_dir, "bftools")):
-            zip_path = os.path.join(tools_dir, "bftools.zip")
-
-            if not os.path.exists(zip_path):
-                url = "https://downloads.openmicroscopy.org/bio-formats/latest/artifacts/bftools.zip"
-                print(f"Downloading bfconvert from {url}...")
-                urllib.request.urlretrieve(url, zip_path)
-
-            print(f"Unzipping {zip_path}...")
-            try:
+            if not bftools_dir.exists():
+                zip_path = tools_dir / "bftools.zip"
+                if not zip_path.exists():
+                    url = "https://downloads.openmicroscopy.org/bio-formats/latest/artifacts/bftools.zip"
+                    urllib.request.urlretrieve(url, zip_path)
                 with zipfile.ZipFile(zip_path, "r") as zip_ref:
                     zip_ref.extractall(tools_dir)
-            except zipfile.BadZipFile:
-                raise zipfile.BadZipFile(f"Invalid ZIP file: {zip_path}")
+                zip_path.unlink()
 
-            if os.path.exists(zip_path):
-                os.remove(zip_path)
-
-            print(f"bfconvert set up at {self.bfconvert_path}")
-
-        system = platform.system().lower()
-        if system == "linux":
             try:
-                os.chmod(self.bf_sh_path, os.stat(self.bf_sh_path).st_mode | 0o111)
-                os.chmod(
-                    self.bfconvert_path, os.stat(self.bfconvert_path).st_mode | 0o111
+                system = platform.system().lower()
+                if system in ["darwin", "linux"]:
+
+                    os.chmod(self.bf_sh_path, os.stat(self.bf_sh_path).st_mode | 0o111)
+                    os.chmod(
+                        self.bfconvert_path,
+                        os.stat(self.bfconvert_path).st_mode | 0o111,
+                    )
+            except PermissionError as e:
+                raise BFConvertSetupError(
+                    f"Permission error on setting executable flag: {e}"
                 )
-            except PermissionError:
-                raise PermissionError("Permission denied: Cannot chmod files")
-
-        # try:
-        #     version_output = subprocess.check_output([str(self.bfconvert_path), "-version"],shell=True)
-        #     print(f"bfconvert version: {version_output.decode('utf-8').strip()}")
-        # except subprocess.CalledProcessError as e:
-        #     print(f"Failed to get bfconvert version: {e.output.decode()}")
-
-        # Print bfconvert version
-        try:
 
             version_output = subprocess.check_output(
                 [str(self.bfconvert_path), "-version"], shell=self.shell
             )
             print(f"bfconvert version: {version_output.decode('utf-8').strip()}")
-        except subprocess.CalledProcessError:
-            raise subprocess.CalledProcessError(
-                1,
-                [self.bfconvert_path, "-version"],
-                output="Failed to get bfconvert version.",
-            )
+        except (
+            zipfile.BadZipFile,
+            PermissionError,
+            subprocess.CalledProcessError,
+        ) as e:
+            raise BFConvertSetupError(f"Error setting up bfconvert: {e}")
 
-        return self.bfconvert_path
+        return str(self.bfconvert_path)
 
     def _get_outfile(self, fileout):
         """
@@ -267,7 +219,6 @@ class TileStitcher:
         Returns:
             tuple: A tuple containing the output file path and its Java file object.
         """
-
         if not fileout.endswith(".ome.tif"):
             fileout += ".ome.tif"
         return fileout, jpype.JClass("java.io.File")(fileout)
@@ -284,44 +235,44 @@ class TileStitcher:
         Returns:
             ImageRegion: An ImageRegion object representing the parsed region.
         """
+        if not self.checkTIFF(file):
+            raise TIFFParsingError(
+                f"{file} is not a valid TIFF file"
+            )  # pragma: no cover
 
-        if self.checkTIFF(file):
-            try:
-                # Extract the image region coordinates and dimensions from the TIFF tags
-                with tifffile.TiffFile(file) as tif:
-                    tag_xpos = tif.pages[0].tags.get("XPosition")
-                    tag_ypos = tif.pages[0].tags.get("YPosition")
-                    tag_xres = tif.pages[0].tags.get("XResolution")
-                    tag_yres = tif.pages[0].tags.get("YResolution")
-                    if (
-                        tag_xpos is None
-                        or tag_ypos is None
-                        or tag_xres is None
-                        or tag_yres is None
-                    ):
-                        print(
-                            f"Could not find required tags for {file}"
-                        )  # pragma: no cover
-                        return None  # pragma: no cover
-                    xpos = 10000 * tag_xpos.value[0] / tag_xpos.value[1]
-                    xres = tag_xres.value[0] / (tag_xres.value[1] * 10000)
-                    ypos = 10000 * tag_ypos.value[0] / tag_ypos.value[1]
-                    yres = tag_yres.value[0] / (tag_yres.value[1] * 10000)
-                    height = tif.pages[0].tags.get("ImageLength").value
-                    width = tif.pages[0].tags.get("ImageWidth").value
-                x = int(round(xpos * xres))
-                y = int(round(ypos * yres))
-                # Create an ImageRegion object representing the extracted image region
+        try:
+            with tifffile.TiffFile(file) as tif:
+                tag_xpos, tag_ypos, tag_xres, tag_yres = (
+                    tif.pages[0].tags.get("XPosition"),
+                    tif.pages[0].tags.get("YPosition"),
+                    tif.pages[0].tags.get("XResolution"),
+                    tif.pages[0].tags.get("YResolution"),
+                )
+
+                if not all([tag_xpos, tag_ypos, tag_xres, tag_yres]):
+                    raise TIFFParsingError(f"Required TIFF tags missing for {file}")
+
+                xpos, ypos = (
+                    10000 * tag_xpos.value[0] / tag_xpos.value[1],
+                    10000 * tag_ypos.value[0] / tag_ypos.value[1],
+                )
+                xres, yres = (
+                    tag_xres.value[0] / (tag_xres.value[1] * 10000),
+                    tag_yres.value[0] / (tag_yres.value[1] * 10000),
+                )
+
+                x, y, width, height = (
+                    int(round(xpos * xres)),
+                    int(round(ypos * yres)),
+                    tif.pages[0].imagewidth,
+                    tif.pages[0].imagelength,
+                )
+
                 region = self.ImageRegion.createInstance(x, y, width, height, z, t)
                 return region
-            except Exception as e:
-                print(f"Error occurred while parsing {file}: {e}")
-                traceback.print_exc()
-                raise
-        else:
-            print(f"{file} is not a valid TIFF file")
+        except Exception as e:
+            raise TIFFParsingError(f"Error parsing TIFF file {file}: {e}")
 
-    # Define a function to check if a file is a valid TIFF file
     def checkTIFF(self, file):
         """
         Check if a given file is a valid TIFF file.
@@ -338,24 +289,16 @@ class TileStitcher:
         try:
             with open(file, "rb") as f:
                 bytes = f.read(4)
-                byteOrder = self.toShort(bytes[0], bytes[1])
-                if byteOrder == 0x4949:  # Little-endian
-                    val = self.toShort(bytes[3], bytes[2])
-                elif byteOrder == 0x4D4D:  # Big-endian
-                    val = self.toShort(bytes[2], bytes[3])
-                else:
-                    return False
+                byteOrder = (bytes[0] << 8) + bytes[1]
+                val = (
+                    (bytes[3] << 8) + bytes[2]
+                    if byteOrder == 0x4949
+                    else (bytes[2] << 8) + bytes[3]
+                )
                 return val == 42 or val == 43
-        except FileNotFoundError:
-            print(f"Error: File not found {file}")
-            raise FileNotFoundError
-        except IOError:
-            print(f"Error: Could not open file {file}")
-            raise IOError
-        except Exception as e:  # pragma: no cover
-            print(f"Error: {e}")
+        except Exception as e:
+            raise TIFFParsingError(f"Error checking TIFF file {file}: {e}")
 
-    # Define a helper function to convert two bytes to a short integer
     def toShort(self, b1, b2):
         """
         Convert two bytes to a short integer.
@@ -369,9 +312,9 @@ class TileStitcher:
         Returns:
             int: The short integer represented by the two bytes.
         """
+
         return (b1 << 8) + b2
 
-    # Define a function to parse TIFF file metadata and extract the image region
     def parse_regions(self, infiles):
         """
         Parse image regions from a list of TIFF files and build a sparse image server.
@@ -388,8 +331,7 @@ class TileStitcher:
             try:
                 region = self.parseRegion(f)
                 if region is None:  # pragma: no cover
-                    print("WARN: Could not parse region for " + str(f))
-                    continue
+                    continue  # Skip files that failed to parse without halting the entire operation
                 serverBuilder = (
                     self.ImageServerProvider.getPreferredUriImageSupport(
                         self.BufferedImage, jpype.JString(f)
@@ -399,8 +341,9 @@ class TileStitcher:
                 )
                 builder.jsonRegion(region, 1.0, serverBuilder)
             except Exception as e:  # pragma: no cover
-                print(f"Error parsing regions from file {f}: {e}")
-                traceback.print_exc()
+                raise ImageServerConstructionError(
+                    f"Error parsing regions from file {f}: {e}"
+                )
         return builder.build()
 
     def _write_pyramidal_image_server(self, server, fileout, downsamples):
@@ -413,24 +356,19 @@ class TileStitcher:
             downsamples (list): A list of downsample levels to use in the pyramidal image server.
         """
 
-        # Convert the parsed regions into a pyramidal image server and write to file
-
         try:
             newOME = self.OMEPyramidWriter.Builder(server)
-
-            # Control downsamples
             if downsamples is None:
                 downsamples = server.getPreferredDownsamples()
-                print(downsamples)
             newOME.downsamples(downsamples).tileSize(
                 512
             ).channelsInterleaved().parallelize().losslessCompression().build().writePyramid(
                 fileout.getAbsolutePath()
             )
-        except Exception as e:
-            print(f"Error writing pyramidal image server to file {fileout}: {e}")
-            # traceback.print_exc()
-            raise
+        except Exception as e:  # pragma: no cover
+            raise ImageWritingError(
+                f"Error writing pyramidal image server to file {fileout}: {e}"
+            )
 
     def run_image_stitching(
         self, input_dir, output_filename, downsamples=[1, 8], separate_series=False
@@ -450,23 +388,22 @@ class TileStitcher:
             output_file, file_jpype = self._get_outfile(output_filename)
 
             if not infiles or not file_jpype:
-                return
+                raise ImageStitchingOperationError(
+                    "No input files found or output path is invalid."
+                )
 
             server = self.parse_regions(infiles)
             server = self.ImageServers.pyramidalize(server)
             self._write_pyramidal_image_server(server, file_jpype, downsamples)
 
             server.close()
-            print(f"Image stitching completed. Output file: {file_jpype}")
+            print(f"Image stitching completed. Output file: {output_file}")
 
             if separate_series:
-                print("Separating Series")
                 self.bfconvert_path = self.setup_bfconvert(self.bfconvert_dir)
                 self.run_bfconvert(output_file)
-
         except Exception as e:
-            print(f"Error running image stitching: {e}")
-            traceback.print_exc()
+            raise ImageStitchingOperationError(f"Error running image stitching: {e}")
 
     def run_bfconvert(
         self, stitched_image_path, bfconverted_path=None, delete_original=True
@@ -482,51 +419,66 @@ class TileStitcher:
         """
 
         if not self.is_bfconvert_available():
-            print("bfconvert command not available. Skipping bfconvert step.")
-            return
+            raise BFConvertExecutionError(
+                "bfconvert command not available. Skipping bfconvert step."
+            )
 
-        if not bfconverted_path:
-            base_path = stitched_image_path.rsplit(".ome.tif", 1)[0]
-            bfconverted_path = f"{base_path}_separated.ome.tif"
+        # Generate default bfconverted path if not provided
+        bfconverted_path = (
+            bfconverted_path
+            or f"{stitched_image_path.rsplit('.ome.tif', 1)[0]}_separated.ome.tif"
+        )
 
-        bfconvert_command = f"./{self.bfconvert_path} -series 0 -separate '{stitched_image_path}' '{bfconverted_path}'"
-        print("Bfconvert Command: ", bfconvert_command)
+        # Check if the bfconverted file already exists and remove it to avoid prompting
+        bfconverted_file = Path(bfconverted_path)
+        if bfconverted_file.exists():
+            bfconverted_file.unlink()  # This deletes the file
 
-        bfconvert_command = [
-            str(self.bfconvert_path),
-            "-series",
-            "0",
-            "-separate",
-            str(stitched_image_path),
-            str(bfconverted_path),
-        ]
+        try:
+            # Execute bfconvert command based on the environment (shell or not)
+            if self.shell:
+                bfconvert_command = f'"{self.bfconvert_path}" -series 0 -separate "{stitched_image_path}" "{bfconverted_path}"'
+                subprocess.run(bfconvert_command, shell=True, check=True)
+            else:
+                subprocess.run(
+                    [
+                        self.bfconvert_path,
+                        "-series",
+                        "0",
+                        "-separate",
+                        stitched_image_path,
+                        bfconverted_path,
+                    ],
+                    check=True,
+                )
+            print(f"bfconvert completed. Output file: {bfconverted_path}")
+        except subprocess.CalledProcessError as e:
+            raise BFConvertExecutionError(
+                f"Error running bfconvert command: {e}"
+            ) from e
 
-        # Check if the file already exists and remove it to avoid prompting
-        if not os.path.exists(bfconverted_path):
-            # Run bfconvert command
-            try:
-                subprocess.run(bfconvert_command, shell=self.shell, check=True)
-                print(f"bfconvert completed. Output file: {bfconverted_path}")
-
-                # Delete the original stitched image if requested
-                if delete_original:
-                    os.remove(stitched_image_path)
-                    print(f"Original stitched image deleted: {stitched_image_path}")
-
-            except subprocess.CalledProcessError:
-                print("Error running bfconvert command.")
+        # Optionally delete the original stitched image
+        if delete_original:
+            original_file = Path(stitched_image_path)
+            if original_file.exists():
+                original_file.unlink()
+                print(f"Original stitched image deleted: {stitched_image_path}")
 
     def is_bfconvert_available(self):
+        """
+        Check if bfconvert is available.
+        """
 
         try:
             result = subprocess.run(
-                [str(self.bfconvert_path), "-version"],
+                [self.bfconvert_path, "-version"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 shell=self.shell,
             )
             return result.returncode == 0
-        except FileNotFoundError:
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            # raise BFConvertExecutionError("bfconvert tool not found.")
             return False
 
     def shutdown(self):
@@ -536,4 +488,70 @@ class TileStitcher:
 
         if jpype.isJVMStarted():
             jpype.shutdownJVM()
-            print("JVM successfully shutdown")
+            print("JVM successfully shutdown.")
+
+
+class TileStitcherError(Exception):
+    """General exception for TileStitcher-related errors."""
+
+    pass
+
+
+class JVMInitializationError(TileStitcherError):
+    """Specific exception for errors related to JVM initialization."""
+
+    pass
+
+
+class QuPathClassImportError(TileStitcherError):
+    """Specific exception for errors during QuPath class imports."""
+
+    pass
+
+
+class BFConvertSetupError(TileStitcherError):
+    """Exception raised during the setup or execution of the bfconvert tool."""
+
+    pass
+
+
+class FileCollectionError(TileStitcherError):
+    """Exception raised for errors during file collection."""
+
+    pass
+
+
+class ImageServerConstructionError(TileStitcherError):
+    """Exception for errors during the construction of the image server."""
+
+    pass
+
+
+class ImageWritingError(TileStitcherError):
+    """Exception for errors during writing the pyramidal image server to a file."""
+
+    pass
+
+
+class ImageStitchingOperationError(TileStitcherError):
+    """Exception for errors during the image stitching operation."""
+
+    pass
+
+
+class TIFFParsingError(TileStitcherError):
+    """Exception raised for errors during TIFF parsing."""
+
+    pass
+
+
+class BFConvertExecutionError(TileStitcherError):
+    """Exception raised for errors executing the bfconvert tool."""
+
+    pass
+
+
+class BFConvertError(TileStitcherError):
+    """Exception raised for errors during the bfconvert tool setup or operation."""
+
+    pass
