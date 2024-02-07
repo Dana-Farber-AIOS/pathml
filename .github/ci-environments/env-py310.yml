@@ -22,7 +22,7 @@ dependencies:
   - networkx<=3.2.1
   # - python-javabridge==4.0.3
   - pip:
-      - python-bioformats==4.0.7
+      # - python-bioformats==4.0.7
       # - python-javabridge==4.0.3
       - protobuf==3.20.3
       # - deepcell<=0.12.7
