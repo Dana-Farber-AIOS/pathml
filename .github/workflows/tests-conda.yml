@@ -21,8 +21,13 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ["3.8", "3.9", "3.10"]
     steps:
-      - uses: actions/checkout@v2
-      
+      - uses: actions/checkout@v4
+      - name: Setup JAVA
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          check-latest: true
       - name: Setup Miniconda
         uses: conda-incubator/setup-miniconda@v3
         with:
