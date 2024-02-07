@@ -5,34 +5,33 @@ channels:
     - conda-forge
 
 dependencies:
-    - pip==21.3.1
+    - pip==23.3.2
     - numpy # orig = 1.19.5
     - scipy # orig = 1.7.3
     - scikit-image # orig 0.18.3
     - matplotlib==3.5.1
     - openjdk<=18.0.0
-    - pytorch==1.13.1 # orig = 1.10.1
-    - h5py==3.1.0
-    - dask==2021.12.0
-    - pydicom==2.2.2
-    - pytest==7.4.0 # orig = 6.2.5
-    - pre-commit==2.16.0
-    - coverage==5.5
-    - networkx==3.1
+    - h5py==3.10.0
+    - dask<=2023.12.1
+    - pydicom==2.4.4
+    - pytest==7.4.3 # orig = 6.2.5
+    - pre-commit<=3.6.0
+    - coverage==7.3.4
+    - networkx<=3.2.1
     - pip:
         - -r requirements_cuda.txt
-        - python-bioformats==4.0.0
-        - python-javabridge==4.0.0
+        - python-bioformats==4.0.7
+        - python-javabridge==4.0.3
         - protobuf==3.20.3
-        - deepcell==0.12.7 # orig = 0.11.0
+        # - deepcell==0.12.7 # orig = 0.11.0
         - onnx==1.14.0
         - onnxruntime==1.15.1
-        - opencv-contrib-python==4.5.3.56
-        - openslide-python==1.2.0
-        - scanpy==1.8.2
-        - anndata==0.7.8
-        - tqdm==4.62.3
-        - loguru==0.5.3
-        - pandas==1.5.2 # orig no req
+        - opencv-contrib-python==4.8.1.78
+        - openslide-python==1.3.1
+        - scanpy==1.9.6
+        - anndata<=0.10.3
+        - tqdm==4.66.1
+        - loguru==0.7.2
+        - pandas<=2.1.4
         - torch-geometric==2.3.1
-        - jpype1
+        - jpype1==1.4.1

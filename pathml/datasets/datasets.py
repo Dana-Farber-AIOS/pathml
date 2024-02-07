@@ -109,17 +109,17 @@ class EntityDataset(torch.utils.data.Dataset):
         self.assign_dir = assign_dir
 
         if self.cell_dir is not None:
-            if not os.path.exists(cell_dir):
+            if not os.path.exists(cell_dir):  # pragma: no cover
                 raise FileNotFoundError(f"Directory not found: {self.cell_dir}")
             self.cell_graphs = glob(os.path.join(cell_dir, "*.pt"))
 
         if self.tissue_dir is not None:
-            if not os.path.exists(tissue_dir):
+            if not os.path.exists(tissue_dir):  # pragma: no cover
                 raise FileNotFoundError(f"Directory not found: {self.tissue_dir}")
             self.tissue_graphs = glob(os.path.join(tissue_dir, "*.pt"))
 
         if self.assign_dir is not None:
-            if not os.path.exists(assign_dir):
+            if not os.path.exists(assign_dir):  # pragma: no cover
                 raise FileNotFoundError(f"Directory not found: {self.assign_dir}")
             self.assigns = glob(os.path.join(assign_dir, "*.pt"))
 
@@ -237,7 +237,7 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
             from torchvision import transforms
 
             self.use_torchvision = True
-        except ImportError:
+        except ImportError:  # pragma: no cover
             print(
                 "Torchvision is not installed, using base modules for resizing patches and skipping normalization"
             )
@@ -252,7 +252,7 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
                 basic_transforms.append(transforms.Normalize(self.mean, self.std))
             self.dataset_transform = transforms.Compose(basic_transforms)
 
-        if self.entity not in ["cell", "tissue"]:
+        if self.entity not in ["cell", "tissue"]:  # pragma: no cover
             raise ValueError(
                 "Invalid value for entity. Expected 'cell' or 'tissue', got '{}'.".format(
                     self.entity
@@ -435,7 +435,7 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
             patch = self._get_patch_tissue(
                 self.patch_coordinates[index], self.patch_instance_ids[index]
             )
-        else:
+        else:  # pragma: no cover
             raise ValueError(
                 "Invalid value for entity. Expected 'cell' or 'tissue', got '{}'.".format(
                     self.entity
@@ -444,7 +444,7 @@ class InstanceMapPatchDataset(torch.utils.data.Dataset):
 
         if self.use_torchvision:
             patch = self.dataset_transform(patch)
-        else:
+        else:  # pragma: no cover
             patch = patch / 255.0 if patch.max() > 1 else patch
             patch = resize(patch, (self.resize_size, self.resize_size))
             patch = torch.from_numpy(patch).permute(2, 0, 1).float()

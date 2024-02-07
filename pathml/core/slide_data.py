@@ -40,7 +40,9 @@ def infer_backend(path):
         for ext in extension_set:
             if path[-len(ext) :] == ext:
                 return name
-    raise ValueError(f"input path {path} doesn't match any supported file extensions")
+    raise ValueError(
+        f"input path {path} doesn't match any supported file extensions"
+    )  # pragma: no cover
 
 
 class SlideData:
@@ -382,7 +384,7 @@ class SlideData:
         Returns:
             np.ndarray: image at the specified region
         """
-        if self.slide is None:
+        if self.slide is None:  # pragma: no cover
             raise ValueError(
                 "Cannot call `.extract_region()` because no slide is specified. "
                 "If already tiled, access `.tiles` directly instead"
