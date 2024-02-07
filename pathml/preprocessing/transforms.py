@@ -730,7 +730,7 @@ class StainNormalizationHE(Transform):
             C = self._estimate_pixel_concentrations_lstsq(image, stain_matrix)
         elif self.stain_estimation_method == "vahadane":
             C = self._estimate_pixel_concentrations_lasso(image, stain_matrix)
-        else:
+        else:  # pragma: no cover
             raise Exception(f"Provided target {self.target} invalid")
         return C
 
@@ -1493,7 +1493,7 @@ class QuantifyMIF(Transform):
         try:
             counts.obsm["spatial"] = np.array(counts.obs[["x", "y"]])
         # TODO: change to specific exception
-        except Exception:
+        except Exception:  # pragma: no cover
             logger.warning("did not log coordinates in obsm")
         return counts
 

@@ -53,6 +53,7 @@ jobs:
         mamba --version
         echo "Checking the available disk space..."
         df -h
+        
     - name: Install dependencies with mamba
       shell: bash -l {0}
       run: mamba env update --file environment.yml --name pathml
@@ -82,6 +83,15 @@ jobs:
     - name: disk usage
       shell: bash -l {0}
       run: |
+        sudo df -h
+        sudo du -h
+        
+    - name: free disk space
+      run: |
+        sudo swapoff -a
+        sudo rm -f /swapfile
+        sudo apt clean
+        docker rmi $(docker image ls -aq)
         sudo df -h
         sudo du -h
 
