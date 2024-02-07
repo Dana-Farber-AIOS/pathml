@@ -22,6 +22,25 @@ jobs:
         python-version: ["3.8", "3.9", "3.10"]
     steps:
       - uses: actions/checkout@v4
+      - name: Setup cache for Conda
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/miniconda/pkgs
+            ~/.conda/pkgs
+          key: ${{ runner.os }}-conda-${{ hashFiles('.github/ci-environments/env-py*.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-conda-
+      
+      - name: Setup cache for pip
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('.github/ci-environments/env-py*.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            
       - name: Setup JAVA
         uses: actions/setup-java@v4
         with:
