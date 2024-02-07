@@ -85,6 +85,21 @@ jobs:
         shell: bash -l {0}
         run: conda --version
 
+      - name: Install python-bioformats and python-javabridge
+        shell: bash -l {0}
+        run: |
+          if [[ "$(conda env list | grep 'pathml')" != "" ]]; then
+            echo "Active environment is pathml. Proceeding with installation."
+            pip install --use-pep517 python-javabridge python-bioformats
+            echo "Installed python-javabridge version:"
+            python -c "import javabridge; print(javabridge.__version__)"
+            echo "Installed python-bioformats version:"
+            python -c "import bioformats; print(bioformats.__version__)"
+          else
+            echo "Active environment is not pathml. Skipping installation."
+          fi
+
+
       # - name: Install additional dependencies
       #   if: matrix.os == 'ubuntu-latest' || matrix.os == 'ubuntu-18.04'
       #   shell: bash -l {0}
