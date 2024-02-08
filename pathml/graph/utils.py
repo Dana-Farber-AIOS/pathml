@@ -167,7 +167,44 @@ def two_hop(edge_index, num_nodes):
         torch.tensor: Output edge index tensor.
     """
     adj = to_torch_csr_tensor(edge_index, size=(num_nodes, num_nodes))
-    edge_index2, _ = to_edge_index(adj @ adj)
-    edge_index2, _ = remove_self_loops(edge_index2)
-    edge_index = torch.cat([edge_index, edge_index2], dim=1)
+    try:
+        edge_index2, _ = to_edge_index(adj @ adj)
+        edge_index2, _ = remove_self_loops(edge_index2)
+        edge_index = torch.cat([edge_index, edge_index2], dim=1)
+    except RuntimeError as e:
+        print(e, "Computing two-hop graph manually")
+        edge_index = two_hop_no_sparse(edge_index, num_nodes)
     return edge_index
+
+
+def two_hop_no_sparse(edge_index, num_nodes):  # pragma: no cover
+    """Calculates the two-hop graph without using sparse tensors, in case of M1/M2 chips.
+    Args:
+        edge_index (torch.tensor): The edge index in sparse form of the graph (2, E)
+        num_nodes (int): maximum number of nodes.
+    Returns:
+        torch.tensor: Output edge index tensor.
+    """
+    # Initialize an empty list to store the two-hop edges
+    two_hop_edges = []
+
+    # Convert edge_index tensor to a list of tuples (edges)
+    edges = edge_index.t().tolist()
+
+    # Iterate over all pairs of nodes
+    for src, dest in edges:
+        # First hop: Add direct edges
+        two_hop_edges.append([src, dest])
+
+        # Second hop: Find all neighbors of the destination node
+        for neighbor in range(num_nodes):
+            # Check if the neighbor is connected to the destination node
+            if [dest, neighbor] in edges:
+                # Avoid self-loops
+                if neighbor != src:
+                    two_hop_edges.append([src, neighbor])
+
+    # Convert the list of two-hop edges to a PyTorch tensor
+    edge_index_two_hop = torch.tensor(two_hop_edges).t().contiguous()
+
+    return edge_index_two_hop
