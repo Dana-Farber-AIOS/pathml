@@ -53,6 +53,7 @@ jobs:
         mamba --version
         echo "Checking the available disk space..."
         df -h
+        
     - name: Install dependencies with mamba
       shell: bash -l {0}
       run: mamba env update --file environment.yml --name pathml
@@ -79,13 +80,18 @@ jobs:
       shell: bash -l {0}
       run: pip install torchvision==0.14.1
 
-    - name: Install DeepCell
-      shell: bash -l {0}
-      run: pip install deepcell
-
     - name: disk usage
       shell: bash -l {0}
       run: |
+        sudo df -h
+        sudo du -h
+        
+    - name: free disk space
+      run: |
+        sudo swapoff -a
+        sudo rm -f /swapfile
+        sudo apt clean
+        docker rmi $(docker image ls -aq)
         sudo df -h
         sudo du -h
 
