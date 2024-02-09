@@ -171,7 +171,7 @@ def two_hop(edge_index, num_nodes):
         edge_index2, _ = to_edge_index(adj @ adj)
         edge_index2, _ = remove_self_loops(edge_index2)
         edge_index = torch.cat([edge_index, edge_index2], dim=1)
-    except RuntimeError as e:
+    except RuntimeError as e:  # pragma: no cover
         print(e, "Computing two-hop graph manually")
         edge_index = two_hop_no_sparse(edge_index, num_nodes)
     return edge_index
