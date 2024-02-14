@@ -32,7 +32,6 @@ jobs:
 
     - name: Debug JAVA_HOME
       run: |
-        echo ${{ steps.setup-java.outputs.java_home }}
         echo $env:JAVA_HOME
         echo $env:PATH
       shell: pwsh
