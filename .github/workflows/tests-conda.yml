@@ -12,116 +12,54 @@ on:
       - master
 
 jobs:
-  build:
-    name: Build (${{ matrix.os }}, Python ${{ matrix.python-version }})
-    runs-on: ${{ matrix.os }}
+  build-linux:
+    runs-on: windows-latest
     strategy:
-      fail-fast: false
+      max-parallel: 5
       matrix:
-        os: [ windows-latest]
-        python-version: [ "3.10"]
+        python-version: [3.9]
+    timeout-minutes: 60 # add a timeout
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup cache for Conda
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/miniconda/pkgs
-            ~/.conda/pkgs
-          key: ${{ runner.os }}-conda-${{ hashFiles('.github/ci-environments/env-py*.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-conda-
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Display Python version
+      run: python -c "import sys; print(sys.version)"
+    # - name: Install dependencies
+    #   shell: bash -l {0}
+    #   run: |
+    #     sudo apt-get update
+    #     sudo apt-get install openslide-tools
+    #     sudo apt-get install pandoc
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-activate-base: false
+        activate-environment: pathml
+        environment-file: '.github/ci-environments/env-py310.yml'
+        mamba-version: "*"
+        python-version: ${{ matrix.python-version }}
+    - name: Debugging
+      run: |
+        echo "Printing the environment.yml file..."
+        cat environment.yml
+        echo "Checking the status of mamba..."
+        mamba --version
+        echo "Checking the available disk space..."
+        df -h
+    - name: Install dependencies with mamba
+      shell: bash -l {0}
+      run: mamba env update --file environment.yml --name pathml
       
-      - name: Setup cache for pip
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('.github/ci-environments/env-py*.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-            
-      - name: Setup JAVA
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-          check-latest: true
-
-      - name: Check JAVA_HOME
-        shell: bash -l {0}
-        run: |
-          echo "JAVA_HOME is set to $JAVA_HOME"
-          echo "Java Path:"
-          which java
-          echo "Java Version:"
-          java -version
-
-      - name: Add JDK bin to PATH
-        if: runner.os == 'Windows'
-        run: echo "$JAVA_HOME\bin" >> $GITHUB_PATH
-
-
-      - name: Setup Miniconda
-        uses: conda-incubator/setup-miniconda@v3
-        with:
-          auto-update-conda: true
-          miniforge-version: latest
-          use-mamba: true
-          activate-environment: pathml
-          environment-file: .github/ci-environments/env-py${{ matrix.python-version == '3.10' && '310' || matrix.python-version == '3.9' && '39' || '38' }}.yml
-          channels: conda-forge
-
-      - name: Display Python version
-        shell: bash -l {0}
-        run: |
-          python --version
-
-      - name: Conda info
-        shell: bash -l {0}
-        run: conda info
-
-      - name: Conda Version
-        shell: bash -l {0}
-        run: conda --version
-
-      - name: Install python-bioformats and python-javabridge
-        shell: bash -l {0}
-        run: |
-          if [[ "$(conda env list | grep 'pathml')" != "" ]]; then
-            echo "Active environment is pathml. Proceeding with installation."
-            pip install --use-pep517 python-javabridge python-bioformats
-            echo "Installed python-javabridge version:"
-            python -c "import javabridge; print(javabridge.__version__)"
-            echo "Installed python-bioformats version:"
-            python -c "import bioformats; print(bioformats.__version__)"
-          else
-            echo "Active environment is not pathml. Skipping installation."
-          fi
-
-
-      # - name: Install additional dependencies
-      #   if: matrix.os == 'ubuntu-latest' || matrix.os == 'ubuntu-18.04'
-      #   shell: bash -l {0}
-      #   run: |
-      #     sudo apt-get update
-      #     sudo apt-get install openslide-tools
-      #     sudo apt-get install pandoc
-
-      # - name: Install additional dependencies
-      #   shell: bash -l {0}
-      #   run: |
-      #     mamba install spams torchvision==0.14.1
-
-      # - name: Test with coverage
-      #   shell: bash -l {0}
-      #   run: |
-      #     coverage run -m pytest
-      #     coverage xml -o coverage.xml
-
-      # - name: Upload coverage to Codecov
-      #   uses: codecov/codecov-action@v2
-      #   with:
-      #     token: ${{ secrets.CODECOV_TOKEN }}
-      #     files: ./coverage.xml
-      #     fail_ci_if_error: true
+    - name: Conda info
+      shell: bash -l {0}
+      run: |
+        conda info
+        conda list
+    - name: Install PathML
+      shell: bash -l {0}      
+      run: pip install -e .
+  
