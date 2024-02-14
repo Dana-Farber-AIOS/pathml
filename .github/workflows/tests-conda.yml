@@ -47,13 +47,13 @@ jobs:
       shell: pwsh
 
     - name: vcpkg build
-    uses: johnwason/vcpkg-action@v6
-    id: vcpkg
-    with:
-      pkgs: openslide
-      triplet: x64-windows-release
-      token: ${{ github.token }}
-      github-binarycache: true
+      uses: johnwason/vcpkg-action@v6
+      id: vcpkg
+      with:
+        pkgs: openslide
+        triplet: x64-windows-release
+        token: ${{ github.token }}
+        github-binarycache: true
         
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2
