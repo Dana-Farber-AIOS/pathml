@@ -51,7 +51,7 @@ jobs:
       id: vcpkg
       with:
         pkgs: openslide
-        triplet: x64-windows-release
+        triplet: x64-windows
         token: ${{ github.token }}
         github-binarycache: true
         
