@@ -27,8 +27,14 @@ jobs:
       uses: actions/setup-java@v2
       with:
         java-version: '17'
-        distribution: 'temurin'
-        
+        distribution: 'temurin' # Use 'temurin' for Eclipse Temurin distribution
+        java-package: jdk # Make sure it's JDK not JRE
+      id: setup-java
+
+    - name: Set JAVA_HOME and PATH
+      run: |
+        echo "JAVA_HOME=${{ steps.setup-java.outputs.java_home }}" >> $GITHUB_ENV
+        echo "${{ steps.setup-java.outputs.java_home }}\bin" >> $GITHUB_PATH
         
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2
