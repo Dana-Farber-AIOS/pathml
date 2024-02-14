@@ -34,7 +34,14 @@ jobs:
     - name: Set JAVA_HOME and PATH
       run: |
         echo "JAVA_HOME=${{ steps.setup-java.outputs.java_home }}" >> $GITHUB_ENV
+        echo "JDK_HOME=${{ steps.setup-java.outputs.java_home }}" >> $GITHUB_ENV
         echo "${{ steps.setup-java.outputs.java_home }}\bin" >> $GITHUB_PATH
+
+    - name: Verify JAVA_HOME and Java installation
+      run: |
+        echo "JAVA_HOME: $JAVA_HOME"
+        java -version
+        javac -version
         
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2
