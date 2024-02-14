@@ -37,9 +37,9 @@ jobs:
       shell: pwsh
 
     - name: Set JAVA_HOME and JDK_HOME
-      run: |
-        # echo "JDK_HOME=$JAVA_HOME" >> $GITHUB_ENV
-        $env:JDK_HOME = $env:JAVA_HOME
+      run: echo "$env:JDK_HOME=$env:JAVA_HOME" >> $GITHUB_ENV
+      env:
+        JAVA_HOME: $env:JAVA_HOME
       shell: pwsh
 
     - name: Print JAVA_HOME and JDK_HOME
