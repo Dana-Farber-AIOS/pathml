@@ -1,11 +1,14 @@
 import setuptools
 
-with open("README.md", "r") as fh:
+# Specify the encoding explicitly when reading README.md
+with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 about = {}
-with open("pathml/_version.py") as f:
+# It's also a good practice to specify encoding here, though it may not be necessary if _version.py contains only ASCII characters
+with open("pathml/_version.py", "r", encoding="utf-8") as f:
     exec(f.read(), about)
+
 version = about["__version__"]
 
 setuptools.setup(
