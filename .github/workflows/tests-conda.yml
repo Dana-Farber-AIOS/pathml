@@ -38,9 +38,8 @@ jobs:
 
     - name: Set JAVA_HOME and JDK_HOME
       run: |
-        echo "JAVA_HOME=${{ steps.setup-java.outputs.java_home }}" >> $GITHUB_ENV
-        echo "JDK_HOME=${{ steps.setup-java.outputs.java_home }}" >> $GITHUB_ENV
-        $env
+        # echo "JDK_HOME=$JAVA_HOME" >> $GITHUB_ENV
+        echo "JDK_HOME=$JAVA_HOME" >> $GITHUB_ENV
       shell: pwsh
 
     - name: Print JAVA_HOME and JDK_HOME
