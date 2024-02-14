@@ -74,9 +74,9 @@ jobs:
       shell: bash -l {0}      
       run: pip install -e .
 
-    - name: Install python-spams
-      shell: bash -l {0}      
-      run: pip install spams
+    # - name: Install python-spams
+    #   shell: bash -l {0}      
+    #   run: pip install spams
     
     - name: Install torchvision
       shell: bash -l {0}
