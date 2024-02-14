@@ -5,7 +5,7 @@ channels:
   - pytorch
 
 dependencies:
-  - python<=3.10
+  - python<3.11
   - pip==23.3.2
   - numpy==1.23.5
   - scipy<=1.11.4
@@ -22,10 +22,10 @@ dependencies:
   - networkx<=3.2.1
   # - python-javabridge==4.0.3
   - pip:
-      # - python-bioformats==4.0.7
-      # - python-javabridge==4.0.3
+      - python-bioformats==4.0.7
+      - python-javabridge==4.0.3
       - protobuf==3.20.3
-      # - deepcell<=0.12.7
+      - deepcell<=0.12.7
       - onnx==1.14.0
       - onnxruntime==1.15.1
       - opencv-contrib-python==4.8.1.78
