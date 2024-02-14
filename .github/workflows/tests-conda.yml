@@ -39,7 +39,7 @@ jobs:
       with:
         auto-activate-base: false
         activate-environment: pathml
-        environment-file: '.github/ci-environments/env-py310.yml'
+        environment-file: '.github/ci-environments/env-py39.yml'
         mamba-version: "*"
         python-version: ${{ matrix.python-version }}
     - name: Debugging
