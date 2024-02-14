@@ -73,3 +73,21 @@ jobs:
     - name: Install PathML
       shell: bash -l {0}      
       run: pip install -e .
+
+    - name: Install python-spams
+      shell: bash -l {0}      
+      run: pip install spams
+    
+    - name: Install torchvision
+      shell: bash -l {0}
+      run: pip install torchvision==0.14.1
+
+    - name: Test tile_stitcher with pytest and generate coverage
+      shell: bash -l {0}
+      run: |
+        COVERAGE_FILE=.coverage_tilestitcher coverage run -m pytest tests/preprocessing_tests/test_tilestitcher.py
+
+    - name: Test other modules with pytest and generate coverage
+        shell: bash -l {0}
+        run: |
+          COVERAGE_FILE=.coverage_others coverage run -m pytest -m "not slow and not exclude"
