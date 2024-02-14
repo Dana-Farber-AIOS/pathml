@@ -82,6 +82,19 @@ jobs:
       shell: bash -l {0}
       run: pip install torchvision==0.14.1
 
+    - name: Set up vcpkg
+        uses: lukka/run-vcpkg@v10
+        with:
+          # Setup vcpkg directory
+          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+          # Clone vcpkg repo
+          setupOnly: true
+        
+    - name: Install OpenSlide with vcpkg
+      run: |
+        ./vcpkg/vcpkg install openslide
+      working-directory: ${{ github.workspace }}
+      
     - name: Test tile_stitcher with pytest and generate coverage
       shell: bash -l {0}
       run: |
