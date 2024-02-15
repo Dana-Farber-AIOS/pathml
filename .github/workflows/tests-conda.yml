@@ -104,11 +104,17 @@ jobs:
         shell: bash -l {0}
         run: pip install torchvision==0.14.1
 
-      - name: Download and Setup OpenSlide
+      # - name: Download and Setup OpenSlide
+      #   run: |
+      #     Invoke-WebRequest -Uri "https://github.com/openslide/openslide-bin/releases/download/v20231011/openslide-win64-20231011.zip" -OutFile "openslide-win64-20231011.zip"
+      #     Expand-Archive -Path "openslide-win64-20231011.zip" -DestinationPath "${{ github.workspace }}/openslide-binaries"
+      #     echo "${{ github.workspace }}/openslide-binaries/openslide-win64-20231011" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
+      #   shell: pwsh
+
+      - name: Check PATH
         run: |
-          Invoke-WebRequest -Uri "https://github.com/openslide/openslide-bin/releases/download/v20231011/openslide-win64-20231011.zip" -OutFile "openslide-win64-20231011.zip"
-          Expand-Archive -Path "openslide-win64-20231011.zip" -DestinationPath "${{ github.workspace }}/openslide-binaries"
-          echo "${{ github.workspace }}/openslide-binaries/openslide-win64-20231011" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
+          # echo $env:JAVA_HOME
+          echo $env:PATH
         shell: pwsh
       
       - name: Test tile_stitcher with pytest and generate coverage
