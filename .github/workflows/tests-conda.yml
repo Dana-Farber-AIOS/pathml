@@ -111,6 +111,10 @@ jobs:
       #     echo "${{ github.workspace }}/openslide-binaries/openslide-win64-20231011" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
       #   shell: pwsh
 
+      - name: Set OPENSLIDE_PATH
+        run: echo "OPENSLIDE_PATH=D:\a\pathml\pathml\openslide-binaries\openslide-win64-20231011\bin" >> $GITHUB_ENV
+        shell: pwsh
+
       - name: Check PATH
         run: |
           # echo $env:JAVA_HOME
