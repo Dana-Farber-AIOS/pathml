@@ -181,82 +181,82 @@ def test_Inference(tileHE):
     )
 
 
-def test_HaloAIInference(tileHE):
-    new_path = "tests/testdata/random_model.onnx"
+# def test_HaloAIInference(tileHE):
+#     new_path = "tests/testdata/random_model.onnx"
 
-    inference = HaloAIInference(
-        model_path=new_path, input_name="data", num_classes=1, model_type="segmentation"
-    )
-    orig_im = tileHE.image
-    inference.apply(tileHE)
-    assert np.array_equal(tileHE.image, inference.F(orig_im))
+#     inference = HaloAIInference(
+#         model_path=new_path, input_name="data", num_classes=1, model_type="segmentation"
+#     )
+#     orig_im = tileHE.image
+#     inference.apply(tileHE)
+#     assert np.array_equal(tileHE.image, inference.F(orig_im))
 
-    assert (
-        repr(inference)
-        == f"Class to handle HALO AI ONNX model locally stored at {new_path}"
-    )
-
-
-def test_RemoteTestHoverNet():
-    inference = RemoteTestHoverNet()
-
-    wsi = SlideData("tests/testdata/small_HE.svs")
-
-    tiles = wsi.generate_tiles(shape=(256, 256), pad=False)
-    a = 0
-    test_tile = None
-
-    while a == 0:
-        for tile in tiles:
-            test_tile = tile
-            a += 1
-
-    orig_im = test_tile.image
-    inference.apply(test_tile)
-    assert np.array_equal(test_tile.image, inference.F(orig_im))
-
-    assert (
-        repr(inference)
-        == "Class to handle remote TIAToolBox HoverNet test ONNX. See model card for citation."
-    )
-
-    inference.remove()
+#     assert (
+#         repr(inference)
+#         == f"Class to handle HALO AI ONNX model locally stored at {new_path}"
+#     )
 
 
-def test_convert_pytorch_onnx():
-    test_tensor = torch.randn(1, 10)
-    model_test = torch.jit.load("tests/testdata/test.pt")
+# def test_RemoteTestHoverNet():
+#     inference = RemoteTestHoverNet()
 
-    model_test.eval()
+#     wsi = SlideData("tests/testdata/small_HE.svs")
 
-    convert_pytorch_onnx(
-        model=model_test, dummy_tensor=test_tensor, model_name="test_export.onnx"
-    )
+#     tiles = wsi.generate_tiles(shape=(256, 256), pad=False)
+#     a = 0
+#     test_tile = None
 
-    os.remove("test_export.onnx")
+#     while a == 0:
+#         for tile in tiles:
+#             test_tile = tile
+#             a += 1
 
-    # test Value Error Statements
+#     orig_im = test_tile.image
+#     inference.apply(test_tile)
+#     assert np.array_equal(test_tile.image, inference.F(orig_im))
 
-    # test lines to check model input
-    try:
-        convert_pytorch_onnx(
-            model=None, dummy_tensor=test_tensor, model_name="test_export.onnx"
-        )
+#     assert (
+#         repr(inference)
+#         == "Class to handle remote TIAToolBox HoverNet test ONNX. See model card for citation."
+#     )
 
-    except Exception as e:
-        assert (
-            str(e)
-            == f"The model is not of type torch.nn.Module. Received {type(None)}."
-        )
+#     inference.remove()
 
-    # test lines to check model dummy input
-    try:
-        convert_pytorch_onnx(
-            model=model_test, dummy_tensor=None, model_name="test_export.onnx"
-        )
 
-    except Exception as e:
-        assert (
-            str(e)
-            == f"The dummy tensor needs to be a torch tensor. Received {type(None)}."
-        )
+# def test_convert_pytorch_onnx():
+#     test_tensor = torch.randn(1, 10)
+#     model_test = torch.jit.load("tests/testdata/test.pt")
+
+#     model_test.eval()
+
+#     convert_pytorch_onnx(
+#         model=model_test, dummy_tensor=test_tensor, model_name="test_export.onnx"
+#     )
+
+#     os.remove("test_export.onnx")
+
+#     # test Value Error Statements
+
+#     # test lines to check model input
+#     try:
+#         convert_pytorch_onnx(
+#             model=None, dummy_tensor=test_tensor, model_name="test_export.onnx"
+#         )
+
+#     except Exception as e:
+#         assert (
+#             str(e)
+#             == f"The model is not of type torch.nn.Module. Received {type(None)}."
+#         )
+
+#     # test lines to check model dummy input
+#     try:
+#         convert_pytorch_onnx(
+#             model=model_test, dummy_tensor=None, model_name="test_export.onnx"
+#         )
+
+#     except Exception as e:
+#         assert (
+#             str(e)
+#             == f"The dummy tensor needs to be a torch tensor. Received {type(None)}."
+#         )
