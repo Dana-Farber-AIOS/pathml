@@ -48,24 +48,45 @@ jobs:
 
       - name: Download and Setup OpenSlide
         run: |
-          Invoke-WebRequest -Uri "https://github.com/openslide/openslide-bin/releases/download/v20231011/openslide-win64-20231011.zip" -OutFile "openslide-win64-20231011.zip"
-          # Expand-Archive -Path "openslide-win64-20231011.zip" -DestinationPath "${{ github.workspace }}/openslide-binaries"
-          # echo "${{ github.workspace }}/openslide-binaries/openslide-win64-20231011" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
-        shell: pwsh
-
-      - name: Extract OpenSlide Binaries
-        run: |
-          Expand-Archive -Path "openslide-win64-20231011.zip" -DestinationPath "${{ github.workspace }}/openslide-binaries"
-          $binPath = Join-Path ${{ github.workspace }} "openslide-binaries/openslide-win64-20231011/bin"
+          $zipFile = "openslide-win64-20231011.zip"
+          $extractPath = Join-Path $env:GITHUB_WORKSPACE "openslide-binaries"
+          Invoke-WebRequest -Uri "https://github.com/openslide/openslide-bin/releases/download/v20231011/$zipFile" -OutFile $zipFile
+          Expand-Archive -Path $zipFile -DestinationPath $extractPath
+          $binPath = Join-Path $extractPath "openslide-win64-20231011/bin"
           Write-Host "Adding to PATH: $binPath"
-          echo "$binPath" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
+          echo "OPENSLIDE_PATH=$binPath" | Out-File -Append -FilePath $env:GITHUB_ENV
+          echo "$binPath" | Out-File -Append -FilePath $env:GITHUB_PATH
         shell: pwsh
 
+      # Optional: List files in OpenSlide bin directory to verify
       - name: List files in OpenSlide bin directory
         run: |
-          $binPath = Join-Path ${{ github.workspace }} "openslide-binaries/openslide-win64-20231011/bin"
-          Get-ChildItem -Path $binPath
+          Get-ChildItem -Path $env:OPENSLIDE_PATH
         shell: pwsh
+        env:
+          OPENSLIDE_PATH: ${{ env.OPENSLIDE_PATH }}
+
+          
+      # - name: Download and Setup OpenSlide
+      #   run: |
+      #     Invoke-WebRequest -Uri "https://github.com/openslide/openslide-bin/releases/download/v20231011/openslide-win64-20231011.zip" -OutFile "openslide-win64-20231011.zip"
+      #     # Expand-Archive -Path "openslide-win64-20231011.zip" -DestinationPath "${{ github.workspace }}/openslide-binaries"
+      #     # echo "${{ github.workspace }}/openslide-binaries/openslide-win64-20231011" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
+      #   shell: pwsh
+
+      # - name: Extract OpenSlide Binaries
+      #   run: |
+      #     Expand-Archive -Path "openslide-win64-20231011.zip" -DestinationPath "${{ github.workspace }}/openslide-binaries"
+      #     $binPath = Join-Path ${{ github.workspace }} "openslide-binaries/openslide-win64-20231011/bin"
+      #     Write-Host "Adding to PATH: $binPath"
+      #     echo "$binPath" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
+      #   shell: pwsh
+
+      # - name: List files in OpenSlide bin directory
+      #   run: |
+      #     $binPath = Join-Path ${{ github.workspace }} "openslide-binaries/openslide-win64-20231011/bin"
+      #     Get-ChildItem -Path $binPath
+      #   shell: pwsh
         
       - name: Check PATH
         run: |
