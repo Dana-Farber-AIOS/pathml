@@ -12,6 +12,15 @@ import scanpy as sc
 
 from pathml.core import Tile, VectraSlide, types
 
+def pytest_configure(config):
+    if sys.platform == 'win64':
+        # Fetch the OpenSlide path from environment variable
+        print('Setting path')
+        openslide_path = os.getenv('OPENSLIDE_PATH')
+        if openslide_path:
+            os.add_dll_directory(openslide_path)
+        else:
+            raise RuntimeError("OPENSLIDE_PATH environment variable is not set.")
 
 def pytest_sessionfinish(session, exitstatus):
     """
