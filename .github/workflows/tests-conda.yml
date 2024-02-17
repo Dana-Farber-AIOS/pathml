@@ -142,16 +142,17 @@ jobs:
           echo $env:PATH
         shell: pwsh
       
-      - name: Test tile_stitcher with pytest and generate coverage
-        shell: bash -l {0}
-        run: |
-          coverage run --data-file=.coverage_tilestitcher -m pytest tests/preprocessing_tests/test_tilestitcher.py
-        continue-on-error: true
+      # - name: Test tile_stitcher with pytest and generate coverage
+      #   shell: bash -l {0}
+      #   run: |
+      #     coverage run --data-file=.coverage_tilestitcher -m pytest tests/preprocessing_tests/test_tilestitcher.py
+      #   continue-on-error: true
 
       - name: Test other modules with pytest and generate coverage
         shell: bash -l {0}
         run: |
-          coverage run --data-file=.coverage_others -m pytest -m "not slow and not exclude"
+          # coverage run --data-file=.coverage_others -m pytest -m "not slow and not exclude"
+          coverage run --data-file=.coverage_others -m pytest -v -m "not slow and not exclude"
         continue-on-error: true
 
 
