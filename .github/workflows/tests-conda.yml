@@ -148,12 +148,26 @@ jobs:
       #     coverage run --data-file=.coverage_tilestitcher -m pytest tests/preprocessing_tests/test_tilestitcher.py
       #   continue-on-error: true
 
-      - name: Test other modules with pytest and generate coverage
-        shell: bash -l {0}
+      # - name: Test other modules with pytest and generate coverage
+      #   shell: bash -l {0}
+      #   run: |
+      #     # coverage run --data-file=.coverage_others -m pytest -m "not slow and not exclude"
+      #     coverage run --data-file=.coverage_others -m pytest -v -m "not slow and not exclude"
+      #   continue-on-error: true
+
+      - name: Increase Test Verbosity and Add Resource Monitoring
         run: |
-          # coverage run --data-file=.coverage_others -m pytest -m "not slow and not exclude"
+          # Adding resource monitoring for diagnosis
+          Start-Process -FilePath "powershell" -ArgumentList "Get-Process | Sort-Object -Property CPU -Descending | Select-Object -First 10; Get-Counter '\Memory\Available MBytes', '\Processor(_Total)\% Processor Time';" -NoNewWindow -PassThru
           coverage run --data-file=.coverage_others -m pytest -v -m "not slow and not exclude"
         continue-on-error: true
+        shell: pwsh
+
+      - name: Check System Resources After Tests
+        run: |
+          Get-Process | Sort-Object -Property CPU -Descending | Select-Object -First 10
+          Get-Counter '\Memory\Available MBytes', '\Processor(_Total)\% Processor Time'
+        shell: pwsh
 
 
 # name: Tests Cross-Platform
