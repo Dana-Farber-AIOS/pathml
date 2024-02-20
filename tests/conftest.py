@@ -43,6 +43,16 @@ from pathml.core import Tile, VectraSlide, types
 def pytest_sessionfinish(session, exitstatus):
     javabridge.kill_vm()
 
+@pytest.fixture(autouse=True)
+def remove_duplicate_paths():
+    yield  # Wait for the test to finish
+    # Split the PATH by the OS-specific path separator
+    paths = os.environ['PATH'].split(os.pathsep)
+    # Remove duplicates while preserving order
+    unique_paths = list(dict.fromkeys(paths))
+    # Join the unique paths back into a string and set it as the new PATH
+    os.environ['PATH'] = os.pathsep.join(unique_paths)
+    
 # Fixtures and utility functions
 def create_HE_tile():
     s = openslide.open_slide("tests/testdata/small_HE.svs")
