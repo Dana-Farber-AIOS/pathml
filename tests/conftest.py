@@ -8,15 +8,23 @@ import os
 import sys
 
 # Pre-configuration to add the OpenSlide DLL directory to the system's environment variables
+import os
+import sys
+
 def configure_openslide_path():
-    Print('Configuring Openslide path on', sys.platform)
-    if sys.platform == 'win32':  # Assuming Windows
+    print('Configuring OpenSlide path on', sys.platform)
+    
+    # Check if the os.add_dll_directory function is available (Python 3.8+ on Windows)
+    if hasattr(os, 'add_dll_directory'):
         openslide_path = os.getenv('OPENSLIDE_PATH')
         if openslide_path:
-            print('Adding OpenSlide path', openslide_path)
-            os.add_dll_directory(f'r"{openslide_path}"')
+            print('Adding OpenSlide path:', openslide_path)
+            os.add_dll_directory(openslide_path)
         else:
             raise RuntimeError("OPENSLIDE_PATH environment variable is not set or incorrect.")
+    else:
+        print("os.add_dll_directory not available, ensure your Python version is 3.8 or higher on Windows")
+
 
 # Call the pre-configuration function before importing OpenSlide
 configure_openslide_path()
