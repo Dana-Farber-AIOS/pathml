@@ -48,9 +48,11 @@ jobs:
 
       - name: Download and Setup OpenSlide
         run: |
-          $zipFile = "openslide-win64-20231011.zip"
+          # $zipFile = "openslide-win64-20231011.zip"
+          $zipFile = "openslide-win64-20230414.zip"
           $extractPath = Join-Path $env:GITHUB_WORKSPACE "openslide-binaries"
-          Invoke-WebRequest -Uri "https://github.com/openslide/openslide-bin/releases/download/v20231011/$zipFile" -OutFile $zipFile
+          # Invoke-WebRequest -Uri "https://github.com/openslide/openslide-bin/releases/download/v20231011/$zipFile" -OutFile $zipFile
+          Invoke-WebRequest -Uri "https://github.com/openslide/openslide-bin/releases/download/v20230414/$zipFile" -OutFile $zipFile
           Expand-Archive -Path $zipFile -DestinationPath $extractPath
           $binPath = Join-Path $extractPath "openslide-win64-20231011/bin"
           Write-Host "Adding to PATH: $binPath"
