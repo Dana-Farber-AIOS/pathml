@@ -66,7 +66,55 @@ jobs:
           echo "PATH: $env:PATH"
         shell: pwsh
 
+
+      - name: Download and Setup OpenSlide
+        run: |
+          # $zipFile = "openslide-win64-20231011.zip"
+          $zipFile = "openslide-win64-20230414.zip"
+          $extractPath = Join-Path $env:GITHUB_WORKSPACE "openslide-binaries"
+          # Invoke-WebRequest -Uri "https://github.com/openslide/openslide-bin/releases/download/v20231011/$zipFile" -OutFile $zipFile
+          Invoke-WebRequest -Uri "https://github.com/openslide/openslide-bin/releases/download/v20230414/$zipFile" -OutFile $zipFile
+          Expand-Archive -Path $zipFile -DestinationPath $extractPath
+          # $binPath = Join-Path $extractPath "openslide-win64-20231011/bin"
+          $binPath = Join-Path $extractPath "openslide-win64-20230414/bin"
+          Write-Host "Adding to PATH: $binPath"
+          echo "OPENSLIDE_PATH=$binPath" | Out-File -Append -FilePath $env:GITHUB_ENV
+          # echo "$binPath" | Out-File -Append -FilePath $env:GITHUB_PATH
+        shell: pwsh
+
+      # Optional: List files in OpenSlide bin directory to verify
+      - name: List files in OpenSlide bin directory
+        run: |
+          Get-ChildItem -Path $env:OPENSLIDE_PATH
+        shell: pwsh
+        env:
+          OPENSLIDE_PATH: ${{ env.OPENSLIDE_PATH }}
+
+      - name: Conda info
+        shell: bash -l {0}
+        run: |
+          conda info
+          conda list
+
+      - name: Install PathML
+        shell: bash -l {0}      
+        run: pip install -e .
+
+      - name: Install torchvision
+        shell: bash -l {0}
+        run: pip install torchvision==0.14.1
         
+      - name: Set OPENSLIDE_PATH
+        run: echo "OPENSLIDE_PATH=D:\a\pathml\pathml\openslide-binaries\openslide-win64-20231011\bin" >> $GITHUB_ENV
+        shell: pwsh
+
+      - name: Test other modules with pytest and generate coverage
+        shell: bash -l {0}
+        run: |
+          # coverage run --data-file=.coverage_others -m pytest -m "not slow and not exclude"
+          coverage run --data-file=.coverage_others -m pytest -v -m "not slow and not exclude"
+        continue-on-error: true
+
     # steps:
     #   - uses: actions/checkout@v2
 
