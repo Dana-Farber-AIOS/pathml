@@ -17,7 +17,7 @@ jobs:
     strategy:
       max-parallel: 5
       matrix:
-        python-version: [3.9]
+        python-version: ["3.8", "3.9", "3.10"]
     timeout-minutes: 120
 
     steps:
@@ -55,7 +55,7 @@ jobs:
           $binPath = Join-Path $extractPath "openslide-win64-20231011/bin"
           Write-Host "Adding to PATH: $binPath"
           echo "OPENSLIDE_PATH=$binPath" | Out-File -Append -FilePath $env:GITHUB_ENV
-          echo "$binPath" | Out-File -Append -FilePath $env:GITHUB_PATH
+          # echo "$binPath" | Out-File -Append -FilePath $env:GITHUB_PATH
         shell: pwsh
 
       # Optional: List files in OpenSlide bin directory to verify
@@ -99,7 +99,8 @@ jobs:
         with:
           auto-activate-base: false
           activate-environment: pathml
-          environment-file: '.github/ci-environments/env-py39.yml'
+          # environment-file: '.github/ci-environments/env-py39.yml'
+          environment-file: .github/ci-environments/env-py${{ matrix.python-version == '3.10' && '310' || matrix.python-version == '3.9' && '39' || '38' }}.yml
           mamba-version: "*"
           python-version: ${{ matrix.python-version }}
 
