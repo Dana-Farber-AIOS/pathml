@@ -35,6 +35,11 @@ jobs:
           echo "PATH: $env:PATH"
         shell: pwsh
 
+      - name: Set JDK_HOME environment variable
+        run: echo "JDK_HOME=${JAVA_HOME}" >> $GITHUB_ENV
+        shell: bash
+
+
       - name: Setup Miniconda
         uses: conda-incubator/setup-miniconda@v2
         with:
