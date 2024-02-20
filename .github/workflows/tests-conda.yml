@@ -54,7 +54,8 @@ jobs:
           # Invoke-WebRequest -Uri "https://github.com/openslide/openslide-bin/releases/download/v20231011/$zipFile" -OutFile $zipFile
           Invoke-WebRequest -Uri "https://github.com/openslide/openslide-bin/releases/download/v20230414/$zipFile" -OutFile $zipFile
           Expand-Archive -Path $zipFile -DestinationPath $extractPath
-          $binPath = Join-Path $extractPath "openslide-win64-20231011/bin"
+          # $binPath = Join-Path $extractPath "openslide-win64-20231011/bin"
+          $binPath = Join-Path $extractPath "openslide-win64-20230414/bin"
           Write-Host "Adding to PATH: $binPath"
           echo "OPENSLIDE_PATH=$binPath" | Out-File -Append -FilePath $env:GITHUB_ENV
           # echo "$binPath" | Out-File -Append -FilePath $env:GITHUB_PATH
