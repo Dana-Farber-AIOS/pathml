@@ -111,9 +111,9 @@ def get_full_instance_map(wsi, patch_size, mask_name="cell"):
     for tile in wsi.tiles:
         tx, ty = tile.coords
         image_norm[tx : tx + patch_size, ty : ty + patch_size] = tile.image
-        instance_map[tx : tx + patch_size, ty : ty + patch_size] = tile.masks[
-            mask_name
-        ][:, :, 0]
+        instance_map[tx : tx + patch_size, ty : ty + patch_size] = np.squeeze(
+            tile.masks[mask_name]
+        )[:, :]
     image_norm = image_norm[: wsi.shape[0], : wsi.shape[1], :]
     instance_map = instance_map[: wsi.shape[0], : wsi.shape[1]]
     label_instance_map = label(instance_map)

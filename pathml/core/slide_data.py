@@ -390,7 +390,7 @@ class SlideData:
                 "If already tiled, access `.tiles` directly instead"
             )
 
-        return self.slide.extract_region(location, size, *args, **kwargs)
+        return np.squeeze(self.slide.extract_region(location, size, *args, **kwargs))
 
     def generate_tiles(self, shape=3000, stride=None, pad=False, **kwargs):
         """
