@@ -39,7 +39,7 @@ jobs:
       with:
         auto-activate-base: false
         activate-environment: pathml
-        environment-file: environment.yml
+        environment-file: environment_test.yml
         # mamba-version: "*"
         miniforge-version: latest
         use-mamba: true
@@ -48,7 +48,7 @@ jobs:
     - name: Debugging
       run: |
         echo "Printing the environment.yml file..."
-        cat environment.yml
+        cat environment_test.yml
         echo "Checking the status of mamba..."
         mamba --version
         echo "Checking the available disk space..."
@@ -56,7 +56,7 @@ jobs:
         
     - name: Install dependencies with mamba
       shell: bash -l {0}
-      run: mamba env update --file environment.yml --name pathml
+      run: mamba env update --file environment_test.yml --name pathml
     - name: Conda info
       shell: bash -l {0}
       run: |
@@ -72,9 +72,9 @@ jobs:
       shell: bash -l {0}      
       run: pip install -e .
       
-    - name: Install python-spams
-      shell: bash -l {0}      
-      run: pip install spams
+  # - name: Install python-spams
+  #   shell: bash -l {0}      
+  #   run: pip install spams
     
     - name: Install torchvision
       shell: bash -l {0}

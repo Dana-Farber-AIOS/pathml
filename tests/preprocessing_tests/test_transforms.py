@@ -126,7 +126,7 @@ def test_stain_normalization_he(tileHE, method, target):
     t = StainNormalizationHE(target=target, stain_estimation_method=method)
     orig_im = tileHE.image
     t.fit_to_reference(orig_im)
-    assert t.stain_matrix_target_od.shape == (3, 2)
+    assert t.stain_matrix_target_od.shape == (2, 3)
 
 
 @pytest.mark.parametrize("target", ["normalize", "hematoxylin", "eosin"])
