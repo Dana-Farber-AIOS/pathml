@@ -3,8 +3,6 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
-import os
-
 import anndata
 import cv2
 import numpy as np
@@ -13,16 +11,11 @@ from loguru import logger
 from skimage import restoration
 from skimage.exposure import equalize_adapthist, equalize_hist, rescale_intensity
 from skimage.measure import regionprops_table
+from sklearn.decomposition import DictionaryLearning
 
 import pathml.core
 import pathml.core.slide_data
-from pathml.utils import (
-    RGB_to_GREY,
-    RGB_to_HSI,
-    RGB_to_HSV,
-    RGB_to_OD,
-    normalize_matrix_cols,
-)
+from pathml.utils import RGB_to_GREY, RGB_to_HSI, RGB_to_HSV, RGB_to_OD
 
 
 # Base class
@@ -535,6 +528,7 @@ class SuperpixelInterpolation(Transform):
         assert (
             image.dtype == np.uint8
         ), f"Input image dtype {image.dtype} must be np.uint8"
+        image = np.squeeze(image)
         # initialize slic class and iterate
         slic = cv2.ximgproc.createSuperpixelSLIC(
             image=image, region_size=self.region_size
@@ -559,80 +553,21 @@ class SuperpixelInterpolation(Transform):
 
 
 class StainNormalizationHE(Transform):
-    """
-    Normalize H&E stained images to a reference slide.
-    Also can be used to separate hematoxylin and eosin channels.
-
-    H&E images are assumed to be composed of two stains, each one having a vector of its characteristic RGB values.
-    The stain matrix is a 3x2 matrix where the first column corresponds to the hematoxylin stain vector and the second
-    corresponds to eosin stain vector. The stain matrix can be estimated from a reference image in a number of ways;
-    here we provide implementations of two such algorithms from Macenko et al. and Vahadane et al.
-
-    After estimating the stain matrix for an image, the next step is to assign stain concentrations to each pixel.
-    Each pixel is assumed to be a linear combination of the two stain vectors, where the coefficients are the
-    intensities of each stain vector at that pixel. To solve for the intensities, we use least squares in Macenko
-    method and lasso in vahadane method.
-
-    The image can then be reconstructed by applying those pixel intensities to a stain matrix. This allows you to
-    standardize the appearance of an image by reconstructing it using a reference stain matrix. Using this method of
-    normalization may help account for differences in slide appearance arising from variations in staining procedure,
-    differences between scanners, etc. Images can also be reconstructed using only a single stain vector, e.g. to
-    separate the hematoxylin and eosin channels of an H&E image.
-
-    This code is based in part on StainTools: https://github.com/Peter554/StainTools
-
-    Args:
-        target (str): one of 'normalize', 'hematoxylin', or 'eosin'. Defaults to 'normalize'
-        stain_estimation_method (str): method for estimating stain matrix. Must be one of 'macenko' or 'vahadane'.
-            Defaults to 'macenko'.
-        optical_density_threshold (float): Threshold for removing low-optical density pixels when estimating stain
-            vectors. Defaults to 0.15
-        sparsity_regularizer (float): Regularization parameter for dictionary learning when estimating stain vector
-            using vahadane method. Ignored if ``concentration_estimation_method != 'vahadane'``. Defaults to 1.0
-        angular_percentile (float): Percentile for stain vector selection when estimating stain vector
-            using Macenko method. Ignored if ``concentration_estimation_method != 'macenko'``. Defaults to 0.01
-        regularizer_lasso (float): regularization parameter for lasso solver. Defaults to 0.01.
-            Ignored if ``method != 'lasso'``
-        background_intensity (int): Intensity of background light. Must be an integer between 0 and 255.
-            Defaults to 245.
-        stain_matrix_target_od (np.ndarray): Stain matrix for reference slide.
-            Matrix of H and E stain vectors in optical density (OD) space.
-            Stain matrix is (3, 2) and first column corresponds to hematoxylin.
-            Default stain matrix can be used, or you can also fit to a reference slide of your choosing by calling
-            :meth:`~pathml.preprocessing.transforms.StainNormalizationHE.fit_to_reference`.
-        max_c_target (np.ndarray): Maximum concentrations of each stain in reference slide.
-            Default can be used, or you can also fit to a reference slide of your choosing by calling
-            :meth:`~pathml.preprocessing.transforms.StainNormalizationHE.fit_to_reference`.
-
-    Note:
-        If using ``stain_estimation_method = "Vahadane"``, `spams <http://thoth.inrialpes.fr/people/mairal/spams/>`_
-        must be installed, along with all of its dependencies (i.e. libblas & liblapack).
-
-    References:
-        Macenko, M., Niethammer, M., Marron, J.S., Borland, D., Woosley, J.T., Guan, X., Schmitt, C. and Thomas, N.E.,
-        2009, June. A method for normalizing histology slides for quantitative analysis. In 2009 IEEE International
-        Symposium on Biomedical Imaging: From Nano to Macro (pp. 1107-1110). IEEE.
-
-        Vahadane, A., Peng, T., Sethi, A., Albarqouni, S., Wang, L., Baust, M., Steiger, K., Schlitter, A.M., Esposito,
-        I. and Navab, N., 2016. Structure-preserving color normalization and sparse stain separation for histological
-        images. IEEE transactions on medical imaging, 35(8), pp.1962-1971.
-    """
 
     def __init__(
         self,
         target="normalize",
         stain_estimation_method="macenko",
         optical_density_threshold=0.15,
-        sparsity_regularizer=1.0,
+        regularizer=0.1,
         angular_percentile=0.01,
-        regularizer_lasso=0.01,
         background_intensity=245,
         stain_matrix_target_od=np.array(
             [[0.5626, 0.2159], [0.7201, 0.8012], [0.4062, 0.5581]]
-        ),
-        max_c_target=np.array([1.9705, 1.0308]),
+        ).T,
+        max_c_target=np.array([[1.9705, 1.0308]]),
     ):
-        # verify inputs
+
         assert target.lower() in [
             "normalize",
             "eosin",
@@ -645,21 +580,20 @@ class StainNormalizationHE(Transform):
         assert (
             0 <= background_intensity <= 255
         ), f"Error: input background intensity {background_intensity} must be an integer between 0 and 255"
-
-        if stain_estimation_method.lower() == "vahadane":
-            try:
-                import spams  # noqa: F401
-            except (ImportError, ModuleNotFoundError):  # pragma: no cover
-                raise Exception(
-                    "Vahadane method requires `spams` package to be installed"
-                )
+        assert stain_matrix_target_od.shape == (
+            2,
+            3,
+        ), "Error: stain matrix target must have shape (2,3)"
+        assert max_c_target.shape == (
+            1,
+            2,
+        ), "Error: max color target must have shape (1,2)"
 
         self.target = target.lower()
         self.stain_estimation_method = stain_estimation_method.lower()
         self.optical_density_threshold = optical_density_threshold
-        self.sparsity_regularizer = sparsity_regularizer
         self.angular_percentile = angular_percentile
-        self.regularizer_lasso = regularizer_lasso
+        self.regularizer = regularizer
         self.background_intensity = background_intensity
         self.stain_matrix_target_od = stain_matrix_target_od
         self.max_c_target = max_c_target
@@ -668,45 +602,30 @@ class StainNormalizationHE(Transform):
         return (
             f"StainNormalizationHE(target={self.target}, stain_estimation_method={self.stain_estimation_method}, "
             f"optical_density_threshold={self.optical_density_threshold}, "
-            f"sparsity_regularizer={self.sparsity_regularizer}, angular_percentile={self.angular_percentile}, "
-            f"regularizer_lasso={self.regularizer_lasso}, background_intensity={self.background_intensity}, "
+            f"regularizer={self.regularizer}, angular_percentile={self.angular_percentile}, "
+            f"background_intensity={self.background_intensity}, "
             f"stain_matrix_target_od={self.stain_matrix_target_od}, max_c_target={self.max_c_target})"
         )
 
-    def fit_to_reference(self, image_ref):
-        """
-        Fit ``stain_matrix`` and ``max_c`` to a reference slide. This allows you to use a specific slide as the
-        reference for stain normalization. Works by first estimating stain matrix from input reference image,
-        then estimating pixel concentrations. Newly computed stain matrix and maximum concentrations are then used
-        for any future color normalization.
-
-        Args:
-            image_ref (np.ndarray): RGB reference image
-        """
-        # first estimate stain matrix for reference image_ref
-        stain_matrix = self._estimate_stain_vectors(image=image_ref)
-
-        # next get pixel concentrations for reference image_ref
-        C = self._estimate_pixel_concentrations(
-            image=image_ref, stain_matrix=stain_matrix
+    def fit_to_reference(self, target):
+        self.stain_matrix_target_od = self._estimate_stain_vectors(target)
+        self.target_concentrations = self._estimate_pixel_concentrations(
+            target,
+            self.stain_matrix_target_od,
         )
+        self.max_c_target = np.percentile(
+            self.target_concentrations,
+            99,
+            axis=0,
+        ).reshape((1, 2))
 
-        # get max concentrations
-        # actually use 99th percentile so it's more robust
-        max_C = np.percentile(C, 99, axis=0).reshape((1, 2))
-
-        # put the newly determined stain matrix and max C matrix for reference slide into class attrs
-        self.stain_matrix_target_od = stain_matrix
-        self.max_c_target = max_C
+    @staticmethod
+    def _estimate_pixel_concentrations(image, stain_matrix):
+        od = RGB_to_OD(image).reshape((-1, 3))
+        C, _, _, _ = np.linalg.lstsq(stain_matrix.T, od.T, rcond=-1)
+        return C.T
 
     def _estimate_stain_vectors(self, image):
-        """
-        Estimate stain vectors using appropriate method
-
-        Args:
-            image (np.ndarray): RGB image
-        """
-        # first estimate stain matrix for reference image_ref
         if self.stain_estimation_method == "macenko":
             stain_matrix = self._estimate_stain_vectors_macenko(image)
         elif self.stain_estimation_method == "vahadane":
@@ -717,61 +636,33 @@ class StainNormalizationHE(Transform):
             )
         return stain_matrix
 
-    def _estimate_pixel_concentrations(self, image, stain_matrix):
-        """
-        Estimate pixel concentrations from a given stain matrix using appropriate method
+    def _estimate_stain_vectors_vahadane(self, image):
+        image = image.astype("uint8")  # ensure input image is uint8
 
-        Args:
-            image (np.ndarray): RGB image
-            stain_matrix (np.ndarray): matrix of H and E stain vectors in optical density (OD) space.
-                Stain_matrix is (3, 2) and first column corresponds to hematoxylin by convention.
-        """
-        if self.stain_estimation_method == "macenko":
-            C = self._estimate_pixel_concentrations_lstsq(image, stain_matrix)
-        elif self.stain_estimation_method == "vahadane":
-            C = self._estimate_pixel_concentrations_lasso(image, stain_matrix)
-        else:
-            raise Exception(f"Provided target {self.target} invalid")
-        return C
+        # convert to OD and ignore background
+        OD = RGB_to_OD(image).reshape((-1, 3))
+        OD = OD[np.all(OD > self.optical_density_threshold, axis=1)]
 
-    def _estimate_stain_vectors_vahadane(self, image, random_seed=0):
-        """
-        Estimate stain vectors using dictionary learning method from Vahadane et al.
-
-        Args:
-            image (np.ndarray): RGB image
-        """
-        try:
-            import spams
-        except (ImportError, ModuleNotFoundError):  # pragma: no cover
-            raise Exception("Vahadane method requires `spams` package to be installed")
-        # convert to Optical Density (OD) space
-        image_OD = RGB_to_OD(image)
-        # reshape to (M*N)x3
-        image_OD = image_OD.reshape(-1, 3)
-        # drop pixels with low OD
-        OD = image_OD[np.all(image_OD > self.optical_density_threshold, axis=1)]
-
-        # dictionary learning
-        # need to first update
-        # see https://github.com/dmlc/xgboost/issues/1715#issuecomment-420305786
-        os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
-        dictionary = spams.trainDL(
-            X=OD.T,
-            K=2,
-            lambda1=self.sparsity_regularizer,
-            mode=2,
-            modeD=0,
-            posAlpha=True,
-            posD=True,
+        # do the dictionary learning
+        dl = DictionaryLearning(
+            n_components=2,
+            alpha=self.regularizer,
+            transform_alpha=self.regularizer,
+            fit_algorithm="lars",
+            transform_algorithm="lasso_lars",
+            positive_dict=True,
             verbose=False,
+            max_iter=3,
+            transform_max_iter=1000,
         )
-        dictionary = normalize_matrix_cols(dictionary)
+        dictionary = dl.fit_transform(X=OD.T).T
+
         # order H and E.
-        # H on first col.
+        # H on first row.
         if dictionary[0, 0] > dictionary[1, 0]:
-            dictionary = dictionary[:, [1, 0]]
-        return dictionary
+            dictionary = dictionary[[1, 0], :]
+
+        return dictionary / np.linalg.norm(dictionary, axis=1)[:, None]
 
     def _estimate_stain_vectors_macenko(self, image):
         """
@@ -781,12 +672,9 @@ class StainNormalizationHE(Transform):
         Args:
             image (np.ndarray): RGB image
         """
-        # convert to Optical Density (OD) space
-        image_OD = RGB_to_OD(image)
-        # reshape to (M*N)x3
-        image_OD = image_OD.reshape(-1, 3)
-        # drop pixels with low OD
-        OD = image_OD[np.all(image_OD > self.optical_density_threshold, axis=1)]
+        OD = RGB_to_OD(image).reshape((-1, 3))
+        OD = OD[np.all(OD > self.optical_density_threshold, axis=1)]
+
         # get top 2 PCs. PCs are eigenvectors of covariance matrix
         try:
             _, v = np.linalg.eigh(np.cov(OD.T))
@@ -811,109 +699,51 @@ class StainNormalizationHE(Transform):
         # a heuristic to make the vector corresponding to hematoxylin first and the
         # one corresponding to eosin second
         if stain2[0] > stain1[0]:
-            HE = np.array((stain2, stain1)).T
+            HE = np.array((stain2, stain1))
         else:
-            HE = np.array((stain1, stain2)).T
+            HE = np.array((stain1, stain2))
         return HE
 
-    def _estimate_pixel_concentrations_lstsq(self, image, stain_matrix):
-        """
-        estimate concentrations of each stain at each pixel using least squares
-
-        Args:
-            image (np.ndarray): RGB image
-            stain_matrix (np.ndarray): matrix of H and E stain vectors in optical density (OD) space.
-                Stain_matrix is (3, 2) and first column corresponds to hematoxylin by convention.
-        """
-        image_OD = RGB_to_OD(image).reshape(-1, 3)
-
-        # Get concentrations of each stain at each pixel
-        # image_ref.T = S @ C.T
-        #   image_ref.T is 3x(M*N)
-        #   stain matrix S is 3x2
-        #   concentration matrix C.T is 2x(M*N)
-        # solve for C using least squares
-        C = np.linalg.lstsq(stain_matrix, image_OD.T, rcond=None)[0].T
-        return C
-
-    def _estimate_pixel_concentrations_lasso(self, image, stain_matrix):
-        """
-        estimate concentrations of each stain at each pixel using lasso
-
-        Args:
-            image (np.ndarray): RGB image
-            stain_matrix (np.ndarray): matrix of H and E stain vectors in optical density (OD) space.
-                Stain_matrix is (3, 2) and first column corresponds to hematoxylin by convention.
-        """
-        try:
-            import spams
-        except (ImportError, ModuleNotFoundError):  # pragma: no cover
-            raise Exception("Vahadane method requires `spams` package to be installed")
-        image_OD = RGB_to_OD(image).reshape(-1, 3)
-
-        # Get concentrations of each stain at each pixel
-        # image_ref.T = S @ C.T
-        #   image_ref.T is 3x(M*N)
-        #   stain matrix S is 3x2
-        #   concentration matrix C.T is 2x(M*N)
-        # solve for C using lasso
-        lamb = self.regularizer_lasso
-        C = (
-            spams.lasso(X=image_OD.T, D=stain_matrix, mode=2, lambda1=lamb, pos=True)
-            .toarray()
-            .T
-        )
-        return C
-
     def _reconstruct_image(self, pixel_intensities):
-        """
-        Reconstruct an image from pixel intensities. Uses reference stain matrix and max_c
-        from :func:`~pathml.preprocessing.transforms.StainNormalizationHE.fit_to_reference`, if that method has been
-        called, otherwise uses defaults.
 
-        Args:
-            pixel_intensities (np.ndarray): matrix of stain intensities for each pixel.
-            If image_ref is MxN, stain matrix is 2x(M*M)
-        """
-        # scale to max intensities
-        # actually use 99th percentile so it's more robust
         max_c = np.percentile(pixel_intensities, 99, axis=0).reshape((1, 2))
         pixel_intensities *= self.max_c_target / max_c
 
         if self.target == "normalize":
-            im = np.exp(-self.stain_matrix_target_od @ pixel_intensities.T)
-        elif self.target == "hematoxylin":
-            im = np.exp(
-                -self.stain_matrix_target_od[:, 0].reshape(-1, 1)
-                @ pixel_intensities[:, 0].reshape(-1, 1).T
+            im = self.background_intensity * np.exp(
+                -1 * np.dot(pixel_intensities, self.stain_matrix_target_od),
             )
         elif self.target == "eosin":
-            im = np.exp(
-                -self.stain_matrix_target_od[:, 1].reshape(-1, 1)
-                @ pixel_intensities[:, 1].reshape(-1, 1).T
+            im = self.background_intensity * np.exp(
+                -1
+                * np.dot(
+                    pixel_intensities[:, 1].reshape(-1, 1),
+                    self.stain_matrix_target_od[1, :].reshape(1, -1),
+                ),
             )
-        else:  # pragma: no cover
-            raise Exception(
-                f"Error: input target {self.target} is invalid. Must be one of 'normalize', 'eosin', 'hematoxylin'"
+        elif self.target == "hematoxylin":
+            im = self.background_intensity * np.exp(
+                -1
+                * np.dot(
+                    pixel_intensities[:, 0].reshape(-1, 1),
+                    self.stain_matrix_target_od[0, :].reshape(1, -1),
+                ),
             )
 
-        im = im * self.background_intensity
-        im = np.clip(im, a_min=0, a_max=255)
-        im = im.T.astype(np.uint8)
+        # ensure between 0 and 255
+        im[im > 255] = 255
+        im[im < 0] = 0
         return im
 
     def F(self, image):
-        # first estimate stain matrix for reference image_ref
-        stain_matrix = self._estimate_stain_vectors(image=image)
 
-        # next get pixel concentrations for reference image_ref
-        C = self._estimate_pixel_concentrations(image=image, stain_matrix=stain_matrix)
+        stain_matrix_source = self._estimate_stain_vectors(image)
+        pixel_intensities = self._estimate_pixel_concentrations(
+            image, stain_matrix_source
+        )
+        reconstructed_im = self._reconstruct_image(pixel_intensities)
 
-        # next reconstruct the image_ref
-        im_reconstructed = self._reconstruct_image(pixel_intensities=C)
-
-        im_reconstructed = im_reconstructed.reshape(image.shape)
-        return im_reconstructed
+        return reconstructed_im.reshape(image.shape).astype(np.uint8)
 
     def apply(self, tile):
         assert isinstance(
@@ -923,6 +753,384 @@ class StainNormalizationHE(Transform):
             tile.slide_type.stain == "HE"
         ), f"Tile has slide_type.stain={tile.slide_type.stain}, but must be 'HE'"
         tile.image = self.F(tile.image)
+
+
+# class StainNormalizationHE(Transform):
+#     """
+#     Normalize H&E stained images to a reference slide.
+#     Also can be used to separate hematoxylin and eosin channels.
+
+#     H&E images are assumed to be composed of two stains, each one having a vector of its characteristic RGB values.
+#     The stain matrix is a 3x2 matrix where the first column corresponds to the hematoxylin stain vector and the second
+#     corresponds to eosin stain vector. The stain matrix can be estimated from a reference image in a number of ways;
+#     here we provide implementations of two such algorithms from Macenko et al. and Vahadane et al.
+
+#     After estimating the stain matrix for an image, the next step is to assign stain concentrations to each pixel.
+#     Each pixel is assumed to be a linear combination of the two stain vectors, where the coefficients are the
+#     intensities of each stain vector at that pixel. To solve for the intensities, we use least squares in Macenko
+#     method and lasso in vahadane method.
+
+#     The image can then be reconstructed by applying those pixel intensities to a stain matrix. This allows you to
+#     standardize the appearance of an image by reconstructing it using a reference stain matrix. Using this method of
+#     normalization may help account for differences in slide appearance arising from variations in staining procedure,
+#     differences between scanners, etc. Images can also be reconstructed using only a single stain vector, e.g. to
+#     separate the hematoxylin and eosin channels of an H&E image.
+
+#     This code is based in part on StainTools: https://github.com/Peter554/StainTools
+
+#     Args:
+#         target (str): one of 'normalize', 'hematoxylin', or 'eosin'. Defaults to 'normalize'
+#         stain_estimation_method (str): method for estimating stain matrix. Must be one of 'macenko' or 'vahadane'.
+#             Defaults to 'macenko'.
+#         optical_density_threshold (float): Threshold for removing low-optical density pixels when estimating stain
+#             vectors. Defaults to 0.15
+#         sparsity_regularizer (float): Regularization parameter for dictionary learning when estimating stain vector
+#             using vahadane method. Ignored if ``concentration_estimation_method != 'vahadane'``. Defaults to 1.0
+#         angular_percentile (float): Percentile for stain vector selection when estimating stain vector
+#             using Macenko method. Ignored if ``concentration_estimation_method != 'macenko'``. Defaults to 0.01
+#         regularizer_lasso (float): regularization parameter for lasso solver. Defaults to 0.01.
+#             Ignored if ``method != 'lasso'``
+#         background_intensity (int): Intensity of background light. Must be an integer between 0 and 255.
+#             Defaults to 245.
+#         stain_matrix_target_od (np.ndarray): Stain matrix for reference slide.
+#             Matrix of H and E stain vectors in optical density (OD) space.
+#             Stain matrix is (3, 2) and first column corresponds to hematoxylin.
+#             Default stain matrix can be used, or you can also fit to a reference slide of your choosing by calling
+#             :meth:`~pathml.preprocessing.transforms.StainNormalizationHE.fit_to_reference`.
+#         max_c_target (np.ndarray): Maximum concentrations of each stain in reference slide.
+#             Default can be used, or you can also fit to a reference slide of your choosing by calling
+#             :meth:`~pathml.preprocessing.transforms.StainNormalizationHE.fit_to_reference`.
+
+#     Note:
+#         If using ``stain_estimation_method = "Vahadane"``, `spams <http://thoth.inrialpes.fr/people/mairal/spams/>`_
+#         must be installed, along with all of its dependencies (i.e. libblas & liblapack).
+
+#     References:
+#         Macenko, M., Niethammer, M., Marron, J.S., Borland, D., Woosley, J.T., Guan, X., Schmitt, C. and Thomas, N.E.,
+#         2009, June. A method for normalizing histology slides for quantitative analysis. In 2009 IEEE International
+#         Symposium on Biomedical Imaging: From Nano to Macro (pp. 1107-1110). IEEE.
+
+#         Vahadane, A., Peng, T., Sethi, A., Albarqouni, S., Wang, L., Baust, M., Steiger, K., Schlitter, A.M., Esposito,
+#         I. and Navab, N., 2016. Structure-preserving color normalization and sparse stain separation for histological
+#         images. IEEE transactions on medical imaging, 35(8), pp.1962-1971.
+#     """
+
+#     def __init__(
+#         self,
+#         target="normalize",
+#         stain_estimation_method="macenko",
+#         optical_density_threshold=0.15,
+#         sparsity_regularizer=1.0,
+#         angular_percentile=0.01,
+#         regularizer_lasso=0.01,
+#         background_intensity=245,
+#         stain_matrix_target_od=np.array(
+#             [[0.5626, 0.2159], [0.7201, 0.8012], [0.4062, 0.5581]]
+#         ),
+#         max_c_target=np.array([1.9705, 1.0308]),
+#     ):
+#         # verify inputs
+#         assert target.lower() in [
+#             "normalize",
+#             "eosin",
+#             "hematoxylin",
+#         ], f"Error input target {target} must be one of 'normalize', 'eosin', 'hematoxylin'"
+#         assert stain_estimation_method.lower() in [
+#             "macenko",
+#             "vahadane",
+#         ], f"Error: input stain estimation method {stain_estimation_method} must be one of 'macenko' or 'vahadane'"
+#         assert (
+#             0 <= background_intensity <= 255
+#         ), f"Error: input background intensity {background_intensity} must be an integer between 0 and 255"
+
+#         if stain_estimation_method.lower() == "vahadane":
+#             try:
+#                 import spams  # noqa: F401
+#             except (ImportError, ModuleNotFoundError):  # pragma: no cover
+#                 raise Exception(
+#                     "Vahadane method requires `spams` package to be installed"
+#                 )
+
+#         self.target = target.lower()
+#         self.stain_estimation_method = stain_estimation_method.lower()
+#         self.optical_density_threshold = optical_density_threshold
+#         self.sparsity_regularizer = sparsity_regularizer
+#         self.angular_percentile = angular_percentile
+#         self.regularizer_lasso = regularizer_lasso
+#         self.background_intensity = background_intensity
+#         self.stain_matrix_target_od = stain_matrix_target_od
+#         self.max_c_target = max_c_target
+
+#     def __repr__(self):
+#         return (
+#             f"StainNormalizationHE(target={self.target}, stain_estimation_method={self.stain_estimation_method}, "
+#             f"optical_density_threshold={self.optical_density_threshold}, "
+#             f"sparsity_regularizer={self.sparsity_regularizer}, angular_percentile={self.angular_percentile}, "
+#             f"regularizer_lasso={self.regularizer_lasso}, background_intensity={self.background_intensity}, "
+#             f"stain_matrix_target_od={self.stain_matrix_target_od}, max_c_target={self.max_c_target})"
+#         )
+
+#     def fit_to_reference(self, image_ref):
+#         """
+#         Fit ``stain_matrix`` and ``max_c`` to a reference slide. This allows you to use a specific slide as the
+#         reference for stain normalization. Works by first estimating stain matrix from input reference image,
+#         then estimating pixel concentrations. Newly computed stain matrix and maximum concentrations are then used
+#         for any future color normalization.
+
+#         Args:
+#             image_ref (np.ndarray): RGB reference image
+#         """
+#         # first estimate stain matrix for reference image_ref
+#         stain_matrix = self._estimate_stain_vectors(image=image_ref)
+
+#         # next get pixel concentrations for reference image_ref
+#         C = self._estimate_pixel_concentrations(
+#             image=image_ref, stain_matrix=stain_matrix
+#         )
+
+#         # get max concentrations
+#         # actually use 99th percentile so it's more robust
+#         max_C = np.percentile(C, 99, axis=0).reshape((1, 2))
+
+#         # put the newly determined stain matrix and max C matrix for reference slide into class attrs
+#         self.stain_matrix_target_od = stain_matrix
+#         self.max_c_target = max_C
+
+#     def _estimate_stain_vectors(self, image):
+#         """
+#         Estimate stain vectors using appropriate method
+
+#         Args:
+#             image (np.ndarray): RGB image
+#         """
+#         # first estimate stain matrix for reference image_ref
+#         if self.stain_estimation_method == "macenko":
+#             stain_matrix = self._estimate_stain_vectors_macenko(image)
+#         elif self.stain_estimation_method == "vahadane":
+#             stain_matrix = self._estimate_stain_vectors_vahadane(image)
+#         else:  # pragma: no cover
+#             raise Exception(
+#                 f"Error: input stain estimation method {self.stain_estimation_method} must be one of 'macenko' or 'vahadane'"
+#             )
+#         return stain_matrix
+
+#     def _estimate_pixel_concentrations(self, image, stain_matrix):
+#         """
+#         Estimate pixel concentrations from a given stain matrix using appropriate method
+
+#         Args:
+#             image (np.ndarray): RGB image
+#             stain_matrix (np.ndarray): matrix of H and E stain vectors in optical density (OD) space.
+#                 Stain_matrix is (3, 2) and first column corresponds to hematoxylin by convention.
+#         """
+#         if self.stain_estimation_method == "macenko":
+#             C = self._estimate_pixel_concentrations_lstsq(image, stain_matrix)
+#         elif self.stain_estimation_method == "vahadane":
+#             C = self._estimate_pixel_concentrations_lasso(image, stain_matrix)
+#         else:  # pragma: no cover
+#             raise Exception(f"Provided target {self.target} invalid")
+#         return C
+
+#     def _estimate_stain_vectors_vahadane(self, image, random_seed=0):
+#         """
+#         Estimate stain vectors using dictionary learning method from Vahadane et al.
+
+#         Args:
+#             image (np.ndarray): RGB image
+#         """
+#         try:
+#             import spams
+#         except (ImportError, ModuleNotFoundError):  # pragma: no cover
+#             raise Exception("Vahadane method requires `spams` package to be installed")
+#         # convert to Optical Density (OD) space
+#         image_OD = RGB_to_OD(image)
+#         # reshape to (M*N)x3
+#         image_OD = image_OD.reshape(-1, 3)
+#         # drop pixels with low OD
+#         OD = image_OD[np.all(image_OD > self.optical_density_threshold, axis=1)]
+
+#         if OD.size != 0:
+#             # dictionary learning
+#             # need to first update
+#             # see https://github.com/dmlc/xgboost/issues/1715#issuecomment-420305786
+#             os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
+#             dictionary = spams.trainDL(
+#                 X=OD.T,
+#                 K=2,
+#                 lambda1=self.sparsity_regularizer,
+#                 mode=2,
+#                 modeD=0,
+#                 posAlpha=True,
+#                 posD=True,
+#                 verbose=False,
+#             )
+#             dictionary = normalize_matrix_cols(dictionary)
+#             # order H and E.
+#             # H on first col.
+#             if dictionary[0, 0] > dictionary[1, 0]:
+#                 dictionary = dictionary[:, [1, 0]]
+#             return dictionary
+#         else:
+#             logger.warning(f"Using default stain vectors, try reducing 'optical_density_threshold' parameter")
+#             #return np.zeros((3, 2))
+#             return self.stain_matrix_target_od
+
+#     def _estimate_stain_vectors_macenko(self, image):
+#         """
+#         Estimate stain vectors using Macenko method. Returns a (3, 2) matrix with first column corresponding to
+#         hematoxylin and second column corresponding to eosin in OD space.
+
+#         Args:
+#             image (np.ndarray): RGB image
+#         """
+#         # convert to Optical Density (OD) space
+#         image_OD = RGB_to_OD(image)
+#         # reshape to (M*N)x3
+#         image_OD = image_OD.reshape(-1, 3)
+#         # drop pixels with low OD
+#         OD = image_OD[np.all(image_OD > self.optical_density_threshold, axis=1)]
+
+#         if OD.size != 0:
+#             # get top 2 PCs. PCs are eigenvectors of covariance matrix
+#             try:
+#                 _, v = np.linalg.eigh(np.cov(OD.T))
+#             except np.linalg.LinAlgError as err:  # pragma: no cover
+#                 logger.exception(f"Error in computing eigenvectors: {err}")
+#                 raise
+#             pcs = v[:, 1:3]
+#             # project OD pixels onto plane of first 2 PCs
+#             projected = OD @ pcs
+#             # Calculate angle of each point on projection plane
+#             angles = np.arctan2(projected[:, 1], projected[:, 0])
+#             # get robust min and max angles
+#             max_angle = np.percentile(angles, 100 * (1 - self.angular_percentile))
+#             min_angle = np.percentile(angles, 100 * self.angular_percentile)
+#             # get vector of unit length pointing in that angle, in projection plane
+#             # unit length vector of angle theta is <cos(theta), sin(theta)>
+#             v_max = np.array([np.cos(max_angle), np.sin(max_angle)])
+#             v_min = np.array([np.cos(min_angle), np.sin(min_angle)])
+#             # project back to OD space
+#             stain1 = pcs @ v_max
+#             stain2 = pcs @ v_min
+#             # a heuristic to make the vector corresponding to hematoxylin first and the
+#             # one corresponding to eosin second
+#             if stain2[0] > stain1[0]:
+#                 HE = np.array((stain2, stain1)).T
+#             else:
+#                 HE = np.array((stain1, stain2)).T
+#             return HE
+#         else:
+#             logger.warning(f"Using default stain vectors, try reducing 'optical_density_threshold' parameter")
+#             return self.stain_matrix_target_od
+#             #return np.zeros((3, 2))
+
+#     def _estimate_pixel_concentrations_lstsq(self, image, stain_matrix):
+#         """
+#         estimate concentrations of each stain at each pixel using least squares
+
+#         Args:
+#             image (np.ndarray): RGB image
+#             stain_matrix (np.ndarray): matrix of H and E stain vectors in optical density (OD) space.
+#                 Stain_matrix is (3, 2) and first column corresponds to hematoxylin by convention.
+#         """
+#         image_OD = RGB_to_OD(image).reshape(-1, 3)
+
+#         # Get concentrations of each stain at each pixel
+#         # image_ref.T = S @ C.T
+#         #   image_ref.T is 3x(M*N)
+#         #   stain matrix S is 3x2
+#         #   concentration matrix C.T is 2x(M*N)
+#         # solve for C using least squares
+#         C = np.linalg.lstsq(stain_matrix, image_OD.T, rcond=None)[0].T
+#         return C
+
+#     def _estimate_pixel_concentrations_lasso(self, image, stain_matrix):
+#         """
+#         estimate concentrations of each stain at each pixel using lasso
+
+#         Args:
+#             image (np.ndarray): RGB image
+#             stain_matrix (np.ndarray): matrix of H and E stain vectors in optical density (OD) space.
+#                 Stain_matrix is (3, 2) and first column corresponds to hematoxylin by convention.
+#         """
+#         try:
+#             import spams
+#         except (ImportError, ModuleNotFoundError):  # pragma: no cover
+#             raise Exception("Vahadane method requires `spams` package to be installed")
+#         image_OD = RGB_to_OD(image).reshape(-1, 3)
+
+#         # Get concentrations of each stain at each pixel
+#         # image_ref.T = S @ C.T
+#         #   image_ref.T is 3x(M*N)
+#         #   stain matrix S is 3x2
+#         #   concentration matrix C.T is 2x(M*N)
+#         # solve for C using lasso
+#         lamb = self.regularizer_lasso
+#         C = (
+#             spams.lasso(X=image_OD.T, D=stain_matrix.astype('float32'), mode=2, lambda1=lamb, pos=True)
+#             .toarray()
+#             .T
+#         )
+#         return C
+
+#     def _reconstruct_image(self, pixel_intensities):
+#         """
+#         Reconstruct an image from pixel intensities. Uses reference stain matrix and max_c
+#         from :func:`~pathml.preprocessing.transforms.StainNormalizationHE.fit_to_reference`, if that method has been
+#         called, otherwise uses defaults.
+
+#         Args:
+#             pixel_intensities (np.ndarray): matrix of stain intensities for each pixel.
+#             If image_ref is MxN, stain matrix is 2x(M*M)
+#         """
+#         # scale to max intensities
+#         # actually use 99th percentile so it's more robust
+#         max_c = np.percentile(pixel_intensities, 99, axis=0).reshape((1, 2))
+#         pixel_intensities *= self.max_c_target / max_c
+
+#         if self.target == "normalize":
+#             im = np.exp(-self.stain_matrix_target_od @ pixel_intensities.T)
+#         elif self.target == "hematoxylin":
+#             im = np.exp(
+#                 -self.stain_matrix_target_od[:, 0].reshape(-1, 1)
+#                 @ pixel_intensities[:, 0].reshape(-1, 1).T
+#             )
+#         elif self.target == "eosin":
+#             im = np.exp(
+#                 -self.stain_matrix_target_od[:, 1].reshape(-1, 1)
+#                 @ pixel_intensities[:, 1].reshape(-1, 1).T
+#             )
+#         else:  # pragma: no cover
+#             raise Exception(
+#                 f"Error: input target {self.target} is invalid. Must be one of 'normalize', 'eosin', 'hematoxylin'"
+#             )
+
+#         im = im * self.background_intensity
+#         im = np.clip(im, a_min=0, a_max=255)
+#         im = im.T.astype(np.uint8)
+#         return im
+
+#     def F(self, image):
+#         # first estimate stain matrix for reference image_ref
+#         stain_matrix = self._estimate_stain_vectors(image=image)
+
+#         # next get pixel concentrations for reference image_ref
+#         C = self._estimate_pixel_concentrations(image=image, stain_matrix=stain_matrix)
+
+#         # next reconstruct the image_ref
+#         im_reconstructed = self._reconstruct_image(pixel_intensities=C)
+
+#         im_reconstructed = im_reconstructed.reshape(image.shape)
+#         return im_reconstructed
+
+#     def apply(self, tile):
+#         assert isinstance(
+#             tile, pathml.core.tile.Tile
+#         ), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+#         assert (
+#             tile.slide_type.stain == "HE"
+#         ), f"Tile has slide_type.stain={tile.slide_type.stain}, but must be 'HE'"
+#         tile.image = self.F(tile.image)
 
 
 class NucleusDetectionHE(Transform):
@@ -967,9 +1175,9 @@ class NucleusDetectionHE(Transform):
         )
 
     def F(self, image):
-        assert (
-            image.dtype == np.uint8
-        ), f"Input image dtype {image.dtype} must be np.uint8"
+        # assert (
+        #     image.dtype == np.uint8
+        # ), f"Input image dtype {image.dtype} must be np.uint8"
         im_hematoxylin = StainNormalizationHE(
             target="hematoxylin",
             stain_estimation_method=self.stain_estimation_method,
@@ -1493,7 +1701,7 @@ class QuantifyMIF(Transform):
         try:
             counts.obsm["spatial"] = np.array(counts.obs[["x", "y"]])
         # TODO: change to specific exception
-        except Exception:
+        except Exception:  # pragma: no cover
             logger.warning("did not log coordinates in obsm")
         return counts
 
