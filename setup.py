@@ -47,7 +47,7 @@ setuptools.setup(
         "jpype1==1.4.1",
         "tqdm==4.66.1",
         "anndata<=0.10.3",
-        "pydicom==2.4.4"
+        "pydicom==2.4.4",
     ],
     classifiers=[
         "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
