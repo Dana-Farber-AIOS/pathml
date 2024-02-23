@@ -53,7 +53,7 @@ class Graph(Data):
 
 
 class HACTPairData(Data):
-    """Constructs pytorch-geometric data object for handling both cell and tissue data
+    """Constructs pytorch-geometric data object for handling both cell and tissue data.
 
     Args:
         x_cell (torch.tensor): Computed features of each cell in the graph
@@ -62,6 +62,11 @@ class HACTPairData(Data):
         edge_index_tissue (torch.tensor): Edge index in sparse format between nodes in the tissue graph
         assignment (torch.tensor): Assigment matrix that contains mapping between cells and tissues.
         target (torch.tensor): Target label if used in a supervised setting.
+
+    References:
+        Jaume, G., Pati, P., Anklin, V., Foncubierta, A. and Gabrani, M., 2021, September.
+        Histocartography: A toolkit for graph analytics in digital pathology.
+        In MICCAI Workshop on Computational Pathology (pp. 117-128). PMLR.
     """
 
     def __init__(
@@ -141,6 +146,12 @@ def build_assignment_matrix(low_level_centroids, high_level_map, matrix=False):
 
     Returns:
         The assignment matrix as a numpy array.
+
+    References:
+        [1] https://github.com/BiomedSciAI/histocartography/tree/main
+        [2] Jaume, G., Pati, P., Anklin, V., Foncubierta, A. and Gabrani, M., 2021, September.
+        Histocartography: A toolkit for graph analytics in digital pathology.
+        In MICCAI Workshop on Computational Pathology (pp. 117-128). PMLR.
     """
 
     low_level_centroids = low_level_centroids.astype(int)
@@ -163,8 +174,15 @@ def two_hop(edge_index, num_nodes):
     Args:
         edge_index (torch.tensor): The edge index in sparse form of the graph.
         num_nodes (int): maximum number of nodes.
+
     Returns:
         torch.tensor: Output edge index tensor.
+
+    References:
+        [1] https://github.com/BiomedSciAI/histocartography/tree/main
+        [2] Jaume, G., Pati, P., Anklin, V., Foncubierta, A. and Gabrani, M., 2021, September.
+        Histocartography: A toolkit for graph analytics in digital pathology.
+        In MICCAI Workshop on Computational Pathology (pp. 117-128). PMLR.
     """
     adj = to_torch_csr_tensor(edge_index, size=(num_nodes, num_nodes))
     try:

@@ -22,9 +22,9 @@ class HACTNet(nn.Module):
 
     References:
         Pati, P., Jaume, G., Foncubierta-Rodriguez, A., Feroce, F., Anniciello, A.M., Scognamiglio, G., Brancati, N., Fiche, M.,
-        Dubruc, E., Riccio, D. and Di Bonito, M., 2022. Hierarchical graph representations in digital pathology. Medical image
-        analysis, 75, p.102264.
-
+        Dubruc, E., Riccio, D. and Di Bonito, M., 2022.
+        Hierarchical graph representations in digital pathology.
+        Medical image analysis, 75, p.102264.
     """
 
     def __init__(self, cell_params, tissue_params, classifier_params):

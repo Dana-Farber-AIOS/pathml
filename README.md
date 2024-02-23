@@ -147,12 +147,12 @@ cd pathml
 ````
 
 Create conda environment:
+
 ````
 conda env create -f environment.yml
 conda activate pathml
 ````
-
-Optionally install CUDA (instructions [here](#CUDA))
+To use GPU acceleration for model training or other tasks, you must install CUDA. The default CUDA version in our environment file is 11.6. To install a different CUDA version, refer to the instructions [here](#CUDA)). 
 
 Install `PathML` from source: 
 ````
@@ -224,10 +224,13 @@ Check the version of CUDA:
 nvidia-smi
 ````
 
-Install correct version of `cudatoolkit`:
+Replace both instances of 'cu116' in `requirements/requirements_torch.txt` with the CUDA version you see. For example, for CUDA 11.7, 'cu116' becomes 'cu117'. 
+
+Then create the environment:
+
 ````
-# update this command with your CUDA version number
-conda install cudatoolkit=11.0
+conda env create -f environment.yml
+conda activate pathml
 ````
 
 After installing PyTorch, optionally verify successful PyTorch installation with CUDA support: 
