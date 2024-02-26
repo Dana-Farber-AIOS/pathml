@@ -73,6 +73,7 @@ Cornell Medicine.
    examples/link_tile_stitching
    examples/link_construct_graphs
    examples/link_train_hactnet
+   examples/link_jco
 
 .. toctree::
    :maxdepth: 2
