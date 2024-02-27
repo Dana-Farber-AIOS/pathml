@@ -91,34 +91,8 @@ vcpkg install openslide
  2. Option B: Using Pre-built OpenSlide Binaries (Alternative)
 For Windows users, an alternative to using `vcpkg` is to download and use pre-built OpenSlide binaries. This method is recommended if you prefer a quicker setup.
 
-  1. Download the OpenSlide Windows binaries from the [OpenSlide Downloads](https://openslide.org/download/) page.
-  2. Extract the archive to your desired location, e.g., `C:\OpenSlide\`.
-
-**Importing PathML in Windows:**
-
-Insert the following code snippet at the beginning of your Python script or Jupyter notebook before importing PathML. This code sets up the DLL directory for OpenSlide, ensuring that the library is properly loaded:
-
-```python
-
-# The path can also be read from a config file, etc.
-OPENSLIDE_PATH = r'c:\path\to\openslide-win64\bin'
-
-import os
-if hasattr(os, 'add_dll_directory'):
-    # Windows-specific setup
-    with os.add_dll_directory(OPENSLIDE_PATH):
-        import openslide
-else:
-    # For other OSes, this step is not needed
-    import openslide
-
-# Now you can proceed with using PathML
-import pathml
-
-```
-This code snippet ensures that the OpenSlide DLLs are correctly found by Python on Windows systems. Replace c:\path\to\openslide-win64\bin with the actual path where you extracted the OpenSlide binaries.
-
-If you encounter any DLL load failures, verify that the OpenSlide `bin` directory is correctly added to your `PATH`.
+  - Download the OpenSlide Windows binaries from the [OpenSlide Downloads](https://openslide.org/download/) page.
+  - Extract the archive to your desired location, e.g., `C:\OpenSlide\`.
 
 #### Install OpenJDK 17
 ````
