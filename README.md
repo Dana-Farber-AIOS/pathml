@@ -28,25 +28,19 @@ Imaging datasets in cancer research are growing exponentially in both quantity a
 :construction: the `dev` branch is under active development, with experimental features, bug fixes, and refactors that may happen at any time! 
 Stable versions are available as tagged releases on GitHub, or as versioned releases on PyPI
 
-
 # Installation
 
-There are several ways to install `PathML`:
+`PathML` is an advanced tool for pathology image analysis. Below are simplified instructions to help you install PathML on your system. Whether you're a user or a developer, follow these steps to get started.
 
-1. `pip install` from PyPI (**recommended for users**)
-2. Clone repo to local machine and install from source (recommended for developers/contributors)
-3. Use the PathML Docker container
+## 1. Prerequisites
 
-Options (1) and (2) require that you first install all external dependencies:
-* OpenSlide
-* JDK 17
+We recommend using [Conda](https://conda.io/projects/conda/en/latest/user-guide/getting-started.html#) for managing your environments. 
 
-We recommend using conda for environment management. 
-Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
+#### Installing Conda
 
-*Note: these instructions are for Linux. Commands may be different for other platforms.*
+If you don't have Conda installed, you can download Miniconda [here]. (https://docs.conda.io/en/latest/miniconda.html)
 
-### Updating Conda and Using libmamba
+#### Updating Conda and Using libmamba
 
 Recent versions of Conda have integrated `libmamba`, a faster dependency solver. To benefit from this improvement, first ensure your Conda is updated:
 
@@ -61,42 +55,44 @@ conda install -n base conda-libmamba-solver
 conda config --set solver libmamba
 ````
 
-Please refer to [this Anaconda blog post](https://www.anaconda.com/blog/a-faster-conda-for-a-growing-community).
+*Note: these instructions are for Linux. Commands may be different for other platforms.*
 
-## Installation option 1: pip install
+## 2. PathML Installation Methods
 
-### Common Steps
+### 2.1 Install with pip (Recommended for Users)
 
-Create conda environment:
+#### Common Steps
+
+Create and Activate Conda Environment:
 ````
 conda create --name pathml python=3.9
 conda activate pathml
 ````
 
-### Platform-Specific External Dependencies
+#### Platform-Specific External Dependencies
 
-#### Install external dependencies (Linux) with [Apt](https://ubuntu.com/server/docs/package-management):
+* Linux: Install external dependencies with [Apt](https://ubuntu.com/server/docs/package-management):
 ````
 sudo apt-get install openslide-tools g++ gcc libblas-dev liblapack-dev
 ````
 
-#### Install external dependencies (MacOS) with [Brew](www.brew.sh):
+* MacOS: Install external dependencies with [Brew](www.brew.sh):
 ````
 brew install openslide
 ````
 
-#### Windows
+* Windows:
 
-##### Option A: Install with [vcpkg](https://vcpkg.io/en/):
+ 1. Option A: Install with [vcpkg](https://vcpkg.io/en/):
 ````
 vcpkg install openslide
 ````
 
-##### Option B: Using Pre-built OpenSlide Binaries (Alternative)
+ 2. Option B: Using Pre-built OpenSlide Binaries (Alternative)
 For Windows users, an alternative to using `vcpkg` is to download and use pre-built OpenSlide binaries. This method is recommended if you prefer a quicker setup.
 
-1. Download the OpenSlide Windows binaries from the [OpenSlide Downloads](https://openslide.org/download/) page.
-2. Extract the archive to your desired location, e.g., `C:\OpenSlide\`.
+  1. Download the OpenSlide Windows binaries from the [OpenSlide Downloads](https://openslide.org/download/) page.
+  2. Extract the archive to your desired location, e.g., `C:\OpenSlide\`.
 
 **Importing PathML in Windows:**
 
@@ -124,21 +120,21 @@ This code snippet ensures that the OpenSlide DLLs are correctly found by Python 
 
 If you encounter any DLL load failures, verify that the OpenSlide `bin` directory is correctly added to your `PATH`.
 
-### Install OpenJDK 17
+#### Install OpenJDK 17
 ````
 conda install -c conda-forge 'openjdk<=18.0'
 ````
 
-### Optionally install CUDA
+#### Optionally install CUDA
 
 [Follow instructions here](#CUDA)
 
-### Install `PathML` from PyPI
+#### Install `PathML` from PyPI
 ````
 pip install pathml
 ````
 
-## Installation option 2: clone repo and install from source
+### 2.2 Install from Source (Recommended for Developers)
 
 Clone repo:
 ````
@@ -159,7 +155,7 @@ Install `PathML` from source:
 pip install -e .
 ````
 
-## Installation option 3: Docker
+### 2.3 Use Docker Container
 
 First, download or build the PathML Docker container:
 
@@ -196,7 +192,7 @@ Note that these instructions assume that there are no other processes using port
 Please refer to the `Docker run` [documentation](https://docs.docker.com/engine/reference/run/) for further instructions
 on accessing the container, e.g. for mounting volumes to access files on a local machine from within the container.
 
-## Option 4: Google Colab
+### 2.4 Use Google Colab
 
 To get PathML running in a Colab environment:
 
@@ -214,7 +210,7 @@ os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-17-openjdk-amd64"
 *Thanks to all of our open-source collaborators for helping maintain these installation instructions!*  
 *Please open an issue for any bugs or other problems during installation process.*
 
-## CUDA
+# CUDA
 
 To use GPU acceleration for model training or other tasks, you must install CUDA. 
 This guide should work, but for the most up-to-date instructions, refer to the [official PyTorch installation instructions](https://pytorch.org/get-started/locally/).
