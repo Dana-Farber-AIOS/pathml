@@ -101,7 +101,7 @@ conda install -c conda-forge 'openjdk<=18.0'
 
 #### Optionally install CUDA
 
-[Follow instructions here](#CUDA)
+[Follow instructions here](##CUDA)
 
 #### Install `PathML` from PyPI
 ````
@@ -122,7 +122,7 @@ Create conda environment:
 conda env create -f environment.yml
 conda activate pathml
 ````
-To use GPU acceleration for model training or other tasks, you must install CUDA. The default CUDA version in our environment file is 11.6. To install a different CUDA version, refer to the instructions [here](#CUDA)). 
+To use GPU acceleration for model training or other tasks, you must install CUDA. The default CUDA version in our environment file is 11.6. To install a different CUDA version, refer to the instructions [here](##CUDA)). 
 
 Install `PathML` from source: 
 ````
