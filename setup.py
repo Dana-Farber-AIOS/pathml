@@ -8,6 +8,8 @@ with open("pathml/_version.py") as f:
     exec(f.read(), about)
 version = about["__version__"]
 
+dependency_links = ["https://download.pytorch.org/whl/cu116"]
+
 setuptools.setup(
     name="pathml",
     version=version,
@@ -21,6 +23,7 @@ setuptools.setup(
         "Documentation": "https://pathml.readthedocs.io/en/stable",
         "Source Code": "https://github.com/Dana-Farber-AIOS/pathml",
     },
+    dependency_links=dependency_links,
     install_requires=[
         "numpy==1.23.5",
         "pandas<=2.1.4",
