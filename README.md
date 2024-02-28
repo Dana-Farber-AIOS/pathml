@@ -184,7 +184,39 @@ os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-17-openjdk-amd64"
 *Thanks to all of our open-source collaborators for helping maintain these installation instructions!*  
 *Please open an issue for any bugs or other problems during installation process.*
 
-# CUDA
+## 3. Import PathML
+
+After you have installed all necessary dependencies and PathML itself, import it using the followinf command:
+
+````
+import pathml
+````
+
+For Windows users, insert the following code snippet at the beginning of your Python script or Jupyter notebook before importing PathML. This code sets up the DLL directory for OpenSlide, ensuring that the library is properly loaded:
+
+```python
+
+# The path can also be read from a config file, etc.
+OPENSLIDE_PATH = r'c:\path\to\openslide-win64\bin'
+
+import os
+if hasattr(os, 'add_dll_directory'):
+    # Windows-specific setup
+    with os.add_dll_directory(OPENSLIDE_PATH):
+        import openslide
+else:
+    # For other OSes, this step is not needed
+    import openslide
+
+# Now you can proceed with using PathML
+import pathml
+```
+This code snippet ensures that the OpenSlide DLLs are correctly found by Python on Windows systems. Replace c:\path\to\openslide-win64\bin with the actual path where you extracted the OpenSlide binaries.
+
+If you encounter any DLL load failures, verify that the OpenSlide `bin` directory is correctly added to your `PATH`.
+
+
+## CUDA
 
 To use GPU acceleration for model training or other tasks, you must install CUDA. 
 This guide should work, but for the most up-to-date instructions, refer to the [official PyTorch installation instructions](https://pytorch.org/get-started/locally/).
@@ -208,11 +240,11 @@ After installing PyTorch, optionally verify successful PyTorch installation with
 python -c "import torch; print(torch.cuda.is_available())"
 ````
 
-# Using with Jupyter
+## Using with Jupyter
 
 Jupyter notebooks are a convenient way to work interactively. To use `PathML` in Jupyter notebooks: 
 
-## Set JAVA_HOME environment variable
+### Set JAVA_HOME environment variable
 
 PathML relies on Java to enable support for reading a wide range of file formats.
 Before using `PathML` in Jupyter, you may need to manually set the `JAVA_HOME` environment variable 
@@ -225,7 +257,7 @@ specifying the path to Java. To do so:
     os.environ["JAVA_HOME"] = "/opt/conda/envs/pathml" # change path as needed
     ````
 
-## Register environment as an IPython kernel
+### Register environment as an IPython kernel
 ````
 conda activate pathml
 conda install ipykernel
