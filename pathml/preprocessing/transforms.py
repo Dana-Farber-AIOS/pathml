@@ -553,6 +553,58 @@ class SuperpixelInterpolation(Transform):
 
 
 class StainNormalizationHE(Transform):
+    """
+    Normalize H&E stained images to a reference slide.
+    Also can be used to separate hematoxylin and eosin channels.
+
+    H&E images are assumed to be composed of two stains, each one having a vector of its characteristic RGB values.
+    The stain matrix is a 2x3 matrix where the first row corresponds to the hematoxylin stain vector and the second
+    corresponds to eosin stain vector. The stain matrix can be estimated from a reference image in a number of ways;
+    here we provide implementations of two such algorithms from Macenko et al. and Vahadane et al.
+
+    After estimating the stain matrix for an image, the next step is to assign stain concentrations to each pixel.
+    Each pixel is assumed to be a linear combination of the two stain vectors, where the coefficients are the
+    intensities of each stain vector at that pixel. To solve for the intensities, we use least squares in Macenko
+    method and lasso in vahadane method.
+
+    The image can then be reconstructed by applying those pixel intensities to a stain matrix. This allows you to
+    standardize the appearance of an image by reconstructing it using a reference stain matrix. Using this method of
+    normalization may help account for differences in slide appearance arising from variations in staining procedure,
+    differences between scanners, etc. Images can also be reconstructed using only a single stain vector, e.g. to
+    separate the hematoxylin and eosin channels of an H&E image.
+
+    This code is based in part on StainTools: https://github.com/Peter554/StainTools
+
+    Args:
+        target (str): one of 'normalize', 'hematoxylin', or 'eosin'. Defaults to 'normalize'
+        stain_estimation_method (str): method for estimating stain matrix. Must be one of 'macenko' or 'vahadane'.
+            Defaults to 'macenko'.
+        optical_density_threshold (float): Threshold for removing low-optical density pixels when estimating stain
+            vectors. Defaults to 0.15
+        regularizer (float): Regularization parameter for dictionary learning when estimating stain vector
+            using vahadane method. Ignored if ``concentration_estimation_method != 'vahadane'``. Defaults to 0.1
+        angular_percentile (float): Percentile for stain vector selection when estimating stain vector
+            using Macenko method. Ignored if ``concentration_estimation_method != 'macenko'``. Defaults to 0.01
+        background_intensity (int): Intensity of background light. Must be an integer between 0 and 255.
+            Defaults to 245.
+        stain_matrix_target_od (np.ndarray): Stain matrix for reference slide.
+            Matrix of H and E stain vectors in optical density (OD) space.
+            Stain matrix is (2, 3) and first row corresponds to hematoxylin.
+            Default stain matrix can be used, or you can also fit to a reference slide of your choosing by calling
+            :meth:`~pathml.preprocessing.transforms.StainNormalizationHE.fit_to_reference`.
+        max_c_target (np.ndarray): Maximum concentrations of each stain in reference slide.
+            Default can be used, or you can also fit to a reference slide of your choosing by calling
+            :meth:`~pathml.preprocessing.transforms.StainNormalizationHE.fit_to_reference`.
+
+    References:
+        Macenko, M., Niethammer, M., Marron, J.S., Borland, D., Woosley, J.T., Guan, X., Schmitt, C. and Thomas, N.E.,
+        2009, June. A method for normalizing histology slides for quantitative analysis. In 2009 IEEE International
+        Symposium on Biomedical Imaging: From Nano to Macro (pp. 1107-1110). IEEE.
+
+        Vahadane, A., Peng, T., Sethi, A., Albarqouni, S., Wang, L., Baust, M., Steiger, K., Schlitter, A.M., Esposito,
+        I. and Navab, N., 2016. Structure-preserving color normalization and sparse stain separation for histological
+        images. IEEE transactions on medical imaging, 35(8), pp.1962-1971.
+    """
 
     def __init__(
         self,
