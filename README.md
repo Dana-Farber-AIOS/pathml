@@ -99,10 +99,6 @@ For Windows users, an alternative to using `vcpkg` is to download and use pre-bu
 conda install -c conda-forge 'openjdk<=18.0'
 ````
 
-#### Optionally install CUDA
-
-[Follow instructions here](##CUDA)
-
 #### Install `PathML` from PyPI
 ````
 pip install pathml
@@ -186,7 +182,7 @@ os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-17-openjdk-amd64"
 
 ## 3. Import PathML
 
-After you have installed all necessary dependencies and PathML itself, import it using the followinf command:
+After you have installed all necessary dependencies and PathML itself, import it using the following command:
 
 ````
 import pathml
