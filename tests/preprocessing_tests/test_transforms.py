@@ -170,12 +170,12 @@ def test_binary_label_transforms(tileHE, transform):
 
 
 def test_segment_mif(tileVectra):
-    pytest.importorskip("deepcell")
-    from pathml.preprocessing.transforms import SegmentMIF
+    # pytest.importorskip("deepcell")
+    from pathml.preprocessing.transforms import SegmentMIFRemote
 
     vectra_collapse = CollapseRunsVectra()
     vectra_collapse.apply(tileVectra)
-    t = SegmentMIF(nuclear_channel=0, cytoplasm_channel=1)
+    t = SegmentMIFRemote(nuclear_channel=0, cytoplasm_channel=1)
     orig_im = tileVectra.image
     cell, nuclear = t.F(orig_im)
     t.apply(tileVectra)
@@ -184,13 +184,13 @@ def test_segment_mif(tileVectra):
 
 
 def test_quantify_mif(tileVectra):
-    pytest.importorskip("deepcell")
-    from pathml.preprocessing.transforms import SegmentMIF
+    # pytest.importorskip("deepcell")
+    from pathml.preprocessing.transforms import SegmentMIFRemote
 
     t = QuantifyMIF("cell_segmentation")
     with pytest.raises(AssertionError):
         t.apply(tileVectra)
-    t2 = SegmentMIF(nuclear_channel=0, cytoplasm_channel=1)
+    t2 = SegmentMIFRemote(nuclear_channel=0, cytoplasm_channel=1)
     vectra_collapse = CollapseRunsVectra()
     vectra_collapse.apply(tileVectra)
     t2.apply(tileVectra)
@@ -250,10 +250,10 @@ def test_repr(transform):
 
 
 def test_segmentMIF_repr():
-    pytest.importorskip("deepcell")
-    from pathml.preprocessing.transforms import SegmentMIF
+    # pytest.importorskip("deepcell")
+    from pathml.preprocessing.transforms import SegmentMIFRemote
 
-    repr(SegmentMIF(nuclear_channel=0, cytoplasm_channel=1))
+    repr(SegmentMIFRemote(nuclear_channel=0, cytoplasm_channel=1))
 
 
 def test_collapse_runs_codex_repr():

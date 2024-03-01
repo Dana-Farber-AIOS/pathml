@@ -3,6 +3,8 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
+from warnings import warn
+
 import anndata
 import cv2
 import numpy as np
@@ -1154,7 +1156,7 @@ class DeconvolveMIF(Transform):  # pragma: no cover
         tile.image = self.F(tile.image, tile.slidetype)
 
 
-class SegmentMIF(Transform):
+class SegmentMIF(Transform):  # pragma: no cover
     """
     Transform applying segmentation to MIF images.
 
@@ -1166,7 +1168,6 @@ class SegmentMIF(Transform):
           segmentation model on 1.3 million cell annotations and 1.2 million nuclear annotations (TissueNet dataset).
           Model outputs predictions for centroid and boundary of every nucleus and cell, then centroid and boundary
           predictions are used as inputs to a watershed algorithm that creates segmentation masks.
-        * **Cellpose**: [coming soon]
 
     .. note::
         Mesmer model requires installation of deepcell dependency: ``pip install deepcell``
@@ -1184,9 +1185,6 @@ class SegmentMIF(Transform):
         Greenwald, N.F., Miller, G., Moen, E. et al. Whole-cell segmentation of tissue images with human-level
         performance using large-scale data annotation and deep learning. Nat Biotechnol (2021).
         https://doi.org/10.1038/s41587-021-01094-0
-
-        Stringer, C., Wang, T., Michaelos, M. and Pachitariu, M., 2021. Cellpose: a generalist algorithm for cellular
-        segmentation. Nature Methods, 18(1), pp.100-106.
     """
 
     def __init__(
@@ -1199,6 +1197,12 @@ class SegmentMIF(Transform):
         postprocess_kwargs_nuclear=None,
         postprocess_kwargs_whole_cell=None,
     ):
+        warn(
+            "SegmentMIF is deprecated and will be removed in future versions. Use pathml.preprocessing.SegmentMIFRemote instead.",
+            DeprecationWarning,
+            2,
+        )
+
         assert isinstance(
             nuclear_channel, int
         ), "nuclear_channel must be an int indicating index"
@@ -1227,10 +1231,6 @@ class SegmentMIF(Transform):
                     "The Mesmer model in SegmentMIF requires deepcell to be installed"
                 ) from None
             self.model = model.lower()
-        elif model.lower() == "cellpose":
-            """from cellpose import models
-            self.model = models.Cellpose(gpu=self.gpu, model_type='cyto')"""
-            raise NotImplementedError("Cellpose model not currently supported")
         else:  # pragma: no cover
             raise ValueError("currently only supports mesmer model")
 
@@ -1282,6 +1282,78 @@ class SegmentMIF(Transform):
             return cell_segmentation_predictions, nuclear_segmentation_predictions
         else:  # pragma: no cover
             raise NotImplementedError(f"model={self.model} currently not supported.")
+
+    def apply(self, tile):
+        assert isinstance(
+            tile, pathml.core.tile.Tile
+        ), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        assert (
+            tile.slide_type.stain == "Fluor"
+        ), f"Tile has slide_type.stain='{tile.slide_type.stain}', but must be 'Fluor'"
+        cell_segmentation, nuclear_segmentation = self.F(tile.image)
+        tile.masks["cell_segmentation"] = cell_segmentation
+        tile.masks["nuclear_segmentation"] = nuclear_segmentation
+
+
+class SegmentMIFRemote(Transform):
+    """
+    Transform applying segmentation to MIF images using a Mesmer model. Mesmer uses human-in-the-loop pipeline
+    to train a  ResNet50 backbone w/ Feature Pyramid Network segmentation model on 1.3 million cell annotations
+    and 1.2 million nuclear annotations (TissueNet dataset). Model outputs predictions for centroid and boundary
+    of every nucleus and cell, then centroid and boundary predictions are used as inputs to a watershed
+    algorithm that creates segmentation masks.
+
+    Implements `pathml.inference.RemoteMesmer` in the backend.
+
+    Input image must be formatted (c, x, y) or (batch, c, x, y). z and t dimensions must be selected before calling SegmentMIF
+
+    Args:
+        model_path(str): path where the ONNX model is downloaded
+        nuclear_channel(int): channel that defines cell nucleus
+        cytoplasm_channel(int): channel that defines cell membrane or cytoplasm
+        image_resolution(float): pixel resolution of image in microns. Currently only supports 0.5
+        preprocess_kwargs(dict): keyword arguemnts to pass to pre-processing function
+        postprocess_kwargs_nuclear(dict): keyword arguments to pass to post-processing function
+        postprocess_kwargs_whole_cell(dict): keyword arguments to pass to post-processing function
+
+    References:
+        Greenwald, N.F., Miller, G., Moen, E. et al. Whole-cell segmentation of tissue images with human-level
+        performance using large-scale data annotation and deep learning. Nat Biotechnol (2021).
+        https://doi.org/10.1038/s41587-021-01094-0
+    """
+
+    def __init__(
+        self,
+        model_path="temp.onnx",
+        nuclear_channel=None,
+        cytoplasm_channel=None,
+        image_resolution=0.5,
+        preprocess_kwargs=None,
+        postprocess_kwargs_nuclear=None,
+        postprocess_kwargs_whole_cell=None,
+    ):
+        self.image_resolution = image_resolution
+
+        from pathml.inference import RemoteMesmer
+
+        self.inference = RemoteMesmer(
+            model_path=model_path,
+            nuclear_channel=nuclear_channel,
+            cytoplasm_channel=cytoplasm_channel,
+            image_resolution=image_resolution,
+            preprocess_kwargs=preprocess_kwargs,
+            postprocess_kwargs_nuclear=postprocess_kwargs_nuclear,
+            postprocess_kwargs_whole_cell=postprocess_kwargs_whole_cell,
+        )
+
+    def __repr__(self):
+        return f"SegmentMIF(model='mesmer', image_resolution={self.image_resolution})"
+
+    def F(self, image):
+        cell_segmentation_predictions, nuclear_segmentation_predictions = (
+            self.inference.F(image)
+        )
+        return cell_segmentation_predictions, nuclear_segmentation_predictions
 
     def apply(self, tile):
         assert isinstance(

@@ -7,6 +7,7 @@ from .inference import (
     HaloAIInference,
     Inference,
     InferenceBase,
+    RemoteMesmer,
     RemoteTestHoverNet,
     check_onnx_clean,
     convert_pytorch_onnx,

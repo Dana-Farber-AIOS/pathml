@@ -11,7 +11,13 @@ import onnxruntime
 import requests
 import torch
 
+import pathml
 import pathml.preprocessing.transforms as Transforms
+from pathml.inference.mesmer_utils import (
+    deep_watershed,
+    format_output_mesmer,
+    mesmer_preprocess,
+)
 
 
 def remove_initializer_from_input(model_path, new_path):
@@ -375,7 +381,7 @@ class HaloAIInference(Inference):
 
 # class to handle remote onnx models
 class RemoteTestHoverNet(Inference):
-    """Transformation to run inferrence on ONNX model.
+    """Transformation to run inference on ONNX model.
 
     Citation for model:
     Pocock J, Graham S, Vu QD, Jahanifar M, Deshpande S, Hadjigeorghiou G, Shephard A, Bashir RM, Bilal M, Lu W, Epstein D.
@@ -424,3 +430,166 @@ class RemoteTestHoverNet(Inference):
     def remove(self):
         # remove the temp.onnx model
         os.remove(self.model_path)
+
+
+class RemoteMesmer(Inference):
+    """
+    Transformation to run inference on ONNX Mesmer model.
+
+    Citation for model:
+    Greenwald NF, Miller G, Moen E, Kong A, Kagel A, Dougherty T, Fullaway CC, McIntosh BJ, Leow KX, Schwartz MS, Pavelchek C.
+    Whole-cell segmentation of tissue images with human-level performance using large-scale data annotation and deep learning.
+    Nature biotechnology. 2022 Apr;40(4):555-65.
+
+    Args:
+    model_path (str): temp file name to download onnx from huggingface, do not change
+    input_name (str): name of the input the ONNX model accepts, default = "data", do not change
+    num_classes (int): number of classes you are predicting, do not change
+    model_type (str): type of model, e.g. "segmentation", do not change
+    local (bool): True if the model is stored locally, default = "True", do not change
+    nuclear_channel(int): channel that defines cell nucleus
+    cytoplasm_channel(int): channel that defines cell membrane or cytoplasm
+    image_resolution(float): pixel resolution of image in microns. Currently only supports 0.5
+    preprocess_kwargs(dict): keyword arguemnts to pass to pre-processing function
+    postprocess_kwargs_nuclear(dict): keyword arguments to pass to post-processing function
+    postprocess_kwargs_whole_cell(dict): keyword arguments to pass to post-processing function
+    """
+
+    def __init__(
+        self,
+        model_path="temp.onnx",
+        input_name="data",
+        num_classes=3,
+        model_type="Segmentation",
+        local=False,
+        nuclear_channel=None,
+        cytoplasm_channel=None,
+        image_resolution=0.5,
+        preprocess_kwargs=None,
+        postprocess_kwargs_nuclear=None,
+        postprocess_kwargs_whole_cell=None,
+    ):
+        super().__init__(model_path, input_name, num_classes, model_type, local)
+        assert isinstance(
+            nuclear_channel, int
+        ), "nuclear_channel must be an int indicating index"
+        assert isinstance(
+            cytoplasm_channel, int
+        ), "cytoplasm_channel must be an int indicating index"
+        self.nuclear_channel = nuclear_channel
+        self.cytoplasm_channel = cytoplasm_channel
+        self.image_resolution = image_resolution
+        self.preprocess_kwargs = preprocess_kwargs if preprocess_kwargs else {}
+        self.postprocess_kwargs_nuclear = (
+            postprocess_kwargs_nuclear if postprocess_kwargs_nuclear else {}
+        )
+        self.postprocess_kwargs_whole_cell = (
+            postprocess_kwargs_whole_cell if postprocess_kwargs_whole_cell else {}
+        )
+
+        # specify URL of the model in PathML public repository
+        url = "https://huggingface.co/pathml/test/resolve/main/mesmer.onnx"
+
+        # download model, save as temp.onnx
+        with open(self.model_path, "wb") as out_file:
+            content = requests.get(url, stream=True).content
+            out_file.write(content)
+
+        self.model_card["num_classes"] = self.num_classes
+        self.model_card["model_type"] = self.model_type
+        self.model_card["name"] = "Deepcell's Mesmer"
+        self.model_card["model_input_notes"] = (
+            "Accepts tiles of 256 x 256, resolution must be 0.5."
+        )
+        self.model_card["citation"] = (
+            "Greenwald NF, Miller G, Moen E, Kong A, Kagel A, Dougherty T, Fullaway CC, McIntosh BJ, Leow KX, Schwartz MS, Pavelchek C. Whole-cell segmentation of tissue images with human-level performance using large-scale data annotation and deep learning. Nature biotechnology. 2022 Apr;40(4):555-65."
+        )
+
+        print(self.model_card["model_input_notes"])
+
+        if not (self.image_resolution == 0.5):
+            print("The model only works with images of resolution 0.5.")
+
+    def __repr__(self):
+        return "Class to handle remote Mesmer Model from Deepcell. See model card for citation."
+
+    def inference(self, image):
+        # load fixed model
+        onnx_model = onnx.load(self.model_path)
+
+        # check tile dimensions match ONNX input dimensions
+        input_node = onnx_model.graph.input
+
+        dimensions = []
+        for input in input_node:
+            if input.name == self.input_name:
+                input_shape = input.type.tensor_type.shape.dim
+                for dim in input_shape:
+                    dimensions.append(dim.dim_value)
+
+        # check onnx model
+        onnx.checker.check_model(onnx_model)
+
+        # start an inference session
+        ort_sess = onnxruntime.InferenceSession(self.model_path)
+
+        # create model output, returns a list
+        model_output = ort_sess.run(None, {self.input_name: image.astype("f")})
+
+        return model_output
+
+    def F(self, image):
+        img = image.copy()
+        if len(img.shape) not in [3, 4]:
+            raise ValueError(
+                f"input image has shape {img.shape}. supported image shapes are x,y,c or batch,x,y,c."
+            )  # pragma: no cover
+        if len(img.shape) == 3:
+            img = np.expand_dims(img, axis=0)
+        if img.shape[1] != 256 and img.shape[2] != 256:
+            raise ValueError(
+                f"input image has shape {img.shape}. currently, we only support image shapes that are (256,256,c) or (batch,256,256,c)."
+            )  # pragma: no cover
+        nuc_cytoplasm = np.stack(
+            (img[:, :, :, self.nuclear_channel], img[:, :, :, self.cytoplasm_channel]),
+            axis=-1,
+        )
+
+        # if not (self.image_resolution == 0.5):
+        #     nuc_cytoplasm = mesmer_resize_input(nuc_cytoplasm, self.image_resolution)
+
+        # get pre-processing output
+        pre_processed_output = mesmer_preprocess(
+            nuc_cytoplasm, **self.preprocess_kwargs
+        )
+
+        # run infernece
+        output = self.inference(pre_processed_output)
+
+        # reformat output
+        output = format_output_mesmer(output)
+
+        # post-processing
+        label_images_cell = deep_watershed(
+            output["whole-cell"], **self.postprocess_kwargs_whole_cell
+        )
+
+        label_images_nucleus = deep_watershed(
+            output["nuclear"], **self.postprocess_kwargs_nuclear
+        )
+
+        return np.squeeze(label_images_cell, axis=0), np.squeeze(
+            label_images_nucleus, axis=0
+        )
+
+    def apply(self, tile):
+        assert isinstance(
+            tile, pathml.core.tile.Tile
+        ), f"tile is type {type(tile)} but must be pathml.core.tile.Tile"
+        assert (
+            tile.slide_type.stain == "Fluor"
+        ), f"Tile has slide_type.stain='{tile.slide_type.stain}', but must be 'Fluor'"
+
+        cell_segmentation, nuclear_segmentation = self.F(tile.image)
+        tile.masks["cell_segmentation"] = cell_segmentation
+        tile.masks["nuclear_segmentation"] = nuclear_segmentation
