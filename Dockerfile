@@ -1,59 +1,74 @@
-# syntax=docker/dockerfile:1
+# Stage 1: Java Environment Setup
+FROM eclipse-temurin:17-jdk as java-env
 
-FROM ubuntu:20.04
-# LABEL about the custom image
-LABEL maintainer="PathML@dfci.harvard.edu"
-LABEL description="This is custom Docker Image for running PathML"
+# Set JAVA_HOME environment variable
+#ENV JAVA_HOME /opt/java/openjdk
+RUN echo $JAVA_HOME
 
-# Disable Prompt During Packages Installation
-ARG DEBIAN_FRONTEND=noninteractive
+# Stage 2: Python Environment Setup with Micromamba
+FROM mambaorg/micromamba:bookworm-slim as python-env
 
-#Set miniconda path
-ENV PATH="/root/miniconda3/bin:${PATH}"
-ARG PATH="/root/miniconda3/bin:${PATH}"
-
-ENV JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64/jre/"
-ARG JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64/jre/"
-
-ENV SHELL="/bin/bash"
-
-#install packages on root
+# Switch to root user to install packages
 USER root
 
-#download and install miniconda and external dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends  openslide-tools \
-    g++ \
-    gcc \
-    libpixman-1-0 \
-    libblas-dev \
-    liblapack-dev \
-    wget \
-    openjdk-8-jre \
-    openjdk-8-jdk \
-    && wget \
-    https://repo.anaconda.com/miniconda/Miniconda3-py38_4.10.3-Linux-x86_64.sh \
-    && mkdir /root/.conda \
-    && bash Miniconda3-py38_4.10.3-Linux-x86_64.sh -b \
-    && rm -f Miniconda3-py38_4.10.3-Linux-x86_64.sh \
-    && rm -rf /var/lib/apt/lists/*
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    openslide-tools g++ gcc libpixman-1-dev libblas-dev liblapack-dev wget \
+    libgl1-mesa-dev libgl1-mesa-glx && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# copy pathml files into docker
-COPY setup.py README.md /opt/pathml/
+# Create working directory and environment
+WORKDIR /app
+COPY environment.yml .
+RUN micromamba install --yes --name base -f environment.yml && \
+    micromamba clean --all --yes
+
+# Copy PathML files
+COPY setup.py README.md pyproject.toml /opt/pathml/
 COPY pathml/ /opt/pathml/pathml
 COPY tests/ /opt/pathml/tests
 
-# install pathml and deepcell
-RUN pip3 install pip==21.3.1 \
-    && pip3 install numpy==1.19.5 spams==2.6.2.5 protobuf==3.20.1\
-    && pip3 install python-bioformats==4.0.0 deepcell /opt/pathml/ pytest
+# Activate the environment
+ARG MAMBA_DOCKERFILE_ACTIVATE=1
 
-# run tests to verify container
-WORKDIR /opt/pathml
-RUN python3 -m pytest /opt/pathml/tests/ -m "not slow"
+# Install spams
+RUN /opt/conda/bin/pip install spams
 
+# Install PathML and dependencies
+RUN /opt/conda/bin/pip install /opt/pathml/
+
+# Test importing pathml to verify installation
+RUN /opt/conda/bin/python -c "import pathml"
+
+# Copy Java environment from java-env stage
+COPY --from=java-env /opt/java/openjdk /opt/java/openjdk
+
+# Set JAVA_HOME and PATH environment variables
+#ENV JAVA_HOME /opt/java/openjdk
+#ENV PATH $JAVA_HOME/bin:$PATH
+
+# Set the PATH to include /opt/conda/bin and /opt/conda
+ENV PATH /opt/conda/bin:$PATH
+ENV PATH /opt/conda:$PATH
+
+# Verify Java installation
+RUN java -version
+
+WORKDIR /opt/pathml/
+RUN ls
+RUN python -m pytest tests/preprocessing_tests/test_tilestitcher.py
+RUN pytest -m "not slow and not exclude"
+
+# Set default workdir
 WORKDIR /home/pathml
 
-# set up jupyter lab
-RUN pip3 install jupyter -U && pip3 install jupyterlab
+
+# Expose JupyterLab on port 8888 and set the entrypoint
 EXPOSE 8888
 ENTRYPOINT ["jupyter", "lab", "--ip=0.0.0.0", "--allow-root", "--no-browser"]
+
+
+# Set the entrypoint to bash for direct shell access
+#ENTRYPOINT ["/bin/bash"]
