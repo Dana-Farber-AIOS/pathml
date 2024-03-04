@@ -44,7 +44,7 @@ def erode_edges(mask, erosion_width):
         ValueError: mask.ndim is not 2 or 3
     """
 
-    if mask.ndim not in {2, 3}:
+    if mask.ndim not in {2, 3}:  # pragma: no cover
         raise ValueError(
             "erode_edges expects arrays of ndim 2 or 3."
             "Got ndim: {}".format(mask.ndim)
@@ -184,7 +184,7 @@ def mesmer_preprocess(image, **kwargs):
         np.array: processed image array
     """
 
-    if len(image.shape) != 4:
+    if len(image.shape) != 4:  # pragma: no cover
         raise ValueError(f"Image data must be 4D, got image of shape {image.shape}")
 
     output = np.copy(image)
@@ -216,7 +216,7 @@ def format_output_mesmer(output_list):
         ValueError: if model output list is not len(4)
     """
     expected_length = 4
-    if len(output_list) != expected_length:
+    if len(output_list) != expected_length:  # pragma: no cover
         raise ValueError(
             "output_list was length {}, expecting length {}".format(
                 len(output_list), expected_length
@@ -286,13 +286,13 @@ def deep_watershed(
     try:
         maximas = outputs[maxima_index]
         interiors = outputs[interior_index]
-    except (TypeError, KeyError, IndexError):
+    except (TypeError, KeyError, IndexError):  # pragma: no cover
         raise ValueError(
             "`outputs` should be a list of at least two " "NumPy arryas of equal shape."
         )
 
     valid_algos = {"h_maxima", "peak_local_max"}
-    if maxima_algorithm not in valid_algos:
+    if maxima_algorithm not in valid_algos:  # pragma: no cover
         raise ValueError(
             "Invalid value for maxima_algorithm: {}. "
             "Must be one of {}".format(maxima_algorithm, valid_algos)
@@ -306,13 +306,13 @@ def deep_watershed(
             "This will lead to slow prediction performance."
         )
 
-    if maximas.shape[:-1] != interiors.shape[:-1]:
+    if maximas.shape[:-1] != interiors.shape[:-1]:  # pragma: no cover
         raise ValueError(
             "All input arrays must have the same shape. "
             "Got {} and {}".format(maximas.shape, interiors.shape)
         )
 
-    if maximas.ndim not in {4, 5}:
+    if maximas.ndim not in {4, 5}:  # pragma: no cover
         raise ValueError(
             "maxima and interior tensors must be rank 4 or 5. "
             "Rank 4 is 2D data of shape (batch, x, y, c). "

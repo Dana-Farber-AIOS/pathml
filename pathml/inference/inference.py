@@ -507,7 +507,7 @@ class RemoteMesmer(Inference):
 
         print(self.model_card["model_input_notes"])
 
-        if not (self.image_resolution == 0.5):
+        if not (self.image_resolution == 0.5):  # pragma: no cover
             print("The model only works with images of resolution 0.5.")
 
     def __repr__(self):
