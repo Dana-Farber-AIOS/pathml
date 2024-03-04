@@ -1,3 +1,13 @@
+"""
+The following functions were taken from the Deepcell package to enable PathML to support their Mesmer segmentation model.
+
+Deepcell website:
+https://deepcell.readthedocs.io/en/master/#
+
+Citation: 
+"Greenwald NF, Miller G, Moen E, Kong A, Kagel A, Dougherty T, Fullaway CC, McIntosh BJ, Leow KX, Schwartz MS, Pavelchek C. Whole-cell segmentation of tissue images with human-level performance using large-scale data annotation and deep learning. Nature biotechnology. 2022 Apr;40(4):555-65."
+"""
+
 import warnings
 
 import cv2
