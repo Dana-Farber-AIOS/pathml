@@ -4,16 +4,14 @@ The following functions were taken from the Deepcell package to enable PathML to
 Deepcell website:
 https://deepcell.readthedocs.io/en/master/#
 
-Citation: 
+Citation:
 "Greenwald NF, Miller G, Moen E, Kong A, Kagel A, Dougherty T, Fullaway CC, McIntosh BJ, Leow KX, Schwartz MS, Pavelchek C. Whole-cell segmentation of tissue images with human-level performance using large-scale data annotation and deep learning. Nature biotechnology. 2022 Apr;40(4):555-65."
 """
 
 import warnings
 
-import cv2
 import numpy as np
 import scipy.ndimage as nd
-from skimage import transform
 from skimage.exposure import equalize_adapthist, rescale_intensity
 from skimage.feature import peak_local_max
 from skimage.measure import label, regionprops
@@ -97,7 +95,6 @@ def percentile_threshold(image, percentile=99.9):
     This function is from "Greenwald NF, Miller G, Moen E, Kong A, Kagel A, Dougherty T, Fullaway CC, McIntosh BJ, Leow KX, Schwartz MS, Pavelchek C. Whole-cell segmentation of tissue images with human-level performance using large-scale data annotation and deep learning. Nature biotechnology. 2022 Apr;40(4):555-65."
 
     https://github.com/vanvalenlab/deepcell-toolbox/blob/master/deepcell_toolbox/processing.py
-
 
     Args:
         image: numpy array of image data
@@ -202,133 +199,6 @@ def mesmer_preprocess(image, **kwargs):
         output = histogram_normalization(image=output, kernel_size=kernel_size)
 
     return output
-
-
-def resize(data, shape, data_format="channels_last", labeled_image=False):
-    """Resize the data to the given shape.
-    Uses openCV to resize the data if the data is a single channel, as it
-    is very fast. However, openCV does not support multi-channel resizing,
-    so if the data has multiple channels, use skimage.
-
-    This function is from "Greenwald NF, Miller G, Moen E, Kong A, Kagel A, Dougherty T, Fullaway CC, McIntosh BJ, Leow KX, Schwartz MS, Pavelchek C. Whole-cell segmentation of tissue images with human-level performance using large-scale data annotation and deep learning. Nature biotechnology. 2022 Apr;40(4):555-65."
-
-    https://github.com/vanvalenlab/deepcell-toolbox/blob/master/deepcell_toolbox/utils.py
-
-    Args:
-        data (np.array): data to be reshaped. Must have a channel dimension
-        shape (tuple): shape of the output data in the form (x,y).
-            Batch and channel dimensions are handled automatically and preserved.
-        data_format (str): determines the order of the channel axis,
-            one of 'channels_first' and 'channels_last'.
-        labeled_image (bool): flag to determine how interpolation and floats are handled based
-         on whether the data represents raw images or annotations
-
-    Raises:
-        ValueError: ndim of data not 3 or 4
-        ValueError: Shape for resize can only have length of 2, e.g. (x,y)
-
-    Returns:
-        numpy.array: data reshaped to new shape.
-    """
-    if len(data.shape) not in {3, 4}:
-        raise ValueError(
-            "Data must have 3 or 4 dimensions, e.g. "
-            "[batch, x, y], [x, y, channel] or "
-            "[batch, x, y, channel]. Input data only has {} "
-            "dimensions.".format(len(data.shape))
-        )
-
-    if len(shape) != 2:
-        raise ValueError(
-            "Shape for resize can only have length of 2, e.g. (x,y)."
-            "Input shape has {} dimensions.".format(len(shape))
-        )
-
-    original_dtype = data.dtype
-
-    # cv2 resize is faster but does not support multi-channel data
-    # If the data is multi-channel, use skimage.transform.resize
-    channel_axis = 0 if data_format == "channels_first" else -1
-    batch_axis = -1 if data_format == "channels_first" else 0
-
-    # Use skimage for multichannel data
-    if data.shape[channel_axis] > 1:
-        # Adjust output shape to account for channel axis
-        if data_format == "channels_first":
-            shape = tuple([data.shape[channel_axis]] + list(shape))
-        else:
-            shape = tuple(list(shape) + [data.shape[channel_axis]])
-
-        # linear interpolation (order 1) for image data, nearest neighbor (order 0) for labels
-        # anti_aliasing introduces spurious labels, include only for image data
-        order = 0 if labeled_image else 1
-        anti_aliasing = not labeled_image
-
-        def _resize(d):
-            return transform.resize(
-                d,
-                shape,
-                mode="constant",
-                preserve_range=True,
-                order=order,
-                anti_aliasing=anti_aliasing,
-            )
-
-    # single channel image, resize with cv2
-    else:
-        shape = tuple(shape)[::-1]  # cv2 expects swapped axes.
-
-        # linear interpolation for image data, nearest neighbor for labels
-        # CV2 doesn't support ints for linear interpolation, set to float for image data
-        if labeled_image:
-            interpolation = cv2.INTER_NEAREST
-        else:
-            interpolation = cv2.INTER_LINEAR
-            data = data.astype("float32")
-
-        def _resize(d):
-            return np.expand_dims(
-                cv2.resize(np.squeeze(d), shape, interpolation=interpolation),
-                axis=channel_axis,
-            )
-
-    # Check for batch dimension to loop over
-    if len(data.shape) == 4:
-        batch = []
-        for i in range(data.shape[batch_axis]):
-            d = data[i] if batch_axis == 0 else data[..., i]
-            batch.append(_resize(d))
-        resized = np.stack(batch, axis=batch_axis)
-    else:
-        resized = _resize(data)
-
-    return resized.astype(original_dtype)
-
-
-def mesmer_resize_input(image, image_mpp):
-    """Checks if there is a difference between image and model resolution
-    and resizes if they are different. Otherwise returns the unmodified
-    image.
-
-    This function is from "Greenwald NF, Miller G, Moen E, Kong A, Kagel A, Dougherty T, Fullaway CC, McIntosh BJ, Leow KX, Schwartz MS, Pavelchek C. Whole-cell segmentation of tissue images with human-level performance using large-scale data annotation and deep learning. Nature biotechnology. 2022 Apr;40(4):555-65."
-
-    https://github.com/vanvalenlab/deepcell-tf/blob/master/deepcell/applications/application.py
-
-    Args:
-        image (numpy.array): Input image to resize.
-        image_mpp (float): Microns per pixel for the ``image``.
-
-    Returns:
-        numpy.array: Input image resized if necessary to match ``model_mpp``
-    """
-    # Don't scale the image if mpp is the same or not defined
-    # if image_mpp not in {None, self.model_mpp}:
-    shape = image.shape
-    scale_factor = image_mpp / 0.5
-    new_shape = (int(shape[1] * scale_factor), int(shape[2] * scale_factor))
-    image = resize(image, new_shape, data_format="channels_last")
-
-    return image
 
 
 def format_output_mesmer(output_list):

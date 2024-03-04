@@ -175,7 +175,17 @@ def test_segment_mif(tileVectra):
 
     vectra_collapse = CollapseRunsVectra()
     vectra_collapse.apply(tileVectra)
-    t = SegmentMIFRemote(nuclear_channel=0, cytoplasm_channel=1)
+    t = SegmentMIFRemote(
+        nuclear_channel=0,
+        cytoplasm_channel=1,
+        postprocess_kwargs_nuclear={
+            "label_erosion": 10,
+            "small_objects_threshold": 0.2,
+            "fill_holes_threshold": 0.2,
+            "pixel_expansion": 10,
+            "maxima_algorithm": "peak_local_max",
+        },
+    )
     orig_im = tileVectra.image
     cell, nuclear = t.F(orig_im)
     t.apply(tileVectra)

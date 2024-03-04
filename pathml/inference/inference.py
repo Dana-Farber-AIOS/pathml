@@ -513,6 +513,10 @@ class RemoteMesmer(Inference):
     def __repr__(self):
         return "Class to handle remote Mesmer Model from Deepcell. See model card for citation."
 
+    def remove(self):
+        # remove the temp.onnx model
+        os.remove(self.model_path)
+
     def inference(self, image):
         # load fixed model
         onnx_model = onnx.load(self.model_path)
