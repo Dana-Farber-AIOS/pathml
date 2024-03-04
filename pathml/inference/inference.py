@@ -499,7 +499,7 @@ class RemoteMesmer(Inference):
         self.model_card["model_type"] = self.model_type
         self.model_card["name"] = "Deepcell's Mesmer"
         self.model_card["model_input_notes"] = (
-            "Accepts tiles of 256 x 256, resolution must be 0.5."
+            "Accepts tiles of 256 x 256, resolution must be 0.5. Unlike other inference classes, segmentation maps are saved to tile.masks."
         )
         self.model_card["citation"] = (
             "Greenwald NF, Miller G, Moen E, Kong A, Kagel A, Dougherty T, Fullaway CC, McIntosh BJ, Leow KX, Schwartz MS, Pavelchek C. Whole-cell segmentation of tissue images with human-level performance using large-scale data annotation and deep learning. Nature biotechnology. 2022 Apr;40(4):555-65."
@@ -554,9 +554,6 @@ class RemoteMesmer(Inference):
             (img[:, :, :, self.nuclear_channel], img[:, :, :, self.cytoplasm_channel]),
             axis=-1,
         )
-
-        # if not (self.image_resolution == 0.5):
-        #     nuc_cytoplasm = mesmer_resize_input(nuc_cytoplasm, self.image_resolution)
 
         # get pre-processing output
         pre_processed_output = mesmer_preprocess(
