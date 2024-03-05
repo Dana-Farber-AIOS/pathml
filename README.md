@@ -38,7 +38,7 @@ We recommend using [Conda](https://conda.io/projects/conda/en/latest/user-guide/
 
 #### Installing Conda
 
-If you don't have Conda installed, you can download Miniconda [here]. (https://docs.conda.io/en/latest/miniconda.html)
+If you don't have Conda installed, you can download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html).
 
 #### Updating Conda and Using libmamba (Optional)
 
