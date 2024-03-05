@@ -110,6 +110,12 @@ class BaseGraphBuilder:
                               representation. Defaults to False.
         return_networkx (bool): Whether to return as a networkx graph object. Deafults to returning a Pytorvh Geometric
                                 Data object.
+
+    References:
+        [1] https://github.com/BiomedSciAI/histocartography/tree/main
+        [2] Jaume, G., Pati, P., Anklin, V., Foncubierta, A. and Gabrani, M., 2021, September.
+        Histocartography: A toolkit for graph analytics in digital pathology.
+        In MICCAI Workshop on Computational Pathology (pp. 117-128). PMLR.
     """
 
     def __init__(
@@ -316,6 +322,12 @@ class KNNGraphBuilder(BaseGraphBuilder):
 
     Returns:
         A pathml.graph.utils.Graph object containing node and edge information.
+
+    References:
+        [1] https://github.com/BiomedSciAI/histocartography/tree/main
+        [2] Jaume, G., Pati, P., Anklin, V., Foncubierta, A. and Gabrani, M., 2021, September.
+        Histocartography: A toolkit for graph analytics in digital pathology.
+        In MICCAI Workshop on Computational Pathology (pp. 117-128). PMLR.
     """
 
     def __init__(self, k=5, thresh=None, **kwargs):
@@ -363,6 +375,11 @@ class RAGGraphBuilder(BaseGraphBuilder):
     Returns:
         A pathml.graph.utils.Graph object containing node and edge information.
 
+    References:
+        [1] https://github.com/BiomedSciAI/histocartography/tree/main
+        [2] Jaume, G., Pati, P., Anklin, V., Foncubierta, A. and Gabrani, M., 2021, September.
+        Histocartography: A toolkit for graph analytics in digital pathology.
+        In MICCAI Workshop on Computational Pathology (pp. 117-128). PMLR.
     """
 
     def __init__(self, kernel_size=3, hops=1, **kwargs):
@@ -484,6 +501,12 @@ class SuperpixelExtractor:
        connectivity (int, optional): Connectivity for merging graph. Defaults to 2.
        downsampling_factor (int, optional): Downsampling factor from the input image
                                             resolution. Defaults to 1.
+
+    References:
+        [1] https://github.com/BiomedSciAI/histocartography/tree/main
+        [2] Jaume, G., Pati, P., Anklin, V., Foncubierta, A. and Gabrani, M., 2021, September.
+        Histocartography: A toolkit for graph analytics in digital pathology.
+        In MICCAI Workshop on Computational Pathology (pp. 117-128). PMLR.
     """
 
     def __init__(
@@ -556,7 +579,14 @@ class SuperpixelExtractor:
 
 
 class SLICSuperpixelExtractor(SuperpixelExtractor):
-    """Use the SLIC algorithm to extract superpixels."""
+    """Use the SLIC algorithm to extract superpixels.
+
+    References:
+        [1] https://github.com/BiomedSciAI/histocartography/tree/main
+        [2] Jaume, G., Pati, P., Anklin, V., Foncubierta, A. and Gabrani, M., 2021, September.
+        Histocartography: A toolkit for graph analytics in digital pathology.
+        In MICCAI Workshop on Computational Pathology (pp. 117-128). PMLR.
+    """
 
     def __init__(self, **kwargs):
         """Extract superpixels with the SLIC algorithm"""
@@ -597,7 +627,15 @@ class SLICSuperpixelExtractor(SuperpixelExtractor):
 
 
 class MergedSuperpixelExtractor(SuperpixelExtractor):
-    """Use the SLIC algorithm to extract superpixels and a merging function to merge superpixels"""
+    """Use the SLIC algorithm to extract superpixels and a merging function to merge superpixels
+
+    References:
+        [1] https://github.com/BiomedSciAI/histocartography/tree/main
+        [2] Jaume, G., Pati, P., Anklin, V., Foncubierta, A. and Gabrani, M., 2021, September.
+        Histocartography: A toolkit for graph analytics in digital pathology.
+        In MICCAI Workshop on Computational Pathology (pp. 117-128). PMLR.
+
+    """
 
     def __init__(self, **kwargs):
         """Extract superpixels with the SLIC algorithm and then merge"""
@@ -721,6 +759,12 @@ class ColorMergedSuperpixelExtractor(MergedSuperpixelExtractor):
     Args:
         w_hist (float, optional): Weight of the histogram features for merging. Defaults to 0.5.
         w_mean (float, optional): Weight of the mean features for merging. Defaults to 0.5.
+
+    References:
+        [1] https://github.com/BiomedSciAI/histocartography/tree/main
+        [2] Jaume, G., Pati, P., Anklin, V., Foncubierta, A. and Gabrani, M., 2021, September.
+        Histocartography: A toolkit for graph analytics in digital pathology.
+        In MICCAI Workshop on Computational Pathology (pp. 117-128). PMLR.
     """
 
     def __init__(self, w_hist: float = 0.5, w_mean: float = 0.5, **kwargs):

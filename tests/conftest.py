@@ -84,8 +84,14 @@ def tileHE():
 @pytest.fixture
 def tileVectra():
     slidedata = VectraSlide("tests/testdata/small_vectra.qptiff", backend="bioformats")
-    region = slidedata.slide.extract_region(location=(0, 0), size=(500, 500))
-    masks = np.random.randint(low=1, high=255, size=(region.shape[0], region.shape[1]), dtype=np.uint8)
+
+    region = slidedata.slide.extract_region(location=(0, 0), size=(256, 256))
+
+    # make mask object
+    masks = np.random.randint(
+        low=1, high=255, size=(region.shape[0], region.shape[1]), dtype=np.uint8
+    )
+
     masks = {"testmask": masks}
     labs = {
         "test_string_label": "testlabel",

@@ -118,7 +118,7 @@ class DeepPatchFeatureExtractor:
                 model = self._get_torchvision_model(architecture).to(self.device)
                 self._validate_model(model)
                 self.model = self._remove_layers(model, extraction_layer)
-            except (ImportError, ModuleNotFoundError):
+            except (ImportError, ModuleNotFoundError):  # pragma: no cover
                 raise Exception(
                     "Using online models require torchvision to be installed"
                 )
@@ -134,13 +134,15 @@ class DeepPatchFeatureExtractor:
         """Raise an error if the model does not have the required attributes."""
 
         if not isinstance(model, torchvision.models.resnet.ResNet):
-            if not hasattr(model, "classifier"):
+            if not hasattr(model, "classifier"):  # pragma: no cover
                 raise ValueError(
                     "Please provide either a ResNet-type architecture or"
                     + ' an architecture that has the attribute "classifier".'
                 )
 
-            if not (hasattr(model, "features") or hasattr(model, "model")):
+            if not (
+                hasattr(model, "features") or hasattr(model, "model")
+            ):  # pragma: no cover
                 raise ValueError(
                     "Please provide an architecture that has the attribute"
                     + ' "features" or "model".'

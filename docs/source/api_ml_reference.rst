@@ -1,25 +1,30 @@
 ML API
 ======
 
-h5path Dataset
---------------
-
-.. autoapiclass:: pathml.ml.TileDataset
-    :members:
-
-HoVer-Net
+Models
 ---------
 
-.. autoapiclass:: pathml.ml.HoVerNet
+.. autoapiclass:: pathml.ml.models.hovernet.HoVerNet
+    :members:
+
+.. autoapiclass:: pathml.ml.models.hactnet.HACTNet
+    :members:
+
+Layers
+---------
+
+.. autoapiclass:: pathml.ml.layers.GNNLayer
     :members:
 
 Helper functions
 ^^^^^^^^^^^^^^^^
 
-.. autoapifunction:: pathml.ml.hovernet.compute_hv_map
+.. autoapifunction:: pathml.ml.models.hovernet.compute_hv_map
 
-.. autoapifunction:: pathml.ml.hovernet.loss_hovernet
+.. autoapifunction:: pathml.ml.models.hovernet.loss_hovernet
 
-.. autoapifunction:: pathml.ml.hovernet.remove_small_objs
+.. autoapifunction:: pathml.ml.models.hovernet.remove_small_objs
 
-.. autoapifunction:: pathml.ml.hovernet.post_process_batch_hovernet
+.. autoapifunction:: pathml.ml.models.hovernet.post_process_batch_hovernet
+
+

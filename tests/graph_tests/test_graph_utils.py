@@ -124,7 +124,7 @@ class DummyTransform(Transform):
         self.mask_name = mask_name
 
     def F(self, image):
-        return image
+        return image[:, :, 0]
 
     def apply(self, tile):
         assert isinstance(

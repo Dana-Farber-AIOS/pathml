@@ -78,7 +78,7 @@ Building documentation locally
 .. code-block::
 
     cd docs                                     # enter docs directory
-    pip install -r readthedocs-requirements     # install packages to build docs
+    pip install -r readthedocs-requirements.txt     # install packages to build docs
     make html                                   # build docs in html format
 
 Then use your favorite web browser to open ``pathml/docs/build/html/index.html``

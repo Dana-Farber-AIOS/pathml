@@ -53,7 +53,7 @@ class Graph(Data):
 
 
 class HACTPairData(Data):
-    """Constructs pytorch-geometric data object for handling both cell and tissue data
+    """Constructs pytorch-geometric data object for handling both cell and tissue data.
 
     Args:
         x_cell (torch.tensor): Computed features of each cell in the graph
@@ -62,6 +62,11 @@ class HACTPairData(Data):
         edge_index_tissue (torch.tensor): Edge index in sparse format between nodes in the tissue graph
         assignment (torch.tensor): Assigment matrix that contains mapping between cells and tissues.
         target (torch.tensor): Target label if used in a supervised setting.
+
+    References:
+        Jaume, G., Pati, P., Anklin, V., Foncubierta, A. and Gabrani, M., 2021, September.
+        Histocartography: A toolkit for graph analytics in digital pathology.
+        In MICCAI Workshop on Computational Pathology (pp. 117-128). PMLR.
     """
 
     def __init__(
@@ -111,9 +116,9 @@ def get_full_instance_map(wsi, patch_size, mask_name="cell"):
     for tile in wsi.tiles:
         tx, ty = tile.coords
         image_norm[tx : tx + patch_size, ty : ty + patch_size] = tile.image
-        instance_map[tx : tx + patch_size, ty : ty + patch_size] = tile.masks[
-            mask_name
-        ][:, :, 0]
+        instance_map[tx : tx + patch_size, ty : ty + patch_size] = np.squeeze(
+            tile.masks[mask_name]
+        )[:, :]
     image_norm = image_norm[: wsi.shape[0], : wsi.shape[1], :]
     instance_map = instance_map[: wsi.shape[0], : wsi.shape[1]]
     label_instance_map = label(instance_map)
@@ -141,6 +146,12 @@ def build_assignment_matrix(low_level_centroids, high_level_map, matrix=False):
 
     Returns:
         The assignment matrix as a numpy array.
+
+    References:
+        [1] https://github.com/BiomedSciAI/histocartography/tree/main
+        [2] Jaume, G., Pati, P., Anklin, V., Foncubierta, A. and Gabrani, M., 2021, September.
+        Histocartography: A toolkit for graph analytics in digital pathology.
+        In MICCAI Workshop on Computational Pathology (pp. 117-128). PMLR.
     """
 
     low_level_centroids = low_level_centroids.astype(int)
@@ -163,11 +174,55 @@ def two_hop(edge_index, num_nodes):
     Args:
         edge_index (torch.tensor): The edge index in sparse form of the graph.
         num_nodes (int): maximum number of nodes.
+
+    Returns:
+        torch.tensor: Output edge index tensor.
+
+    References:
+        [1] https://github.com/BiomedSciAI/histocartography/tree/main
+        [2] Jaume, G., Pati, P., Anklin, V., Foncubierta, A. and Gabrani, M., 2021, September.
+        Histocartography: A toolkit for graph analytics in digital pathology.
+        In MICCAI Workshop on Computational Pathology (pp. 117-128). PMLR.
+    """
+    adj = to_torch_csr_tensor(edge_index, size=(num_nodes, num_nodes))
+    try:
+        edge_index2, _ = to_edge_index(adj @ adj)
+        edge_index2, _ = remove_self_loops(edge_index2)
+        edge_index = torch.cat([edge_index, edge_index2], dim=1)
+    except RuntimeError as e:  # pragma: no cover
+        print(e, "Computing two-hop graph manually")
+        edge_index = two_hop_no_sparse(edge_index, num_nodes)
+    return edge_index
+
+
+def two_hop_no_sparse(edge_index, num_nodes):  # pragma: no cover
+    """Calculates the two-hop graph without using sparse tensors, in case of M1/M2 chips.
+    Args:
+        edge_index (torch.tensor): The edge index in sparse form of the graph (2, E)
+        num_nodes (int): maximum number of nodes.
     Returns:
         torch.tensor: Output edge index tensor.
     """
-    adj = to_torch_csr_tensor(edge_index, size=(num_nodes, num_nodes))
-    edge_index2, _ = to_edge_index(adj @ adj)
-    edge_index2, _ = remove_self_loops(edge_index2)
-    edge_index = torch.cat([edge_index, edge_index2], dim=1)
-    return edge_index
+    # Initialize an empty list to store the two-hop edges
+    two_hop_edges = []
+
+    # Convert edge_index tensor to a list of tuples (edges)
+    edges = edge_index.t().tolist()
+
+    # Iterate over all pairs of nodes
+    for src, dest in edges:
+        # First hop: Add direct edges
+        two_hop_edges.append([src, dest])
+
+        # Second hop: Find all neighbors of the destination node
+        for neighbor in range(num_nodes):
+            # Check if the neighbor is connected to the destination node
+            if [dest, neighbor] in edges:
+                # Avoid self-loops
+                if neighbor != src:
+                    two_hop_edges.append([src, neighbor])
+
+    # Convert the list of two-hop edges to a PyTorch tensor
+    edge_index_two_hop = torch.tensor(two_hop_edges).t().contiguous()
+
+    return edge_index_two_hop
