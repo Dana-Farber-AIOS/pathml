@@ -9,11 +9,13 @@ from pathml.inference import (
     HaloAIInference,
     Inference,
     InferenceBase,
+    RemoteMesmer,
     RemoteTestHoverNet,
     check_onnx_clean,
     convert_pytorch_onnx,
     remove_initializer_from_input,
 )
+from pathml.preprocessing import CollapseRunsVectra
 
 
 def test_remove_initializer_from_input():
@@ -220,6 +222,33 @@ def test_RemoteTestHoverNet():
         == "Class to handle remote TIAToolBox HoverNet test ONNX. See model card for citation."
     )
 
+    inference.remove()
+
+
+def test_RemoteMesmer(tileVectra):
+    vectra_collapse = CollapseRunsVectra()
+    vectra_collapse.apply(tileVectra)
+    inference = RemoteMesmer(
+        nuclear_channel=0,
+        cytoplasm_channel=1,
+        postprocess_kwargs_nuclear={
+            "label_erosion": 10,
+            "small_objects_threshold": 0.2,
+            "fill_holes_threshold": 0.2,
+            "pixel_expansion": 10,
+            "maxima_algorithm": "peak_local_max",
+        },
+    )
+    orig_im = tileVectra.image
+    cell, nuclear = inference.F(orig_im)
+    inference.apply(tileVectra)
+    assert np.array_equal(tileVectra.masks["cell_segmentation"], cell)
+    assert np.array_equal(tileVectra.masks["nuclear_segmentation"], nuclear)
+
+    assert (
+        repr(inference)
+        == "Class to handle remote Mesmer Model from Deepcell. See model card for citation."
+    )
     inference.remove()
 
 

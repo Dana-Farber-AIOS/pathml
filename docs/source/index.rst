@@ -41,6 +41,12 @@ Cornell Medicine.
 
 .. toctree::
    :maxdepth: 2
+   :caption: Graphs
+
+   graphs
+
+.. toctree::
+   :maxdepth: 2
    :caption: Machine Learning
 
    dataloaders
@@ -65,6 +71,9 @@ Cornell Medicine.
    examples/link_workflow_Inference
    examples/link_gallery
    examples/link_tile_stitching
+   examples/link_construct_graphs
+   examples/link_train_hactnet
+   examples/link_jco
 
 .. toctree::
    :maxdepth: 2
@@ -72,6 +81,7 @@ Cornell Medicine.
 
    api_core_reference
    api_preprocessing_reference
+   api_graph_reference
    api_datasets_reference
    api_ml_reference
    api_utils_reference
