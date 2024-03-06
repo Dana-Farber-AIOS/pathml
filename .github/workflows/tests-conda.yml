@@ -116,6 +116,12 @@ jobs:
           coverage run --data-file=.coverage_others -m pytest -v -m "not slow and not exclude"
         continue-on-error: true
 
+      - name: Test tile_stitcher with pytest and generate coverage
+        shell: bash -l {0}
+        run: |
+          coverage run --data-file=.coverage_tilestitcher -m pytest tests/preprocessing_tests/test_tilestitcher.py
+        continue-on-error: true
+
     # steps:
     #   - uses: actions/checkout@v2
 
