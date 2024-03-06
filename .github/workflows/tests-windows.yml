@@ -2,9 +2,14 @@ name: Tests windows
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - dev
+      - master
   push:
     branches:
-      - dev_graph
+      - dev
+      - master
 
 jobs:
   build:
@@ -12,7 +17,7 @@ jobs:
     strategy:
       max-parallel: 5
       matrix:
-        python-version: ["3.8"]
+        python-version: ["3.8", "3.9", "3.10"]
     timeout-minutes: 120
 
     steps:
@@ -35,14 +40,13 @@ jobs:
         run: echo "JDK_HOME=${JAVA_HOME}" >> $GITHUB_ENV
         shell: bash
 
-
       - name: Setup Miniconda
         uses: conda-incubator/setup-miniconda@v2
         with:
           auto-activate-base: false
           activate-environment: pathml
-          environment-file: '.github/ci-environments/windows-env.yml'
-          #  environment-file: .github/ci-environments/env-py${{ matrix.python-version == '3.10' && '310' || matrix.python-version == '3.9' && '39' || '38' }}.yml
+          # environment-file: '.github/ci-environments/env-py39.yml'
+          environment-file: .github/ci-environments/env-py${{ matrix.python-version == '3.10' && '310' || matrix.python-version == '3.9' && '39' || '38' }}.yml
           mamba-version: "*"
           python-version: ${{ matrix.python-version }}
           
@@ -91,6 +95,7 @@ jobs:
         run: |
           conda info
           conda list
+
       - name: Install PathML
         shell: bash -l {0}      
         run: pip install -e .
@@ -109,3 +114,281 @@ jobs:
           # coverage run --data-file=.coverage_others -m pytest -m "not slow and not exclude"
           coverage run --data-file=.coverage_others -m pytest -v -m "not slow and not exclude"
         continue-on-error: true
+
+      - name: Test tile_stitcher with pytest and generate coverage
+        shell: bash -l {0}
+        run: |
+          coverage run --data-file=.coverage_tilestitcher -m pytest tests/preprocessing_tests/test_tilestitcher.py
+        continue-on-error: true
+
+    # steps:
+    #   - uses: actions/checkout@v2
+
+    #   - name: Set up JDK 17
+    #     uses: actions/setup-java@v2
+    #     with:
+    #       java-version: '17'
+    #       distribution: 'temurin'
+    #     id: setup-java
+
+    #   - name: Debug JAVA_HOME
+    #     run: |
+    #       echo $env:JAVA_HOME
+    #       echo $env:PATH
+    #     shell: pwsh
+
+    #   - name: Set JDK_HOME environment variable
+    #     run: echo "JDK_HOME=${JAVA_HOME}" >> $GITHUB_ENV
+    #     shell: bash
+
+    #   - name: Print JAVA_HOME and JDK_HOME
+    #     run: |
+    #       echo "JAVA_HOME: $env:JAVA_HOME"
+    #       echo "JDK_HOME: $env:JDK_HOME"
+    #     shell: pwsh
+
+    #   - name: Download and Setup OpenSlide
+    #     run: |
+    #       # $zipFile = "openslide-win64-20231011.zip"
+    #       $zipFile = "openslide-win64-20230414.zip"
+    #       $extractPath = Join-Path $env:GITHUB_WORKSPACE "openslide-binaries"
+    #       # Invoke-WebRequest -Uri "https://github.com/openslide/openslide-bin/releases/download/v20231011/$zipFile" -OutFile $zipFile
+    #       Invoke-WebRequest -Uri "https://github.com/openslide/openslide-bin/releases/download/v20230414/$zipFile" -OutFile $zipFile
+    #       Expand-Archive -Path $zipFile -DestinationPath $extractPath
+    #       # $binPath = Join-Path $extractPath "openslide-win64-20231011/bin"
+    #       $binPath = Join-Path $extractPath "openslide-win64-20230414/bin"
+    #       Write-Host "Adding to PATH: $binPath"
+    #       echo "OPENSLIDE_PATH=$binPath" | Out-File -Append -FilePath $env:GITHUB_ENV
+    #       # echo "$binPath" | Out-File -Append -FilePath $env:GITHUB_PATH
+    #     shell: pwsh
+
+    #   # Optional: List files in OpenSlide bin directory to verify
+    #   - name: List files in OpenSlide bin directory
+    #     run: |
+    #       Get-ChildItem -Path $env:OPENSLIDE_PATH
+    #     shell: pwsh
+    #     env:
+    #       OPENSLIDE_PATH: ${{ env.OPENSLIDE_PATH }}
+
+          
+    #   # - name: Download and Setup OpenSlide
+    #   #   run: |
+    #   #     Invoke-WebRequest -Uri "https://github.com/openslide/openslide-bin/releases/download/v20231011/openslide-win64-20231011.zip" -OutFile "openslide-win64-20231011.zip"
+    #   #     # Expand-Archive -Path "openslide-win64-20231011.zip" -DestinationPath "${{ github.workspace }}/openslide-binaries"
+    #   #     # echo "${{ github.workspace }}/openslide-binaries/openslide-win64-20231011" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
+    #   #   shell: pwsh
+
+    #   # - name: Extract OpenSlide Binaries
+    #   #   run: |
+    #   #     Expand-Archive -Path "openslide-win64-20231011.zip" -DestinationPath "${{ github.workspace }}/openslide-binaries"
+    #   #     $binPath = Join-Path ${{ github.workspace }} "openslide-binaries/openslide-win64-20231011/bin"
+    #   #     Write-Host "Adding to PATH: $binPath"
+    #   #     echo "$binPath" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
+    #   #   shell: pwsh
+
+    #   # - name: List files in OpenSlide bin directory
+    #   #   run: |
+    #   #     $binPath = Join-Path ${{ github.workspace }} "openslide-binaries/openslide-win64-20231011/bin"
+    #   #     Get-ChildItem -Path $binPath
+    #   #   shell: pwsh
+
+        
+    #   - name: Check PATH
+    #     run: |
+    #       # echo $env:JAVA_HOME
+    #       echo $env:PATH
+    #     shell: pwsh
+        
+    #   - name: Setup Miniconda
+    #     uses: conda-incubator/setup-miniconda@v2
+    #     with:
+    #       auto-activate-base: false
+    #       activate-environment: pathml
+    #       # environment-file: '.github/ci-environments/env-py39.yml'
+    #       environment-file: .github/ci-environments/env-py${{ matrix.python-version == '3.10' && '310' || matrix.python-version == '3.9' && '39' || '38' }}.yml
+    #       mamba-version: "*"
+    #       python-version: ${{ matrix.python-version }}
+
+    #   - name: Debugging
+    #     shell: bash -l {0}
+    #     run: |
+    #       echo "Checking the status of mamba..."
+    #       mamba --version
+    #       echo "Checking the available disk space..."
+    #       df -h
+
+    #   - name: Conda info
+    #     shell: bash -l {0}
+    #     run: |
+    #       conda info
+    #       conda list
+
+    #   - name: Install PathML
+    #     shell: bash -l {0}      
+    #     run: pip install -e .
+
+    #   - name: Install torchvision
+    #     shell: bash -l {0}
+    #     run: pip install torchvision==0.14.1
+
+    #   # - name: Download and Setup OpenSlide
+    #   #   run: |
+    #   #     Invoke-WebRequest -Uri "https://github.com/openslide/openslide-bin/releases/download/v20231011/openslide-win64-20231011.zip" -OutFile "openslide-win64-20231011.zip"
+    #   #     Expand-Archive -Path "openslide-win64-20231011.zip" -DestinationPath "${{ github.workspace }}/openslide-binaries"
+    #   #     echo "${{ github.workspace }}/openslide-binaries/openslide-win64-20231011" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
+    #   #   shell: pwsh
+
+    #   - name: Set OPENSLIDE_PATH
+    #     run: echo "OPENSLIDE_PATH=D:\a\pathml\pathml\openslide-binaries\openslide-win64-20231011\bin" >> $GITHUB_ENV
+    #     shell: pwsh
+
+    #   - name: Check PATH
+    #     run: |
+    #       # echo $env:JAVA_HOME
+    #       echo $env:PATH
+    #     shell: pwsh
+      
+    #   # - name: Test tile_stitcher with pytest and generate coverage
+    #   #   shell: bash -l {0}
+    #   #   run: |
+    #   #     coverage run --data-file=.coverage_tilestitcher -m pytest tests/preprocessing_tests/test_tilestitcher.py
+    #   #   continue-on-error: true
+
+    #   # - name: Test other modules with pytest and generate coverage
+    #   #   shell: bash -l {0}
+    #   #   run: |
+    #   #     # coverage run --data-file=.coverage_others -m pytest -m "not slow and not exclude"
+    #   #     coverage run --data-file=.coverage_others -m pytest -v -m "not slow and not exclude"
+    #   #   continue-on-error: true
+
+    #   - name: Increase Test Verbosity and Add Resource Monitoring
+    #     run: |
+    #       # Adding resource monitoring for diagnosis
+    #       Start-Process -FilePath "powershell" -ArgumentList "Get-Process | Sort-Object -Property CPU -Descending | Select-Object -First 10; Get-Counter '\Memory\Available MBytes', '\Processor(_Total)\% Processor Time';" -NoNewWindow -PassThru
+    #       coverage run --data-file=.coverage_others -m pytest -v -m "not slow and not exclude"
+    #     continue-on-error: true
+    #     shell: pwsh
+
+    #   - name: Check System Resources After Tests
+    #     run: |
+    #       Get-Process | Sort-Object -Property CPU -Descending | Select-Object -First 10
+    #       Get-Counter '\Memory\Available MBytes', '\Processor(_Total)\% Processor Time'
+    #     shell: pwsh
+
+
+# name: Tests Cross-Platform
+
+# on:
+#   workflow_dispatch:
+#   pull_request:
+#     branches:
+#       - dev
+#       - master
+#   push:
+#     branches:
+#       - dev
+#       - master
+
+# jobs:
+#   build:
+#     runs-on: windows-latest  # Use Ubuntu if you're building on Linux, or keep windows-latest if you're targeting Windows.
+#     strategy:
+#       max-parallel: 5
+#       matrix:
+#         python-version: [3.9]
+#     timeout-minutes: 60
+
+#     steps:
+#     - uses: actions/checkout@v2
+    
+#     - name: Set up JDK 17
+#       uses: actions/setup-java@v2
+#       with:
+#         java-version: '17'
+#         distribution: 'temurin' # Use 'temurin' for Eclipse Temurin distribution
+#       id: setup-java
+
+#     - name: Debug JAVA_HOME
+#       run: |
+#         echo $env:JAVA_HOME
+#         echo $env:PATH
+#       shell: pwsh
+
+#     - name: Set JDK_HOME environment variable
+#       shell: bash
+#       run: echo "JDK_HOME=${JAVA_HOME}" >> $GITHUB_ENV
+
+#     - name: Print JAVA_HOME and JDK_HOME
+#       run: |
+#         echo "JAVA_HOME: $env:JAVA_HOME"
+#         echo "JDK_HOME: $env:JDK_HOME"
+#       shell: pwsh
+
+#     - name: vcpkg build
+#       uses: johnwason/vcpkg-action@v6
+#       id: vcpkg
+#       with:
+#         pkgs: openslide
+#         triplet: x64-windows
+#         token: ${{ github.token }}
+#         github-binarycache: true
+        
+#     - name: Setup Miniconda
+#       uses: conda-incubator/setup-miniconda@v2
+#       with:
+#         auto-activate-base: false
+#         activate-environment: pathml
+#         environment-file: '.github/ci-environments/env-py39.yml'  # Directly specify the env-py39.yml file
+#         mamba-version: "*"
+#         python-version: ${{ matrix.python-version }}
+
+#     - name: Debugging
+#       shell: bash -l {0}
+#       run: |
+#         echo "Checking the status of mamba..."
+#         mamba --version
+#         echo "Checking the available disk space..."
+#         df -h
+
+#     - name: Conda info
+#       shell: bash -l {0}
+#       run: |
+#         conda info
+#         conda list
+
+#     - name: Install PathML
+#       shell: bash -l {0}      
+#       run: pip install -e .
+
+#     # - name: Install python-spams
+#     #   shell: bash -l {0}      
+#     #   run: pip install spams
+    
+#     - name: Install torchvision
+#       shell: bash -l {0}
+#       run: pip install torchvision==0.14.1
+
+#     - name: Set up vcpkg
+#       uses: lukka/run-vcpkg@v10
+#       with:
+#         # Setup vcpkg directory
+#         vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+#         # Clone vcpkg repo
+#         setupOnly: true
+        
+#     - name: Install OpenSlide with vcpkg
+#       run: |
+#         ./vcpkg/vcpkg install openslide
+#       working-directory: ${{ github.workspace }}
+      
+#     - name: Test tile_stitcher with pytest and generate coverage
+#       shell: bash -l {0}
+#       run: |
+#         # COVERAGE_FILE=.coverage_tilestitcher coverage run -m pytest tests/preprocessing_tests/test_tilestitcher.py
+#         coverage run --data-file=.coverage_tilestitcher -m pytest tests/preprocessing_tests/test_tilestitcher.py
+
+#     - name: Test other modules with pytest and generate coverage
+#       shell: bash -l {0}
+#       run: coverage run --data-file=.coverage_others -m pytest -m "not slow and not exclude"
+#           # COVERAGE_FILE=.coverage_others coverage run -m pytest -m "not slow and not exclude"
+        
