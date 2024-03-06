@@ -12,7 +12,7 @@ dependencies:
   - scikit-image<=0.22.0
   - matplotlib<=3.8.2
   - openjdk<=18.0.0
-  - pytorch==2.1.2
+  - pytorch==1.13.1
   - h5py==3.10.0
   - dask<=2023.12.1
   - pydicom==2.4.4
