@@ -1,0 +1,38 @@
+name: Tests MacOS
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dev_graph
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        python-version: [3.8, 3.9, 3.10]
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          miniforge-version: latest
+          use-mamba: true
+          python-version: ${{ matrix.python-version }}
+          activate-environment: pathml
+          environment-file: requirements/environment_mac.yml
+          channels: conda-forge
+
+      - name: Conda info
+        shell: bash -l {0}
+        run: conda info
+
+      - name: Conda Version
+        shell: bash -l {0}
+        run: conda --version
