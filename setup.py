@@ -8,6 +8,8 @@ about = {}
 with open("pathml/_version.py", "r", encoding="utf-8") as f:
     exec(f.read(), about)
 
+version = about["__version__"]
+
 dependency_links = ["https://download.pytorch.org/whl/cu116"]
 
 setuptools.setup(
