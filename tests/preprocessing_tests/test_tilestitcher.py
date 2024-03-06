@@ -1,5 +1,6 @@
 import glob
 import os
+import sys
 import subprocess
 import tempfile
 import urllib
@@ -300,6 +301,10 @@ def test_bfconvert_version_output(tile_stitcher, bfconvert_setup, capsys):
 
 @pytest.mark.exclude
 def test_permission_error_on_directory_creation(tile_stitcher):
+
+    if sys.platform.startswith("darwin"):
+        pytest.skip("MacOS does not allow write permissions for this test", allow_module_level=True)
+    
     with pytest.raises(BFConvertSetupError):
         tile_stitcher.setup_bfconvert("/fake/path")
 
@@ -316,6 +321,10 @@ def mock_subprocess(monkeypatch):
 @pytest.mark.exclude
 @pytest.fixture
 def mock_urlretrieve(monkeypatch):
+
+    if sys.platform.startswith("darwin"):
+        pytest.skip("MacOS does not allow write permissions for this test", allow_module_level=True)
+    
     def fake_urlretrieve(url, filename):
         # Simulate downloading by creating a dummy zip file at the specified filename
         with zipfile.ZipFile(filename, "w") as zipf:
