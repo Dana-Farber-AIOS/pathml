@@ -123,7 +123,11 @@ class TileStitcher:
     def format_jvm_options(qupath_jars, memory):
         memory_option = f"-Xmx{memory}"
         formatted_classpath = [
-            path.replace("/", "\\") if platform.system() == "Windows" else path
+            (
+                str(Path(path).as_posix())
+                if platform.system() != "Windows"
+                else str(Path(path))
+            )
             for path in qupath_jars
         ]
         class_path_option = "-Djava.class.path=" + os.pathsep.join(formatted_classpath)
@@ -171,6 +175,7 @@ class TileStitcher:
 
         try:
             if not tools_dir.exists():
+
                 tools_dir.mkdir(parents=True, exist_ok=True)
 
             if not bftools_dir.exists():
@@ -204,6 +209,7 @@ class TileStitcher:
             zipfile.BadZipFile,
             PermissionError,
             subprocess.CalledProcessError,
+            OSError,
         ) as e:
             raise BFConvertSetupError(f"Error setting up bfconvert: {e}")
 
