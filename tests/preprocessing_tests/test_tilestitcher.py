@@ -310,14 +310,6 @@ def test_bfconvert_version_output(tile_stitcher, bfconvert_setup, capsys):
     ), "bfconvert version not printed correctly"
 
 
-# @pytest.mark.exclude
-# def test_permission_error_on_directory_creation(tile_stitcher):
-#     with patch("pathlib.Path.mkdir", side_effect=OSError("Simulated directory creation failure")):
-#         with pytest.raises(BFConvertSetupError) as exc_info:
-#             tile_stitcher.setup_bfconvert("/fake/path")
-#         assert "directory creation failure" in str(exc_info.value)
-
-
 @pytest.mark.exclude
 @pytest.fixture
 def mock_subprocess(monkeypatch):
