@@ -5,7 +5,6 @@ License: GNU GPL 2.0
 
 import os
 import sys
-
 import h5py
 import numpy as np
 import pytest
