@@ -112,7 +112,7 @@ def test_pipeline_bioformats_tiff(tmp_path, dist, tile_size):
 
 
 @pytest.mark.parametrize("dist", [False, True])
-@pytest.mark.parametrize("tile_size", [1000, (1920, 1440)])
+@pytest.mark.parametrize("tile_size", [256, (256, 256)])
 def test_pipeline_bioformats_vectra(tmp_path, dist, tile_size):
     if dist:
         if sys.platform.startswith("win"):
