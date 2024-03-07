@@ -4,6 +4,7 @@ License: GNU GPL 2.0
 """
 
 from pathlib import Path
+import sys
 
 import h5py
 import numpy as np

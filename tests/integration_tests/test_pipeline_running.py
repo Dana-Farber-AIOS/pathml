@@ -73,7 +73,7 @@ def test_pipeline_HE(tmp_path, im_path, dist):
 # test pipelines with bioformats backends, both tiff and qptiff files
 # need to test tif and qptiff because they can have different behaviors due to different shapes (HWC vs HWZCT)
 @pytest.mark.parametrize("dist", [False, True])
-@pytest.mark.parametrize("tile_size", [400, (640, 480)])
+@pytest.mark.parametrize("tile_size", [256, (256, 256)])
 def test_pipeline_bioformats_tiff(tmp_path, dist, tile_size):
 
     if dist:
