@@ -17,19 +17,17 @@ from pathml.datasets.deepfocus import DeepFocusDataModule, DeepFocusDataset
 
 
 @pytest.fixture
-def create_incomplete_deepfocus_data():
-    """
-    create fake deepfocus data simulating incomplete download
-    """
-    target_dir = Path("dftests")
+def create_incomplete_deepfocus_data(tmp_path):
+    target_dir = tmp_path / "dftests"
     target_dir.mkdir(parents=True, exist_ok=True)
-    f = h5py.File(target_dir / Path("outoffocus2017_patches5Classification.h5"), "w")
-    X = np.random.randint(low=1, high=254, size=(1000, 64, 64, 3), dtype=np.uint8)
-    writedataframeh5(f, "X", X)
-    Y = np.random.randint(low=1, high=5, size=(204000,), dtype=np.uint8)
-    writedataframeh5(f, "Y", Y)
-    return f
-
+    filename = target_dir / "outoffocus2017_patches5Classification.h5"
+    with h5py.File(filename, "w") as f:
+        X = np.random.randint(low=1, high=254, size=(1000, 64, 64, 3), dtype=np.uint8)
+        writedataframeh5(f, "X", X)
+        Y = np.random.randint(low=1, high=5, size=(204000,), dtype=np.uint8)
+        writedataframeh5(f, "Y", Y)
+    # Return the path to the file rather than the file object itself to avoid access issues
+    return filename
 
 def test_incomplete_fails(create_incomplete_deepfocus_data):
     target_dir = "dftests"
