@@ -125,7 +125,6 @@ def test_pipeline_bioformats_vectra(tmp_path, dist, tile_size):
         [
             CollapseRunsVectra(),
             SegmentMIFRemote(
-                model="mesmer",
                 nuclear_channel=0,
                 cytoplasm_channel=2,
                 image_resolution=0.5,
