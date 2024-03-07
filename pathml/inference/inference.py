@@ -442,17 +442,17 @@ class RemoteMesmer(Inference):
     Nature biotechnology. 2022 Apr;40(4):555-65.
 
     Args:
-    model_path (str): temp file name to download onnx from huggingface, do not change
-    input_name (str): name of the input the ONNX model accepts, default = "data", do not change
-    num_classes (int): number of classes you are predicting, do not change
-    model_type (str): type of model, e.g. "segmentation", do not change
-    local (bool): True if the model is stored locally, default = "True", do not change
-    nuclear_channel(int): channel that defines cell nucleus
-    cytoplasm_channel(int): channel that defines cell membrane or cytoplasm
-    image_resolution(float): pixel resolution of image in microns. Currently only supports 0.5
-    preprocess_kwargs(dict): keyword arguemnts to pass to pre-processing function
-    postprocess_kwargs_nuclear(dict): keyword arguments to pass to post-processing function
-    postprocess_kwargs_whole_cell(dict): keyword arguments to pass to post-processing function
+        model_path (str): temp file name to download onnx from huggingface, do not change
+        input_name (str): name of the input the ONNX model accepts, default = "data", do not change
+        num_classes (int): number of classes you are predicting, do not change
+        model_type (str): type of model, e.g. "segmentation", do not change
+        local (bool): True if the model is stored locally, default = "True", do not change
+        nuclear_channel(int): channel that defines cell nucleus
+        cytoplasm_channel(int): channel that defines cell membrane or cytoplasm
+        image_resolution(float): pixel resolution of image in microns. Currently only supports 0.5
+        preprocess_kwargs(dict): keyword arguemnts to pass to pre-processing function
+        postprocess_kwargs_nuclear(dict): keyword arguments to pass to post-processing function
+        postprocess_kwargs_whole_cell(dict): keyword arguments to pass to post-processing function
     """
 
     def __init__(

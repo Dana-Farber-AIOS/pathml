@@ -21,6 +21,11 @@ RemoteTestHoverNet Class
 
 .. autoapiclass:: pathml.inference.RemoteTestHoverNet
 
+RemoteMesmer Class
+------------------------
+
+.. autoapiclass:: pathml.inference.RemoteMesmer
+
 Helper functions
 ^^^^^^^^^^^^^^^^
 

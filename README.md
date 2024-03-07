@@ -38,9 +38,9 @@ We recommend using [Conda](https://conda.io/projects/conda/en/latest/user-guide/
 
 #### Installing Conda
 
-If you don't have Conda installed, you can download Miniconda [here]. (https://docs.conda.io/en/latest/miniconda.html)
+If you don't have Conda installed, you can download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html).
 
-#### Updating Conda and Using libmamba
+#### Updating Conda and Using libmamba (Optional)
 
 Recent versions of Conda have integrated `libmamba`, a faster dependency solver. To benefit from this improvement, first ensure your Conda is updated:
 
@@ -54,22 +54,11 @@ Then, to install and set the new `libmamba` solver, run:
 conda install -n base conda-libmamba-solver
 conda config --set solver libmamba
 ````
-
 *Note: these instructions are for Linux. Commands may be different for other platforms.*
 
-## 2. PathML Installation Methods
-
-### 2.1 Install with pip (Recommended for Users)
-
-#### Common Steps
-
-Create and Activate Conda Environment:
-````
-conda create --name pathml python=3.9
-conda activate pathml
-````
-
 #### Platform-Specific External Dependencies
+
+For installation methods [1)](#2.1-Install-with-pip-(Recommended-for-Users)) and [2)](#2.2-Install-from-Source-(Recommended-for-Developers)), you will need to install the following platform-specific packages. 
 
 * Linux: Install external dependencies with [Apt](https://ubuntu.com/server/docs/package-management):
 ````
@@ -94,7 +83,17 @@ For Windows users, an alternative to using `vcpkg` is to download and use pre-bu
   - Download the OpenSlide Windows binaries from the [OpenSlide Downloads](https://openslide.org/download/) page.
   - Extract the archive to your desired location, e.g., `C:\OpenSlide\`.
 
-#### Install OpenJDK 17
+
+## 2. PathML Installation Methods
+
+### 2.1 Install with pip (Recommended for Users)
+
+#### Create and Activate Conda Environment
+````
+conda create --name pathml python=3.9
+conda activate pathml
+````
+#### Install OpenJDK 
 ````
 conda install -c conda-forge 'openjdk<=18.0'
 ````
@@ -106,21 +105,30 @@ pip install pathml
 
 ### 2.2 Install from Source (Recommended for Developers)
 
-Clone repo:
+#### Clone repository
 ````
 git clone https://github.com/Dana-Farber-AIOS/pathml.git
 cd pathml
 ````
 
-Create conda environment:
+#### Create conda environment 
+
+* Linux and Windows:
 
 ````
 conda env create -f environment.yml
 conda activate pathml
 ````
-To use GPU acceleration for model training or other tasks, you must install CUDA. The default CUDA version in our environment file is 11.6. To install a different CUDA version, refer to the instructions [here](##CUDA)). 
+To use GPU acceleration for model training or other tasks, you must install CUDA. The default CUDA version in our environment file is 11.6. To install a different CUDA version, refer to the instructions [here](#CUDA)). 
 
-Install `PathML` from source: 
+* MacOS:
+
+````
+conda env create -f requirements/environment_mac.yml
+conda activate pathml
+````
+
+#### Install `PathML` from source: 
 ````
 pip install -e .
 ````

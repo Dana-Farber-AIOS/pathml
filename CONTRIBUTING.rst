@@ -59,18 +59,23 @@ Setting up a local development environment
 Running tests
 -------------
 
-To run the full testing suite:
+To run the full testing suite (not recommended):
 
 .. code-block::
 
-    python -m pytest
+    python -m pytest 
 
-Some tests are known to be very slow. To skip them, run instead:
+Some tests are known to be very slow. Tests for the tile stitching functionality must be ran separately. To skip them, run:
 
 .. code-block::
 
-    python -m pytest -m "not slow"
+    python -m pytest -m "not slow and not exclude"
 
+Then, run the tilestitching test:
+
+.. code-block::
+
+    python -m pytest tests/preprocessing_tests/test_tilestitcher.py
 
 Building documentation locally
 ------------------------------
@@ -89,7 +94,9 @@ Checking code coverage
 .. code-block::
 
     conda install coverage  # install coverage package for code coverage
-    coverage run            # run tests and calculate code coverage
+    COVERAGE_FILE=.coverage_others coverage run -m pytest -m "not slow and not exclude" # run coverage for all files except tile stitching
+    COVERAGE_FILE=.coverage_tilestitcher coverage run -m pytest tests/preprocessing_tests/test_tilestitcher.py # run coverage for tile stitching
+    coverage combine .coverage_tilestitcher .coverage_others # combine coverage results
     coverage report         # view coverage report
     coverage html           # optionally generate HTML coverage report
 
@@ -163,9 +170,10 @@ To run the test suite and check code coverage:
 
 .. code-block::
 
-    conda install pytest    # first install pytest package
     conda install coverage  # install coverage package for code coverage
-    coverage run            # run tests and calculate code coverage
+    COVERAGE_FILE=.coverage_others coverage run -m pytest -m "not slow and not exclude" # run coverage for all files except tile stitching
+    COVERAGE_FILE=.coverage_tilestitcher coverage run -m pytest tests/preprocessing_tests/test_tilestitcher.py # run coverage for tile stitching
+    coverage combine .coverage_tilestitcher .coverage_others # combine coverage results
     coverage report         # view coverage report
     coverage html           # optionally generate HTML coverage report
 
