@@ -118,13 +118,13 @@ def test_pipeline_bioformats_vectra(tmp_path, dist, tile_size):
         if sys.platform.startswith("win"):
             pytest.skip("dask distributed not available on windows", allow_module_level=True)
         
-    from pathml.preprocessing.transforms import SegmentMIF
+    from pathml.preprocessing.transforms import SegmentMIFRemote
 
     slide = VectraSlide("tests/testdata/small_vectra.qptiff")
     pipeline = Pipeline(
         [
             CollapseRunsVectra(),
-            SegmentMIF(
+            SegmentMIFRemote(
                 model="mesmer",
                 nuclear_channel=0,
                 cytoplasm_channel=2,
