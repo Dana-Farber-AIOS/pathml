@@ -78,6 +78,12 @@ def test_run_pipeline(example_slide_data):
 
 @pytest.mark.parametrize("overwrite_tiles", [True, False])
 def test_run_existing_tiles(slide_dataset_with_tiles, overwrite_tiles):
+    
+    # windows dask distributed incompatiblility
+    if sys.platform.startswith("win"):
+        dist = False
+    else:
+        dist = True
     dataset = slide_dataset_with_tiles
     pipeline = Pipeline([BoxBlur(kernel_size=15)])
     if overwrite_tiles:
@@ -85,7 +91,7 @@ def test_run_existing_tiles(slide_dataset_with_tiles, overwrite_tiles):
     else:
         with pytest.raises(Exception):
             dataset.run(
-                pipeline, overwrite_existing_tiles=overwrite_tiles, tile_size=500
+                pipeline, overwrite_existing_tiles=overwrite_tiles, distributed=dist, tile_size=500
             )
 
 @pytest.fixture

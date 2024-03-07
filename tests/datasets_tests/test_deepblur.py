@@ -3,6 +3,7 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
+import os
 import shutil
 import urllib
 from pathlib import Path
@@ -33,7 +34,9 @@ def test_incomplete_fails(create_incomplete_deepfocus_data):
     target_dir = "dftests"
     with pytest.raises(AssertionError):
         DeepFocusDataModule(target_dir, download=False)
-    shutil.rmtree(target_dir)
+        
+    if os.path.exists(target_dir):
+        shutil.rmtree(target_dir)
 
 
 def test_check_deepfocus_data_urls():
