@@ -63,6 +63,9 @@ def test_write_with_array_labels(tmp_path, example_slide_data):
 
 
 def test_run_pipeline(example_slide_data):
+    if sys.platform.startswith("win"):
+        pytest.skip("dask distributed not available on windows", allow_module_level=False)
+    
     pipeline = Pipeline([BoxBlur(kernel_size=15)])
     # start the dask client
     client = Client()
@@ -83,7 +86,6 @@ def test_run_existing_tiles(slide_dataset_with_tiles, overwrite_tiles):
             dataset.run(
                 pipeline, overwrite_existing_tiles=overwrite_tiles, tile_size=500
             )
-
 
 @pytest.fixture
 def he_slide():

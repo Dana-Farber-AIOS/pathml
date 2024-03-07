@@ -32,7 +32,7 @@ def test_pipeline_HE(tmp_path, im_path, dist):
 
     if dist:
         if sys.platform.startswith("win"):
-            pytest.skip("dask distributed not available on windows", allow_module_level=True)
+            pytest.skip("dask distributed not available on windows", allow_module_level=False)
     
     labs = {
         "test_string_label": "testlabel",
@@ -78,7 +78,7 @@ def test_pipeline_bioformats_tiff(tmp_path, dist, tile_size):
 
     if dist:
         if sys.platform.startswith("win"):
-            pytest.skip("dask distributed not available on windows", allow_module_level=True)
+            pytest.skip("dask distributed not available on windows", allow_module_level=False)
     
     slide = VectraSlide("tests/testdata/smalltif.tif")
     # use a passthru dummy pipeline
@@ -116,7 +116,7 @@ def test_pipeline_bioformats_tiff(tmp_path, dist, tile_size):
 def test_pipeline_bioformats_vectra(tmp_path, dist, tile_size):
     if dist:
         if sys.platform.startswith("win"):
-            pytest.skip("dask distributed not available on windows", allow_module_level=True)
+            pytest.skip("dask distributed not available on windows", allow_module_level=False)
         
     from pathml.preprocessing.transforms import SegmentMIFRemote
 

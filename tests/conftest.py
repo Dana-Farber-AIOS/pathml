@@ -43,6 +43,16 @@ def pytest_sessionfinish(session, exitstatus):
     javabridge.kill_vm()
 
 
+@pytest.fixture(autouse=True)
+def remove_duplicate_paths():
+    yield  # Wait for the test to finish
+    # Split the PATH by the OS-specific path separator
+    paths = os.environ['PATH'].split(os.pathsep)
+    # Remove duplicates while preserving order
+    unique_paths = list(dict.fromkeys(paths))
+    # Join the unique paths back into a string and set it as the new PATH
+    os.environ['PATH'] = os.pathsep.join(unique_paths)
+
 def create_HE_tile():
     s = openslide.open_slide("tests/testdata/small_HE.svs")
     im_image = s.read_region(level=0, location=(900, 800), size=(500, 500))
@@ -63,7 +73,6 @@ def create_HE_tile():
     }
     tile = Tile(image=im_np_rgb, coords=(1, 3), masks=masks, labels=labs)
     return tile
-
 
 @pytest.fixture
 def tile():
