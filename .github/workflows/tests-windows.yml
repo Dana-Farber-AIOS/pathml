@@ -40,8 +40,9 @@ jobs:
         with:
           auto-activate-base: false
           activate-environment: pathml
+          environment-file: environment.yml
           # environment-file: '.github/ci-environments/env-py39.yml'
-          environment-file: .github/ci-environments/env-py${{ matrix.python-version == '3.10' && '310' || matrix.python-version == '3.9' && '39' || '38' }}.yml
+          # environment-file: .github/ci-environments/env-py${{ matrix.python-version == '3.10' && '310' || matrix.python-version == '3.9' && '39' || '38' }}.yml
           mamba-version: "*"
           python-version: ${{ matrix.python-version }}
           
