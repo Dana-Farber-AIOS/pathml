@@ -3,17 +3,10 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
+# flake8: noqa
 # Pre-configuration to add the OpenSlide DLL directory to the system's environment variables
 import os
 import sys
-
-import cv2
-import javabridge
-import numpy as np
-import pytest
-import scanpy as sc
-
-from pathml.core import Tile, VectraSlide, types
 
 
 def configure_openslide_path():
@@ -37,6 +30,15 @@ def configure_openslide_path():
 
 # Call the pre-configuration function before importing OpenSlide
 configure_openslide_path()
+
+import cv2
+import javabridge
+import numpy as np
+import openslide
+import pytest
+import scanpy as sc
+
+from pathml.core import Tile, VectraSlide, types
 
 
 def pytest_sessionfinish(session, exitstatus):
