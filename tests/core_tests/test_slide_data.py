@@ -4,6 +4,7 @@ License: GNU GPL 2.0
 """
 
 from pathlib import Path
+import sys
 
 import h5py
 import numpy as np
@@ -63,6 +64,9 @@ def test_write_with_array_labels(tmp_path, example_slide_data):
 
 
 def test_run_pipeline(example_slide_data):
+    if sys.platform.startswith("win"):
+        pytest.skip("dask distributed not available on windows", allow_module_level=False)
+    
     pipeline = Pipeline([BoxBlur(kernel_size=15)])
     # start the dask client
     client = Client()
@@ -74,16 +78,21 @@ def test_run_pipeline(example_slide_data):
 
 @pytest.mark.parametrize("overwrite_tiles", [True, False])
 def test_run_existing_tiles(slide_dataset_with_tiles, overwrite_tiles):
+    
+    # windows dask distributed incompatiblility
+    if sys.platform.startswith("win"):
+        dist = False
+    else:
+        dist = True
     dataset = slide_dataset_with_tiles
     pipeline = Pipeline([BoxBlur(kernel_size=15)])
     if overwrite_tiles:
-        dataset.run(pipeline, overwrite_existing_tiles=overwrite_tiles, tile_size=500)
+        dataset.run(pipeline, overwrite_existing_tiles=overwrite_tiles, distributed=dist, tile_size=500)
     else:
         with pytest.raises(Exception):
             dataset.run(
-                pipeline, overwrite_existing_tiles=overwrite_tiles, tile_size=500
+                pipeline, overwrite_existing_tiles=overwrite_tiles, distributed=dist, tile_size=500
             )
-
 
 @pytest.fixture
 def he_slide():

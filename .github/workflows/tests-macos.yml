@@ -1,0 +1,66 @@
+name: Tests MacOS
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dev_graph
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        python-version: ["3.8"]
+        
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install openslide
+        shell: bash -l {0}
+        run: brew install openslide
+      
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          miniforge-version: latest
+          use-mamba: true
+          python-version: ${{ matrix.python-version }}
+          activate-environment: pathml
+          environment-file: requirements/environment_mac.yml
+          channels: conda-forge
+
+      - name: Conda info
+        shell: bash -l {0}
+        run: conda info
+
+      - name: Conda Version
+        shell: bash -l {0}
+        run: conda --version
+
+      - name: Set default Temurin JDK 17
+        run: |
+          sudo update-java-alternatives --set temurin-17-jdk-amd64 || true
+          java -version
+
+      - name: Install PathML
+        shell: bash -l {0}      
+        run: pip install -e .
+        
+      - name: Install torchvision
+        shell: bash -l {0}
+        run: pip install torchvision==0.14.1
+
+      - name: Test other modules with pytest and generate coverage
+        shell: bash -l {0}
+        run: |
+         COVERAGE_FILE=.coverage_others coverage run -m pytest -m "not slow and not exclude"
+
+      - name: Test tile_stitcher with pytest and generate coverage
+        shell: bash -l {0}
+        run: |
+         COVERAGE_FILE=.coverage_tilestitcher coverage run -m pytest tests/preprocessing_tests/test_tilestitcher.py

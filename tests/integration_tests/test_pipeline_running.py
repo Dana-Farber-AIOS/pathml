@@ -4,7 +4,7 @@ License: GNU GPL 2.0
 """
 
 import os
-
+import sys
 import h5py
 import numpy as np
 import pytest
@@ -29,6 +29,11 @@ from pathml.utils import pil_to_rgb
 )
 @pytest.mark.parametrize("dist", [False, True])
 def test_pipeline_HE(tmp_path, im_path, dist):
+
+    if dist:
+        if sys.platform.startswith("win"):
+            pytest.skip("dask distributed not available on windows", allow_module_level=False)
+    
     labs = {
         "test_string_label": "testlabel",
         "test_array_label": np.array([2, 3, 4]),
@@ -68,8 +73,13 @@ def test_pipeline_HE(tmp_path, im_path, dist):
 # test pipelines with bioformats backends, both tiff and qptiff files
 # need to test tif and qptiff because they can have different behaviors due to different shapes (HWC vs HWZCT)
 @pytest.mark.parametrize("dist", [False, True])
-@pytest.mark.parametrize("tile_size", [400, (640, 480)])
+@pytest.mark.parametrize("tile_size", [256, (256, 256)])
 def test_pipeline_bioformats_tiff(tmp_path, dist, tile_size):
+
+    if dist:
+        if sys.platform.startswith("win"):
+            pytest.skip("dask distributed not available on windows", allow_module_level=False)
+    
     slide = VectraSlide("tests/testdata/smalltif.tif")
     # use a passthru dummy pipeline
     pipeline = Pipeline([])
@@ -102,17 +112,19 @@ def test_pipeline_bioformats_tiff(tmp_path, dist, tile_size):
 
 
 @pytest.mark.parametrize("dist", [False, True])
-@pytest.mark.parametrize("tile_size", [1000, (1920, 1440)])
+@pytest.mark.parametrize("tile_size", [256, (256, 256)])
 def test_pipeline_bioformats_vectra(tmp_path, dist, tile_size):
-    pytest.importorskip("deepcell")
-    from pathml.preprocessing.transforms import SegmentMIF
+    if dist:
+        if sys.platform.startswith("win"):
+            pytest.skip("dask distributed not available on windows", allow_module_level=False)
+        
+    from pathml.preprocessing.transforms import SegmentMIFRemote
 
     slide = VectraSlide("tests/testdata/small_vectra.qptiff")
     pipeline = Pipeline(
         [
             CollapseRunsVectra(),
-            SegmentMIF(
-                model="mesmer",
+            SegmentMIFRemote(
                 nuclear_channel=0,
                 cytoplasm_channel=2,
                 image_resolution=0.5,
