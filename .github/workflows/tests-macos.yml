@@ -58,9 +58,9 @@ jobs:
       - name: Test other modules with pytest and generate coverage
         shell: bash -l {0}
         run: |
-         COVERAGE_FILE=.coverage_others coverage run -m pytest -v -m "not slow and not exclude"
+         COVERAGE_FILE=.coverage_others coverage run -m pytest -m "not slow and not exclude"
 
       - name: Test tile_stitcher with pytest and generate coverage
         shell: bash -l {0}
         run: |
-         COVERAGE_FILE=.coverage_tilestitcher coverage run -m pytest -v tests/preprocessing_tests/test_tilestitcher.py
+         COVERAGE_FILE=.coverage_tilestitcher coverage run -m pytest tests/preprocessing_tests/test_tilestitcher.py
