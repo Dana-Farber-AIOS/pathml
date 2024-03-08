@@ -30,11 +30,12 @@ def create_incomplete_deepfocus_data(tmp_path):
     # Return the path to the file rather than the file object itself to avoid access issues
     return filename
 
+
 def test_incomplete_fails(create_incomplete_deepfocus_data):
     target_dir = "dftests"
     with pytest.raises(AssertionError):
         DeepFocusDataModule(target_dir, download=False)
-        
+
     if os.path.exists(target_dir):
         shutil.rmtree(target_dir)
 

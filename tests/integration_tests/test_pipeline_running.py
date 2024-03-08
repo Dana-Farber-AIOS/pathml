@@ -5,6 +5,7 @@ License: GNU GPL 2.0
 
 import os
 import sys
+
 import h5py
 import numpy as np
 import pytest
@@ -32,8 +33,10 @@ def test_pipeline_HE(tmp_path, im_path, dist):
 
     if dist:
         if sys.platform.startswith("win"):
-            pytest.skip("dask distributed not available on windows", allow_module_level=False)
-    
+            pytest.skip(
+                "dask distributed not available on windows", allow_module_level=False
+            )
+
     labs = {
         "test_string_label": "testlabel",
         "test_array_label": np.array([2, 3, 4]),
@@ -78,8 +81,10 @@ def test_pipeline_bioformats_tiff(tmp_path, dist, tile_size):
 
     if dist:
         if sys.platform.startswith("win"):
-            pytest.skip("dask distributed not available on windows", allow_module_level=False)
-    
+            pytest.skip(
+                "dask distributed not available on windows", allow_module_level=False
+            )
+
     slide = VectraSlide("tests/testdata/smalltif.tif")
     # use a passthru dummy pipeline
     pipeline = Pipeline([])
@@ -116,8 +121,10 @@ def test_pipeline_bioformats_tiff(tmp_path, dist, tile_size):
 def test_pipeline_bioformats_vectra(tmp_path, dist, tile_size):
     if dist:
         if sys.platform.startswith("win"):
-            pytest.skip("dask distributed not available on windows", allow_module_level=False)
-        
+            pytest.skip(
+                "dask distributed not available on windows", allow_module_level=False
+            )
+
     from pathml.preprocessing.transforms import SegmentMIFRemote
 
     slide = VectraSlide("tests/testdata/small_vectra.qptiff")

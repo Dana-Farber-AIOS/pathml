@@ -7,31 +7,37 @@ License: GNU GPL 2.0
 import os
 import sys
 
-def configure_openslide_path():
-    print('Configuring OpenSlide path on', sys.platform)
-    
-    # Check if the os.add_dll_directory function is available (Python 3.8+ on Windows)
-    if hasattr(os, 'add_dll_directory'):
-        openslide_path = os.getenv('OPENSLIDE_PATH')
-        if openslide_path:
-            print('Adding OpenSlide path:', openslide_path)
-            os.add_dll_directory(openslide_path)
-        else:
-            raise RuntimeError("OPENSLIDE_PATH environment variable is not set or incorrect.")
-    else:
-        print("os.add_dll_directory not available, ensure your Python version is 3.8 or higher on Windows")
-
-# Call the pre-configuration function before importing OpenSlide
-configure_openslide_path()
-
 import cv2
 import javabridge
 import numpy as np
-import openslide
 import pytest
 import scanpy as sc
 
 from pathml.core import Tile, VectraSlide, types
+
+
+def configure_openslide_path():
+    print("Configuring OpenSlide path on", sys.platform)
+
+    # Check if the os.add_dll_directory function is available (Python 3.8+ on Windows)
+    if hasattr(os, "add_dll_directory"):
+        openslide_path = os.getenv("OPENSLIDE_PATH")
+        if openslide_path:
+            print("Adding OpenSlide path:", openslide_path)
+            os.add_dll_directory(openslide_path)
+        else:
+            raise RuntimeError(
+                "OPENSLIDE_PATH environment variable is not set or incorrect."
+            )
+    else:
+        print(
+            "os.add_dll_directory not available, ensure your Python version is 3.8 or higher on Windows"
+        )
+
+
+# Call the pre-configuration function before importing OpenSlide
+configure_openslide_path()
+
 
 def pytest_sessionfinish(session, exitstatus):
     """
@@ -47,13 +53,16 @@ def pytest_sessionfinish(session, exitstatus):
 def remove_duplicate_paths():
     yield  # Wait for the test to finish
     # Split the PATH by the OS-specific path separator
-    paths = os.environ['PATH'].split(os.pathsep)
+    paths = os.environ["PATH"].split(os.pathsep)
     # Remove duplicates while preserving order
     unique_paths = list(dict.fromkeys(paths))
     # Join the unique paths back into a string and set it as the new PATH
-    os.environ['PATH'] = os.pathsep.join(unique_paths)
+    os.environ["PATH"] = os.pathsep.join(unique_paths)
+
 
 def create_HE_tile():
+    import openslide
+
     s = openslide.open_slide("tests/testdata/small_HE.svs")
     im_image = s.read_region(level=0, location=(900, 800), size=(500, 500))
     im_np = np.asarray(im_image)
@@ -73,6 +82,7 @@ def create_HE_tile():
     }
     tile = Tile(image=im_np_rgb, coords=(1, 3), masks=masks, labels=labs)
     return tile
+
 
 @pytest.fixture
 def tile():

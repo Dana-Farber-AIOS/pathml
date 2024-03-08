@@ -123,8 +123,12 @@ class TileStitcher:
     def format_jvm_options(qupath_jars, memory):
         memory_option = f"-Xmx{memory}"
         formatted_classpath = [
-            (str(Path(path).as_posix()) if platform.system() != "Windows" else str(Path(path)))
-             for path in qupath_jars
+            (
+                str(Path(path).as_posix())
+                if platform.system() != "Windows"
+                else str(Path(path))
+            )
+            for path in qupath_jars
         ]
         class_path_option = "-Djava.class.path=" + os.pathsep.join(formatted_classpath)
         return memory_option, class_path_option

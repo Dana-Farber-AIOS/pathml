@@ -6,8 +6,8 @@
 import glob
 import os
 import platform
-import sys
 import subprocess
+import sys
 import tempfile
 import urllib
 import zipfile
@@ -147,8 +147,8 @@ def test_format_jvm_options_classpath(
 ):
     os_name = "nt" if any("C:\\" in jar for jar in qupath_jars) else "posix"
     monkeypatch.setattr(
-         platform, "system", lambda: "Windows" if os_name == "nt" else "Linux"
-     )
+        platform, "system", lambda: "Windows" if os_name == "nt" else "Linux"
+    )
     monkeypatch.setattr(os, "pathsep", ";" if os_name == "nt" else ":")
     _, class_path_option = tile_stitcher.format_jvm_options(qupath_jars, "512m")
     expected_classpath = "-Djava.class.path=" + expected_classpath_suffix
@@ -314,7 +314,7 @@ def test_bfconvert_version_output(tile_stitcher, bfconvert_setup, capsys):
 
 #     if sys.platform.startswith("darwin"):
 #         pytest.skip("MacOS does not allow write permissions for this test", allow_module_level=True)
-    
+
 #     with pytest.raises(BFConvertSetupError):
 #         tile_stitcher.setup_bfconvert("/fake/path")
 
@@ -333,8 +333,11 @@ def mock_subprocess(monkeypatch):
 def mock_urlretrieve(monkeypatch):
 
     if sys.platform.startswith("darwin"):
-        pytest.skip("MacOS does not allow write permissions for this test", allow_module_level=True)
-    
+        pytest.skip(
+            "MacOS does not allow write permissions for this test",
+            allow_module_level=True,
+        )
+
     def fake_urlretrieve(url, filename):
         # Simulate downloading by creating a dummy zip file at the specified filename
         with zipfile.ZipFile(filename, "w") as zipf:
