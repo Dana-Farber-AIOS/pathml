@@ -1,4 +1,4 @@
-name: Tests
+name: Tests linux
 
 on:
   workflow_dispatch:
