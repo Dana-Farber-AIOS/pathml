@@ -28,7 +28,7 @@ View the official [PathML Documentation on readthedocs](https://pathml.readthedo
 
 🔥 **Examples! Examples! Examples!**
 
-[↴ Jump to the gallery of examples below](https://github.com/Dana-Farber-AIOS/pathml#3-examples)
+[↴ Jump to the gallery of examples below](#3-examples)
 
 <br>
 
