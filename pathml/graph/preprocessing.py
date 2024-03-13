@@ -112,7 +112,7 @@ class BaseGraphBuilder:
                                 Data object.
 
     References:
-        [1] https://github.com/BiomedSciAI/histocartography/tree/main
+        [1] https://github.com/BiomedSciAI/histocartography/tree/main with an AGPL-3.0 license (https://www.gnu.org/licenses/)
         [2] Jaume, G., Pati, P., Anklin, V., Foncubierta, A. and Gabrani, M., 2021, September.
         Histocartography: A toolkit for graph analytics in digital pathology.
         In MICCAI Workshop on Computational Pathology (pp. 117-128). PMLR.
@@ -324,7 +324,7 @@ class KNNGraphBuilder(BaseGraphBuilder):
         A pathml.graph.utils.Graph object containing node and edge information.
 
     References:
-        [1] https://github.com/BiomedSciAI/histocartography/tree/main
+        [1] https://github.com/BiomedSciAI/histocartography/tree/main with an AGPL-3.0 license (https://www.gnu.org/licenses/)
         [2] Jaume, G., Pati, P., Anklin, V., Foncubierta, A. and Gabrani, M., 2021, September.
         Histocartography: A toolkit for graph analytics in digital pathology.
         In MICCAI Workshop on Computational Pathology (pp. 117-128). PMLR.
@@ -376,7 +376,7 @@ class RAGGraphBuilder(BaseGraphBuilder):
         A pathml.graph.utils.Graph object containing node and edge information.
 
     References:
-        [1] https://github.com/BiomedSciAI/histocartography/tree/main
+        [1] https://github.com/BiomedSciAI/histocartography/tree/main with an AGPL-3.0 license (https://www.gnu.org/licenses/)
         [2] Jaume, G., Pati, P., Anklin, V., Foncubierta, A. and Gabrani, M., 2021, September.
         Histocartography: A toolkit for graph analytics in digital pathology.
         In MICCAI Workshop on Computational Pathology (pp. 117-128). PMLR.
@@ -503,7 +503,7 @@ class SuperpixelExtractor:
                                             resolution. Defaults to 1.
 
     References:
-        [1] https://github.com/BiomedSciAI/histocartography/tree/main
+        [1] https://github.com/BiomedSciAI/histocartography/tree/main with an AGPL-3.0 license (https://www.gnu.org/licenses/)
         [2] Jaume, G., Pati, P., Anklin, V., Foncubierta, A. and Gabrani, M., 2021, September.
         Histocartography: A toolkit for graph analytics in digital pathology.
         In MICCAI Workshop on Computational Pathology (pp. 117-128). PMLR.
@@ -582,7 +582,7 @@ class SLICSuperpixelExtractor(SuperpixelExtractor):
     """Use the SLIC algorithm to extract superpixels.
 
     References:
-        [1] https://github.com/BiomedSciAI/histocartography/tree/main
+        [1] https://github.com/BiomedSciAI/histocartography/tree/main with an AGPL-3.0 license (https://www.gnu.org/licenses/)
         [2] Jaume, G., Pati, P., Anklin, V., Foncubierta, A. and Gabrani, M., 2021, September.
         Histocartography: A toolkit for graph analytics in digital pathology.
         In MICCAI Workshop on Computational Pathology (pp. 117-128). PMLR.
@@ -630,7 +630,7 @@ class MergedSuperpixelExtractor(SuperpixelExtractor):
     """Use the SLIC algorithm to extract superpixels and a merging function to merge superpixels
 
     References:
-        [1] https://github.com/BiomedSciAI/histocartography/tree/main
+        [1] https://github.com/BiomedSciAI/histocartography/tree/main with an AGPL-3.0 license (https://www.gnu.org/licenses/)
         [2] Jaume, G., Pati, P., Anklin, V., Foncubierta, A. and Gabrani, M., 2021, September.
         Histocartography: A toolkit for graph analytics in digital pathology.
         In MICCAI Workshop on Computational Pathology (pp. 117-128). PMLR.
@@ -761,7 +761,7 @@ class ColorMergedSuperpixelExtractor(MergedSuperpixelExtractor):
         w_mean (float, optional): Weight of the mean features for merging. Defaults to 0.5.
 
     References:
-        [1] https://github.com/BiomedSciAI/histocartography/tree/main
+        [1] https://github.com/BiomedSciAI/histocartography/tree/main with an AGPL-3.0 license (https://www.gnu.org/licenses/)
         [2] Jaume, G., Pati, P., Anklin, V., Foncubierta, A. and Gabrani, M., 2021, September.
         Histocartography: A toolkit for graph analytics in digital pathology.
         In MICCAI Workshop on Computational Pathology (pp. 117-128). PMLR.

@@ -30,6 +30,7 @@ from skimage.segmentation import find_boundaries, relabel_sequential, watershed
 
 def erode_edges(mask, erosion_width):
     """Erode edge of objects to prevent them from touching
+    This function is from "Greenwald NF, Miller G, Moen E, Kong A, Kagel A, Dougherty T, Fullaway CC, McIntosh BJ, Leow KX, Schwartz MS, Pavelchek C. Whole-cell segmentation of tissue images with human-level performance using large-scale data annotation and deep learning. Nature biotechnology. 2022 Apr;40(4):555-65."
 
     https://github.com/vanvalenlab/deepcell-toolbox/blob/master/deepcell_toolbox/utils.py
 
@@ -61,6 +62,7 @@ def erode_edges(mask, erosion_width):
 
 def fill_holes(label_img, size=10, connectivity=1):
     """Fills holes located completely within a given label with pixels of the same value
+    This function is from "Greenwald NF, Miller G, Moen E, Kong A, Kagel A, Dougherty T, Fullaway CC, McIntosh BJ, Leow KX, Schwartz MS, Pavelchek C. Whole-cell segmentation of tissue images with human-level performance using large-scale data annotation and deep learning. Nature biotechnology. 2022 Apr;40(4):555-65."
 
     https://github.com/vanvalenlab/deepcell-toolbox/blob/master/deepcell_toolbox/utils.py
 
@@ -128,7 +130,6 @@ def percentile_threshold(image, percentile=99.9):
 def histogram_normalization(image, kernel_size=None):
     """Pre-process images using Contrast Limited Adaptive
     Histogram Equalization (CLAHE).
-
 
     If one of the inputs is a constant-value array, it will
     be normalized as an array of all zeros of the same shape.
@@ -250,6 +251,7 @@ def deep_watershed(
     """Uses ``maximas`` and ``interiors`` to perform watershed segmentation.
     ``maximas`` are used as the watershed seeds for each object and
     ``interiors`` are used as the watershed mask.
+    This function is from "Greenwald NF, Miller G, Moen E, Kong A, Kagel A, Dougherty T, Fullaway CC, McIntosh BJ, Leow KX, Schwartz MS, Pavelchek C. Whole-cell segmentation of tissue images with human-level performance using large-scale data annotation and deep learning. Nature biotechnology. 2022 Apr;40(4):555-65."
 
     https://github.com/vanvalenlab/deepcell-toolbox/blob/master/deepcell_toolbox/deep_watershed.py
 
