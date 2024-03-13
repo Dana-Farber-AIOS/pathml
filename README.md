@@ -116,24 +116,24 @@ First, download or build the PathML Docker container:
 
 ![pathml-docker-installation](https://user-images.githubusercontent.com/25375373/191053363-477497a1-9804-48f3-91f9-767dc7f859ed.gif)
 
-- Option A: download PathML container from Docker Hub
+- *Step 1:* download PathML container from Docker Hub
    ````
    docker pull pathml/pathml:latest
    ````
   Optionally specify a tag for a particular version, e.g. `docker pull pathml/pathml:2.0.2`. To view possible tags, 
   please refer to the [PathML DockerHub page](https://hub.docker.com/r/pathml/pathml).
   
-- Option B: build docker container from source
+- *Alternative Step 1* if you have custom hardware: build docker container from source
    ````
    git clone https://github.com/Dana-Farber-AIOS/pathml.git
    cd pathml
    docker build -t pathml/pathml .
    ````
 
-Then connect to the container:
-````
-docker run -it -p 8888:8888 pathml/pathml
-````
+- *Step 2:* Then connect to the container:
+  ````
+  docker run -it -p 8888:8888 pathml/pathml
+  ````
 
 The above command runs the container, which is configured to spin up a jupyter lab session and expose it on port 8888. 
 The terminal should display a URL to the jupyter lab session starting with `http://127.0.0.1:8888/lab?token=<.....>`. 
