@@ -23,6 +23,7 @@ Transforms
 .. autoapiclass:: pathml.preprocessing.LabelArtifactTileHE
 .. autoapiclass:: pathml.preprocessing.LabelWhiteSpaceHE
 .. autoapiclass:: pathml.preprocessing.SegmentMIF
+.. autoapiclass:: pathml.preprocessing.SegmentMIFRemote
 .. autoapiclass:: pathml.preprocessing.QuantifyMIF
 .. autoapiclass:: pathml.preprocessing.CollapseRunsVectra
 .. autoapiclass:: pathml.preprocessing.CollapseRunsCODEX
