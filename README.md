@@ -1,19 +1,27 @@
-<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/logo.png width="300"> 
+🤖🔬 **PathML: Tools for computational pathology**
 
-<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/overview.png width="750">
-
+[![Downloads](https://static.pepy.tech/badge/pathml)](https://pepy.tech/project/pathml)
 [![Documentation Status](https://readthedocs.org/projects/pathml/badge/?version=latest)](https://pathml.readthedocs.io/en/latest/?badge=latest)
+[![codecov](https://codecov.io/gh/Dana-Farber-AIOS/pathml/branch/master/graph/badge.svg?token=UHSQPTM28Y)](https://codecov.io/gh/Dana-Farber-AIOS/pathml)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![PyPI version](https://img.shields.io/pypi/v/pathml)](https://pypi.org/project/pathml/)
-[![Downloads](https://pepy.tech/badge/pathml)](https://pepy.tech/project/pathml)
-[![codecov](https://codecov.io/gh/Dana-Farber-AIOS/pathml/branch/master/graph/badge.svg?token=UHSQPTM28Y)](https://codecov.io/gh/Dana-Farber-AIOS/pathml)
+
+⭐ **PathML objective is to lower the barrier to entry to digital pathology**
+
+Imaging datasets in cancer research are growing exponentially in both quantity and information density. These massive datasets may enable derivation of insights for cancer research and clinical care, but only if researchers are equipped with the tools to leverage advanced computational analysis approaches such as machine learning and artificial intelligence. In this work, we highlight three themes to guide development of such computational tools: scalability, standardization, and ease of use. We then apply these principles to develop PathML, a general-purpose research toolkit for computational pathology. We describe the design of the PathML framework and demonstrate applications in diverse use cases. 
+
+🚀 **The fastest way to get started?**
+
+    docker pull pathml/pathml && docker run -it -p 8888:8888 pathml/pathml
 
 | Branch | Test status   |
 | ------ | ------------- |
 | master | ![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg?branch=master) |
 | dev    | ![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg?branch=dev) |
 
-An open-source toolkit for computational pathology and machine learning.
+<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/logo.png width="300"> 
+
+<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/overview.png width="750">
 
 **View [documentation](https://pathml.readthedocs.io/en/latest/)**
 
@@ -22,73 +30,110 @@ Stable versions are available as tagged releases on GitHub, or as versioned rele
 
 # Installation
 
-There are several ways to install `PathML`:
+`PathML` is an advanced tool for pathology image analysis. Below are simplified instructions to help you install PathML on your system. Whether you're a user or a developer, follow these steps to get started.
 
-1. `pip install` from PyPI (**recommended for users**)
-2. Clone repo to local machine and install from source (recommended for developers/contributors)
-3. Use the PathML Docker container
+## 1. Prerequisites
 
-Options (1) and (2) require that you first install all external dependencies:
-* openslide
-* JDK 8
+We recommend using [Conda](https://conda.io/projects/conda/en/latest/user-guide/getting-started.html#) for managing your environments. 
 
-We recommend using conda for environment management. 
-Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
+#### Installing Conda
 
+If you don't have Conda installed, you can download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html).
+
+#### Updating Conda and Using libmamba (Optional)
+
+Recent versions of Conda have integrated `libmamba`, a faster dependency solver. To benefit from this improvement, first ensure your Conda is updated:
+
+````
+conda update -n base conda
+````
+
+Then, to install and set the new `libmamba` solver, run:
+
+````
+conda install -n base conda-libmamba-solver
+conda config --set solver libmamba
+````
 *Note: these instructions are for Linux. Commands may be different for other platforms.*
 
-## Installation option 1: pip install
+#### Platform-Specific External Dependencies
 
-Create conda environment:
-````
-conda create --name pathml python=3.8
-conda activate pathml
-````
+For installation methods [1)](#2.1-Install-with-pip-(Recommended-for-Users)) and [2)](#2.2-Install-from-Source-(Recommended-for-Developers)), you will need to install the following platform-specific packages. 
 
-Install external dependencies (Linux) with [Apt](https://ubuntu.com/server/docs/package-management):
+* Linux: Install external dependencies with [Apt](https://ubuntu.com/server/docs/package-management):
 ````
 sudo apt-get install openslide-tools g++ gcc libblas-dev liblapack-dev
 ````
 
-Install external dependencies (MacOS) with [Brew](www.brew.sh):
+* MacOS: Install external dependencies with [Brew](www.brew.sh):
 ````
 brew install openslide
 ````
 
-Install [OpenJDK 8](https://openjdk.java.net/):
+* Windows:
+
+ 1. Option A: Install with [vcpkg](https://vcpkg.io/en/):
 ````
-conda install openjdk==8.0.152
+vcpkg install openslide
 ````
 
-Optionally install CUDA (instructions [here](#CUDA))
+ 2. Option B: Using Pre-built OpenSlide Binaries (Alternative)
+For Windows users, an alternative to using `vcpkg` is to download and use pre-built OpenSlide binaries. This method is recommended if you prefer a quicker setup.
 
-Install `PathML` from PyPI:
+  - Download the OpenSlide Windows binaries from the [OpenSlide Downloads](https://openslide.org/download/) page.
+  - Extract the archive to your desired location, e.g., `C:\OpenSlide\`.
+
+
+## 2. PathML Installation Methods
+
+### 2.1 Install with pip (Recommended for Users)
+
+#### Create and Activate Conda Environment
+````
+conda create --name pathml python=3.9
+conda activate pathml
+````
+#### Install OpenJDK 
+````
+conda install -c conda-forge 'openjdk<=18.0'
+````
+
+#### Install `PathML` from PyPI
 ````
 pip install pathml
 ````
 
-## Installation option 2: clone repo and install from source
+### 2.2 Install from Source (Recommended for Developers)
 
-Clone repo:
+#### Clone repository
 ````
 git clone https://github.com/Dana-Farber-AIOS/pathml.git
 cd pathml
 ````
 
-Create conda environment:
+#### Create conda environment 
+
+* Linux and Windows:
+
 ````
 conda env create -f environment.yml
 conda activate pathml
 ````
+To use GPU acceleration for model training or other tasks, you must install CUDA. The default CUDA version in our environment file is 11.6. To install a different CUDA version, refer to the instructions [here](#CUDA)). 
 
-Optionally install CUDA (instructions [here](#CUDA))
+* MacOS:
 
-Install `PathML` from source: 
+````
+conda env create -f requirements/environment_mac.yml
+conda activate pathml
+````
+
+#### Install `PathML` from source: 
 ````
 pip install -e .
 ````
 
-## Installation option 3: Docker
+### 2.3 Use Docker Container
 
 First, download or build the PathML Docker container:
 
@@ -125,6 +170,56 @@ Note that these instructions assume that there are no other processes using port
 Please refer to the `Docker run` [documentation](https://docs.docker.com/engine/reference/run/) for further instructions
 on accessing the container, e.g. for mounting volumes to access files on a local machine from within the container.
 
+### 2.4 Use Google Colab
+
+To get PathML running in a Colab environment:
+
+````
+import os
+!pip install openslide-python
+!apt-get install openslide-tools
+!apt-get install openjdk-17-jdk-headless -qq > /dev/null
+os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-17-openjdk-amd64"
+!update-alternatives --set java /usr/lib/jvm/java-17-openjdk-amd64/bin/java
+!java -version
+!pip install pathml
+````
+
+*Thanks to all of our open-source collaborators for helping maintain these installation instructions!*  
+*Please open an issue for any bugs or other problems during installation process.*
+
+## 3. Import PathML
+
+After you have installed all necessary dependencies and PathML itself, import it using the following command:
+
+````
+import pathml
+````
+
+For Windows users, insert the following code snippet at the beginning of your Python script or Jupyter notebook before importing PathML. This code sets up the DLL directory for OpenSlide, ensuring that the library is properly loaded:
+
+```python
+
+# The path can also be read from a config file, etc.
+OPENSLIDE_PATH = r'c:\path\to\openslide-win64\bin'
+
+import os
+if hasattr(os, 'add_dll_directory'):
+    # Windows-specific setup
+    with os.add_dll_directory(OPENSLIDE_PATH):
+        import openslide
+else:
+    # For other OSes, this step is not needed
+    import openslide
+
+# Now you can proceed with using PathML
+import pathml
+```
+This code snippet ensures that the OpenSlide DLLs are correctly found by Python on Windows systems. Replace c:\path\to\openslide-win64\bin with the actual path where you extracted the OpenSlide binaries.
+
+If you encounter any DLL load failures, verify that the OpenSlide `bin` directory is correctly added to your `PATH`.
+
+
 ## CUDA
 
 To use GPU acceleration for model training or other tasks, you must install CUDA. 
@@ -135,10 +230,13 @@ Check the version of CUDA:
 nvidia-smi
 ````
 
-Install correct version of `cudatoolkit`:
+Replace both instances of 'cu116' in `requirements/requirements_torch.txt` with the CUDA version you see. For example, for CUDA 11.7, 'cu116' becomes 'cu117'. 
+
+Then create the environment:
+
 ````
-# update this command with your CUDA version number
-conda install cudatoolkit=11.0
+conda env create -f environment.yml
+conda activate pathml
 ````
 
 After installing PyTorch, optionally verify successful PyTorch installation with CUDA support: 
@@ -146,11 +244,11 @@ After installing PyTorch, optionally verify successful PyTorch installation with
 python -c "import torch; print(torch.cuda.is_available())"
 ````
 
-# Using with Jupyter
+## Using with Jupyter
 
 Jupyter notebooks are a convenient way to work interactively. To use `PathML` in Jupyter notebooks: 
 
-## Set JAVA_HOME environment variable
+### Set JAVA_HOME environment variable
 
 PathML relies on Java to enable support for reading a wide range of file formats.
 Before using `PathML` in Jupyter, you may need to manually set the `JAVA_HOME` environment variable 
@@ -163,7 +261,7 @@ specifying the path to Java. To do so:
     os.environ["JAVA_HOME"] = "/opt/conda/envs/pathml" # change path as needed
     ````
 
-## Register environment as an IPython kernel
+### Register environment as an IPython kernel
 ````
 conda activate pathml
 conda install ipykernel
@@ -191,12 +289,36 @@ See [contributing](https://github.com/Dana-Farber-AIOS/pathml/blob/master/CONTRI
 
 # Citing
 
-If you use `PathML` in your work, please cite our paper:
+If you use `PathML` please cite:
 
-Rosenthal J, Carelli R, Omar M, Brundage D, Halbert E, Nyman J, Hari SN, Van Allen EM, Marchionni L, Umeton R, Loda M. 
-Building tools for machine learning and artificial intelligence in cancer research: best practices and a case study 
-with the PathML toolkit for computational pathology. *Molecular Cancer Research*, 2021. 
-DOI: [10.1158/1541-7786.MCR-21-0665](https://doi.org/10.1158/1541-7786.MCR-21-0665)
+- [**J. Rosenthal et al., "Building tools for machine learning and artificial intelligence in cancer research: best practices and a case study with the PathML toolkit for computational pathology." Molecular Cancer Research, 2022.**](https://doi.org/10.1158/1541-7786.MCR-21-0665)
+
+So far, PathML was used in the following manuscripts: 
+
+- [J. Linares et al. **Molecular Cell** 2021](https://www.cell.com/molecular-cell/fulltext/S1097-2765(21)00729-2)
+- [A. Shmatko et al. **Nature Cancer** 2022](https://www.nature.com/articles/s43018-022-00436-4)
+- [J. Pocock et al. **Nature Communications Medicine** 2022](https://www.nature.com/articles/s43856-022-00186-5)
+- [S. Orsulic et al. **Frontiers in Oncology** 2022](https://www.frontiersin.org/articles/10.3389/fonc.2022.924945/full)
+- [D. Brundage et al. **arXiv** 2022](https://arxiv.org/abs/2203.13888)
+- [A. Marcolini et al. **SoftwareX** 2022](https://www.sciencedirect.com/science/article/pii/S2352711022001558)
+- [M. Rahman et al. **Bioengineering** 2022](https://www.mdpi.com/2306-5354/9/8/335)
+- [C. Lama et al. **bioRxiv** 2022](https://www.biorxiv.org/content/10.1101/2022.09.28.509751v1.full)
+- the list continues [**here 🔗 for 2023 and onwards**](https://scholar.google.com/scholar?oi=bibs&hl=en&cites=1157052756975292108)
+
+# Users
+
+<table style="border: 0px !important;"><tr><td>This is where in the world our most enthusiastic supporters are located:
+   <br/><br/>
+<img src="https://user-images.githubusercontent.com/25375373/208137141-e450aa86-8433-415a-9cc7-c4274139bdc2.png" width="500px">
+   </td><td>   
+and this is where they work:
+   <br/><br/>
+<img src="https://user-images.githubusercontent.com/25375373/208137644-f73c86d0-c5c7-4094-80d9-ea11e0edbdc5.png" width="400px">
+</td>                                                                                                                             
+</tr>
+</table>
+
+Source: https://ossinsight.io/analyze/Dana-Farber-AIOS/pathml#people
 
 # License
 
@@ -209,6 +331,6 @@ Commercial license options are available also.
 
 Questions? Comments? Suggestions? Get in touch!
 
-[PathML@dfci.harvard.edu](mailto:PathML@dfci.harvard.edu)
+[pathml@dfci.harvard.edu](mailto:pathml@dfci.harvard.edu)
 
 <img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/dfci_cornell_joint_logos.png width="750"> 

@@ -3,6 +3,7 @@ Copyright 2021, Dana-Farber Cancer Institute and Weill Cornell Medicine
 License: GNU GPL 2.0
 """
 
+import sys
 from pathlib import Path
 
 import h5py
@@ -11,7 +12,14 @@ import pytest
 from dask.distributed import Client
 
 import pathml
-from pathml.core import HESlide, MultiparametricSlide, SlideData, Tile
+from pathml.core import (
+    CODEXSlide,
+    HESlide,
+    IHCSlide,
+    MultiparametricSlide,
+    SlideData,
+    Tile,
+)
 from pathml.core.slide_data import infer_backend
 from pathml.preprocessing import BoxBlur, Pipeline
 
@@ -35,12 +43,32 @@ def test_infer_backend(path, backend):
     assert infer_backend(path) == backend
 
 
+def test_infer_backend_unsupported_extension():
+    # Define a file path with an unsupported extension
+    unsupported_path = "unsupported_file.xyz"
+
+    # Use pytest.raises to verify that a ValueError is raised with the expected message
+    with pytest.raises(ValueError) as excinfo:
+        infer_backend(unsupported_path)
+
+    # Check if the error message contains the expected content
+    assert (
+        f"input path {unsupported_path} doesn't match any supported file extensions"
+        in str(excinfo.value)
+    )
+
+
 def test_write_with_array_labels(tmp_path, example_slide_data):
     example_slide_data.write(tmp_path / "test_array_in_labels.h5path")
     assert Path(tmp_path / "test_array_in_labels.h5path").is_file()
 
 
 def test_run_pipeline(example_slide_data):
+    if sys.platform.startswith("win"):
+        pytest.skip(
+            "dask distributed not available on windows", allow_module_level=False
+        )
+
     pipeline = Pipeline([BoxBlur(kernel_size=15)])
     # start the dask client
     client = Client()
@@ -52,14 +80,28 @@ def test_run_pipeline(example_slide_data):
 
 @pytest.mark.parametrize("overwrite_tiles", [True, False])
 def test_run_existing_tiles(slide_dataset_with_tiles, overwrite_tiles):
+
+    # windows dask distributed incompatiblility
+    if sys.platform.startswith("win"):
+        dist = False
+    else:
+        dist = True
     dataset = slide_dataset_with_tiles
     pipeline = Pipeline([BoxBlur(kernel_size=15)])
     if overwrite_tiles:
-        dataset.run(pipeline, overwrite_existing_tiles=overwrite_tiles, tile_size=500)
+        dataset.run(
+            pipeline,
+            overwrite_existing_tiles=overwrite_tiles,
+            distributed=dist,
+            tile_size=500,
+        )
     else:
         with pytest.raises(Exception):
             dataset.run(
-                pipeline, overwrite_existing_tiles=overwrite_tiles, tile_size=500
+                pipeline,
+                overwrite_existing_tiles=overwrite_tiles,
+                distributed=dist,
+                tile_size=500,
             )
 
 
@@ -78,6 +120,30 @@ def multiparametric_slide():
 def test_multiparametric(multiparametric_slide):
     assert isinstance(multiparametric_slide, SlideData)
     assert multiparametric_slide.slide_type == pathml.types.IF
+
+
+@pytest.fixture
+def ihc_slide_path():
+    return "tests/testdata/small_HE.svs"
+
+
+@pytest.fixture
+def codex_slide_path():
+    return "tests/testdata/small_vectra.qptiff"
+
+
+def test_ihc_slide_creation(ihc_slide_path):
+    slide = IHCSlide(ihc_slide_path)
+    assert isinstance(slide, SlideData)
+    assert slide.slide_type == pathml.types.IHC
+    # Assuming 'backend' needs to be explicitly passed for IHCSlide, otherwise, test its default if applicable
+
+
+def test_codex_slide_creation_with_default_backend(codex_slide_path):
+    slide = CODEXSlide(codex_slide_path)
+    assert isinstance(slide, SlideData)
+    assert slide.slide_type == pathml.types.CODEX
+    assert slide.backend == "bioformats"
 
 
 @pytest.mark.parametrize("shape", [500, (500, 400)])

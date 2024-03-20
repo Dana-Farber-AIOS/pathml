@@ -31,9 +31,12 @@ def test_run_pipeline_and_tile_dataset_and_reshape(slide_dataset):
     # run the pipeline
     slide_dataset.run(pipeline=pipeline, distributed=False, tile_size=50)
 
+    out = slide_dataset.__repr__()
+
     tile = slide_dataset[0].tiles[0]
     assert isinstance(tile, Tile)
     assert tile.image.shape == (50, 50, 3)
+    assert len(out) > 0
 
 
 @pytest.mark.parametrize("write", [True, False])

@@ -1,0 +1,120 @@
+name: Tests windows
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - dev
+      - master
+  push:
+    branches:
+      - dev
+      - master
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      max-parallel: 5
+      matrix:
+        python-version: ["3.8", "3.9", "3.10"]
+    timeout-minutes: 120
+
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Print JAVA_HOME and PATH
+        run: |
+          echo "JAVA_HOME: $env:JAVA_HOME"
+          echo "PATH: $env:PATH"
+        shell: pwsh
+
+      - name: Set JDK_HOME environment variable
+        run: echo "JDK_HOME=${JAVA_HOME}" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-activate-base: false
+          activate-environment: pathml
+          environment-file: environment.yml
+          # environment-file: '.github/ci-environments/env-py39.yml'
+          # environment-file: .github/ci-environments/env-py${{ matrix.python-version == '3.10' && '310' || matrix.python-version == '3.9' && '39' || '38' }}.yml
+          mamba-version: "*"
+          python-version: ${{ matrix.python-version }}
+          
+      # - name: Install JavaBridge and other dependencies
+      #   shell: bash -l {0}
+      #   run: |
+      #     pip install python-javabridge
+
+      - name: Run Python script to find JVM path
+        shell: bash -l {0}
+        run: |
+          python -c "import javabridge; print('javabridge.locate.find_javahome():', javabridge.locate.find_javahome()); print('javabridge.jutil._find_jvm_windows():', javabridge.jutil._find_jvm_windows())"
+    
+      - name: Print JAVA_HOME and PATH Second
+        run: |
+          echo "JAVA_HOME: $env:JAVA_HOME"
+          echo "PATH: $env:PATH"
+        shell: pwsh
+
+
+      - name: Download and Setup OpenSlide
+        run: |
+          # $zipFile = "openslide-win64-20231011.zip"
+          $zipFile = "openslide-win64-20230414.zip"
+          $extractPath = Join-Path $env:GITHUB_WORKSPACE "openslide-binaries"
+          # Invoke-WebRequest -Uri "https://github.com/openslide/openslide-bin/releases/download/v20231011/$zipFile" -OutFile $zipFile
+          Invoke-WebRequest -Uri "https://github.com/openslide/openslide-bin/releases/download/v20230414/$zipFile" -OutFile $zipFile
+          Expand-Archive -Path $zipFile -DestinationPath $extractPath
+          # $binPath = Join-Path $extractPath "openslide-win64-20231011/bin"
+          $binPath = Join-Path $extractPath "openslide-win64-20230414/bin"
+          Write-Host "Adding to PATH: $binPath"
+          echo "OPENSLIDE_PATH=$binPath" | Out-File -Append -FilePath $env:GITHUB_ENV
+          # echo "$binPath" | Out-File -Append -FilePath $env:GITHUB_PATH
+        shell: pwsh
+
+      # Optional: List files in OpenSlide bin directory to verify
+      - name: List files in OpenSlide bin directory
+        run: |
+          Get-ChildItem -Path $env:OPENSLIDE_PATH
+        shell: pwsh
+        env:
+          OPENSLIDE_PATH: ${{ env.OPENSLIDE_PATH }}
+
+      - name: Conda info
+        shell: bash -l {0}
+        run: |
+          conda info
+          conda list
+
+      - name: Install PathML
+        shell: bash -l {0}      
+        run: pip install -e .
+
+      - name: Install torchvision
+        shell: bash -l {0}
+        run: pip install torchvision==0.14.1
+        
+      - name: Set OPENSLIDE_PATH
+        run: echo "OPENSLIDE_PATH=D:\a\pathml\pathml\openslide-binaries\openslide-win64-20231011\bin" >> $GITHUB_ENV
+        shell: pwsh
+
+      - name: Test other modules with pytest and generate coverage
+        shell: bash -l {0}
+        run: |
+          coverage run --data-file=.coverage_others -m pytest -m "not slow and not exclude"
+
+      - name: Test tile_stitcher with pytest and generate coverage
+        shell: bash -l {0}
+        run: |
+          coverage run --data-file=.coverage_tilestitcher -m pytest tests/preprocessing_tests/test_tilestitcher.py

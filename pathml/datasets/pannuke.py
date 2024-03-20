@@ -17,7 +17,7 @@ from loguru import logger
 
 from pathml.datasets.base_data_module import BaseDataModule
 from pathml.datasets.utils import pannuke_multiclass_mask_to_nucleus_mask
-from pathml.ml.hovernet import compute_hv_map
+from pathml.ml.models.hovernet import compute_hv_map
 from pathml.utils import download_from_url
 
 

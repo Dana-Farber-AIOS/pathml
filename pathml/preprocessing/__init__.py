@@ -22,6 +22,7 @@ from .transforms import (
     QuantifyMIF,
     RescaleIntensity,
     SegmentMIF,
+    SegmentMIFRemote,
     StainNormalizationHE,
     SuperpixelInterpolation,
     TissueDetectionHE,

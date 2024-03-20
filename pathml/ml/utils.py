@@ -7,7 +7,134 @@ import numpy as np
 
 # Utilities for ML module
 import torch
+from sklearn.utils.class_weight import compute_class_weight
 from torch.nn import functional as F
+from torch_geometric.utils import degree
+from tqdm import tqdm
+
+
+def scatter_sum(src, index, dim, out=None, dim_size=None):
+    """
+    Reduces all values from the :attr:`src` tensor into :attr:`out` at the
+    indices specified in the :attr:`index` tensor along a given axis
+    :attr:`dim`.
+
+    For each value in :attr:`src`, its output index is specified by its index
+    in :attr:`src` for dimensions outside of :attr:`dim` and by the
+    corresponding value in :attr:`index` for dimension :attr:`dim`.
+    The applied reduction is defined via the :attr:`reduce` argument.
+
+    Args:
+        src: The source tensor.
+        index: The indices of elements to scatter.
+        dim: The axis along which to index. Default is -1.
+        out: The destination tensor.
+        dim_size: If `out` is not given, automatically create output with size `dim_size` at dimension `dim`.
+
+    Reference:
+        https://pytorch-scatter.readthedocs.io/en/latest/_modules/torch_scatter/scatter.html#scatter
+    """
+
+    index = broadcast(index, src, dim)
+    if out is None:
+        size = list(src.size())
+        if dim_size is not None:
+            size[dim] = dim_size
+        elif index.numel() == 0:
+            size[dim] = 0
+        else:
+            size[dim] = int(index.max()) + 1
+        out = torch.zeros(size, dtype=src.dtype, device=src.device)
+        return out.scatter_add_(dim, index, src)
+    else:
+        return out.scatter_add_(dim, index, src)
+
+
+def broadcast(src, other, dim):
+    """
+    Broadcast tensors to match output tensor dimension.
+    """
+    if dim < 0:
+        dim = other.dim() + dim
+    if src.dim() == 1:
+        for _ in range(0, dim):
+            src = src.unsqueeze(0)
+    for _ in range(src.dim(), other.dim()):
+        src = src.unsqueeze(-1)
+    src = src.expand(other.size())
+    return src
+
+
+def get_degree_histogram(loader, edge_index_str, x_str):
+    """
+    Returns the degree histogram to be used as input for the `deg` argument in `PNAConv`.
+    """
+
+    deg_histogram = torch.zeros(1, dtype=torch.long)
+    for data in tqdm(loader):
+        d = degree(
+            data[edge_index_str][1], num_nodes=data[x_str].shape[0], dtype=torch.long
+        )
+        d_bincount = torch.bincount(d, minlength=deg_histogram.numel())
+        if d_bincount.size(0) > deg_histogram.size(0):
+            d_bincount[: deg_histogram.size(0)] += deg_histogram
+            deg_histogram = d_bincount
+        else:
+            assert d_bincount.size(0) == deg_histogram.size(0)
+            deg_histogram += d_bincount
+    return deg_histogram
+
+
+def get_class_weights(loader):
+    """
+    Returns the per-class weights to be used in weighted loss functions.
+    """
+
+    ys = []
+    for data in tqdm(loader):
+        ys.append(data.target.numpy())
+    ys = np.array(ys).ravel()
+    weights = compute_class_weight("balanced", classes=np.unique(ys), y=np.array(ys))
+    return weights
+
+
+# Potential Typop
+# def center_crop_im_batch(batch, dims, batch_order="BCHW"):
+#     """
+#     Center crop images in a batch.
+
+#     Args:
+#         batch: The batch of images to be cropped
+#         dims: Amount to be cropped (tuple for H, W)
+#     """
+#     assert (
+#         batch.ndim == 4
+#     ), f"ERROR input shape is {batch.shape} - expecting a batch with 4 dimensions total"
+#     assert (
+#         len(dims) == 2
+#     ), f"ERROR input cropping dims is {dims} - expecting a tuple with 2 elements total"
+#     assert batch_order in {
+#         "BHCW",
+#         "BCHW",
+#     }, f"ERROR input batch order {batch_order} not recognized. Must be one of 'BHCW' or 'BCHW'"
+
+#     if dims == (0, 0):
+#         # no cropping necessary in this case
+#         batch_cropped = batch
+#     else:
+#         crop_t = dims[0] // 2
+#         crop_b = dims[0] - crop_t
+#         crop_l = dims[1] // 2
+#         crop_r = dims[1] - crop_l
+
+#         if batch_order == "BHWC":
+#             batch_cropped = batch[:, crop_t:-crop_b, crop_l:-crop_r, :]
+#         elif batch_order == "BCHW":
+#             batch_cropped = batch[:, :, crop_t:-crop_b, crop_l:-crop_r]
+#         else:
+#             raise Exception("Input batch order not valid")
+
+#     return batch_cropped
 
 
 def center_crop_im_batch(batch, dims, batch_order="BCHW"):
@@ -25,9 +152,9 @@ def center_crop_im_batch(batch, dims, batch_order="BCHW"):
         len(dims) == 2
     ), f"ERROR input cropping dims is {dims} - expecting a tuple with 2 elements total"
     assert batch_order in {
-        "BHCW",
+        "BHWC",
         "BCHW",
-    }, f"ERROR input batch order {batch_order} not recognized. Must be one of 'BHCW' or 'BCHW'"
+    }, f"ERROR input batch order {batch_order} not recognized. Must be one of 'BHWC' or 'BCHW'"
 
     if dims == (0, 0):
         # no cropping necessary in this case
@@ -42,7 +169,7 @@ def center_crop_im_batch(batch, dims, batch_order="BCHW"):
             batch_cropped = batch[:, crop_t:-crop_b, crop_l:-crop_r, :]
         elif batch_order == "BCHW":
             batch_cropped = batch[:, :, crop_t:-crop_b, crop_l:-crop_r]
-        else:
+        else:  # pragma: no cover
             raise Exception("Input batch order not valid")
 
     return batch_cropped

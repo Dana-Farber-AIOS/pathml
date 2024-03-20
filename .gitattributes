@@ -1,0 +1,1 @@
+tests/testdata/tilestitching_testdata/*.tif filter=lfs diff=lfs merge=lfs -text

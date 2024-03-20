@@ -26,6 +26,23 @@ Cornell Medicine.
 
 .. toctree::
    :maxdepth: 2
+   :caption: Examples
+
+   examples/link_loading_images
+   examples/link_workflow_HE_vignette
+   examples/link_multiplex_if
+   examples/link_codex
+   examples/link_gallery
+   examples/link_stain_normalization
+   examples/link_construct_graphs
+   examples/link_tile_stitching
+   examples/link_train_hovernet
+   examples/link_train_hactnet
+   examples/link_workflow_Inference
+   examples/link_jco
+
+.. toctree::
+   :maxdepth: 2
    :caption: Preprocessing
 
    loading_slides
@@ -41,6 +58,12 @@ Cornell Medicine.
 
 .. toctree::
    :maxdepth: 2
+   :caption: Graphs
+
+   graphs
+
+.. toctree::
+   :maxdepth: 2
    :caption: Machine Learning
 
    dataloaders
@@ -48,15 +71,9 @@ Cornell Medicine.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Examples
+   :caption: Inference
 
-   examples/link_loading_images
-   examples/link_stain_normalization
-   examples/link_workflow_HE_vignette
-   examples/link_multiplex_if
-   examples/link_codex
-   examples/link_train_hovernet
-   examples/link_gallery
+   inference
 
 .. toctree::
    :maxdepth: 2
@@ -64,9 +81,11 @@ Cornell Medicine.
 
    api_core_reference
    api_preprocessing_reference
+   api_graph_reference
    api_datasets_reference
    api_ml_reference
    api_utils_reference
+   api_inference_reference
 
 .. toctree::
    :maxdepth: 2

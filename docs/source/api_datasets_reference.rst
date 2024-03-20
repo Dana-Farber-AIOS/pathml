@@ -1,13 +1,14 @@
 Datasets API
 ============
 
-PanNuke
--------
+Downloadable Datasets
+----------------------
 
 .. autoapiclass:: pathml.datasets.PanNukeDataModule
-
-
-DeepFocus
----------
-
 .. autoapiclass:: pathml.datasets.DeepFocusDataModule
+
+ML Dataset classes
+-------------------
+
+.. autoapiclass:: pathml.datasets.TileDataset
+.. autoapiclass:: pathml.datasets.EntityDataset
