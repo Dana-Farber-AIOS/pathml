@@ -16,8 +16,8 @@ Imaging datasets in cancer research are growing exponentially in both quantity a
 
 | Branch | Test status   |
 | ------ | ------------- |
-| master | ![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg?branch=master) |
-| dev    | ![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg?branch=dev) |
+| master | ![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-linux.yml/badge.svg?branch=master) |
+| dev    | ![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-linux.yml/badge.svg?branch=dev) |
 
 <img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/logo.png width="300"> 
 
