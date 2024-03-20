@@ -26,6 +26,23 @@ Cornell Medicine.
 
 .. toctree::
    :maxdepth: 2
+   :caption: Examples
+
+   examples/link_loading_images
+   examples/link_workflow_HE_vignette
+   examples/link_multiplex_if
+   examples/link_codex
+   examples/link_gallery
+   examples/link_stain_normalization
+   examples/link_construct_graphs
+   examples/link_tile_stitching
+   examples/link_train_hovernet
+   examples/link_train_hactnet
+   examples/link_workflow_Inference
+   examples/link_jco
+
+.. toctree::
+   :maxdepth: 2
    :caption: Preprocessing
 
    loading_slides
@@ -57,23 +74,6 @@ Cornell Medicine.
    :caption: Inference
 
    inference
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Examples
-
-   examples/link_loading_images
-   examples/link_stain_normalization
-   examples/link_workflow_HE_vignette
-   examples/link_multiplex_if
-   examples/link_codex
-   examples/link_train_hovernet
-   examples/link_workflow_Inference
-   examples/link_gallery
-   examples/link_tile_stitching
-   examples/link_construct_graphs
-   examples/link_train_hactnet
-   examples/link_jco
 
 .. toctree::
    :maxdepth: 2
