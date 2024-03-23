@@ -52,8 +52,6 @@ Options (1), (2), and (4) require that you first install all external dependenci
 We recommend using conda for environment management. 
 Download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html)
 
-*Note: these instructions are for Linux. Commands may be different for other platforms.*
-
 ## 1.1 Installation option 1: pip install
 
 Create conda environment, this step is common to all platforms (Linux, Mac, Windows):
