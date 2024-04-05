@@ -40,6 +40,7 @@ Cornell Medicine.
    examples/link_train_hactnet
    examples/link_workflow_Inference
    examples/link_jco
+   examples/link_talk_to_pathml
 
 .. toctree::
    :maxdepth: 2
