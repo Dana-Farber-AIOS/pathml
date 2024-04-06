@@ -5,6 +5,8 @@
 [![codecov](https://codecov.io/gh/Dana-Farber-AIOS/pathml/branch/master/graph/badge.svg?token=UHSQPTM28Y)](https://codecov.io/gh/Dana-Farber-AIOS/pathml)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![PyPI version](https://img.shields.io/pypi/v/pathml)](https://pypi.org/project/pathml/)
+![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg?branch=master)
+![dev-tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg?branch=dev)
 
 ⭐ **PathML objective is to lower the barrier to entry to digital pathology**
 
@@ -14,15 +16,26 @@ Imaging datasets in cancer research are growing exponentially in both quantity a
 
     docker pull pathml/pathml && docker run -it -p 8888:8888 pathml/pathml
 
-| Branch | Test status   |
-| ------ | ------------- |
-| master | ![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg?branch=master) |
-| dev    | ![tests](https://github.com/Dana-Farber-AIOS/pathml/actions/workflows/tests-conda.yml/badge.svg?branch=dev) |
+done, what analyses can I write now? 👉 <kbd> <br> **[🔬🤖 Click here to launch your PathML Digital Pathology Assistant 🎓](https://chat.openai.com/g/g-L1IbnIIVt-digital-pathology-assistant-v3-0)** <br> </kbd>
 
-Please note that the :construction: `dev` branch is under active development, with experimental features, bug fixes, and refactors that may happen at any time! 
-Stable versions are available as tagged releases on GitHub, or as versioned releases on PyPI
+<table> 
+<tr>
+    <td> <img src="https://github.com/Dana-Farber-AIOS/pathml/assets/25375373/7b1b7293-03cd-4ef1-91d3-8f2efde0899a"/> </td>
+    <td>This AI will help you:
 
-📖 **Official Documentation**
+- install PathML
+- write digital pathology analyses
+- will be your teacher as you embark on your digital pathology journey ❤️
+
+More usage examples [here](./ai-digital-pathology-assistant-v3).
+  
+</td>
+</tr>
+</table>
+
+
+
+📖 **Official PathML Documentation**
 
 View the official [PathML Documentation on readthedocs](https://pathml.readthedocs.io/en/latest/)
 
