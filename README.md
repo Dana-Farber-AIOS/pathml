@@ -23,9 +23,9 @@ done, what analyses can I write now? 👉 <kbd> <br> **[🔬🤖 Click here 
     <td> <img src="https://github.com/Dana-Farber-AIOS/pathml/assets/25375373/7b1b7293-03cd-4ef1-91d3-8f2efde0899a"/> </td>
     <td>This AI will help you:
 
-- install PathML
-- write digital pathology analyses
-- will be your teacher as you embark on your digital pathology journey ❤️
+- write digital pathology analyses for you
+- walk you through the code, step-by-step
+- it will be your teacher as you embark on your digital pathology journey ❤️
 
 More usage examples [here](./ai-digital-pathology-assistant-v3).
   
