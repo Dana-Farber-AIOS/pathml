@@ -259,18 +259,18 @@ If you use ``PathML`` please cite:
 
 So far, **PathML** was referenced in 20+ manuscripts:
 
--   [A. Song et al. **Nature Reviews Bioengineering** 2023](https://www.nature.com/articles/s44222-023-00096-8)
--   [I. Virshup et al. **Nature Bioengineering** 2023](https://www.nature.com/articles/s41587-023-01733-8)
--   [A. Karargyris et al. **Nature Machine Intelligence** 2023](https://www.nature.com/articles/s42256-023-00652-2)
--   [S. Pati et al. **Nature Communications Engineering** 2023](https://www.nature.com/articles/s44172-023-00066-3)
--   [C. Gorman et al. **Nature Communications** 2023](https://www.nature.com/articles/s41467-023-37224-2)
--   [J. Nyman et al. **Cell Reports Medicine** 2023](https://doi.org/10.1016/j.xcrm.2023.101189)
--   [A. Shmatko et al. **Nature Cancer** 2022](https://www.nature.com/articles/s43018-022-00436-4)
--   [J. Pocock et al. **Nature Communications Medicine** 2022](https://www.nature.com/articles/s43856-022-00186-5)
--   [S. Orsulic et al. **Frontiers in Oncology** 2022](https://www.frontiersin.org/articles/10.3389/fonc.2022.924945/full)
--   [D. Brundage et al. **arXiv** 2022](https://arxiv.org/abs/2203.13888)
--   [C. Lama et al. **bioRxiv** 2022](https://www.biorxiv.org/content/10.1101/2022.09.28.509751v1.full)
--   [J. Linares et al. **Molecular Cell** 2021](https://doi.org/10.1016/j.molcel.2021.08.039)
+-   [H. Pakula et al. **Nature Communications**, 2024](https://www.nature.com/articles/s41467-023-44210-1)
+-   [B. Ricciuti et al. **Journal of Clinical Oncology**, 2024](https://ascopubs.org/doi/full/10.1200/JCO.23.00580)
+-   [A. Song et al. **Nature Reviews Bioengineering**, 2023](https://www.nature.com/articles/s44222-023-00096-8)
+-   [I. Virshup et al. **Nature Bioengineering**, 2023](https://www.nature.com/articles/s41587-023-01733-8)
+-   [A. Karargyris et al. **Nature Machine Intelligence**, 2023](https://www.nature.com/articles/s42256-023-00652-2)
+-   [S. Pati et al. **Nature Communications Engineering**, 2023](https://www.nature.com/articles/s44172-023-00066-3)
+-   [C. Gorman et al. **Nature Communications**, 2023](https://www.nature.com/articles/s41467-023-37224-2)
+-   [J. Nyman et al. **Cell Reports Medicine**, 2023](https://doi.org/10.1016/j.xcrm.2023.101189)
+-   [A. Shmatko et al. **Nature Cancer**, 2022](https://www.nature.com/articles/s43018-022-00436-4)
+-   [J. Pocock et al. **Nature Communications Medicine**, 2022](https://www.nature.com/articles/s43856-022-00186-5)
+-   [S. Orsulic et al. **Frontiers in Oncology**, 2022](https://www.frontiersin.org/articles/10.3389/fonc.2022.924945/full)
+-   [J. Linares et al. **Molecular Cell**, 2021](https://doi.org/10.1016/j.molcel.2021.08.039)
 -   the list continues [**here** **🔗**](https://scholar.google.com/scholar?oi=bibs&hl=en&cites=1157052756975292108)
 
 # 5. Users
