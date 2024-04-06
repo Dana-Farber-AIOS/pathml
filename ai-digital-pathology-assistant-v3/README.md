@@ -14,4 +14,8 @@
 
 ## Recreate it
 
-Here you will find all material needed to re-create our [Digital Pathology Assistant](https://chat.openai.com/g/g-L1IbnIIVt-digital-pathology-assistant-v3-0), a custom OpenAI GPT available to all ChatGPT Pro users for research purposes. This AI is not intended clinical use.
+[Here](./src) you will find all material needed to re-create our Digital Pathology Assistant, which is a custom OpenAI GPT available to all ChatGPT Pro users for research purposes. 
+
+## Note 
+
+This AI is **NOT** intended for clinical use.
