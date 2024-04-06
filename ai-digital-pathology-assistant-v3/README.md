@@ -1,8 +1,18 @@
-# PathML Digital Pathology Assistant v3.0
+![image](https://github.com/Dana-Farber-AIOS/pathml/assets/25375373/0e1c7adf-6510-4733-bf38-93c7be1c73cc)
+
+# Digital Pathology Assistant v3.0
+
+👋 Say _Hi!_ to your new digital pathology AI
+
+It will help you:
+
+- install PathML
+- write digital pathology analyses
+- will be your teacher as you embark on your digital pathology journey
 
 ## Run it!
 
-<kbd> <br> **[🔬🤖 Click here to Launch our AI 🎓 ⤴](https://chat.openai.com/g/g-L1IbnIIVt-digital-pathology-assistant-v3-0)** <br> </kbd>
+👉 <kbd> <br> **[🔬🤖 Click here to Launch our AI 🎓 ⤴](https://chat.openai.com/g/g-L1IbnIIVt-digital-pathology-assistant-v3-0)** <br> </kbd>
 
 ## Examples
 
