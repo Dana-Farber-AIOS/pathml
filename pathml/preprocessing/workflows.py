@@ -20,7 +20,7 @@ def run_vectra_workflow(
     use_parallel=True,
     n_cpus=10,
     tile_size=(1920, 1440),
-    save_slidedata_file="data/dataset_processed.h5",
+    save_slidedata_file="./data/dataset_processed.h5",
     save_anndata_file="./data/adata_combined.h5ad",
 ):
 
