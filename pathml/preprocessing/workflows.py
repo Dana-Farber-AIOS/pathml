@@ -41,6 +41,7 @@ def run_vectra_workflow(
         # Store all slides in a SlideDataSet object
         dataset = SlideDataset(vectra_list_A + vectra_list_B)
 
+    # initialize pipeline
     pipe = Pipeline(
         [
             CollapseRunsCODEX(z=0),
@@ -54,6 +55,7 @@ def run_vectra_workflow(
         ]
     )
 
+    # run pipeline
     if use_parallel:
         # Initialize a dask cluster using 10 workers. PathML pipelines can be run in distributed mode on
         # cloud compute or a cluster using dask.distributed.
