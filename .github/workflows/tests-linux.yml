@@ -53,9 +53,9 @@ jobs:
         echo "Checking the available disk space..."
         df -h
         
-    - name: Install dependencies with micromamba
-      shell: bash -l {0}
-      run: micromamba env update --file requirements/environment_test.yml --name pathml
+    # - name: Install dependencies with micromamba
+    #   shell: bash -l {0}
+    #   run: micromamba env update --file requirements/environment_test.yml --name pathml
     
     - name: Micromamba info
       shell: bash -l {0}
