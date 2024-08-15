@@ -59,8 +59,8 @@ jobs:
 
       - name: Install python-javabridge
         shell: bash -l {0}
-        # run: pip install --use-pep517 python-javabridge==4.0.3
-        run: pip install python-javabridge==4.0.3
+        run: pip install --use-pep517 numpy==1.23.5 python-javabridge==4.0.3
+        # run: pip install python-javabridge==4.0.3
 
       - name: Install python-bioformats
         shell: bash -l {0}
