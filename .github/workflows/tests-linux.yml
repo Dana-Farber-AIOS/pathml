@@ -48,16 +48,16 @@ jobs:
       run: |
         echo "Printing the environment.yml file..."
         cat requirements/environment_test.yml
-        echo "Checking the status of mamba..."
-        mamba --version
+        echo "Checking the status of micro mamba..."
+        micromamba config
         echo "Checking the available disk space..."
         df -h
         
-    - name: Install dependencies with mamba
+    - name: Install dependencies with micromamba
       shell: bash -l {0}
       run: micromamba env update --file requirements/environment_test.yml --name pathml
     
-    - name: Mamba info
+    - name: Micromamba info
       shell: bash -l {0}
       run: |
         micromamba info
