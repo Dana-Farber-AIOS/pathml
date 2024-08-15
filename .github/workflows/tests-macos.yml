@@ -57,6 +57,10 @@ jobs:
           create-args: >-
             python=${{ matrix.python-version }}
 
+      - name: Install python-javabridge
+        shell: bash -l {0}
+        run: pip install --use-pep517 python-javabridge==4.0.3
+
       - name: Micromamba info
         shell: bash -l {0}
         run: |
