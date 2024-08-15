@@ -40,21 +40,18 @@ jobs:
         run: echo "JDK_HOME=${JAVA_HOME}" >> $GITHUB_ENV
         shell: bash
 
-      - name: Setup Miniconda
-        uses: conda-incubator/setup-miniconda@v2
+      
+      - name: Setup Micromamba
+        uses: mamba-org/setup-micromamba@v1
         with:
-          auto-activate-base: false
-          activate-environment: pathml
+          micromamba-version: '1.5.6-0'
+          environment-name: pathml
           environment-file: environment.yml
-          # environment-file: '.github/ci-environments/env-py39.yml'
-          # environment-file: .github/ci-environments/env-py${{ matrix.python-version == '3.10' && '310' || matrix.python-version == '3.9' && '39' || '38' }}.yml
-          mamba-version: "*"
-          python-version: ${{ matrix.python-version }}
-          
-      # - name: Install JavaBridge and other dependencies
-      #   shell: bash -l {0}
-      #   run: |
-      #     pip install python-javabridge
+          init-shell: >-
+            bash
+          create-args: >-
+            python=${{ matrix.python-version }}
+            
 
       - name: Run Python script to find JVM path
         shell: bash -l {0}
