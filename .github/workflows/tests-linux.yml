@@ -39,7 +39,7 @@ jobs:
       with:
         micromamba-version: '1.5.6-0'
         environment-name: pathml
-        environment-file: environment.yml
+        environment-file: requirements/environment_test.yml
         init-shell: >-
           bash
         create-args: >-
