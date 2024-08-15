@@ -34,17 +34,16 @@ jobs:
         sudo apt-get update
         sudo apt-get install openslide-tools
         sudo apt-get install pandoc
-    - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v2
+    - name: Setup Micromamba
+      uses: mamba-org/setup-micromamba@v1
       with:
-        auto-activate-base: false
-        activate-environment: pathml
-        environment-file: requirements/environment_test.yml
-        # mamba-version: "*"
-        miniforge-version: latest
-        use-mamba: true
-        channels: conda-forge
-        python-version: ${{ matrix.python-version }}
+        micromamba-version: '1.5.6-0'
+        environment-name: pathml
+        environment-file: environment.yml
+        init-shell: >-
+          bash
+        create-args: >-
+          python=${{ matrix.python-version }}
     - name: Debugging
       run: |
         echo "Printing the environment.yml file..."
@@ -56,12 +55,14 @@ jobs:
         
     - name: Install dependencies with mamba
       shell: bash -l {0}
-      run: mamba env update --file requirements/environment_test.yml --name pathml
-    - name: Conda info
+      run: micromamba env update --file requirements/environment_test.yml --name pathml
+    
+    - name: Mamba info
       shell: bash -l {0}
       run: |
-        conda info
-        conda list
+        micromamba info
+        micromamba config
+        micromamba list
     
     - name: Set default Temurin JDK 17
       run: |
