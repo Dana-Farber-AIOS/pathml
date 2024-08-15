@@ -51,7 +51,7 @@ jobs:
             bash
           create-args: >-
             python=${{ matrix.python-version }}
-            
+
 
       - name: Run Python script to find JVM path
         shell: bash -l {0}
@@ -88,11 +88,12 @@ jobs:
         env:
           OPENSLIDE_PATH: ${{ env.OPENSLIDE_PATH }}
 
-      - name: Conda info
+      - name: Mamba info
         shell: bash -l {0}
         run: |
-          conda info
-          conda list
+          micromamba info
+          micromamba config
+          micromamba list
 
       - name: Install PathML
         shell: bash -l {0}      
