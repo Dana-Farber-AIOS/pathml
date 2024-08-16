@@ -92,7 +92,7 @@ conda config --set solver libmamba
 
 #### Platform-Specific External Dependencies
 
-For installation methods [1)](#1.2.2-Install-with-Anaconda and-pip) and [2)](#1.2.3-Install-from Source-(Recommended-for-Developers)), you will need to install the following platform-specific packages. 
+For installation methods [1)](#2.1-Install-with-Micromamba-and-pip-(Recommended-for-Users)) and [2)](#2.2-Install-from-Source-(Recommended-for-Developers)), you will need to install the following platform-specific packages. 
 
 * Linux: Install external dependencies with [Apt](https://ubuntu.com/server/docs/package-management):
 ````
