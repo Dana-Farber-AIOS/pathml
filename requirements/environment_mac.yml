@@ -7,7 +7,8 @@ channels:
 dependencies:
     - python<=3.10
     - pip==23.3.2
-    # - numpy==1.23.5
+    - numpy==1.23.5
+    - python-javabridge==4.0.3
     - scipy<=1.11.4
     - scikit-image<=0.22.0
     - matplotlib<=3.8.2
@@ -21,9 +22,9 @@ dependencies:
     - networkx<=3.2.1
     - pip:
         # - setuptools==58.2.0
-        - numpy==1.23.5
+        # - numpy==1.23.5
         - torch==1.13.1
-        # - python-bioformats==4.0.7
+        - python-bioformats==4.0.7
         # - python-javabridge==4.0.3
         - protobuf==3.20.3
         - onnx==1.15.0
