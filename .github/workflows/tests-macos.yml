@@ -42,6 +42,14 @@ jobs:
           create-args: >-
             python=${{ matrix.python-version }}
 
+      - name: Install NumPy
+        shell: bash -l {0}      
+        run: pip install numpy==1.23.5
+
+      - name: Install Python-Javabridge
+        shell: bash -l {0}      
+        run: pip install python-javabridge==4.0.3
+
       - name: Micromamba info
         shell: bash -l {0}
         run: |
