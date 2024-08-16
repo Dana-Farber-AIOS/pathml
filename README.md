@@ -70,7 +70,7 @@ Make sure you have the recent version of Micromamba by using the following comma
 micromamba update 
 ```
 
-#####  Updating Conda and Using libmamba (Optional)
+####  Updating Conda and Using libmamba (Optional)
 
 **If you are using Micromamba, you can skip to the next [section](#Platform-Specific-External-Dependencies).** 
 
