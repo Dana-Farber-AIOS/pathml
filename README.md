@@ -56,13 +56,25 @@ View the official [PathML Documentation on readthedocs](https://pathml.readthedo
 
 ## 1.1 Prerequisites
 
-We recommend using [Conda](https://conda.io/projects/conda/en/latest/user-guide/getting-started.html#) for managing your environments. 
+We recommend using [Micromamba](https://mamba.readthedocs.io/en/latest/index.html) for managing your environments. We provide instructions on how to install PathML via Micromamba below. In addition, we also provide instructions on how to install via [Miniconda](https://docs.conda.io/en/latest/miniconda.html) should you have a license. 
 
-#### Installing Conda
+#### Installation 
 
-If you don't have Conda installed, you can download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html).
+If you don't have Miniconda installed, you can download Miniconda [here](https://docs.conda.io/en/latest/miniconda.html).
 
-#### Updating Conda and Using libmamba (Optional)
+
+#### Upating Micromamba
+
+Make sure you have the recent version of Micromamba by using the following command:
+```
+micromamba update 
+```
+
+####  Updating Conda and Using libmamba (Optional)
+
+**If you are using Micromamba, you can skip to the next [section](#Platform-Specific-External-Dependencies).** 
+
+ We recommend that Anaconda/Microconda users complete the following steps to update your Conda version and use `libmamba` to resolve dependency conflicts. 
 
 Recent versions of Conda have integrated `libmamba`, a faster dependency solver. To benefit from this improvement, first ensure your Conda is updated:
 
@@ -80,7 +92,7 @@ conda config --set solver libmamba
 
 #### Platform-Specific External Dependencies
 
-For installation methods [1)](#2.1-Install-with-pip-(Recommended-for-Users)) and [2)](#2.2-Install-from-Source-(Recommended-for-Developers)), you will need to install the following platform-specific packages. 
+For installation methods [1)](#2.1-Install-with-Micromamba-and-pip-(Recommended-for-Users)) and [2)](#2.2-Install-from-Source-(Recommended-for-Developers)), you will need to install the following platform-specific packages. 
 
 * Linux: Install external dependencies with [Apt](https://ubuntu.com/server/docs/package-management):
 ````
@@ -108,7 +120,20 @@ For Windows users, an alternative to using `vcpkg` is to download and use pre-bu
 
 ## 1.2 PathML Installation Methods
 
-### 1.2.1 Install with pip (Recommended for Users)
+### 1.2.1 Install with Micromamba and pip (Recommended for Users)
+
+#### Create and Activate Micromamba Environment and install openjdk
+````
+micromamba create -n pathml  'openjdk<=18.0' -c conda-forge python=3.9
+micromamba activate pathml
+````
+
+#### Install `PathML` from PyPI
+````
+pip install pathml
+````
+
+### 1.2.2 Install with Anaconda and pip 
 
 #### Create and Activate Conda Environment
 ````
@@ -125,7 +150,7 @@ conda install -c conda-forge 'openjdk<=18.0'
 pip install pathml
 ````
 
-### 1.2.2 Install from Source (Recommended for Developers)
+### 1.2.3 Install from Source (Recommended for Developers)
 
 #### Clone repository
 ````
@@ -155,7 +180,7 @@ conda activate pathml
 pip install -e .
 ````
 
-### 1.2.3 Use Docker Container
+### 1.2.4 Use Docker Container
 
 First, download or build the PathML Docker container:
 
@@ -192,7 +217,7 @@ Note that these instructions assume that there are no other processes using port
 Please refer to the `Docker run` [documentation](https://docs.docker.com/engine/reference/run/) for further instructions
 on accessing the container, e.g. for mounting volumes to access files on a local machine from within the container.
 
-### 1.2.4 Use Google Colab
+### 1.2.5 Use Google Colab
 
 To get PathML running in a Colab environment:
 

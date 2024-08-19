@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        python-version: ["3.8"]
+        python-version: ["3.8", "3.9", "3.10"]
         
     steps:
       - uses: actions/checkout@v2
@@ -25,25 +25,26 @@ jobs:
       - name: Install openslide
         shell: bash -l {0}
         run: brew install openslide
+
       
-      - name: Setup Miniconda
-        uses: conda-incubator/setup-miniconda@v3
+      - name: Setup Micromamba
+        uses: mamba-org/setup-micromamba@v1
         with:
-          auto-update-conda: true
-          miniforge-version: latest
-          use-mamba: true
-          python-version: ${{ matrix.python-version }}
-          activate-environment: pathml
+          micromamba-version: '1.5.6-0'
+          environment-name: pathml
           environment-file: requirements/environment_mac.yml
-          channels: conda-forge
+          init-shell: >-
+            bash
+          create-args: >-
+            python=${{ matrix.python-version }}
 
-      - name: Conda info
-        shell: bash -l {0}
-        run: conda info
 
-      - name: Conda Version
+      - name: Micromamba info
         shell: bash -l {0}
-        run: conda --version
+        run: |
+          micromamba info
+          micromamba config
+          micromamba list
 
       - name: Set default Temurin JDK 17
         run: |
