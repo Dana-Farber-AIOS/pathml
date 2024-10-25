@@ -180,7 +180,7 @@ class TileStitcher:
             if not bftools_dir.exists():
                 zip_path = tools_dir / "bftools.zip"
                 if not zip_path.exists():
-                    url = "https://downloads.openmicroscopy.org/bio-formats/latest/artifacts/bftools.zip"
+                    url = "https://downloads.openmicroscopy.org/bio-formats/7.1.0/artifacts/bftools.zip"
                     urllib.request.urlretrieve(url, zip_path)
                 with zipfile.ZipFile(zip_path, "r") as zip_ref:
                     zip_ref.extractall(tools_dir)
