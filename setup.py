@@ -50,7 +50,7 @@ setuptools.setup(
         "onnx==1.15.0",
         "onnxruntime==1.16.3",
         "jpype1==1.4.1",
-        "tqdm==4.66.1",
+        "tqdm==4.66.3",
         "anndata<=0.10.3",
         "pydicom==2.4.4",
     ],
