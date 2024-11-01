@@ -24,7 +24,7 @@ It will help you:
 
 ## Recreate it
 
-[Here](./src) you will find all material needed to re-create our Digital Pathology Assistant, which is a custom OpenAI GPT available to all ChatGPT Plus users for research purposes. 
+[Here](./src) you will find all material needed to re-create our Digital Pathology Assistant, which is a custom OpenAI GPT available to all ChatGPT Pro users for research purposes. 
 
 ## Note 
 

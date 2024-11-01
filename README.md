@@ -16,7 +16,7 @@ Imaging datasets in cancer research are growing exponentially in both quantity a
 
     docker pull pathml/pathml && docker run -it -p 8888:8888 pathml/pathml
 
-Done, what analyses can I write now? 👉 <kbd> <br> **[🔬🤖 Click here to launch your PathML Digital Pathology Assistant 🎓](https://chat.openai.com/g/g-L1IbnIIVt-digital-pathology-assistant-v3-0)** <br> </kbd>
+Done, what analyses can I write now? 👉 <a href="https://chat.openai.com/g/g-L1IbnIIVt-digital-pathology-assistant-v3-0" target="_blank"><img src="https://github.com/Dana-Farber-AIOS/pathml/assets/25375373/7fdc35b4-fede-431b-a8d5-324bea1873e4" width="30%"/></a>
 
 <table> 
 <tr>
