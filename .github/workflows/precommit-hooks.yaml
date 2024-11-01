@@ -3,15 +3,16 @@ name: pre-commit-hooks
 on: [pull_request]
 
 jobs:
-  build:
+  lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v1
-        with:
-          python-version: 3.8
-      - name: Linting
-        run: |
-          pip install pre-commit
-          pre-commit run --all-files
+      - uses: actions/checkout@v3
+      - uses: psf/black@stable
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v3
+    - uses: pre-commit/action@v3.0.0
+      with:
+        extra_args: flake8 --all-files

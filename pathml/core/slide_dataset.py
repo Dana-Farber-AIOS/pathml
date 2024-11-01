@@ -75,7 +75,7 @@ class SlideDataset:
         """
         d = Path(dir)
         if filenames:
-            if len(filenames) != self.__len__():
+            if len(filenames) != self.__len__():  # pragma: no cover
                 raise ValueError(
                     f"input list of filenames has {len(filenames)} elements but must be same length as number of slides in dataset ({self.__len__()})"
                 )
@@ -85,7 +85,7 @@ class SlideDataset:
                 slide_path = d / (filenames[i] + ".h5path")
             elif slide.name:
                 slide_path = d / (slide.name + ".h5path")
-            else:
+            else:  # pragma: no cover
                 raise ValueError(
                     "slide does not have a .name attribute. Must supply a 'filenames' argument."
                 )

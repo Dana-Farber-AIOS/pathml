@@ -114,4 +114,4 @@ def test_pipeline_save(tmp_path):
     pipeline_loaded = pickle.load(open(fp, "rb"))
 
     assert repr(pipeline_loaded) == repr(pipeline)
-    assert type(pipeline_loaded) == type(pipeline)
+    assert type(pipeline_loaded) is type(pipeline)

@@ -23,9 +23,20 @@ Transforms
 .. autoapiclass:: pathml.preprocessing.LabelArtifactTileHE
 .. autoapiclass:: pathml.preprocessing.LabelWhiteSpaceHE
 .. autoapiclass:: pathml.preprocessing.SegmentMIF
+.. autoapiclass:: pathml.preprocessing.SegmentMIFRemote
 .. autoapiclass:: pathml.preprocessing.QuantifyMIF
 .. autoapiclass:: pathml.preprocessing.CollapseRunsVectra
 .. autoapiclass:: pathml.preprocessing.CollapseRunsCODEX
 .. autoapiclass:: pathml.preprocessing.RescaleIntensity    
 .. autoapiclass:: pathml.preprocessing.HistogramEqualization
 .. autoapiclass:: pathml.preprocessing.AdaptiveHistogramEqualization
+
+
+TileStitching
+-------------
+This section covers the `TileStitcher` class, which is specialized for stitching tiled images, particularly useful in digital pathology.
+
+.. autoapiclass:: pathml.preprocessing.tilestitcher.TileStitcher
+   :members: run_image_stitching, shutdown
+   :show-inheritance:
+   

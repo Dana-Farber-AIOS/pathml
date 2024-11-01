@@ -8,7 +8,13 @@ build-backend = "setuptools.build_meta"
 [tool.pytest.ini_options]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "exclude: marks tests to exclude (deselect with '-m \"not exclude\"')"
 ]
 
 [tool.isort]
 profile = "black"
+
+[tool.coverage.report]
+exclude_also = [
+    "def __repr__",
+    ]

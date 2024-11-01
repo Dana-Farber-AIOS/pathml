@@ -5,7 +5,9 @@ License: GNU GPL 2.0
 
 import os
 import shutil
+import tarfile
 import urllib
+from pathlib import Path
 
 import cv2
 import matplotlib.pyplot as plt
@@ -32,6 +34,7 @@ def download_from_url(url, download_dir, name=None):
     path = os.path.join(download_dir, name)
 
     if os.path.exists(path):
+        print(f"File {name} already exists, skipping download.")
         return
     else:
         os.makedirs(download_dir, exist_ok=True)
@@ -39,6 +42,7 @@ def download_from_url(url, download_dir, name=None):
         # Download the file from `url` and save it locally under `file_name`:
         with urllib.request.urlopen(url) as response, open(path, "wb") as out_file:
             shutil.copyfileobj(response, out_file)
+        return path  # added when including qupath utils
 
 
 def parse_file_size(fs):
@@ -345,3 +349,62 @@ def _test_log(msg):
     # passes thru message to pathml logger
     # used for testing logging
     logger.info(msg)
+
+
+def find_qupath_home(start_path):
+    """
+    Search for the QuPath home directory by looking for .jar files within the given start path.
+
+    Args:
+        start_path (str): The starting directory path from which to begin the search.
+
+    Returns:
+        str or None: The absolute path of the QuPath home directory if found; otherwise, None.
+    """
+
+    for root, dirs, files in os.walk(start_path):
+        if any("qupath" in file.lower() and file.endswith(".jar") for file in files):
+            return str(Path(root).parent.parent)
+    return None
+
+
+def setup_qupath(qupath_home=None):
+    """
+    Set up the QuPath environment by downloading and extracting it if not already installed.
+
+    This function checks for an existing QuPath installation in the specified directory.
+    If not found, it downloads QuPath from its official release page and extracts it.
+
+    Args:
+        qupath_home (str, optional): The directory path where QuPath is or will be installed.
+                                     Defaults to '~/tools/qupath' if None.
+
+    Returns:
+        str: The path to the QuPath home directory after setting it up.
+    """
+
+    default_path = str(Path.home() / "tools/qupath")
+    qupath_home = qupath_home if qupath_home is not None else default_path
+    Path(qupath_home).mkdir(parents=True, exist_ok=True)
+
+    # Check for existing QuPath installation
+    existing_qupath_home = find_qupath_home(qupath_home)
+    if existing_qupath_home:
+        return existing_qupath_home
+
+    print("Downloading")
+    # URL and name of QuPath tarball
+    # qupath_url = "https://github.com/qupath/qupath/releases/download/v0.3.0/QuPath-0.3.0-Linux.tar.xz"
+    qupath_url = "https://github.com/qupath/qupath/releases/download/v0.4.3/QuPath-0.4.3-Linux.tar.xz"
+    qupath_tar_name = "QuPath-0.4.3-Linux.tar.xz"
+    tar_path = download_from_url(qupath_url, qupath_home, qupath_tar_name)
+
+    # Extract QuPath if the tarball was downloaded
+    if tar_path:
+        print("Extracting QuPath...")
+        with tarfile.open(tar_path) as tar:
+            tar.extractall(path=qupath_home)
+        os.remove(tar_path)
+
+    # Find the QuPath home by searching for jar files
+    return find_qupath_home(qupath_home)
