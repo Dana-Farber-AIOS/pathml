@@ -18,11 +18,6 @@ Imaging datasets in cancer research are growing exponentially in both quantity a
 
 Done, what analyses can I write now? 👉 <a href="https://chat.openai.com/g/g-L1IbnIIVt-digital-pathology-assistant-v3-0" target="_blank"><img src="https://github.com/Dana-Farber-AIOS/pathml/assets/25375373/7fdc35b4-fede-431b-a8d5-324bea1873e4" width="30%"/></a>
 
-<table> 
-<tr>
-    <td> <img src="https://github.com/Dana-Farber-AIOS/pathml/assets/25375373/7b1b7293-03cd-4ef1-91d3-8f2efde0899a"/> </td>
-    <td>
-        
 This AI will:
         
 - 🤖 write digital pathology analyses for you
@@ -30,10 +25,6 @@ This AI will:
 - 🎓 be your teacher, as you embark on your digital pathology journey ❤️
 
 More information [here](https://github.com/Dana-Farber-AIOS/pathml/tree/master/ai-digital-pathology-assistant-v3) and usage examples [here](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/talk_to_pathml.ipynb)
-  
-</td>
-</tr>
-</table>
 
 
 📖 **Official PathML Documentation**
@@ -319,10 +310,6 @@ This makes the pathml environment available as a kernel in jupyter lab or notebo
 # 3. Examples
 
 Now that you are all set with ``PathML`` installation, let's get started with some analyses you can easily replicate:
-
-<table style="border: 0px !important;">
-    <tr>
-    <td> 
         
 1. [Load over 160+ different types of pathology images using PathML](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/loading_images_vignette.ipynb")
 2. [H&E Stain Deconvolution and Color Normalization]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/stain_normalization.ipynb)
@@ -337,14 +324,6 @@ Now that you are all set with ``PathML`` installation, let's get started with so
 11. [Create an ONNX model in HaloAI or similar software, export it, and run it at scale using PathML]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/InferenceOnnx_tutorial.ipynb")
 12. [Step-by-step process used to analyze the Whole Slide Images (WSIs) of Non-Small Cell Lung Cancer (NSCLC) samples as published in the Journal of Clinical Oncology]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/Graph_Analysis_NSCLC.ipynb")
 13. [Talk to the PathML Digital Pathology Assistant]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/talk_to_pathml.ipynb")
-
-</td>                                                                                                                             
-        <td>
-<img src="https://github.com/Dana-Farber-AIOS/pathml/assets/25375373/502c9e69-e988-4d61-b50f-0d6bfc8af251" width="1000px" />
-
-   </td>
-</tr>
-</table>
 
 # 4. Citing & known uses
 
