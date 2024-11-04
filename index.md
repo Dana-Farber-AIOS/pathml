@@ -311,14 +311,14 @@ This makes the pathml environment available as a kernel in jupyter lab or notebo
 
 Now that you are all set with ``PathML`` installation, let's get started with some analyses you can easily replicate:
         
-1. [Load over 160+ different types of pathology images using PathML](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/loading_images_vignette.ipynb")
-2. [H&E Stain Deconvolution and Color Normalization]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/stain_normalization.ipynb)
-3. [Brightfield imaging pipeline: load an image, preprocess it on a local cluster, and get it read for machine learning analyses in PyTorch]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/workflow_HE_vignette.ipynb")
-4. [Multiparametric Imaging: Quickstart & single-cell quantification]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/multiplex_if.ipynb")
-5. [Multiparametric Imaging: CODEX & nuclei quantization]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/codex.ipynb")
-6. [Train HoVer-Net model to perform nucleus detection and classification, using data from PanNuke dataset]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/train_hovernet.ipynb")
-7. [Gallery of PathML preprocessing and transformations]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/pathml_gallery.ipynb")
-8. [Use the new Graph API to construct cell and tissue graphs from pathology images]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/construct_graphs.ipynb")
+1. [Load over 160+ different types of pathology images using PathML](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/loading_images_vignette.ipynb)
+2. [H&E Stain Deconvolution and Color Normalization](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/stain_normalization.ipynb)
+3. [Brightfield imaging pipeline: load an image, preprocess it on a local cluster, and get it read for machine learning analyses in PyTorch](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/workflow_HE_vignette.ipynb)
+4. [Multiparametric Imaging: Quickstart & single-cell quantification](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/multiplex_if.ipynb)
+5. [Multiparametric Imaging: CODEX & nuclei quantization](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/codex.ipynb)
+6. [Train HoVer-Net model to perform nucleus detection and classification, using data from PanNuke dataset](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/train_hovernet.ipynb)
+7. [Gallery of PathML preprocessing and transformations](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/pathml_gallery.ipynb)
+8. [Use the new Graph API to construct cell and tissue graphs from pathology images](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/construct_graphs.ipynb)
 9. [Train HACTNet model to perform cancer sub-typing using graphs constructed from the BRACS dataset]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/train_hactnet.ipynb")
 10. [Perform reconstruction of tiles obtained from pathology images using Tile Stitching]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/tile_stitching.ipynb")
 11. [Create an ONNX model in HaloAI or similar software, export it, and run it at scale using PathML]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/InferenceOnnx_tutorial.ipynb")
