@@ -319,11 +319,11 @@ Now that you are all set with ``PathML`` installation, let's get started with so
 6. [Train HoVer-Net model to perform nucleus detection and classification, using data from PanNuke dataset](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/train_hovernet.ipynb)
 7. [Gallery of PathML preprocessing and transformations](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/pathml_gallery.ipynb)
 8. [Use the new Graph API to construct cell and tissue graphs from pathology images](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/construct_graphs.ipynb)
-9. [Train HACTNet model to perform cancer sub-typing using graphs constructed from the BRACS dataset]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/train_hactnet.ipynb")
-10. [Perform reconstruction of tiles obtained from pathology images using Tile Stitching]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/tile_stitching.ipynb")
-11. [Create an ONNX model in HaloAI or similar software, export it, and run it at scale using PathML]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/InferenceOnnx_tutorial.ipynb")
-12. [Step-by-step process used to analyze the Whole Slide Images (WSIs) of Non-Small Cell Lung Cancer (NSCLC) samples as published in the Journal of Clinical Oncology]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/Graph_Analysis_NSCLC.ipynb")
-13. [Talk to the PathML Digital Pathology Assistant]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/talk_to_pathml.ipynb")
+9. [Train HACTNet model to perform cancer sub-typing using graphs constructed from the BRACS dataset](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/train_hactnet.ipynb)
+10. [Perform reconstruction of tiles obtained from pathology images using Tile Stitching](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/tile_stitching.ipynb)
+11. [Create an ONNX model in HaloAI or similar software, export it, and run it at scale using PathML](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/InferenceOnnx_tutorial.ipynb)
+12. [Step-by-step process used to analyze the Whole Slide Images (WSIs) of Non-Small Cell Lung Cancer (NSCLC) samples as published in the Journal of Clinical Oncology](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/Graph_Analysis_NSCLC.ipynb)
+13. [Talk to the PathML Digital Pathology Assistant](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/talk_to_pathml.ipynb)
 
 # 4. Citing & known uses
 
