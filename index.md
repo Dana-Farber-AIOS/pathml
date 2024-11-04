@@ -46,9 +46,9 @@ View the official [PathML Documentation on readthedocs](https://pathml.readthedo
 
 <br>
 
-<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/logo.png width="300"> 
+<img src="https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/logo.png" width="300"> 
 
-<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/overview.png width="750">
+<img src="https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/overview.png" width="750">
 
 # 1. Installation
 
@@ -324,19 +324,19 @@ Now that you are all set with ``PathML`` installation, let's get started with so
     <tr>
     <td> 
         
-1. [Load over 160+ different types of pathology images using PathML](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/loading_images_vignette.ipynb)
-2. [H&E Stain Deconvolution and Color Normalization](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/stain_normalization.ipynb)
-3. [Brightfield imaging pipeline: load an image, preprocess it on a local cluster, and get it read for machine learning analyses in PyTorch](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/workflow_HE_vignette.ipynb)
-4. [Multiparametric Imaging: Quickstart & single-cell quantification](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/multiplex_if.ipynb)
-5. [Multiparametric Imaging: CODEX & nuclei quantization](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/codex.ipynb)
-6. [Train HoVer-Net model to perform nucleus detection and classification, using data from PanNuke dataset](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/train_hovernet.ipynb)
-7. [Gallery of PathML preprocessing and transformations](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/pathml_gallery.ipynb)
-8. [Use the new Graph API to construct cell and tissue graphs from pathology images](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/construct_graphs.ipynb)
-9. [Train HACTNet model to perform cancer sub-typing using graphs constructed from the BRACS dataset](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/train_hactnet.ipynb)
-10. [Perform reconstruction of tiles obtained from pathology images using Tile Stitching](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/tile_stitching.ipynb)
-11. [Create an ONNX model in HaloAI or similar software, export it, and run it at scale using PathML](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/InferenceOnnx_tutorial.ipynb)
-12. [Step-by-step process used to analyze the Whole Slide Images (WSIs) of Non-Small Cell Lung Cancer (NSCLC) samples as published in the Journal of Clinical Oncology](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/Graph_Analysis_NSCLC.ipynb)
-13. [Talk to the PathML Digital Pathology Assistant](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/talk_to_pathml.ipynb)
+1. [Load over 160+ different types of pathology images using PathML]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/loading_images_vignette.ipynb")
+2. [H&E Stain Deconvolution and Color Normalization]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/stain_normalization.ipynb")
+3. [Brightfield imaging pipeline: load an image, preprocess it on a local cluster, and get it read for machine learning analyses in PyTorch]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/workflow_HE_vignette.ipynb")
+4. [Multiparametric Imaging: Quickstart & single-cell quantification]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/multiplex_if.ipynb")
+5. [Multiparametric Imaging: CODEX & nuclei quantization]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/codex.ipynb")
+6. [Train HoVer-Net model to perform nucleus detection and classification, using data from PanNuke dataset]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/train_hovernet.ipynb")
+7. [Gallery of PathML preprocessing and transformations]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/pathml_gallery.ipynb")
+8. [Use the new Graph API to construct cell and tissue graphs from pathology images]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/construct_graphs.ipynb")
+9. [Train HACTNet model to perform cancer sub-typing using graphs constructed from the BRACS dataset]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/train_hactnet.ipynb")
+10. [Perform reconstruction of tiles obtained from pathology images using Tile Stitching]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/tile_stitching.ipynb")
+11. [Create an ONNX model in HaloAI or similar software, export it, and run it at scale using PathML]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/InferenceOnnx_tutorial.ipynb")
+12. [Step-by-step process used to analyze the Whole Slide Images (WSIs) of Non-Small Cell Lung Cancer (NSCLC) samples as published in the Journal of Clinical Oncology]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/Graph_Analysis_NSCLC.ipynb")
+13. [Talk to the PathML Digital Pathology Assistant]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/talk_to_pathml.ipynb")
 
 </td>                                                                                                                             
         <td>
