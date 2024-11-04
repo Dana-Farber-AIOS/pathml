@@ -29,7 +29,7 @@ This AI will:
 - 🔬 walk you through the code, step-by-step
 - 🎓 be your teacher, as you embark on your digital pathology journey ❤️
 
-More information [here](./ai-digital-pathology-assistant-v3) and usage examples [here](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/talk_to_pathml.ipynb)
+More information [here](https://github.com/Dana-Farber-AIOS/pathml/tree/master/ai-digital-pathology-assistant-v3) and usage examples [here](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/talk_to_pathml.ipynb)
   
 </td>
 </tr>
@@ -324,8 +324,8 @@ Now that you are all set with ``PathML`` installation, let's get started with so
     <tr>
     <td> 
         
-1. [Load over 160+ different types of pathology images using PathML]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/loading_images_vignette.ipynb")
-2. [H&E Stain Deconvolution and Color Normalization]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/stain_normalization.ipynb")
+1. [Load over 160+ different types of pathology images using PathML](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/loading_images_vignette.ipynb")
+2. [H&E Stain Deconvolution and Color Normalization]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/stain_normalization.ipynb)
 3. [Brightfield imaging pipeline: load an image, preprocess it on a local cluster, and get it read for machine learning analyses in PyTorch]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/workflow_HE_vignette.ipynb")
 4. [Multiparametric Imaging: Quickstart & single-cell quantification]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/multiplex_if.ipynb")
 5. [Multiparametric Imaging: CODEX & nuclei quantization]("https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/codex.ipynb")
