@@ -10,6 +10,14 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
+      - name: free disk space
+        run: |
+          sudo swapoff -a
+          sudo rm -f /swapfile
+          sudo apt clean
+          docker rmi $(docker image ls -aq)
+          sudo df -h
+          sudo du -h
       - name: Checkout
         uses: actions/checkout@v2
       - name: Set version number variable
