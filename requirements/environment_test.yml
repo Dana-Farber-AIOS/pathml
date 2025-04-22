@@ -6,8 +6,8 @@ channels:
 
 dependencies:
     - python<=3.10
-    - pip==23.3.2
-    - numpy==25.0.1
+    - pip==25.0.1
+    - numpy==1.23.5
     - scipy<=1.11.4
     - scikit-image<=0.22.0
     - matplotlib<=3.8.2

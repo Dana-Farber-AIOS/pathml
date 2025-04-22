@@ -19,7 +19,7 @@ dependencies:
     - pre-commit<=3.6.0
     - coverage==7.3.4
     - networkx<=3.2.1
-    - pip3:
+    - pip:
         - -r requirements/requirements_torch.txt
         - python-bioformats==4.0.7
         - python-javabridge==4.0.3
