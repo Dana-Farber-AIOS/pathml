@@ -7,12 +7,12 @@ channels:
 dependencies:
     - python<=3.10
     - pip==23.3.2
-    - numpy==1.23.5
+    - numpy==25.0.1
     - scipy<=1.11.4
     - scikit-image<=0.22.0
     - matplotlib<=3.8.2
     - openjdk<=18.0.0
-    - pytorch==1.13.1
+    - pytorch==2.6.0
     - h5py==3.10.0
     - dask<=2023.12.1
     - pydicom==2.4.4

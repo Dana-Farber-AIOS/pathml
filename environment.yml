@@ -6,7 +6,7 @@ channels:
 
 dependencies:
     - python<=3.10
-    - pip==23.3.2
+    - pip==25.0.1
     - numpy==1.23.5
     - scipy<=1.11.4
     - scikit-image<=0.22.0
@@ -19,7 +19,7 @@ dependencies:
     - pre-commit<=3.6.0
     - coverage==7.3.4
     - networkx<=3.2.1
-    - pip:
+    - pip3:
         - -r requirements/requirements_torch.txt
         - python-bioformats==4.0.7
         - python-javabridge==4.0.3
