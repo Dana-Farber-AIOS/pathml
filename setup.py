@@ -10,7 +10,7 @@ with open("pathml/_version.py", "r", encoding="utf-8") as f:
 
 version = about["__version__"]
 
-dependency_links = ["https://download.pytorch.org/whl/cu116"]
+dependency_links = ["https://download.pytorch.org/whl/cu124"]
 
 setuptools.setup(
     name="pathml",
@@ -40,7 +40,7 @@ setuptools.setup(
         "dask[distributed]",
         "anndata>=0.7.6",
         "scanpy==1.9.6",
-        "torch==1.13.1",
+        "torch==2.6.0",
         "opencv-contrib-python==4.8.1.78",
         "python-bioformats==4.0.7",
         "python-javabridge==4.0.3",

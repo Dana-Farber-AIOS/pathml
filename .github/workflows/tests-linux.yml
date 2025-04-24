@@ -17,7 +17,7 @@ jobs:
     strategy:
       max-parallel: 5
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.9", "3.10"]
     timeout-minutes: 60 # add a timeout
 
     steps:
@@ -83,14 +83,27 @@ jobs:
         sudo df -h
         sudo du -h
         
+    # - name: free disk space
+    #   run: |
+    #     sudo swapoff -a
+    #     sudo rm -f /swapfile
+    #     sudo apt clean
+    #     docker rmi $(docker image ls -aq)
+    #     sudo df -h
+    #     sudo du -h
+
     - name: free disk space
       run: |
         sudo swapoff -a
         sudo rm -f /swapfile
-        sudo apt clean
-        docker rmi $(docker image ls -aq)
-        sudo df -h
-        sudo du -h
+        sudo apt-get clean
+        if [ "$(docker image ls -aq)" ]; then
+          docker rmi $(docker image ls -aq)
+        else
+          echo "No Docker images to remove."
+         fi
+         sudo df -h
+         sudo du -h
 
     # - name: Check Coverage Command
     #   run: |
