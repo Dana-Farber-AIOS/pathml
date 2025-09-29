@@ -18,22 +18,13 @@ Imaging datasets in cancer research are growing exponentially in both quantity a
 
 Done, what analyses can I write now? 👉 <a href="https://chat.openai.com/g/g-L1IbnIIVt-digital-pathology-assistant-v3-0" target="_blank"><img src="https://github.com/Dana-Farber-AIOS/pathml/assets/25375373/7fdc35b4-fede-431b-a8d5-324bea1873e4" width="30%"/></a>
 
-<table> 
-<tr>
-    <td> <img src="https://github.com/Dana-Farber-AIOS/pathml/assets/25375373/7b1b7293-03cd-4ef1-91d3-8f2efde0899a"/> </td>
-    <td>
-        
 This AI will:
         
 - 🤖 write digital pathology analyses for you
 - 🔬 walk you through the code, step-by-step
-- 🎓 be your teacher, as you embark on your digital pathology journey ❤️
+- 🎓 be your teacher, as you embark on your digital pathology journey
 
 More information [here](https://github.com/Dana-Farber-AIOS/pathml/tree/master/ai-digital-pathology-assistant-v3) and usage examples [here](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/talk_to_pathml.ipynb)
-  
-</td>
-</tr>
-</table>
 
 
 📖 **Official PathML Documentation**
@@ -46,9 +37,9 @@ View the official [PathML Documentation on readthedocs](https://pathml.readthedo
 
 <br>
 
-<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/logo.png width="300"> 
+<img src="https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/logo.png" width="300"> 
 
-<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/overview.png width="750">
+<img src="https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/overview.png" width="750">
 
 # 1. Installation
 
@@ -319,10 +310,6 @@ This makes the pathml environment available as a kernel in jupyter lab or notebo
 # 3. Examples
 
 Now that you are all set with ``PathML`` installation, let's get started with some analyses you can easily replicate:
-
-<table style="border: 0px !important;">
-    <tr>
-    <td> 
         
 1. [Load over 160+ different types of pathology images using PathML](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/loading_images_vignette.ipynb)
 2. [H&E Stain Deconvolution and Color Normalization](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/stain_normalization.ipynb)
@@ -338,28 +325,16 @@ Now that you are all set with ``PathML`` installation, let's get started with so
 12. [Step-by-step process used to analyze the Whole Slide Images (WSIs) of Non-Small Cell Lung Cancer (NSCLC) samples as published in the Journal of Clinical Oncology](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/Graph_Analysis_NSCLC.ipynb)
 13. [Talk to the PathML Digital Pathology Assistant](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/talk_to_pathml.ipynb)
 
-</td>                                                                                                                             
-        <td>
-<img src="https://github.com/Dana-Farber-AIOS/pathml/assets/25375373/502c9e69-e988-4d61-b50f-0d6bfc8af251" width="1000px" />
-
-   </td>
-</tr>
-</table>
-
 # 4. Citing & known uses
 
 If you use ``PathML`` please cite:
 
-- [**M. Omar et al., "Antibody-Based Multiplex Image Analysis: Standard Analytical Workflows and Artificial Intelligence Tools for Pathologists." Laboratory Investigation, 2025.**](https://doi.org/10.1016/j.labinv.2025.104220)
+- [**J. Rosenthal et al., "Building tools for machine learning and artificial intelligence in cancer research: best practices and a case study with the PathML toolkit for computational pathology." Molecular Cancer Research, 2022.**](https://doi.org/10.1158/1541-7786.MCR-21-0665)
 
-So far, **PathML** was referenced in 40+ manuscripts:
+So far, **PathML** was referenced in 20+ manuscripts:
 
--   [Y. Han et al. **npj Precision Oncology**, 2025](https://www.nature.com/articles/s41698-025-01056-8)
--   [L. Heumos et al. **Nature Medicine**, 2024](https://www.nature.com/articles/s41591-024-03214-0)
--   [M. Omar et al. **Lancet Digital Health**, 2024](https://www.thelancet.com/journals/landig/article/PIIS2589-7500(24)00114-6/fulltext)
 -   [H. Pakula et al. **Nature Communications**, 2024](https://www.nature.com/articles/s41467-023-44210-1)
 -   [B. Ricciuti et al. **Journal of Clinical Oncology**, 2024](https://ascopubs.org/doi/full/10.1200/JCO.23.00580)
--   [DT. Hoang et al. **Nature Cancer**, 2024](https://www.nature.com/articles/s43018-024-00793-2)
 -   [A. Song et al. **Nature Reviews Bioengineering**, 2023](https://www.nature.com/articles/s44222-023-00096-8)
 -   [I. Virshup et al. **Nature Bioengineering**, 2023](https://www.nature.com/articles/s41587-023-01733-8)
 -   [A. Karargyris et al. **Nature Machine Intelligence**, 2023](https://www.nature.com/articles/s42256-023-00652-2)
@@ -376,11 +351,11 @@ So far, **PathML** was referenced in 40+ manuscripts:
 
 <table style="border: 0px !important;"><tr><td>This is where in the world our most enthusiastic supporters are located:
    <br/><br/>
-<img src="https://github.com/user-attachments/assets/18fdaf1c-5ee0-48db-b0d4-99698184c93e" width="722px">
+<img src="https://user-images.githubusercontent.com/25375373/208137141-e450aa86-8433-415a-9cc7-c4274139bdc2.png" width="500px">
    </td><td>   
 and this is where they work:
    <br/><br/>
-<img src="https://github.com/user-attachments/assets/0ce73bb5-a722-4dc8-8846-824757e45f0c" width="400px">
+<img src="https://user-images.githubusercontent.com/25375373/208137644-f73c86d0-c5c7-4094-80d9-ea11e0edbdc5.png" width="400px">
 </td>                                                                                                                             
 </tr>
 </table>
@@ -416,8 +391,8 @@ Commercial license options are available also.
 
 Questions? Comments? Suggestions? Get in touch!
 
-[innovation@dfci.harvard.edu](mailto:innovation@dfci.harvard.edu)
+[pathml@dfci.harvard.edu](mailto:pathml@dfci.harvard.edu)
 
-<img src=https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/dfci_cornell_joint_logos.png width="750"> 
+<img src="https://raw.githubusercontent.com/Dana-Farber-AIOS/pathml/master/docs/source/_static/images/dfci_cornell_joint_logos.png" width="750"> 
 
 Thank you for reading!
