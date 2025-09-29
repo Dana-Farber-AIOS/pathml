@@ -29,7 +29,7 @@ This AI will:
 - 🔬 walk you through the code, step-by-step
 - 🎓 be your teacher, as you embark on your digital pathology journey ❤️
 
-More information [here](./ai-digital-pathology-assistant-v3) and usage examples [here](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/talk_to_pathml.ipynb)
+More information [here](https://github.com/Dana-Farber-AIOS/pathml/tree/master/ai-digital-pathology-assistant-v3) and usage examples [here](https://github.com/Dana-Farber-AIOS/pathml/blob/master/examples/talk_to_pathml.ipynb)
   
 </td>
 </tr>
