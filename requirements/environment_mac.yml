@@ -23,7 +23,7 @@ dependencies:
     - pip:
         # - setuptools==58.2.0
         # - numpy==1.23.5
-        - torch==1.13.1
+        - torch==2.6.0
         - python-bioformats==4.0.7
         # - python-javabridge==4.0.3
         - protobuf==3.20.3
@@ -32,7 +32,7 @@ dependencies:
         - opencv-contrib-python==4.8.1.78
         - scanpy==1.9.6
         - anndata<=0.10.3
-        - tqdm==4.66.1
+        - tqdm==4.66.3
         - loguru==0.7.2
         - pandas<=2.1.4
         - torch-geometric==2.3.1
