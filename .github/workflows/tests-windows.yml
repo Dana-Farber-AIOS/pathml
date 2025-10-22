@@ -107,6 +107,12 @@ jobs:
         run: echo "OPENSLIDE_PATH=D:\a\pathml\pathml\openslide-binaries\openslide-win64-20231011\bin" >> $GITHUB_ENV
         shell: pwsh
 
+      - name: Fix coverage-numba incompatibility
+        shell: bash -l {0}
+        run: |
+          pip install "coverage<7.3" --force-reinstall
+
+
       - name: Test other modules with pytest and generate coverage
         shell: bash -l {0}
         run: |

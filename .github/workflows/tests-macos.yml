@@ -59,6 +59,11 @@ jobs:
         shell: bash -l {0}
         run: pip install torchvision==0.14.1
 
+      - name: Fix coverage-numba incompatibility
+        shell: bash -l {0}
+        run: |
+          pip install "coverage<7.3" --force-reinstall
+
       - name: Test other modules with pytest and generate coverage
         shell: bash -l {0}
         run: |
