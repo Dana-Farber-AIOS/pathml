@@ -15,10 +15,9 @@ dependencies:
     - h5py==3.10.0
     - dask<=2023.12.1
     - pydicom==3.0.2
-    - coverage<7.3
     - pytest==7.4.3 
     - pre-commit<=3.6.0
-    - coverage==7.2.7
+    - coverage==7.4.0
     - networkx<=3.2.1
     - pip:
         - torch==2.6.0

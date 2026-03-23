@@ -110,8 +110,8 @@ jobs:
       - name: Fix coverage-numba incompatibility
         shell: bash -l {0}
         run: |
-          micromamba activate pathml 
-          pip install "numpy==1.23.5" "coverage<7.3" "numba==0.59.1" --force-reinstall
+          micromamba activate pathml
+          pip install "numpy>=1.26,<2" "coverage>=7.4,<8" "numba>=0.60,<0.62" --force-reinstall --no-cache-dir
           python -m coverage --version
           python -c "import numba; print('Numba version:', numba.__version__)"
 
