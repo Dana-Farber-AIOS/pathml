@@ -27,7 +27,7 @@ setuptools.setup(
     },
     dependency_links=dependency_links,
     install_requires=[
-        "numpy==1.23.5",
+        "numpy==1.26.0",
         "pandas<=2.1.4",
         "scipy<=1.11.4",
         "scikit-image<=0.22.0",
