@@ -101,7 +101,7 @@ jobs:
 
       - name: Install torchvision
         shell: bash -l {0}
-        run: pip install torchvision==0.14.1
+        run: pip install torchvision==0.23.0
         
       - name: Set OPENSLIDE_PATH
         run: echo "OPENSLIDE_PATH=D:\a\pathml\pathml\openslide-binaries\openslide-win64-20231011\bin" >> $GITHUB_ENV
