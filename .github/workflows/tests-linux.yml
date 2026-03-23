@@ -18,7 +18,7 @@ jobs:
       # Limit concurrency to reduce memory pressure
       max-parallel: 2
       matrix:
-        python-version: ["3.9", "3.10"]
+        python-version: ["3.10", "3.11", "3.12"]
     timeout-minutes: 60
 
     steps:
@@ -69,7 +69,7 @@ jobs:
 
       - name: Install lightweight torchvision
         shell: bash -l {0}
-        run: pip install torchvision==0.14.1 --no-cache-dir
+        run: pip install torchvision==0.23.0 --no-cache-dir
 
       - name: Aggressive disk cleanup
         run: |
@@ -85,7 +85,7 @@ jobs:
         shell: bash -l {0}
         run: |
           micromamba activate pathml
-          pip install "numpy==1.23.5" "coverage<7.3" "numba==0.59.1" --force-reinstall --no-cache-dir
+          pip install "numpy>=1.26,<2" "coverage>=7.4,<8" "numba>=0.60,<0.62" --force-reinstall --no-cache-dir
           python -m coverage --version
           python -c "import numba; print('Numba version:', numba.__version__)"
 

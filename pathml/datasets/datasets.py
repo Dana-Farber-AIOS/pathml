@@ -132,21 +132,21 @@ class EntityDataset(torch.utils.data.Dataset):
 
         # Load cell graphs, tissue graphs and assignments if they are provided
         if self.cell_dir is not None:
-            cell_graph = torch.load(self.cell_graphs[index])
+            cell_graph = torch.load(self.cell_graphs[index], weights_only=False)
             if hasattr(cell_graph, "target"):
                 target = cell_graph["target"]
             else:
                 target = None
 
         if self.tissue_dir is not None:
-            tissue_graph = torch.load(self.tissue_graphs[index])
+            tissue_graph = torch.load(self.tissue_graphs[index], weights_only=False)
             if hasattr(tissue_graph, "target"):
                 target = tissue_graph["target"]
             else:
                 target = None
 
         if self.assign_dir is not None:
-            assignment = torch.load(self.assigns[index])
+            assignment = torch.load(self.assigns[index], weights_only=False)
 
         # Create pathml.graph.utils.HACTPairData object with prvided objects
         data = HACTPairData(
