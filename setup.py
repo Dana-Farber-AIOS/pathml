@@ -29,10 +29,10 @@ setuptools.setup(
     install_requires=[
         "numpy==1.26.0",
         "pandas<=2.1.4",
-        "scipy<=1.11.4",
+        "scipy>=1.12,<2",
         "scikit-image<=0.22.0",
         "statsmodels",
-        "matplotlib<=3.8.2",
+        "matplotlib>=3.8.0",
         "openslide-python==1.3.1",
         "pydicom==3.0.2",
         "h5py==3.10.0",
