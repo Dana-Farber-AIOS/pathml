@@ -27,13 +27,13 @@ dependencies:
         - python-javabridge==4.0.4
         - protobuf==3.20.3
         - onnx==1.17.0
-        - onnxruntime==1.16.3
+        - onnxruntime>=1.17.0,<1.18
         - opencv-contrib-python==4.8.1.78
         - openslide-python==1.3.1
         - scanpy==1.9.6
-        - anndata<=0.10.3
+        - anndata>=0.7.6,<=0.10.3,
         - tqdm==4.66.3
         - loguru==0.7.2
         - pandas<=2.1.4
         - torch-geometric==2.3.1
-        - jpype1==1.4.1
+        - jpype1>=1.5.0
