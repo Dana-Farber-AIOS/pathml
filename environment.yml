@@ -24,7 +24,7 @@ dependencies:
         # - coverage==7.2.7
         - numba>=0.59
         - python-bioformats==4.0.7
-        - python-javabridge==4.0.3
+        - python-javabridge==4.0.4
         - protobuf==3.20.3
         - onnx==1.17.0
         - onnxruntime==1.16.3
