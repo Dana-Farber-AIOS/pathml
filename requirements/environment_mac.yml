@@ -5,7 +5,7 @@ channels:
     - pytorch
 
 dependencies:
-    - python>=3.10,<=3.12
+    - python>=3.10
     - pip==23.3.2
     - numpy==1.23.5
     - python-javabridge==4.0.3
@@ -15,7 +15,7 @@ dependencies:
     - openjdk<=18.0.0
     - h5py==3.10.0
     - dask<=2023.12.1
-    - pydicom==2.4.5
+    - pydicom==3.0.2
     - pytest==7.4.3 
     - pre-commit<=3.6.0
     - coverage==7.2.7
