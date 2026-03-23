@@ -24,7 +24,7 @@ dependencies:
         - -r ../requirements/requirements_torch.txt
         # - coverage==7.2.7
         - numba>=0.59
-        - python-bioformats==4.0.7
+        - python-bioformats==4.1.0
         - python-javabridge==4.0.4
         - protobuf==3.20.3
         - onnx==1.17.0

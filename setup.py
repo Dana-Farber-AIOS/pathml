@@ -42,7 +42,7 @@ setuptools.setup(
         "scanpy==1.9.6",
         "torch==2.8.0",
         "opencv-contrib-python==4.8.1.78",
-        "python-bioformats==4.0.7",
+        "python-bioformats==4.1.0",
         "python-javabridge==4.0.4",
         "loguru==0.7.2",
         "networkx<=3.2.1",
