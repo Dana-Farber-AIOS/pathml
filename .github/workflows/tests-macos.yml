@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.10", "3.11", "3.12"]
         
     steps:
       - uses: actions/checkout@v2
@@ -57,15 +57,15 @@ jobs:
         
       - name: Install torchvision
         shell: bash -l {0}
-        run: pip install torchvision==0.14.1
+        run: pip install torchvision==0.23.0
       
       - name: Fix coverage-numba incompatibility
         shell: bash -l {0}
         run: |
-            micromamba activate pathml
-            pip install "numpy==1.23.5" "coverage<7.3" "numba==0.59.1" --force-reinstall
-            python -m coverage --version
-            python -c "import numba; print('Numba version:', numba.__version__)"           
+          micromamba activate pathml
+          pip install "numpy>=1.26,<2" "coverage>=7.4,<8" "numba>=0.60,<0.62" --force-reinstall --no-cache-dir
+          python -m coverage --version
+          python -c "import numba; print('Numba version:', numba.__version__)"        
 
       - name: Test other modules with pytest and generate coverage
         shell: bash -l {0}
