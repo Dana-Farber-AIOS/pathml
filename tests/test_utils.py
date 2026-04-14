@@ -45,6 +45,7 @@ def test_parse_file_sizes(test_input, expected):
     assert parse_file_size(test_input) == expected
 
 
+@pytest.mark.skip(reason="requires internet access")
 def test_download_from_url(tmp_path):
     url = "http://openslide.cs.cmu.edu/download/openslide-testdata/Aperio/index.yaml"
     d = tmp_path / "test"
