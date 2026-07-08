@@ -24,6 +24,7 @@ dependencies:
         - -r ../requirements/requirements_torch.txt
         # - coverage==7.2.7
         - numba>=0.59
+        - onnxscript==0.7.1
         - python-bioformats==4.1.0
         - python-javabridge==4.0.4
         - protobuf==4.25.1
@@ -36,5 +37,5 @@ dependencies:
         - tqdm==4.66.3
         - loguru==0.7.2
         - pandas<=2.1.4
-        - torch-geometric==2.3.1
+        - torch-geometric==2.8.0
         - jpype1>=1.5.0
