@@ -21,6 +21,7 @@ dependencies:
     - networkx<=3.2.1
     - pip:
         - torch==2.12.0
+        - onnxscript=0.7.1
         - python-bioformats==4.1.0
         - python-javabridge==4.0.4
         - protobuf==4.25.1

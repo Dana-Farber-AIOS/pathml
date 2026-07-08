@@ -23,6 +23,7 @@ dependencies:
     - pip:
         # - coverage==7.2.7
         - numba>=0.59
+        - onnxscript=0.7.1
         # - setuptools==58.2.0
         # - numpy==1.23.5
         - torch==2.12.0

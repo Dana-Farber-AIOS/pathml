@@ -51,6 +51,7 @@ setuptools.setup(
         "onnxruntime>=1.17.0,<1.18",
         "jpype1>=1.5.0",
         "tqdm==4.66.3",
+        "onnxscript=0.7.1"
     ],
     classifiers=[
         "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
