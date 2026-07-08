@@ -34,7 +34,7 @@ setuptools.setup(
         "statsmodels",
         "matplotlib>=3.8.0",
         "openslide-python==1.3.1",
-        "pydicom==3.0.2",27
+        "pydicom==3.0.2",
         "h5py==3.10.0",
         "scikit-learn",
         "dask[distributed]",
