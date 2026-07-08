@@ -106,6 +106,7 @@ def convert_pytorch_onnx(
         opset_version=opset_version,
         do_constant_folding=True,
         input_names=[input_name],
+        dynamo=False,
     )
 
 

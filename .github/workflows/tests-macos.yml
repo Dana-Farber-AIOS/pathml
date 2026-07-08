@@ -57,7 +57,7 @@ jobs:
         
       - name: Install torchvision
         shell: bash -l {0}
-        run: pip install torchvision==0.23.0
+        run: pip install torchvision==0.27.0
       
       - name: Fix coverage-numba incompatibility
         shell: bash -l {0}
