@@ -47,7 +47,7 @@ setuptools.setup(
         "loguru==0.7.2",
         "networkx<=3.2.1",
         "torch-geometric==2.8.0",
-        "onnx==1.21.0",
+        "onnx==1.22.0",
         "onnxruntime>=1.17.0,<1.18",
         "jpype1>=1.5.0",
         "tqdm==4.66.3",
