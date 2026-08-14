@@ -40,7 +40,7 @@ setuptools.setup(
         "dask[distributed]",
         "anndata>=0.7.6,<=0.10.3",
         "scanpy==1.9.6",
-        "torch==2.12.0",
+        "torch==2.13.0",
         "opencv-contrib-python==4.8.1.78",
         "python-bioformats==4.1.0",
         "python-javabridge==4.0.4",
